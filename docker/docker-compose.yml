@@ -1,0 +1,62 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: cloudops_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: cloudops_secure_password
+      POSTGRES_DB: cloudops_interview
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d cloudops_interview"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ../backend
+      dockerfile: Dockerfile
+    container_name: cloudops_backend
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      - ENVIRONMENT=production
+      - DEBUG=false
+      - DATABASE_URL=postgresql+asyncpg://postgres:cloudops_secure_password@postgres:5432/cloudops_interview
+      - SECRET_KEY=cloudops-super-secret-production-jwt-key
+      - AI_PROVIDER=mock
+      - STT_PROVIDER=mock
+      - STORAGE_PROVIDER=local
+      - LOCAL_STORAGE_DIR=/app/storage/recordings
+      - RECORDING_RETENTION_DAYS=90
+      - DEFAULT_PASSING_SCORE=80.0
+    volumes:
+      - recordings_data:/app/storage/recordings
+    ports:
+      - "8000:8000"
+
+  frontend:
+    build:
+      context: ../frontend
+      dockerfile: Dockerfile
+    container_name: cloudops_frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:8000/api/v1
+    ports:
+      - "3000:3000"
+
+volumes:
+  postgres_data:
+  recordings_data:
