@@ -52,7 +52,7 @@ export default function LandingPage() {
       
       {/* 1. TOP NAVBAR */}
       <header className="sticky top-0 z-50 backdrop-blur-md bg-white/90 dark:bg-[#070b14]/90 border-b border-slate-200/80 dark:border-slate-800 shadow-xs transition-colors duration-300">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+        <div className="max-w-[1536px] mx-auto px-4 sm:px-6 lg:px-12 h-20 flex items-center justify-between">
           
           {/* Logo */}
           <Link href="/" className="flex items-center gap-3 group">
@@ -111,7 +111,7 @@ export default function LandingPage() {
         />
         <div className="absolute inset-0 z-0 bg-gradient-to-b from-transparent via-[#FAFAFA]/70 to-[#FAFAFA] dark:via-[#070b14]/70 dark:to-[#070b14] pointer-events-none" />
 
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+        <div className="max-w-[1536px] mx-auto px-4 sm:px-6 lg:px-12 relative z-10">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
             
             {/* Hero Left Column */}
@@ -510,7 +510,7 @@ export default function LandingPage() {
         </div>
 
         {/* TRUST BANNER AT BOTTOM OF HERO (Screenshot 1) */}
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-12">
+        <div className="max-w-[1536px] mx-auto px-4 sm:px-6 lg:px-12 mt-12">
           <div className="p-4 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-xs flex flex-col lg:flex-row items-center justify-between gap-6 transition-colors duration-300">
             <span className="text-xs font-black text-[#0B1E36] dark:text-white tracking-wider uppercase">
               TRUSTED BY CLOUD ENGINEERS WORLDWIDE
@@ -544,8 +544,15 @@ export default function LandingPage() {
       </section>
 
       {/* 3. VOICE AI & 5 PILLARS SECTION (Screenshot 2) */}
-      <section id="voice-ai" className="py-20 relative z-10 bg-slate-50 dark:bg-[#070b14] border-t border-slate-200/80 dark:border-slate-800 transition-colors duration-300">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <section id="voice-ai" className="py-20 relative z-10 bg-slate-50 dark:bg-[#070b14] border-t border-slate-200/80 dark:border-slate-800 transition-colors duration-300 overflow-hidden">
+        {/* High-Tech Ambient Cloud Network Background Image Overlay for Voice AI */}
+        <div 
+          className="absolute inset-0 z-0 bg-cover bg-center bg-no-repeat opacity-20 dark:opacity-40 pointer-events-none transition-opacity duration-500"
+          style={{ backgroundImage: `url('/images/hero_bg_cloud_network.png')` }}
+        />
+        <div className="absolute inset-0 z-0 bg-gradient-to-b from-slate-50/90 via-slate-50/60 to-slate-50/90 dark:from-[#070b14]/90 dark:via-[#070b14]/60 dark:to-[#070b14]/90 pointer-events-none" />
+
+        <div className="max-w-[1536px] mx-auto px-4 sm:px-6 lg:px-12 relative z-10">
           
           <div className="mb-8">
             <span className="px-3.5 py-1.5 rounded-full text-xs font-black text-[#FF6B00] bg-orange-100/80 dark:bg-orange-950/60 border border-orange-200 dark:border-orange-900/50 flex items-center gap-1.5 w-fit">
@@ -726,7 +733,7 @@ export default function LandingPage() {
 
       {/* 4. 5-STAGE SYSTEM SECTION (Screenshot 3) */}
       <section id="features" className="py-20 relative z-10 bg-white dark:bg-[#070b14] border-t border-slate-200/80 dark:border-slate-800 transition-colors duration-300">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-[1536px] mx-auto px-4 sm:px-6 lg:px-12">
           
           <div className="text-center max-w-3xl mx-auto mb-14">
             <span className="px-3.5 py-1.5 rounded-full text-xs font-black text-[#FF6B00] bg-orange-100/80 dark:bg-orange-950/60 border border-orange-200 dark:border-orange-900/50 inline-flex items-center gap-1.5 mb-3">
@@ -817,7 +824,7 @@ export default function LandingPage() {
 
       {/* 5. ATS RESUME ANALYZER & STAR REWRITER SECTION */}
       <section id="ats" className="py-20 relative z-10 bg-gradient-to-b from-white via-orange-50/20 to-white dark:from-[#070b14] dark:via-orange-950/10 dark:to-[#070b14] border-t border-slate-200/80 dark:border-slate-800 transition-colors duration-300">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-[1536px] mx-auto px-4 sm:px-6 lg:px-12">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
             
             {/* Left Interactive STAR Formula Rewriter Mock Card */}
@@ -981,7 +988,7 @@ export default function LandingPage() {
 
       {/* 6. 30-DAY GUIDED LEARNING SPRINTS ROADMAP SECTION */}
       <section id="roadmap" className="py-20 relative z-10 bg-white dark:bg-[#070b14] border-t border-slate-200/80 dark:border-slate-800 transition-colors duration-300">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-[1536px] mx-auto px-4 sm:px-6 lg:px-12">
           
           <div className="text-center max-w-3xl mx-auto mb-16">
             <span className="text-xs font-black text-[#FF6B00] uppercase tracking-widest block mb-2">
@@ -1236,7 +1243,7 @@ export default function LandingPage() {
 
       {/* 5. FAQ SECTION */}
       <section id="faq" className="py-20 relative z-10 bg-slate-50 dark:bg-[#070b14] border-t border-slate-200/80 dark:border-slate-800 transition-colors duration-300">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-12">
           <div className="text-center mb-12">
             <span className="text-xs font-black text-[#FF6B00] uppercase tracking-widest">
               FREQUENTLY ASKED QUESTIONS
@@ -1275,7 +1282,7 @@ export default function LandingPage() {
 
       {/* 6. HIGH-IMPACT PRE-FOOTER CTA BANNER */}
       <section className="py-16 relative z-10 bg-[#0B1E36] text-white border-t border-slate-800 overflow-hidden">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+        <div className="max-w-[1536px] mx-auto px-4 sm:px-6 lg:px-12 relative z-10">
           <div className="p-8 sm:p-12 rounded-3xl bg-gradient-to-r from-[#102A4C] via-[#0B1E36] to-[#102A4C] border border-slate-700 shadow-2xl flex flex-col md:flex-row items-center justify-between gap-8 relative overflow-hidden">
             
             <div className="flex flex-col gap-3 max-w-2xl">
@@ -1316,7 +1323,7 @@ export default function LandingPage() {
 
       {/* 7. REDESIGNED CORPORATE SAAS FOOTER */}
       <footer className="bg-[#0B1E36] text-white pt-16 pb-10 border-t border-slate-800 font-sans">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col gap-12">
+        <div className="max-w-[1536px] mx-auto px-4 sm:px-6 lg:px-12 flex flex-col gap-12">
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-10">
             
