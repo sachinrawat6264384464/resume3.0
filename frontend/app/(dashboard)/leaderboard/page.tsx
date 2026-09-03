@@ -15,26 +15,7 @@ export default function LeaderboardPage() {
   const [data, setData] = useState<LeaderboardResponse | null>(null);
   const [activeTab, setActiveTab] = useState<"global" | "weekly" | "improved" | "tech">("global");
   const [selectedTech, setSelectedTech] = useState<string>("AWS");
-  const [isLoading, setIsLoading] = useState(false);
-  const defaultLeaderboard: LeaderboardResponse = {
-    global_ranking: [
-      { rank: 1, candidate_id: "c1", candidate_name: "Aarav Sharma", experience_level: "Senior", target_role: "Senior CloudOps Engineer", xp: 4850, level: 5, streak_days: 12, readiness_score: 92, target_salary_band: "₹25–40 LPA", badges: ["AWS Pro", "K8s Master"] },
-      { rank: 2, candidate_id: "c2", candidate_name: "Vikram Patel", experience_level: "Mid", target_role: "DevOps & SRE Engineer", xp: 3920, level: 4, streak_days: 8, readiness_score: 86, target_salary_band: "₹18–25 LPA", badges: ["Terraform Specialist"] },
-      { rank: 3, candidate_id: "c3", candidate_name: "Neha Gupta", experience_level: "Senior", target_role: "Multi-Cloud Architect", xp: 3410, level: 4, streak_days: 6, readiness_score: 81, target_salary_band: "₹18–25 LPA", badges: ["Linux Kernel"] },
-      { rank: 4, candidate_id: "c4", candidate_name: "Alex Vance", experience_level: "Lead", target_role: "Principal Infrastructure Lead", xp: 2980, level: 3, streak_days: 5, readiness_score: 78, target_salary_band: "₹18–25 LPA", badges: ["Incident Boss"] },
-      { rank: 5, candidate_id: "c5", candidate_name: "Ananya Roy", experience_level: "Junior", target_role: "Cloud Systems Engineer", xp: 2150, level: 2, streak_days: 3, readiness_score: 72, target_salary_band: "₹12–18 LPA", badges: ["Docker Ninja"] }
-    ],
-    weekly_sprint: [
-      { rank: 1, candidate_id: "c1", candidate_name: "Aarav Sharma", experience_level: "Senior", target_role: "Senior CloudOps Engineer", xp: 4850, level: 5, streak_days: 12, readiness_score: 92, target_salary_band: "₹25–40 LPA", badges: ["AWS Pro"] },
-      { rank: 2, candidate_id: "c3", candidate_name: "Neha Gupta", experience_level: "Senior", target_role: "Multi-Cloud Architect", xp: 3410, level: 4, streak_days: 6, readiness_score: 81, target_salary_band: "₹18–25 LPA", badges: ["Linux Kernel"] },
-      { rank: 3, candidate_id: "c2", candidate_name: "Vikram Patel", experience_level: "Mid", target_role: "DevOps & SRE Engineer", xp: 3920, level: 4, streak_days: 8, readiness_score: 86, target_salary_band: "₹18–25 LPA", badges: ["Terraform Specialist"] }
-    ],
-    most_improved: [
-      { rank: 1, candidate_id: "c5", candidate_name: "Ananya Roy", experience_level: "Junior", target_role: "Cloud Systems Engineer", xp: 2150, level: 2, streak_days: 3, readiness_score: 72, target_salary_band: "₹12–18 LPA", badges: ["Docker Ninja"] },
-      { rank: 2, candidate_id: "c2", candidate_name: "Vikram Patel", experience_level: "Mid", target_role: "DevOps & SRE Engineer", xp: 3920, level: 4, streak_days: 8, readiness_score: 86, target_salary_band: "₹18–25 LPA", badges: ["Terraform Specialist"] }
-    ],
-    technology_leaderboards: {}
-  };
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     async function loadLeaderboard() {
@@ -54,22 +35,13 @@ export default function LeaderboardPage() {
     loadLeaderboard();
   }, []);
 
-  if (isLoading) {
-    return (
-      <div className="flex-1 flex items-center justify-center min-h-[50vh]">
-        <Loader2 className="w-8 h-8 text-[#FF6B00] animate-spin" />
-      </div>
-    );
-  }
-
-  const activeData = data || defaultLeaderboard;
-
   const entriesToDisplay: LeaderboardEntry[] = (() => {
-    if (activeTab === "global") return activeData.global_ranking || [];
-    if (activeTab === "weekly") return activeData.weekly_sprint || activeData.global_ranking || [];
-    if (activeTab === "improved") return activeData.most_improved || activeData.global_ranking || [];
-    if (activeTab === "tech") return activeData.technology_leaderboards?.[selectedTech] || activeData.global_ranking || [];
-    return activeData.global_ranking || [];
+    if (!data) return [];
+    if (activeTab === "global") return data.global_ranking || [];
+    if (activeTab === "weekly") return data.weekly_sprint || data.global_ranking || [];
+    if (activeTab === "improved") return data.most_improved || data.global_ranking || [];
+    if (activeTab === "tech") return data.technology_leaderboards?.[selectedTech] || data.global_ranking || [];
+    return data.global_ranking || [];
   })();
 
   return (
@@ -153,7 +125,17 @@ export default function LeaderboardPage() {
         </div>
 
         <div className="flex flex-col gap-3">
-          {entriesToDisplay.map((entry, idx) => {
+          {(isLoading || !data) ? (
+            [1, 2, 3, 4, 5].map((i) => (
+              <div key={i} className="h-16 w-full rounded-2xl bg-slate-100 dark:bg-slate-800/50 animate-pulse border border-slate-200/60 dark:border-slate-800/60 flex items-center justify-between px-6">
+                <div className="w-7 h-7 rounded-full bg-slate-200 dark:bg-slate-700 animate-pulse" />
+                <div className="h-4 w-32 bg-slate-200 dark:bg-slate-700 rounded-lg animate-pulse" />
+                <div className="h-4 w-20 bg-slate-200 dark:bg-slate-700 rounded-lg animate-pulse" />
+                <div className="h-4 w-16 bg-slate-200 dark:bg-slate-700 rounded-lg animate-pulse" />
+              </div>
+            ))
+          ) : entriesToDisplay.length > 0 ? (
+            entriesToDisplay.map((entry, idx) => {
             const rank = idx + 1;
             const isTop3 = rank <= 3;
             const isMe = user && (
@@ -225,7 +207,12 @@ export default function LeaderboardPage() {
                 </div>
               </motion.div>
             );
-          })}
+          })
+        ) : (
+          <div className="p-8 text-center text-xs font-bold text-slate-400">
+            No candidate rankings recorded yet in database
+          </div>
+        )}
         </div>
       </div>
     </motion.div>
