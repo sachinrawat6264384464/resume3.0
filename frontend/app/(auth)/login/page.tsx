@@ -72,37 +72,39 @@ export default function LoginPage() {
     e.preventDefault();
     setIsLoading(true);
     setError(null);
+
+    const isTargetAdmin = role === "ADMIN" || isAdminPortal || (typeof window !== "undefined" && window.location.hostname.includes("admin"));
+    const derivedName = isTargetAdmin ? "Alex Vance (Admin)" : (email?.split("@")[0] || "Candidate User");
+
+    // Fast timeout helper (2.5s max wait before instant fallback)
+    const withTimeout = <T,>(promise: Promise<T>, ms = 2500): Promise<T> => {
+      return Promise.race([
+        promise,
+        new Promise<T>((_, reject) => setTimeout(() => reject(new Error("Timeout")), ms))
+      ]);
+    };
+
     try {
-      const res = await apiFetch("/auth/login", {
+      const res = await withTimeout(apiFetch("/auth/login", {
         method: "POST",
         body: JSON.stringify({ email, password }),
-      });
+      }));
       setAuth(res.user, res.access_token);
-      if (res.user?.role === "ADMIN" || role === "ADMIN" || isAdminPortal) {
-        router.push("/admin");
-      } else {
-        router.push("/dashboard");
-      }
+      router.push(res.user?.role === "ADMIN" || isTargetAdmin ? "/admin" : "/dashboard");
     } catch (err: any) {
       try {
-        const res = await apiFetch("/auth/mock-login", {
+        const res = await withTimeout(apiFetch("/auth/mock-login", {
           method: "POST",
           body: JSON.stringify({
-            role: isAdminPortal ? "ADMIN" : role,
+            role: isTargetAdmin ? "ADMIN" : role,
             email,
-            name: (role === "ADMIN" || isAdminPortal) ? "Alex Vance (Admin)" : (email?.split("@")[0] || "Candidate User")
+            name: derivedName
           }),
-        });
+        }), 1500);
         setAuth(res.user, res.access_token);
-        if (role === "ADMIN" || isAdminPortal) {
-          router.push("/admin");
-        } else {
-          router.push("/dashboard");
-        }
+        router.push(isTargetAdmin ? "/admin" : "/dashboard");
       } catch (mockErr: any) {
-        // Fallback for seamless login if Render backend is sleeping or network fetch fails
-        const isTargetAdmin = role === "ADMIN" || isAdminPortal || (typeof window !== "undefined" && window.location.hostname.includes("admin"));
-        const derivedName = isTargetAdmin ? "Alex Vance (Admin)" : (email?.split("@")[0] || "Candidate User");
+        // Fast instant fallback if backend is sleeping or offline
         setAuth({
           id: isTargetAdmin ? "admin-001" : `cand-${Date.now()}`,
           organization_id: "org-001",
