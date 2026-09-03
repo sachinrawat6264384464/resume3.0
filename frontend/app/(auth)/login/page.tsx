@@ -219,63 +219,61 @@ export default function LoginPage() {
                 {isAdminPortal ? "CloudOps AI Assessment OS — Administrator Microservice Portal" : "Trusted by Cloud Engineers & DevOps Professionals"}
               </span>
 
-              {!isAdminPortal && (
-                <div className="flex items-center justify-between gap-3 overflow-hidden py-0.5 mt-1">
-                  {/* AWS Logo */}
-                  <div className="flex items-center gap-1 shrink-0">
-                    <svg className="h-4 w-auto" viewBox="0 0 50 30" fill="none">
-                      <path d="M16.7 15.7c0-2.1 1.2-3.1 3.2-3.1 1.5 0 2.8.6 3.6 1.6v-1.3h3.2v10.4h-3.2v-1.4c-.9 1.1-2.2 1.7-3.7 1.7-2 0-3.1-1.1-3.1-3.2 0-2.9 2.9-3.8 6.8-3.8v-.3c0-1-.6-1.5-1.9-1.5-.9 0-1.9.4-2.5.8l-.7-2.2zm3.6 5.3c1.2 0 2.2-.6 2.7-1.5v-2.4c-2 0-3.9.4-3.9 1.9 0 1.3.5 2 1.2 2zM28.4 23.3l-3.3-11.8h3.3l2.2 8.7 2.3-8.7h3.1l2.3 8.7 2.2-8.7h3.3L40.5 23.3h-3.1l-2.4-8.8-2.4 8.8h-4.2zM45.5 21.2c.8.6 1.9.9 3 .9 1.2 0 1.9-.4 1.9-1.1 0-.7-.7-1.1-2.3-1.5-2.2-.6-3.4-1.4-3.4-3.2 0-2.2 1.9-3.5 4.5-3.5 1.4 0 2.6.4 3.4.9l-.8 2.2c-.7-.5-1.6-.7-2.6-.7-1.1 0-1.7.4-1.7 1 0 .7.7 1 2.2 1.4 2.3.6 3.5 1.4 3.5 3.3 0 2.3-1.9 3.6-4.9 3.6-1.6 0-3.1-.4-4-1l.7-2.3z" fill="#FF9900"/>
-                      <path d="M12.5 26.5c11 4.5 26.5 4.5 36.5-1.5" stroke="#FF9900" strokeWidth="3" strokeLinecap="round"/>
-                      <path d="M46 22l4.5 3.5-5.5 2" stroke="#FF9900" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"/>
-                    </svg>
-                    <span className="text-xs font-black text-[#232F3E] dark:text-white">aws</span>
-                  </div>
-
-                  {/* Google Cloud Logo */}
-                  <div className="flex items-center gap-1 shrink-0">
-                    <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24">
-                      <path fill="#EA4335" d="M12 5c1.6 0 3 .6 4.1 1.6l3.1-3.1C17.3 1.7 14.8 1 12 1 7.5 1 3.7 3.6 1.8 7.3l3.7 2.9C6.4 7.5 8.9 5 12 5z"/>
-                      <path fill="#4285F4" d="M23.5 12.3c0-.8-.1-1.6-.2-2.3H12v4.5h6.5c-.3 1.5-1.1 2.8-2.4 3.7l3.7 2.9c2.2-2 3.7-5 3.7-8.8z"/>
-                      <path fill="#FBBC05" d="M5.5 14.8c-.3-.8-.4-1.8-.4-2.8s.1-2 .4-2.8L1.8 6.3C.7 8.6 0 10.2 0 12s.7 3.4 1.8 5.7l3.7-2.9z"/>
-                      <path fill="#34A853" d="M12 23c3.2 0 6-1.1 8-3l-3.7-2.9c-1.1.7-2.5 1.2-4.3 1.2-3.1 0-5.6-2.5-6.5-5.3L1.8 16C3.7 19.7 7.5 23 12 23z"/>
-                    </svg>
-                    <span className="text-xs font-bold text-slate-800 dark:text-slate-200">Google Cloud</span>
-                  </div>
-
-                  {/* Microsoft Azure Logo */}
-                  <div className="flex items-center gap-1 shrink-0">
-                    <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none">
-                      <path d="M13.05 2L3 17.15h5.4L13.05 2z" fill="#0089D6"/>
-                      <path d="M13.7 3.75L9.6 17.15H21L13.7 3.75z" fill="#0072C6"/>
-                    </svg>
-                    <span className="text-xs font-extrabold text-[#0072C6]">Azure</span>
-                  </div>
-
-                  {/* Docker Logo */}
-                  <div className="flex items-center gap-1 shrink-0">
-                    <svg className="w-5 h-4 shrink-0" viewBox="0 0 24 24" fill="#0db7ed">
-                      <path d="M13.98 11.08h1.83v1.78h-1.83zm-2.42 0h1.83v1.78h-1.83zm-2.41 0h1.83v1.78H9.15zm-2.42 0h1.83v1.78H6.73zm4.84-2.38h1.83v1.78h-1.83zm-2.42 0h1.83v1.78H9.15zm-2.42 0h1.83v1.78H6.73zm4.84-2.38h1.83v1.78h-1.83zM2.4 14.05c-.32 1.34.2 2.76 1.35 3.58 2.2 1.58 6.64 1.87 9.87 1.87 4.7 0 9.07-1.12 10.38-4.22.14-.34.05-.72-.22-.96a.8.8 0 0 0-.6-.18c-1.34.18-2.67.06-3.92-.35a3.8 3.8 0 0 1-2.03-1.63c-.35-.58-.5-1.25-.43-1.92.05-.4-.2-.77-.59-.87-.39-.1-.8.07-1 .4-.45.74-1.17 1.25-2.02 1.44a5.3 5.3 0 0 1-3.64-.53c-.36-.2-.8-.13-1.07.18-.28.32-.32.78-.1 1.15.5.86.67 1.88.48 2.87z"/>
-                    </svg>
-                    <span className="text-xs font-black text-[#0db7ed]">docker</span>
-                  </div>
-
-                  {/* Kubernetes Logo */}
-                  <div className="flex items-center gap-1 shrink-0">
-                    <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="#326ce5">
-                      <path d="M12 2L3 7v10l9 5 9-5V7l-9-5zm0 2.3l6.7 3.7v7.4L12 19.1 5.3 15.4V8L12 4.3z"/>
-                    </svg>
-                    <span className="text-xs font-extrabold text-[#326ce5]">kubernetes</span>
-                  </div>
-
-                  {/* Terraform Logo */}
-                  <div className="flex items-center gap-1 shrink-0">
-                    <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="#844FBA">
-                      <path d="M1.5 2v6.5l6 3.5V5.5l-6-3.5zm7 4v6.5l6 3.5V9.5l-6-3.5zm0 7.5v6.5l6 3.5V17l-6-3.5zm7-7.5v6.5l6 3.5V5.5l-6-3.5z"/>
-                    </svg>
-                    <span className="text-xs font-black text-slate-900 dark:text-white">Terraform</span>
-                  </div>
+              <div className="flex items-center justify-between gap-3 overflow-hidden py-0.5 mt-1">
+                {/* AWS Logo */}
+                <div className="flex items-center gap-1 shrink-0">
+                  <svg className="h-4 w-auto" viewBox="0 0 50 30" fill="none">
+                    <path d="M16.7 15.7c0-2.1 1.2-3.1 3.2-3.1 1.5 0 2.8.6 3.6 1.6v-1.3h3.2v10.4h-3.2v-1.4c-.9 1.1-2.2 1.7-3.7 1.7-2 0-3.1-1.1-3.1-3.2 0-2.9 2.9-3.8 6.8-3.8v-.3c0-1-.6-1.5-1.9-1.5-.9 0-1.9.4-2.5.8l-.7-2.2zm3.6 5.3c1.2 0 2.2-.6 2.7-1.5v-2.4c-2 0-3.9.4-3.9 1.9 0 1.3.5 2 1.2 2zM28.4 23.3l-3.3-11.8h3.3l2.2 8.7 2.3-8.7h3.1l2.3 8.7 2.2-8.7h3.3L40.5 23.3h-3.1l-2.4-8.8-2.4 8.8h-4.2zM45.5 21.2c.8.6 1.9.9 3 .9 1.2 0 1.9-.4 1.9-1.1 0-.7-.7-1.1-2.3-1.5-2.2-.6-3.4-1.4-3.4-3.2 0-2.2 1.9-3.5 4.5-3.5 1.4 0 2.6.4 3.4.9l-.8 2.2c-.7-.5-1.6-.7-2.6-.7-1.1 0-1.7.4-1.7 1 0 .7.7 1 2.2 1.4 2.3.6 3.5 1.4 3.5 3.3 0 2.3-1.9 3.6-4.9 3.6-1.6 0-3.1-.4-4-1l.7-2.3z" fill="#FF9900"/>
+                    <path d="M12.5 26.5c11 4.5 26.5 4.5 36.5-1.5" stroke="#FF9900" strokeWidth="3" strokeLinecap="round"/>
+                    <path d="M46 22l4.5 3.5-5.5 2" stroke="#FF9900" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                  <span className="text-xs font-black text-[#232F3E] dark:text-white">aws</span>
                 </div>
-              )}
+
+                {/* Google Cloud Logo */}
+                <div className="flex items-center gap-1 shrink-0">
+                  <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24">
+                    <path fill="#EA4335" d="M12 5c1.6 0 3 .6 4.1 1.6l3.1-3.1C17.3 1.7 14.8 1 12 1 7.5 1 3.7 3.6 1.8 7.3l3.7 2.9C6.4 7.5 8.9 5 12 5z"/>
+                    <path fill="#4285F4" d="M23.5 12.3c0-.8-.1-1.6-.2-2.3H12v4.5h6.5c-.3 1.5-1.1 2.8-2.4 3.7l3.7 2.9c2.2-2 3.7-5 3.7-8.8z"/>
+                    <path fill="#FBBC05" d="M5.5 14.8c-.3-.8-.4-1.8-.4-2.8s.1-2 .4-2.8L1.8 6.3C.7 8.6 0 10.2 0 12s.7 3.4 1.8 5.7l3.7-2.9z"/>
+                    <path fill="#34A853" d="M12 23c3.2 0 6-1.1 8-3l-3.7-2.9c-1.1.7-2.5 1.2-4.3 1.2-3.1 0-5.6-2.5-6.5-5.3L1.8 16C3.7 19.7 7.5 23 12 23z"/>
+                  </svg>
+                  <span className="text-xs font-bold text-slate-800 dark:text-slate-200">Google Cloud</span>
+                </div>
+
+                {/* Microsoft Azure Logo */}
+                <div className="flex items-center gap-1 shrink-0">
+                  <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none">
+                    <path d="M13.05 2L3 17.15h5.4L13.05 2z" fill="#0089D6"/>
+                    <path d="M13.7 3.75L9.6 17.15H21L13.7 3.75z" fill="#0072C6"/>
+                  </svg>
+                  <span className="text-xs font-extrabold text-[#0072C6]">Azure</span>
+                </div>
+
+                {/* Docker Logo */}
+                <div className="flex items-center gap-1 shrink-0">
+                  <svg className="w-5 h-4 shrink-0" viewBox="0 0 24 24" fill="#0db7ed">
+                    <path d="M13.98 11.08h1.83v1.78h-1.83zm-2.42 0h1.83v1.78h-1.83zm-2.41 0h1.83v1.78H9.15zm-2.42 0h1.83v1.78H6.73zm4.84-2.38h1.83v1.78h-1.83zm-2.42 0h1.83v1.78H9.15zm-2.42 0h1.83v1.78H6.73zm4.84-2.38h1.83v1.78h-1.83zM2.4 14.05c-.32 1.34.2 2.76 1.35 3.58 2.2 1.58 6.64 1.87 9.87 1.87 4.7 0 9.07-1.12 10.38-4.22.14-.34.05-.72-.22-.96a.8.8 0 0 0-.6-.18c-1.34.18-2.67.06-3.92-.35a3.8 3.8 0 0 1-2.03-1.63c-.35-.58-.5-1.25-.43-1.92.05-.4-.2-.77-.59-.87-.39-.1-.8.07-1 .4-.45.74-1.17 1.25-2.02 1.44a5.3 5.3 0 0 1-3.64-.53c-.36-.2-.8-.13-1.07.18-.28.32-.32.78-.1 1.15.5.86.67 1.88.48 2.87z"/>
+                  </svg>
+                  <span className="text-xs font-black text-[#0db7ed]">docker</span>
+                </div>
+
+                {/* Kubernetes Logo */}
+                <div className="flex items-center gap-1 shrink-0">
+                  <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="#326ce5">
+                    <path d="M12 2L3 7v10l9 5 9-5V7l-9-5zm0 2.3l6.7 3.7v7.4L12 19.1 5.3 15.4V8L12 4.3z"/>
+                  </svg>
+                  <span className="text-xs font-extrabold text-[#326ce5]">kubernetes</span>
+                </div>
+
+                {/* Terraform Logo */}
+                <div className="flex items-center gap-1 shrink-0">
+                  <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="#844FBA">
+                    <path d="M1.5 2v6.5l6 3.5V5.5l-6-3.5zm7 4v6.5l6 3.5V9.5l-6-3.5zm0 7.5v6.5l6 3.5V17l-6-3.5zm7-7.5v6.5l6 3.5V5.5l-6-3.5z"/>
+                  </svg>
+                  <span className="text-xs font-black text-slate-900 dark:text-white">Terraform</span>
+                </div>
+              </div>
             </div>
           </div>
 
