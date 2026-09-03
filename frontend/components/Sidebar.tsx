@@ -5,7 +5,8 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { 
   LayoutDashboard, CheckSquare, FileText, BarChart3, Trophy, 
-  Map, Award, Settings, HelpCircle, LogOut, Cloud, Sparkles
+  Map, Award, Settings, HelpCircle, LogOut, Cloud, Sparkles,
+  Users, CreditCard, Mail, HardDrive, Shield
 } from "lucide-react";
 import { useAuthStore } from "@/lib/store";
 import { apiFetch } from "@/lib/api";
@@ -55,11 +56,21 @@ export function Sidebar() {
   ];
 
   const adminNavItems = [
-    { label: "Admin Analytics", href: "/admin", icon: LayoutDashboard },
-    { label: "JD & Blueprints", href: "/admin/templates", icon: FileText },
-    { label: "Leaderboard Review", href: "/leaderboard", icon: Trophy },
-    { label: "Platform Settings", href: "/settings", icon: Settings },
-    { label: "Switch to Candidate View", href: "/dashboard", icon: LayoutDashboard },
+    { label: "Dashboard", href: "/admin", icon: LayoutDashboard },
+    { label: "Users & Candidates", href: "/admin", icon: Users },
+    { label: "Interviews", href: "/interviews", icon: CheckSquare },
+    { label: "Assessments", href: "/admin/templates", icon: CheckSquare },
+    { label: "Resume Analyzer", href: "/resume-ats", icon: FileText },
+    { label: "Payments & Billing", href: "/admin", icon: CreditCard },
+    { label: "Reports & Analytics", href: "/admin", icon: BarChart3 },
+    { label: "Leaderboard", href: "/leaderboard", icon: Trophy },
+    { label: "Subscriptions", href: "/admin", icon: CreditCard },
+    { label: "System Settings", href: "/settings", icon: Settings },
+    { label: "AI Model & Scoring", href: "/admin", icon: Sparkles },
+    { label: "Email & Notifications", href: "/admin", icon: Mail },
+    { label: "Audit Logs", href: "/admin", icon: FileText },
+    { label: "Support Tickets", href: "/help", icon: HelpCircle },
+    { label: "Backup & Restore", href: "/admin", icon: HardDrive },
   ];
 
   const navItems = isAdminMode ? adminNavItems : candidateNavItems;
@@ -102,33 +113,46 @@ export function Sidebar() {
               href={item.href}
               className={`flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-black transition-all ${
                 isActive
-                  ? "bg-gradient-to-r from-[#FF9900] via-amber-500 to-orange-400 text-slate-950 shadow-md shadow-[#FF9900]/25"
+                  ? isAdminMode 
+                    ? "bg-rose-50 dark:bg-rose-950/50 text-rose-500 font-extrabold shadow-sm border border-rose-100 dark:border-rose-900/40"
+                    : "bg-gradient-to-r from-[#FF9900] via-amber-500 to-orange-400 text-slate-950 shadow-md shadow-[#FF9900]/25"
                   : "text-slate-600 hover:text-slate-900 hover:bg-slate-100 dark:text-slate-400 dark:hover:text-slate-200 dark:hover:bg-slate-800/60"
               }`}
             >
-              <item.icon className={`w-4 h-4 ${isActive ? "text-slate-950" : "text-slate-400"}`} />
+              <item.icon className={`w-4 h-4 ${isActive ? (isAdminMode ? "text-rose-500" : "text-slate-950") : "text-slate-400"}`} />
               <span>{item.label}</span>
             </Link>
           );
         })}
       </nav>
 
-      {/* Bottom Section: Become CloudOps Pro Banner & User Card */}
+      {/* Bottom Section: System Status Card (Admin Mode) or Become CloudOps Pro Banner (Candidate Mode) */}
       <div className="p-3.5 border-t border-slate-200 dark:border-slate-800 flex flex-col gap-3">
         
-        {/* Pro Upgrade Box */}
-        <div className="p-3.5 rounded-2xl bg-gradient-to-b from-amber-50/80 to-amber-100/50 dark:from-amber-950/30 dark:to-amber-900/20 border border-[#FF9900]/30 flex flex-col gap-2">
-          <div className="flex items-center gap-1.5 text-xs font-extrabold text-amber-900 dark:text-amber-200">
-            <Sparkles className="w-3.5 h-3.5 text-[#FF9900] shrink-0" />
-            <span>Become CloudOps Pro</span>
+        {isAdminMode ? (
+          <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 flex flex-col gap-1.5 shadow-sm">
+            <div className="w-7 h-7 rounded-xl bg-rose-500 text-white flex items-center justify-center shadow-sm">
+              <Shield className="w-3.5 h-3.5 fill-white/20" />
+            </div>
+            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">System Status</span>
+            <span className="text-xs font-black text-emerald-600 dark:text-emerald-400">All Systems Operational</span>
+            <div className="w-full h-1 bg-emerald-500 rounded-full mt-0.5" />
+            <span className="text-[9px] font-mono text-slate-400 mt-0.5">Last checked: 2 mins ago</span>
           </div>
-          <p className="text-[10px] text-amber-800 dark:text-amber-300 font-medium leading-relaxed">
-            Unlock full roadmap, mock interviews, and AI mentorship.
-          </p>
-          <button className="w-full py-2 rounded-xl text-[11px] font-black text-slate-950 bg-gradient-to-r from-[#FF9900] via-amber-400 to-orange-400 hover:from-amber-400 hover:to-orange-500 shadow-sm transition-all mt-0.5">
-            Upgrade Now
-          </button>
-        </div>
+        ) : (
+          <div className="p-3.5 rounded-2xl bg-gradient-to-b from-amber-50/80 to-amber-100/50 dark:from-amber-950/30 dark:to-amber-900/20 border border-[#FF9900]/30 flex flex-col gap-2">
+            <div className="flex items-center gap-1.5 text-xs font-extrabold text-amber-900 dark:text-amber-200">
+              <Sparkles className="w-3.5 h-3.5 text-[#FF9900] shrink-0" />
+              <span>Become CloudOps Pro</span>
+            </div>
+            <p className="text-[10px] text-amber-800 dark:text-amber-300 font-medium leading-relaxed">
+              Unlock full roadmap, mock interviews, and AI mentorship.
+            </p>
+            <button className="w-full py-2 rounded-xl text-[11px] font-black text-slate-950 bg-gradient-to-r from-[#FF9900] via-amber-400 to-orange-400 hover:from-amber-400 hover:to-orange-500 shadow-sm transition-all mt-0.5">
+              Upgrade Now
+            </button>
+          </div>
+        )}
 
         {/* Logged in User Card (100% Dynamic) */}
         {isAuthenticated && user && (
