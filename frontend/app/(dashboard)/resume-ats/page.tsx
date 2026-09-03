@@ -129,7 +129,7 @@ CERTIFICATIONS
     } catch (err: any) {
       const msg = err.message || "";
       if (msg.includes("Failed to fetch") || msg.includes("NetworkError") || msg.includes("timeout")) {
-        setAnalysisError("⚠️ Server is waking up (Render cold-start). Please wait 30 seconds and try again — the analysis will work on retry.");
+        setAnalysisError("⚠️ Unable to connect to backend server. Please check your network or local backend server and retry.");
       } else if (msg.includes("401") || msg.includes("Unauthorized")) {
         setAnalysisError("⚠️ Session expired. Please sign out and sign back in, then retry the analysis.");
       } else {
@@ -385,7 +385,7 @@ CERTIFICATIONS
             {isLoading ? (
               <>
                 <Loader2 className="w-4 h-4 animate-spin" />
-                <span>Running AI OCR & ATS Benchmark Analysis... (Server may be waking up)</span>
+                <span>Running AI OCR & ATS Benchmark Analysis...</span>
               </>
             ) : (
               <>

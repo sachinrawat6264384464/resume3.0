@@ -1,8 +1,5 @@
 function getApiBase(): string {
-  if (typeof window !== "undefined" && (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1")) {
-    return process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1";
-  }
-  return process.env.NEXT_PUBLIC_API_URL || "https://resume3-0.onrender.com/api/v1";
+  return process.env.NEXT_PUBLIC_API_URL || "https://handcuff-dweller-crimp.ngrok-free.dev/api/v1";
 }
 
 export async function apiFetch<T = any>(
@@ -14,6 +11,8 @@ export async function apiFetch<T = any>(
   const headers: Record<string, string> = {
     ...(options.headers as Record<string, string>),
   };
+
+  headers["ngrok-skip-browser-warning"] = "true";
 
   if (token) {
     headers["Authorization"] = `Bearer ${token}`;

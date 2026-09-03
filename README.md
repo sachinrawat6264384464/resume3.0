@@ -17,8 +17,8 @@ Architected with a dual-microservice frontend structure deployed on Vercel and a
 
 * **🎓 Candidate Microservice Portal**: [https://resume3-0.vercel.app](https://resume3-0.vercel.app)
 * **🛡️ Dedicated Admin Suite**: [https://resume3-admin.vercel.app](https://resume3-admin.vercel.app)
-* **⚡ FastAPI Backend Gateway**: [https://resume3-0.onrender.com/api/v1](https://resume3-0.onrender.com/api/v1)
-* **📚 Interactive Swagger API Docs**: [https://resume3-0.onrender.com/docs](https://resume3-0.onrender.com/docs)
+* **⚡ FastAPI Backend Gateway**: [https://handcuff-dweller-crimp.ngrok-free.dev/api/v1](https://handcuff-dweller-crimp.ngrok-free.dev/api/v1)
+* **📚 Interactive Swagger API Docs**: [https://handcuff-dweller-crimp.ngrok-free.dev/docs](https://handcuff-dweller-crimp.ngrok-free.dev/docs)
 
 ---
 

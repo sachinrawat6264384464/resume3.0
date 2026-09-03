@@ -73,3 +73,6 @@ backend/storage/recordings/*
 Thumbs.db
 .vscode/
 .idea/
+backend/logs/
+*.log
+

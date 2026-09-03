@@ -68,7 +68,7 @@ app.add_middleware(
         "http://127.0.0.1:3001",
         "http://127.0.0.1:3006"
     ],
-    allow_origin_regex=r"https://.*\.vercel\.app|http://(localhost|127\.0\.0\.1):[0-9]+",
+    allow_origin_regex=r"https://.*\.vercel\.app|https://.*\.ngrok-free\.app|https://.*\.ngrok\.io|http://(localhost|127\.0\.0\.1):[0-9]+",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -76,6 +76,7 @@ app.add_middleware(
 
 # API Performance & Timing Telemetry Middleware
 import time
+from app.core.telemetry_logger import log_api_telemetry
 
 @app.middleware("http")
 async def add_performance_telemetry_middleware(request: Request, call_next):
@@ -84,10 +85,14 @@ async def add_performance_telemetry_middleware(request: Request, call_next):
     process_time_ms = round((time.perf_counter() - start_time) * 1000, 2)
     response.headers["X-Process-Time"] = f"{process_time_ms}ms"
 
+    # Store telemetry entry to persistent log file
+    client_ip = request.client.host if request.client else "127.0.0.1"
+    log_api_telemetry(request.method, request.url.path, response.status_code, process_time_ms, client_ip)
+
     if process_time_ms > 300:
-        print(f"⚠️ [SLOW API WARNING] {request.method} {request.url.path} | Status: {response.status_code} | Time: {process_time_ms}ms")
+        print(f"[SLOW API WARNING] {request.method} {request.url.path} | Status: {response.status_code} | Time: {process_time_ms}ms")
     else:
-        print(f"⚡ [API PERFORMANCE] {request.method} {request.url.path} | Status: {response.status_code} | Time: {process_time_ms}ms")
+        print(f"[API PERFORMANCE] {request.method} {request.url.path} | Status: {response.status_code} | Time: {process_time_ms}ms")
 
     return response
 

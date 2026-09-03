@@ -18,8 +18,8 @@ Designed with a dual-microservice frontend deployment architecture, the platform
 | :--- | :--- | :--- |
 | **🎓 Candidate Portal** | [https://resume3-0.vercel.app](https://resume3-0.vercel.app) | Candidate Dashboard, 5-Stage Voice Interview UI, ATS Resume Analyzer, Career Roadmap, Leaderboard, Certificates, Help Support |
 | **🛡️ Dedicated Admin Suite** | [https://resume3-admin.vercel.app](https://resume3-admin.vercel.app) | Administrator Microservice, Candidate Assessment Analytics, AI Model Prompt Control, 90-Day Retention Purge, Support Tickets Real-Time Inbox |
-| **⚡ FastAPI Backend Engine** | [https://resume3-0.onrender.com/api/v1](https://resume3-0.onrender.com/api/v1) | FastAPI Async Microservice Gateway with CORS `allow_origin_regex` for Vercel microservices, SQLAlchemy 2.0 Async ORM |
-| **📚 Interactive Swagger Docs** | [https://resume3-0.onrender.com/docs](https://resume3-0.onrender.com/docs) | Open API Documentation & Endpoint Tester |
+| **⚡ FastAPI Backend Engine** | [https://handcuff-dweller-crimp.ngrok-free.dev/api/v1](https://handcuff-dweller-crimp.ngrok-free.dev/api/v1) | FastAPI Async Microservice Gateway with CORS `allow_origin_regex` for Vercel microservices, SQLAlchemy 2.0 Async ORM |
+| **📚 Interactive Swagger Docs** | [https://handcuff-dweller-crimp.ngrok-free.dev/docs](https://handcuff-dweller-crimp.ngrok-free.dev/docs) | Open API Documentation & Endpoint Tester |
 
 ---
 
@@ -30,7 +30,7 @@ graph TD
     CandUser["👤 Candidate"] -->|1. Candidate Web App| CandFE["🌐 Candidate Microservice (resume3-0.vercel.app)"]
     AdminUser["🛡️ Administrator"] -->|1. Admin Web App| AdminFE["🌐 Admin Microservice (resume3-admin.vercel.app)"]
     
-    CandFE -->|2. REST API Requests| API["⚡ FastAPI Backend Engine (resume3-0.onrender.com)"]
+    CandFE -->|2. REST API Requests| API["⚡ FastAPI Backend Engine (ngrok Tunnel / Local)"]
     AdminFE -->|2. Admin API Requests| API
     
     API -->|3. Save Users, Scores & Support Tickets| NeonDB[("🐘 Neon Cloud PostgreSQL / SQLite DB")]

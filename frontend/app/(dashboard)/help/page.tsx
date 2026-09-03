@@ -121,7 +121,7 @@ export default function HelpPage() {
     } catch (err: any) {
       const errMsg = err.message || "";
       if (errMsg.includes("Failed to fetch") || errMsg.includes("NetworkError") || errMsg.includes("timeout")) {
-        setSubmitMsg("⚠️ Server is waking up (cold-start). Please wait 30 seconds and try again.");
+        setSubmitMsg("⚠️ Unable to connect to backend server. Please check your network or backend server and retry.");
       } else if (errMsg.includes("401") || errMsg.includes("Unauthorized")) {
         setSubmitMsg("⚠️ Session expired. Please sign out and sign back in, then retry.");
       } else {
