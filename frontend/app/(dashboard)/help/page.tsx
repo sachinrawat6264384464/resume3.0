@@ -520,119 +520,186 @@ export default function HelpPage() {
   // 🎓 CANDIDATE VIEW (Form Submit + My Tickets)
   // ==========================================
   return (
-    <div className="max-w-[900px] mx-auto flex flex-col gap-6 pb-16 text-slate-900 dark:text-slate-100 font-sans">
+    <div className="max-w-[1240px] mx-auto flex flex-col gap-8 pb-16 text-slate-900 dark:text-slate-100 font-sans">
       
-      <div className="flex flex-col gap-1">
-        <h1 className="text-2xl font-black tracking-tight text-slate-900 dark:text-white flex items-center gap-2">
-          <HelpCircle className="w-6 h-6 text-blue-600" />
-          Help & Engineering Support
-        </h1>
-        <p className="text-xs text-slate-500 font-medium">
-          Have an issue during a voice interview or ATS audit? Submit a ticket to our DevOps support team.
-        </p>
+      {/* HEADER BANNER */}
+      <div className="p-6 sm:p-8 rounded-[32px] bg-gradient-to-r from-[#232F3E] via-[#1c2532] to-[#232F3E] text-white border border-[#FF9900]/30 shadow-2xl relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-6">
+        <div className="flex flex-col gap-3 z-10 max-w-2xl">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#FF9900]/10 border border-[#FF9900]/30 text-[#FF9900] text-xs font-black w-fit">
+            <HelpCircle className="w-3.5 h-3.5" />
+            <span>HELP & ENGINEERING SUPPORT • DEVOPS TRIAGE</span>
+          </div>
+
+          <h1 className="text-3xl sm:text-4xl font-black tracking-tight text-white leading-tight">
+            DevOps Support <span className="text-[#FF9900]">& Technical Helpdesk</span>
+          </h1>
+
+          <p className="text-xs sm:text-sm text-slate-300 font-medium leading-relaxed">
+            Have an issue during a voice interview, microphone check, or ATS audit? Submit a ticket directly to our DevOps engineering team for fast resolution.
+          </p>
+        </div>
+
+        <div className="flex items-center gap-4 bg-slate-900/80 p-4 rounded-2xl border border-slate-800 shrink-0 z-10">
+          <div className="w-12 h-12 rounded-2xl bg-[#FF9900]/10 border border-[#FF9900]/30 flex items-center justify-center text-[#FF9900]">
+            <MessageSquare className="w-6 h-6" />
+          </div>
+          <div className="flex flex-col">
+            <span className="text-xs font-mono font-bold text-slate-400">TICKETS SUBMITTED</span>
+            <span className="text-xl font-black text-white">
+              {candidateTickets.length} {candidateTickets.length === 1 ? "Ticket" : "Tickets"}
+            </span>
+          </div>
+        </div>
       </div>
 
-      <form onSubmit={handleCandidateSubmit} className="p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col gap-4">
-        <h3 className="text-sm font-black text-slate-900 dark:text-white">Submit New Support Ticket</h3>
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
 
-        {submitMsg && (
-          <div className="p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 text-xs font-bold text-emerald-700 dark:text-emerald-300">
-            {submitMsg}
-          </div>
-        )}
+        {/* LEFT COLUMN: Submit Support Ticket Form */}
+        <div className="lg:col-span-7 flex flex-col gap-4">
+          <form onSubmit={handleCandidateSubmit} className="p-6 sm:p-8 rounded-[32px] bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-xl flex flex-col gap-5">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
+              <span className="text-xs font-black text-[#FF9900] uppercase tracking-widest">SUBMIT NEW SUPPORT TICKET</span>
+              <span className="text-xs font-mono font-bold text-slate-400">DIRECT DB SYNC</span>
+            </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <div className="flex flex-col gap-1">
-            <label className="text-[11px] font-bold text-slate-500">Category</label>
-            <select
-              value={category}
-              onChange={(e) => setCategory(e.target.value)}
-              className="w-full px-3.5 py-2 rounded-xl text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:border-blue-600"
+            {submitMsg && (
+              <div className="p-4 rounded-2xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 text-xs font-bold text-amber-800 dark:text-amber-300 flex items-start gap-2.5">
+                <span className="text-base shrink-0">ℹ️</span>
+                <span className="leading-relaxed">{submitMsg}</span>
+              </div>
+            )}
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="flex flex-col gap-1.5">
+                <label className="text-[11px] font-black text-slate-600 dark:text-slate-300 uppercase tracking-wider">Category</label>
+                <select
+                  value={category}
+                  onChange={(e) => setCategory(e.target.value)}
+                  className="w-full px-4 py-3 rounded-2xl text-xs bg-slate-50 dark:bg-slate-950 border-2 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white focus:outline-none focus:border-[#FF9900] font-medium transition-all"
+                >
+                  <option value="Technical Issue">Technical Issue</option>
+                  <option value="Audio / Microphone">Audio / Microphone</option>
+                  <option value="Resume ATS Audit">Resume ATS Audit</option>
+                  <option value="Evaluation Score Query">Evaluation Score Query</option>
+                  <option value="Other">Other Query</option>
+                </select>
+              </div>
+
+              <div className="flex flex-col gap-1.5">
+                <label className="text-[11px] font-black text-slate-600 dark:text-slate-300 uppercase tracking-wider">Priority Level</label>
+                <select
+                  value={priority}
+                  onChange={(e) => setPriority(e.target.value)}
+                  className="w-full px-4 py-3 rounded-2xl text-xs bg-slate-50 dark:bg-slate-950 border-2 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white focus:outline-none focus:border-[#FF9900] font-medium transition-all"
+                >
+                  <option value="LOW">Low Priority</option>
+                  <option value="MEDIUM">Medium Priority</option>
+                  <option value="HIGH">High Priority (Urgent)</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[11px] font-black text-slate-600 dark:text-slate-300 uppercase tracking-wider">Issue Subject</label>
+              <input
+                type="text"
+                placeholder="e.g., Audio microphone check error on Stage 3"
+                value={subject}
+                onChange={(e) => setSubject(e.target.value)}
+                className="w-full px-4 py-3 rounded-2xl text-xs bg-slate-50 dark:bg-slate-950 border-2 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white focus:outline-none focus:border-[#FF9900] font-medium transition-all placeholder:text-slate-400"
+                required
+              />
+            </div>
+
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[11px] font-black text-slate-600 dark:text-slate-300 uppercase tracking-wider">Description</label>
+              <textarea
+                rows={4}
+                placeholder="Describe what happened in detail so our DevOps team can investigate..."
+                value={message}
+                onChange={(e) => setMessage(e.target.value)}
+                className="w-full px-4 py-3 rounded-2xl text-xs bg-slate-50 dark:bg-slate-950 border-2 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white focus:outline-none focus:border-[#FF9900] font-medium transition-all resize-none placeholder:text-slate-400"
+                required
+              />
+            </div>
+
+            <button
+              type="submit"
+              disabled={submitLoading}
+              className="w-full py-4 rounded-2xl font-black text-sm text-white bg-gradient-to-r from-[#FF6B00] via-[#FF9900] to-amber-500 hover:from-orange-600 hover:to-amber-600 shadow-xl shadow-[#FF9900]/30 hover:shadow-[#FF9900]/40 flex items-center justify-center gap-2.5 transition-all hover:scale-[1.01] active:scale-[0.99] disabled:opacity-70 mt-1 cursor-pointer"
             >
-              <option value="Technical Issue">Technical Issue</option>
-              <option value="Audio / Microphone">Audio / Microphone</option>
-              <option value="Resume ATS Audit">Resume ATS Audit</option>
-              <option value="Evaluation Score Query">Evaluation Score Query</option>
-              <option value="Other">Other Query</option>
-            </select>
-          </div>
+              {submitLoading ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <span>Connecting to Engineering Server...</span>
+                </>
+              ) : (
+                <>
+                  <Send className="w-4 h-4" />
+                  <span>Submit Support Ticket →</span>
+                </>
+              )}
+            </button>
+          </form>
+        </div>
 
-          <div className="flex flex-col gap-1">
-            <label className="text-[11px] font-bold text-slate-500">Priority Level</label>
-            <select
-              value={priority}
-              onChange={(e) => setPriority(e.target.value)}
-              className="w-full px-3.5 py-2 rounded-xl text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:border-blue-600"
-            >
-              <option value="LOW">Low Priority</option>
-              <option value="MEDIUM">Medium Priority</option>
-              <option value="HIGH">High Priority (Urgent)</option>
-            </select>
+        {/* RIGHT COLUMN: Submitted Support Tickets History */}
+        <div className="lg:col-span-5 flex flex-col gap-4">
+          <div className="p-6 sm:p-8 rounded-[32px] bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-xl flex flex-col gap-4">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
+              <span className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-widest">YOUR SUBMITTED TICKETS</span>
+              <span className="text-xs font-mono font-bold text-[#FF9900]">{candidateTickets.length} TOTAL</span>
+            </div>
+
+            {candidateTickets.length === 0 ? (
+              <div className="p-8 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200/80 dark:border-slate-800 text-center flex flex-col items-center gap-2">
+                <Ticket className="w-8 h-8 text-slate-400 animate-pulse" />
+                <span className="text-xs font-black text-slate-700 dark:text-slate-300">No Support Tickets Yet</span>
+                <span className="text-[11px] text-slate-400 font-medium">Fill out the form on the left if you run into any issues during your voice assessment or ATS audit.</span>
+              </div>
+            ) : (
+              <div className="flex flex-col gap-3 max-h-[520px] overflow-y-auto pr-1">
+                {candidateTickets.map((t, i) => (
+                  <div key={i} className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200/80 dark:border-slate-800 flex flex-col gap-2.5 transition-all hover:border-[#FF9900]/40">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <div className="w-7 h-7 rounded-lg bg-[#FF9900]/10 text-[#FF9900] flex items-center justify-center shrink-0">
+                          <MessageSquare className="w-3.5 h-3.5" />
+                        </div>
+                        <span className="text-xs font-black text-slate-900 dark:text-white truncate">{t.subject}</span>
+                      </div>
+
+                      <span className={`text-[10px] font-black px-2.5 py-1 rounded-full border shrink-0 ${
+                        t.status === "RESOLVED"
+                          ? "bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 border-emerald-300"
+                          : t.status === "ACCEPTED" || t.status === "IN_PROGRESS"
+                          ? "bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 border-amber-300"
+                          : t.status === "REJECTED"
+                          ? "bg-rose-50 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 border-rose-300"
+                          : "bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 border-blue-300"
+                      }`}>
+                        {t.status}
+                      </span>
+                    </div>
+
+                    <p className="text-[11px] text-slate-600 dark:text-slate-400 font-medium line-clamp-2 leading-relaxed">
+                      {t.message}
+                    </p>
+
+                    <div className="flex items-center justify-between text-[10px] font-mono font-bold text-slate-400 pt-2 border-t border-slate-200/60 dark:border-slate-800">
+                      <span>{t.id || t.ticket_code} • {t.category}</span>
+                      <span>{t.created_at}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
 
-        <input
-          type="text"
-          placeholder="Issue Subject (e.g., Audio microphone check error on Stage 3)"
-          value={subject}
-          onChange={(e) => setSubject(e.target.value)}
-          className="w-full px-4 py-2.5 rounded-xl text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:border-blue-600"
-          required
-        />
-
-        <textarea
-          rows={3}
-          placeholder="Describe what happened in detail..."
-          value={message}
-          onChange={(e) => setMessage(e.target.value)}
-          className="w-full px-4 py-2.5 rounded-xl text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:border-blue-600 resize-none"
-          required
-        />
-
-        <button
-          type="submit"
-          disabled={submitLoading}
-          className="w-fit py-2.5 px-6 rounded-xl font-bold text-xs text-white bg-blue-600 hover:bg-blue-700 shadow-md shadow-blue-600/20 flex items-center gap-2 transition-all"
-        >
-          {submitLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
-          <span>Submit Support Ticket</span>
-        </button>
-      </form>
-
-      <div className="flex flex-col gap-3">
-        <h3 className="text-sm font-black text-slate-900 dark:text-white">Your Submitted Support Tickets</h3>
-
-        {candidateTickets.length === 0 ? (
-          <div className="p-8 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-center text-slate-400 text-xs">
-            No support tickets submitted yet. Fill the form above if you experience any technical issues!
-          </div>
-        ) : (
-          candidateTickets.map((t, i) => (
-            <div key={i} className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-center justify-between shadow-sm">
-              <div className="flex items-center gap-3">
-                <MessageSquare className="w-4 h-4 text-blue-600 shrink-0" />
-                <div className="flex flex-col">
-                  <span className="text-xs font-bold text-slate-900 dark:text-white">{t.subject}</span>
-                  <span className="text-[10px] font-mono text-slate-400">{t.id} • {t.category} • {t.created_at}</span>
-                </div>
-              </div>
-
-              <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full border ${
-                t.status === "RESOLVED"
-                  ? "bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 border-emerald-200"
-                  : t.status === "ACCEPTED" || t.status === "IN_PROGRESS"
-                  ? "bg-amber-50 dark:bg-amber-950/60 text-amber-700 border-amber-200"
-                  : t.status === "REJECTED"
-                  ? "bg-rose-50 dark:bg-rose-950/60 text-rose-700 border-rose-200"
-                  : "bg-blue-50 dark:bg-blue-950/60 text-blue-700 border-blue-200"
-              }`}>
-                {t.status}
-              </span>
-            </div>
-          ))
-        )}
       </div>
 
     </div>
   );
 }
+

@@ -53,7 +53,6 @@ export function Sidebar() {
     { label: "My Progress & Matrix", href: "/performance", icon: BarChart3 },
     { label: "Leaderboard", href: "/leaderboard", icon: Trophy },
     { label: "Career Roadmap", href: "/roadmap", icon: Map },
-    { label: "Certificates", href: "/certificates", icon: Award },
     { label: "Settings", href: "/settings", icon: Settings },
     { label: "Help & Support", href: "/help", icon: HelpCircle },
   ];
