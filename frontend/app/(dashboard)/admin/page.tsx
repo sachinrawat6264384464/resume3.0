@@ -12,7 +12,13 @@ import { apiFetch } from "@/lib/api";
 import { AdminDashboardMetrics } from "@/types";
 import { JDParserModal } from "@/components/admin/JDParserModal";
 
+import { useRouter } from "next/navigation";
+import { useAuthStore } from "@/lib/store";
+
 export default function AdminAnalyticsPage() {
+  const router = useRouter();
+  const user = useAuthStore((state) => state.user);
+
   const [metrics, setMetrics] = useState<AdminDashboardMetrics | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isCleaning, setIsCleaning] = useState(false);
@@ -33,8 +39,17 @@ export default function AdminAnalyticsPage() {
   };
 
   useEffect(() => {
+    const isAdminPortalEnv = process.env.NEXT_PUBLIC_IS_ADMIN_PORTAL === "true";
+    const isAdminUser = user?.role === "ADMIN" || user?.role === "SUPER_ADMIN";
+
+    // STRICT CANDIDATE BLOCK: Prevent non-admin candidates on candidate portal from accessing /admin
+    if (!isAdminPortalEnv && !isAdminUser) {
+      router.replace("/dashboard");
+      return;
+    }
+
     loadAnalytics();
-  }, []);
+  }, [user, router]);
 
   const handleRetentionCleanup = async () => {
     if (!confirm("Run 90-day recording retention cleanup? This will permanently purge recordings older than 90 days.")) return;

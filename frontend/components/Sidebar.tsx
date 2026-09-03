@@ -38,7 +38,9 @@ export function Sidebar() {
     router.push("/login");
   };
 
-  const isAdminMode = pathname.startsWith("/admin") || user?.role === "ADMIN" || user?.role === "SUPER_ADMIN";
+  const isAdminPortalEnv = typeof window !== "undefined" && process.env.NEXT_PUBLIC_IS_ADMIN_PORTAL === "true";
+  const isAdminUser = user?.role === "ADMIN" || user?.role === "SUPER_ADMIN";
+  const isAdminMode = isAdminPortalEnv || (isAdminUser && pathname.startsWith("/admin"));
 
   const candidateNavItems = [
     { label: "Candidate Dashboard", href: "/dashboard", icon: LayoutDashboard },
