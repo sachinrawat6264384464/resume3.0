@@ -20,36 +20,53 @@ export async function apiFetch<T = any>(
 
   const url = endpoint.startsWith("http") ? endpoint : `${API_BASE}${endpoint}`;
 
-  const res = await fetch(url, {
-    ...options,
-    headers,
-  });
+  let attempts = 0;
+  const maxAttempts = 3;
 
-  const responseText = await res.text();
+  while (attempts < maxAttempts) {
+    attempts++;
+    try {
+      const res = await fetch(url, {
+        ...options,
+        headers,
+      });
 
-  if (!res.ok) {
-    let errorMsg = `API Error: ${res.statusText}`;
-    if (responseText && responseText.trim()) {
-      try {
-        const errJson = JSON.parse(responseText);
-        errorMsg = errJson.detail || errJson.message || errorMsg;
-      } catch {
-        errorMsg = responseText;
+      const responseText = await res.text();
+
+      if (!res.ok) {
+        let errorMsg = `API Error: ${res.statusText}`;
+        if (responseText && responseText.trim()) {
+          try {
+            const errJson = JSON.parse(responseText);
+            errorMsg = errJson.detail || errJson.message || errorMsg;
+          } catch {
+            errorMsg = responseText;
+          }
+        }
+        throw new Error(errorMsg);
       }
+
+      if (!responseText || !responseText.trim()) {
+        return {} as T;
+      }
+
+      try {
+        return JSON.parse(responseText);
+      } catch (parseErr) {
+        console.warn("API response was not valid JSON:", parseErr);
+        return {} as T;
+      }
+    } catch (err: any) {
+      if (attempts < maxAttempts && (err.message?.includes("Failed to fetch") || err.message?.includes("NetworkError"))) {
+        console.warn(`[apiFetch] Network/Cold-start retry attempt ${attempts} of ${maxAttempts} for ${endpoint}...`);
+        await new Promise((r) => setTimeout(r, 1200));
+        continue;
+      }
+      throw err;
     }
-    throw new Error(errorMsg);
   }
 
-  if (!responseText || !responseText.trim()) {
-    return {} as T;
-  }
-
-  try {
-    return JSON.parse(responseText);
-  } catch (parseErr) {
-    console.warn("API response was not valid JSON:", parseErr);
-    return {} as T;
-  }
+  return {} as T;
 }
 
 export async function firebasePhoneLogin(idToken: string, fullName?: string, role: string = "CANDIDATE") {

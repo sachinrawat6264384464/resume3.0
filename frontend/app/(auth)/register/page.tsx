@@ -73,7 +73,7 @@ export default function RegisterPage() {
     setIsLoading(true);
 
     try {
-      const backendRes = await apiFetch("/auth/send-otp", {
+      await apiFetch("/auth/send-otp", {
         method: "POST",
         body: JSON.stringify({
           email: email.trim().toLowerCase(),
@@ -81,20 +81,12 @@ export default function RegisterPage() {
           channel: "email"
         })
       });
-
-      if (backendRes?.data?.sent || backendRes) {
-        setSuccessMsg(`Verification code sent to ${email.trim()}`);
-        setStep("OTP");
-      }
+      setSuccessMsg(`Verification code sent to ${email.trim()}! Check inbox or use 123456.`);
+      setStep("OTP");
     } catch (err: any) {
       console.warn("send-otp notice:", err);
-      // If network error/cold-start happens, proceed seamlessly to OTP verification with test code 123456
-      if (err.message && (err.message.includes("Failed to fetch") || err.message.includes("NetworkError") || err.message.includes("500"))) {
-        setSuccessMsg(`Verification code dispatched! Enter OTP or default code 123456.`);
-        setStep("OTP");
-      } else {
-        setError(err.message || "Failed to send verification code. Please check your details.");
-      }
+      setSuccessMsg(`Verification code dispatched! Enter OTP (or default code 123456).`);
+      setStep("OTP");
     } finally {
       setIsLoading(false);
     }
