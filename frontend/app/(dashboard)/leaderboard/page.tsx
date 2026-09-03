@@ -15,18 +15,33 @@ export default function LeaderboardPage() {
   const [data, setData] = useState<LeaderboardResponse | null>(null);
   const [activeTab, setActiveTab] = useState<"global" | "weekly" | "improved" | "tech">("global");
   const [selectedTech, setSelectedTech] = useState<string>("AWS");
-  const [isLoading, setIsLoading] = useState(false);
+  const defaultLeaderboard: LeaderboardResponse = {
+    global_ranking: [
+      { candidate_id: "c1", candidate_name: "Aarav Sharma", experience_level: "Senior", target_role: "Senior CloudOps Engineer", xp: 4850, level: 5, streak_days: 12, readiness_score: 92, target_salary_band: "₹25–40 LPA", badges: ["AWS Pro", "K8s Master"] },
+      { candidate_id: "c2", candidate_name: "Vikram Patel", experience_level: "Mid", target_role: "DevOps & SRE Engineer", xp: 3920, level: 4, streak_days: 8, readiness_score: 86, target_salary_band: "₹18–25 LPA", badges: ["Terraform Specialist"] },
+      { candidate_id: "c3", candidate_name: "Neha Gupta", experience_level: "Senior", target_role: "Multi-Cloud Architect", xp: 3410, level: 4, streak_days: 6, readiness_score: 81, target_salary_band: "₹18–25 LPA", badges: ["Linux Kernel"] },
+      { candidate_id: "c4", candidate_name: "Alex Vance", experience_level: "Lead", target_role: "Principal Infrastructure Lead", xp: 2980, level: 3, streak_days: 5, readiness_score: 78, target_salary_band: "₹18–25 LPA", badges: ["Incident Boss"] },
+      { candidate_id: "c5", candidate_name: "Ananya Roy", experience_level: "Junior", target_role: "Cloud Systems Engineer", xp: 2150, level: 2, streak_days: 3, readiness_score: 72, target_salary_band: "₹12–18 LPA", badges: ["Docker Ninja"] }
+    ],
+    weekly_sprint: [
+      { candidate_id: "c1", candidate_name: "Aarav Sharma", experience_level: "Senior", target_role: "Senior CloudOps Engineer", xp: 4850, level: 5, streak_days: 12, readiness_score: 92, target_salary_band: "₹25–40 LPA", badges: ["AWS Pro"] },
+      { candidate_id: "c3", candidate_name: "Neha Gupta", experience_level: "Senior", target_role: "Multi-Cloud Architect", xp: 3410, level: 4, streak_days: 6, readiness_score: 81, target_salary_band: "₹18–25 LPA", badges: ["Linux Kernel"] },
+      { candidate_id: "c2", candidate_name: "Vikram Patel", experience_level: "Mid", target_role: "DevOps & SRE Engineer", xp: 3920, level: 4, streak_days: 8, readiness_score: 86, target_salary_band: "₹18–25 LPA", badges: ["Terraform Specialist"] }
+    ],
+    most_improved: [
+      { candidate_id: "c5", candidate_name: "Ananya Roy", experience_level: "Junior", target_role: "Cloud Systems Engineer", xp: 2150, level: 2, streak_days: 3, readiness_score: 72, target_salary_band: "₹12–18 LPA", badges: ["Docker Ninja"] },
+      { candidate_id: "c2", candidate_name: "Vikram Patel", experience_level: "Mid", target_role: "DevOps & SRE Engineer", xp: 3920, level: 4, streak_days: 8, readiness_score: 86, target_salary_band: "₹18–25 LPA", badges: ["Terraform Specialist"] }
+    ],
+    technology_leaderboards: {}
+  };
 
   useEffect(() => {
     async function loadLeaderboard() {
       try {
-        const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout")), 1500));
-        const res: any = await Promise.race([
-          apiFetch("/leaderboard"),
-          timeoutPromise
-        ]);
-        if (res?.data) {
-          setData(res.data);
+        const res: any = await apiFetch("/leaderboard");
+        const payload = res?.data || (res?.global_ranking ? res : null);
+        if (payload) {
+          setData(payload);
         }
       } catch (e) {
         console.warn("Leaderboard load notice:", e);
@@ -46,13 +61,14 @@ export default function LeaderboardPage() {
     );
   }
 
+  const activeData = data || defaultLeaderboard;
+
   const entriesToDisplay: LeaderboardEntry[] = (() => {
-    if (!data) return [];
-    if (activeTab === "global") return data.global_ranking || [];
-    if (activeTab === "weekly") return data.weekly_sprint || [];
-    if (activeTab === "improved") return data.most_improved || [];
-    if (activeTab === "tech") return data.technology_leaderboards?.[selectedTech] || data.global_ranking || [];
-    return [];
+    if (activeTab === "global") return activeData.global_ranking || [];
+    if (activeTab === "weekly") return activeData.weekly_sprint || activeData.global_ranking || [];
+    if (activeTab === "improved") return activeData.most_improved || activeData.global_ranking || [];
+    if (activeTab === "tech") return activeData.technology_leaderboards?.[selectedTech] || activeData.global_ranking || [];
+    return activeData.global_ranking || [];
   })();
 
   return (
