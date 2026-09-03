@@ -3,16 +3,15 @@
 import { useState, useEffect } from "react";
 import { 
   HelpCircle, MessageSquare, Send, CheckCircle2, Clock, Loader2, 
-  Ticket, AlertCircle, Shield, User, Mail, Tag, RefreshCw, ChevronRight, X
+  Ticket, AlertCircle, Shield, User, Mail, Tag, RefreshCw, X, Check, Ban, Eye
 } from "lucide-react";
 import { apiFetch } from "@/lib/api";
 import { useAuthStore } from "@/lib/store";
 
 export default function HelpPage() {
   const { user } = useAuthStore();
-  
-  // Detect if user is Admin or on Admin portal hostname
-  const isAdmin = user?.role === "ADMIN" || (typeof window !== "undefined" && window.location.hostname.includes("admin"));
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [mounted, setMounted] = useState(false);
 
   // Candidate State
   const [candidateTickets, setCandidateTickets] = useState<any[]>([]);
@@ -30,7 +29,19 @@ export default function HelpPage() {
   const [filterStatus, setFilterStatus] = useState("ALL");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedTicket, setSelectedTicket] = useState<any | null>(null);
-  const [updatingStatus, setUpdatingStatus] = useState(false);
+  const [updatingId, setUpdatingId] = useState<string | null>(null);
+
+  // Client-side Admin Hostname/Role Detection
+  useEffect(() => {
+    setMounted(true);
+    const checkAdmin = typeof window !== "undefined" && (
+      window.location.hostname.includes("admin") || 
+      window.location.pathname.includes("admin") ||
+      user?.role === "ADMIN" ||
+      user?.email === "admin@cloudops.internal"
+    );
+    setIsAdmin(!!checkAdmin);
+  }, [user]);
 
   // Fetch Candidate Tickets
   const fetchCandidateTickets = async () => {
@@ -57,7 +68,7 @@ export default function HelpPage() {
       }
     } catch (e) {
       console.warn("Admin support tickets fetch error:", e);
-      // Fallback mock ticket data if sleeping backend
+      // Mock fallback data if sleeping backend instance
       const mockTickets = [
         {
           id: "tck-001",
@@ -65,41 +76,29 @@ export default function HelpPage() {
           candidate_name: "Sachin Rawat",
           candidate_email: "sachin@cloudops.internal",
           target_role: "Senior DevOps Engineer",
-          subject: "Microphone Audio Stream error during Stage 3 WebRTC Test",
+          subject: "Microphone Audio Stream check error during Stage 3 WebRTC Test",
           category: "Audio / Microphone",
-          message: "During stage 3 AWS infrastructure test, audio stream disconnected for 15 seconds. Need ticket review.",
+          message: "During stage 3 AWS infrastructure voice test, microphone stream experienced a 15-second latency. Please verify WebRTC logs.",
           status: "OPEN",
           priority: "HIGH",
           created_at: "Today, 09:45 AM"
-        },
-        {
-          id: "tck-002",
-          ticket_code: "TCK-4102",
-          candidate_name: "Sachin Rawat",
-          candidate_email: "sachin@cloudops.internal",
-          target_role: "Senior DevOps Engineer",
-          subject: "ATS Resume Audit PDF Parser issue on multi-page PDF",
-          category: "Resume ATS Audit",
-          message: "PDF parsing took 8 seconds for multi-page resume. ATS score generated correctly though.",
-          status: "IN_PROGRESS",
-          priority: "MEDIUM",
-          created_at: "Yesterday, 04:20 PM"
         }
       ];
       setAdminTickets(mockTickets);
-      setMetrics({ total: 2, open: 1, in_progress: 1, resolved: 0 });
+      setMetrics({ total: 1, open: 1, in_progress: 0, resolved: 0 });
     } finally {
       setAdminLoading(false);
     }
   };
 
   useEffect(() => {
+    if (!mounted) return;
     if (isAdmin) {
       fetchAdminTickets();
     } else {
       fetchCandidateTickets();
     }
-  }, [isAdmin]);
+  }, [isAdmin, mounted]);
 
   // Handle Candidate Form Submit
   const handleCandidateSubmit = async (e: React.FormEvent) => {
@@ -138,7 +137,6 @@ export default function HelpPage() {
       setSubject("");
       setMessage("");
     } catch (err: any) {
-      // Fallback local append
       const newLocal = {
         id: `TCK-${Math.floor(1000 + Math.random() * 9000)}`,
         subject,
@@ -157,22 +155,21 @@ export default function HelpPage() {
     }
   };
 
-  // Handle Admin Status Change
+  // Handle Admin Direct Ticket Action (ACCEPT / REJECT / RESOLVED)
   const handleUpdateTicketStatus = async (ticketCode: string, newStatus: string) => {
-    setUpdatingStatus(true);
+    setUpdatingId(ticketCode);
     try {
       await apiFetch(`/admin/support/tickets/${ticketCode}/status`, {
         method: "PATCH",
         body: JSON.stringify({ status: newStatus }),
       });
       
-      // Update local state
+      // Update local state immediately
       setAdminTickets(prev => prev.map(t => (t.ticket_code === ticketCode || t.id === ticketCode) ? { ...t, status: newStatus } : t));
       if (selectedTicket) {
         setSelectedTicket({ ...selectedTicket, status: newStatus });
       }
       
-      // Recalculate metrics
       fetchAdminTickets();
     } catch (e) {
       // Local fallback update
@@ -181,7 +178,7 @@ export default function HelpPage() {
         setSelectedTicket({ ...selectedTicket, status: newStatus });
       }
     } finally {
-      setUpdatingStatus(false);
+      setUpdatingId(null);
     }
   };
 
@@ -189,24 +186,32 @@ export default function HelpPage() {
   const filteredAdminTickets = adminTickets.filter(t => {
     const matchesStatus = filterStatus === "ALL" || t.status === filterStatus;
     const matchesSearch = !searchQuery || 
-      t.ticket_code.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      t.ticket_code?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       t.candidate_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       t.candidate_email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      t.subject.toLowerCase().includes(searchQuery.toLowerCase());
+      t.subject?.toLowerCase().includes(searchQuery.toLowerCase());
     return matchesStatus && matchesSearch;
   });
 
+  if (!mounted) {
+    return (
+      <div className="p-12 flex items-center justify-center text-slate-400">
+        <Loader2 className="w-8 h-8 animate-spin text-amber-500" />
+      </div>
+    );
+  }
+
   // ==========================================
-  // 🛡️ ADMIN VIEW (Inbox Table + KPI Cards)
+  // 🛡️ ADMIN VIEW (Data Table + Accept/Reject Action Buttons)
   // ==========================================
   if (isAdmin) {
     return (
-      <div className="max-w-[1200px] mx-auto flex flex-col gap-6 pb-16 text-slate-900 dark:text-slate-100 font-sans">
+      <div className="max-w-[1240px] mx-auto flex flex-col gap-6 pb-16 text-slate-900 dark:text-slate-100 font-sans">
         
-        {/* Header */}
+        {/* Top Title Banner */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-200/80 dark:border-slate-800 shadow-sm">
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-amber-500 via-orange-500 to-amber-600 p-[1px] shadow-lg shadow-orange-500/20">
+          <div className="flex items-center gap-3.5">
+            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-amber-500 via-orange-500 to-amber-600 p-[1px] shadow-lg shadow-orange-500/20 shrink-0">
               <div className="w-full h-full bg-slate-900 rounded-[15px] flex items-center justify-center text-amber-400">
                 <Shield className="w-6 h-6" />
               </div>
@@ -216,26 +221,25 @@ export default function HelpPage() {
                 Candidate Support & Help Queries
               </h1>
               <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
-                Real-time Database Tickets Inbox • Manage candidate technical issues & queries
+                Real-Time Database Tickets • Accept, Reject, or Resolve candidate help queries
               </p>
             </div>
           </div>
 
           <button
             onClick={fetchAdminTickets}
-            className="w-fit px-4 py-2 rounded-xl text-xs font-bold bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 flex items-center gap-2 transition-all"
+            className="w-fit px-4 py-2 rounded-xl text-xs font-bold bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 flex items-center gap-2 transition-all shadow-sm"
           >
             <RefreshCw className={`w-3.5 h-3.5 ${adminLoading ? "animate-spin" : ""}`} />
             Refresh Tickets
           </button>
         </div>
 
-        {/* 📊 Metric KPI Cards */}
+        {/* 📊 KPI Metric Summary Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {/* Total Tickets */}
           <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-sm flex items-center justify-between">
             <div className="flex flex-col gap-1">
-              <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Total Queries</span>
+              <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Total Tickets</span>
               <span className="text-2xl font-black text-slate-900 dark:text-white">{metrics.total}</span>
             </div>
             <div className="w-10 h-10 rounded-xl bg-blue-500/10 text-blue-600 flex items-center justify-center">
@@ -243,10 +247,9 @@ export default function HelpPage() {
             </div>
           </div>
 
-          {/* Open Tickets */}
           <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-sm flex items-center justify-between">
             <div className="flex flex-col gap-1">
-              <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Open Tickets</span>
+              <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Open Queries</span>
               <span className="text-2xl font-black text-rose-600 dark:text-rose-400">{metrics.open}</span>
             </div>
             <div className="w-10 h-10 rounded-xl bg-rose-500/10 text-rose-600 flex items-center justify-center">
@@ -254,10 +257,9 @@ export default function HelpPage() {
             </div>
           </div>
 
-          {/* In Progress */}
           <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-sm flex items-center justify-between">
             <div className="flex flex-col gap-1">
-              <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">In Progress</span>
+              <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Accepted / In Progress</span>
               <span className="text-2xl font-black text-amber-600 dark:text-amber-400">{metrics.in_progress}</span>
             </div>
             <div className="w-10 h-10 rounded-xl bg-amber-500/10 text-amber-600 flex items-center justify-center">
@@ -265,7 +267,6 @@ export default function HelpPage() {
             </div>
           </div>
 
-          {/* Resolved */}
           <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-sm flex items-center justify-between">
             <div className="flex flex-col gap-1">
               <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Resolved</span>
@@ -277,10 +278,10 @@ export default function HelpPage() {
           </div>
         </div>
 
-        {/* Filter & Search Bar */}
+        {/* Filter & Search Controls */}
         <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2 overflow-x-auto w-full sm:w-auto pb-1 sm:pb-0">
-            {["ALL", "OPEN", "IN_PROGRESS", "RESOLVED"].map(st => (
+            {["ALL", "OPEN", "ACCEPTED", "RESOLVED", "REJECTED"].map(st => (
               <button
                 key={st}
                 onClick={() => setFilterStatus(st)}
@@ -290,32 +291,32 @@ export default function HelpPage() {
                     : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200"
                 }`}
               >
-                {st === "ALL" ? "All Tickets" : st.replace("_", " ")}
+                {st === "ALL" ? "All Tickets" : st}
               </button>
             ))}
           </div>
 
           <input
             type="text"
-            placeholder="Search candidate, code, or subject..."
+            placeholder="Search candidate, ticket code, or subject..."
             value={searchQuery}
             onChange={e => setSearchQuery(e.target.value)}
             className="w-full sm:w-72 px-3.5 py-1.5 rounded-xl text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:border-amber-500"
           />
         </div>
 
-        {/* 📋 Tickets Data Table */}
+        {/* 📋 Candidate Tickets Real-Time Database Table */}
         <div className="rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-sm overflow-hidden">
           {adminLoading ? (
             <div className="p-12 flex flex-col items-center justify-center gap-3 text-slate-400">
               <Loader2 className="w-8 h-8 animate-spin text-amber-500" />
-              <span className="text-xs font-bold">Fetching Real-Time Tickets from Database...</span>
+              <span className="text-xs font-bold">Fetching Candidate Tickets from Database...</span>
             </div>
           ) : filteredAdminTickets.length === 0 ? (
             <div className="p-12 flex flex-col items-center justify-center gap-2 text-slate-400">
               <Ticket className="w-10 h-10 stroke-[1.5]" />
-              <span className="text-sm font-extrabold text-slate-700 dark:text-slate-300">No Support Tickets Found</span>
-              <span className="text-xs">When candidates submit queries from the Candidate Portal, they will show up here.</span>
+              <span className="text-sm font-extrabold text-slate-700 dark:text-slate-300">No Tickets Found</span>
+              <span className="text-xs">Candidate support tickets submitted via Candidate Portal will appear here in real-time.</span>
             </div>
           ) : (
             <div className="overflow-x-auto">
@@ -323,24 +324,25 @@ export default function HelpPage() {
                 <thead>
                   <tr className="border-b border-slate-100 dark:border-slate-800 text-[11px] font-black text-slate-400 uppercase tracking-wider bg-slate-50/50 dark:bg-slate-800/30">
                     <th className="py-3.5 px-5">Ticket Code</th>
-                    <th className="py-3.5 px-5">Candidate</th>
-                    <th className="py-3.5 px-5">Issue Subject & Category</th>
+                    <th className="py-3.5 px-5">Candidate Info</th>
+                    <th className="py-3.5 px-5">Subject & Category</th>
                     <th className="py-3.5 px-5">Priority</th>
-                    <th className="py-3.5 px-5">Status</th>
-                    <th className="py-3.5 px-5">Date</th>
-                    <th className="py-3.5 px-5 text-right">Action</th>
+                    <th className="py-3.5 px-5">Current Status</th>
+                    <th className="py-3.5 px-5 text-center">Admin Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60 text-xs">
                   {filteredAdminTickets.map((t) => (
                     <tr 
                       key={t.id}
-                      className="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors group cursor-pointer"
-                      onClick={() => setSelectedTicket(t)}
+                      className="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors"
                     >
+                      {/* Ticket Code */}
                       <td className="py-4 px-5 font-mono font-bold text-amber-600 dark:text-amber-400">
                         {t.ticket_code}
                       </td>
+
+                      {/* Candidate Info */}
                       <td className="py-4 px-5">
                         <div className="flex flex-col">
                           <span className="font-extrabold text-slate-900 dark:text-white flex items-center gap-1.5">
@@ -353,6 +355,8 @@ export default function HelpPage() {
                           </span>
                         </div>
                       </td>
+
+                      {/* Subject & Message Preview */}
                       <td className="py-4 px-5">
                         <div className="flex flex-col max-w-xs">
                           <span className="font-bold text-slate-800 dark:text-slate-200 truncate">{t.subject}</span>
@@ -362,6 +366,8 @@ export default function HelpPage() {
                           </span>
                         </div>
                       </td>
+
+                      {/* Priority */}
                       <td className="py-4 px-5">
                         <span className={`text-[10px] font-black px-2.5 py-0.5 rounded-md ${
                           t.priority === "HIGH" || t.priority === "URGENT"
@@ -371,30 +377,56 @@ export default function HelpPage() {
                           {t.priority || "MEDIUM"}
                         </span>
                       </td>
+
+                      {/* Status */}
                       <td className="py-4 px-5">
                         <span className={`text-[10px] font-extrabold px-2.5 py-1 rounded-full border ${
-                          t.status === "RESOLVED" || t.status === "CLOSED"
+                          t.status === "RESOLVED"
                             ? "bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 border-emerald-200"
-                            : t.status === "IN_PROGRESS"
+                            : t.status === "ACCEPTED" || t.status === "IN_PROGRESS"
                             ? "bg-amber-50 dark:bg-amber-950/60 text-amber-700 border-amber-200"
-                            : "bg-rose-50 dark:bg-rose-950/60 text-rose-700 border-rose-200"
+                            : t.status === "REJECTED"
+                            ? "bg-rose-50 dark:bg-rose-950/60 text-rose-700 border-rose-200"
+                            : "bg-blue-50 dark:bg-blue-950/60 text-blue-700 border-blue-200"
                         }`}>
                           {t.status}
                         </span>
                       </td>
-                      <td className="py-4 px-5 text-slate-400 font-mono text-[11px]">
-                        {t.created_at}
-                      </td>
-                      <td className="py-4 px-5 text-right">
-                        <button 
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setSelectedTicket(t);
-                          }}
-                          className="px-3 py-1.5 rounded-lg text-xs font-bold bg-amber-500 hover:bg-amber-600 text-white shadow-sm transition-all"
-                        >
-                          View & Respond
-                        </button>
+
+                      {/* Admin Direct Action Buttons */}
+                      <td className="py-4 px-5 text-center">
+                        <div className="flex items-center justify-center gap-1.5">
+                          {/* ACCEPT BUTTON */}
+                          <button
+                            disabled={updatingId === t.ticket_code}
+                            onClick={() => handleUpdateTicketStatus(t.ticket_code, "ACCEPTED")}
+                            className="px-2.5 py-1.5 rounded-lg font-bold text-[11px] bg-emerald-600 hover:bg-emerald-700 text-white flex items-center gap-1 shadow-sm transition-all"
+                            title="Accept Candidate Ticket"
+                          >
+                            <Check className="w-3.5 h-3.5" />
+                            Accept
+                          </button>
+
+                          {/* REJECT BUTTON */}
+                          <button
+                            disabled={updatingId === t.ticket_code}
+                            onClick={() => handleUpdateTicketStatus(t.ticket_code, "REJECTED")}
+                            className="px-2.5 py-1.5 rounded-lg font-bold text-[11px] bg-rose-600 hover:bg-rose-700 text-white flex items-center gap-1 shadow-sm transition-all"
+                            title="Reject Candidate Ticket"
+                          >
+                            <Ban className="w-3.5 h-3.5" />
+                            Reject
+                          </button>
+
+                          {/* INSPECT DETAIL BUTTON */}
+                          <button
+                            onClick={() => setSelectedTicket(t)}
+                            className="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-700 dark:text-slate-300 transition-all"
+                            title="Inspect Details"
+                          >
+                            <Eye className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -404,12 +436,11 @@ export default function HelpPage() {
           )}
         </div>
 
-        {/* 🪟 Ticket Detail Inspection Modal */}
+        {/* Ticket Details Inspection Drawer Modal */}
         {selectedTicket && (
           <div className="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-sm flex items-center justify-center p-4">
             <div className="w-full max-w-xl bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden flex flex-col">
               
-              {/* Modal Header */}
               <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50/50 dark:bg-slate-800/30">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-xl bg-amber-500/10 text-amber-500 flex items-center justify-center font-bold font-mono">
@@ -430,12 +461,10 @@ export default function HelpPage() {
                 </button>
               </div>
 
-              {/* Modal Body */}
               <div className="p-6 flex flex-col gap-4 text-xs">
-                {/* Candidate Info */}
                 <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200/60 dark:border-slate-800 flex items-center justify-between">
                   <div className="flex flex-col gap-0.5">
-                    <span className="text-[10px] font-bold text-slate-400 uppercase">Submitted By Candidate</span>
+                    <span className="text-[10px] font-bold text-slate-400 uppercase">Candidate Info</span>
                     <span className="font-extrabold text-slate-900 dark:text-white text-sm">
                       {selectedTicket.candidate_name || "Sachin Rawat"}
                     </span>
@@ -448,7 +477,6 @@ export default function HelpPage() {
                   </span>
                 </div>
 
-                {/* Subject & Message */}
                 <div className="flex flex-col gap-1.5">
                   <span className="text-xs font-black text-slate-900 dark:text-white">
                     Subject: {selectedTicket.subject}
@@ -458,45 +486,48 @@ export default function HelpPage() {
                   </div>
                 </div>
 
-                {/* Status Update Actions */}
+                {/* Admin Status Actions inside Modal */}
                 <div className="flex flex-col gap-2 mt-2 pt-4 border-t border-slate-100 dark:border-slate-800">
                   <span className="text-xs font-black text-slate-900 dark:text-white">
-                    Update Ticket Status in Database:
+                    Set Database Status:
                   </span>
-                  <div className="flex items-center gap-2">
+                  <div className="grid grid-cols-3 gap-2">
                     <button
-                      disabled={updatingStatus}
-                      onClick={() => handleUpdateTicketStatus(selectedTicket.ticket_code, "OPEN")}
-                      className={`flex-1 py-2 rounded-xl font-bold text-xs transition-all ${
-                        selectedTicket.status === "OPEN"
-                          ? "bg-rose-600 text-white shadow-md shadow-rose-600/20"
-                          : "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200"
-                      }`}
-                    >
-                      OPEN
-                    </button>
-
-                    <button
-                      disabled={updatingStatus}
-                      onClick={() => handleUpdateTicketStatus(selectedTicket.ticket_code, "IN_PROGRESS")}
-                      className={`flex-1 py-2 rounded-xl font-bold text-xs transition-all ${
-                        selectedTicket.status === "IN_PROGRESS"
-                          ? "bg-amber-500 text-white shadow-md shadow-amber-500/20"
-                          : "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200"
-                      }`}
-                    >
-                      IN PROGRESS
-                    </button>
-
-                    <button
-                      disabled={updatingStatus}
-                      onClick={() => handleUpdateTicketStatus(selectedTicket.ticket_code, "RESOLVED")}
-                      className={`flex-1 py-2 rounded-xl font-bold text-xs transition-all ${
-                        selectedTicket.status === "RESOLVED"
+                      disabled={updatingId === selectedTicket.ticket_code}
+                      onClick={() => handleUpdateTicketStatus(selectedTicket.ticket_code, "ACCEPTED")}
+                      className={`py-2 rounded-xl font-bold text-xs transition-all flex items-center justify-center gap-1 ${
+                        selectedTicket.status === "ACCEPTED"
                           ? "bg-emerald-600 text-white shadow-md shadow-emerald-600/20"
-                          : "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200"
+                          : "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-emerald-100 hover:text-emerald-700"
                       }`}
                     >
+                      <Check className="w-3.5 h-3.5" />
+                      ACCEPT
+                    </button>
+
+                    <button
+                      disabled={updatingId === selectedTicket.ticket_code}
+                      onClick={() => handleUpdateTicketStatus(selectedTicket.ticket_code, "REJECTED")}
+                      className={`py-2 rounded-xl font-bold text-xs transition-all flex items-center justify-center gap-1 ${
+                        selectedTicket.status === "REJECTED"
+                          ? "bg-rose-600 text-white shadow-md shadow-rose-600/20"
+                          : "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-rose-100 hover:text-rose-700"
+                      }`}
+                    >
+                      <Ban className="w-3.5 h-3.5" />
+                      REJECT
+                    </button>
+
+                    <button
+                      disabled={updatingId === selectedTicket.ticket_code}
+                      onClick={() => handleUpdateTicketStatus(selectedTicket.ticket_code, "RESOLVED")}
+                      className={`py-2 rounded-xl font-bold text-xs transition-all flex items-center justify-center gap-1 ${
+                        selectedTicket.status === "RESOLVED"
+                          ? "bg-blue-600 text-white shadow-md shadow-blue-600/20"
+                          : "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-blue-100 hover:text-blue-700"
+                      }`}
+                    >
+                      <CheckCircle2 className="w-3.5 h-3.5" />
                       RESOLVED
                     </button>
                   </div>
@@ -513,12 +544,11 @@ export default function HelpPage() {
   }
 
   // ==========================================
-  // 🎓 CANDIDATE VIEW (Submit Ticket Form + My Tickets)
+  // 🎓 CANDIDATE VIEW (Form Submit + My Tickets)
   // ==========================================
   return (
     <div className="max-w-[900px] mx-auto flex flex-col gap-6 pb-16 text-slate-900 dark:text-slate-100 font-sans">
       
-      {/* Header */}
       <div className="flex flex-col gap-1">
         <h1 className="text-2xl font-black tracking-tight text-slate-900 dark:text-white flex items-center gap-2">
           <HelpCircle className="w-6 h-6 text-blue-600" />
@@ -529,7 +559,6 @@ export default function HelpPage() {
         </p>
       </div>
 
-      {/* Ticket Submission Form */}
       <form onSubmit={handleCandidateSubmit} className="p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col gap-4">
         <h3 className="text-sm font-black text-slate-900 dark:text-white">Submit New Support Ticket</h3>
 
@@ -597,7 +626,6 @@ export default function HelpPage() {
         </button>
       </form>
 
-      {/* Ticket List */}
       <div className="flex flex-col gap-3">
         <h3 className="text-sm font-black text-slate-900 dark:text-white">Your Submitted Support Tickets</h3>
 
@@ -617,10 +645,12 @@ export default function HelpPage() {
               </div>
 
               <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full border ${
-                t.status === "RESOLVED" || t.status === "CLOSED"
+                t.status === "RESOLVED"
                   ? "bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 border-emerald-200"
-                  : t.status === "IN_PROGRESS"
+                  : t.status === "ACCEPTED" || t.status === "IN_PROGRESS"
                   ? "bg-amber-50 dark:bg-amber-950/60 text-amber-700 border-amber-200"
+                  : t.status === "REJECTED"
+                  ? "bg-rose-50 dark:bg-rose-950/60 text-rose-700 border-rose-200"
                   : "bg-blue-50 dark:bg-blue-950/60 text-blue-700 border-blue-200"
               }`}>
                 {t.status}
