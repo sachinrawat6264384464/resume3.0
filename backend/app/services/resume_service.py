@@ -126,6 +126,13 @@ class ResumeService:
         )
 
         stages_data = match_data.get("recommended_interview_stages", [])
+        if not stages_data:
+            stages_data = [
+                {"stage_id": 1, "title": "Profile & Career Pitch", "reason": "Assess candidate self-introduction and career journey."},
+                {"stage_id": 2, "title": "Linux Systems Warrior", "reason": "Evaluate core Linux diagnostics, systemd, and memory triage."},
+                {"stage_id": 3, "title": "Multi-Cloud Architecture", "reason": "Deep dive into AWS VPC networking, IAM IRSA, and cloud architecture."}
+            ]
+
         recommended_stages = [
             RecommendedInterviewStage(
                 stage_id=int(s.get("stage_id", idx)),

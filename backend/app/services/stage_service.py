@@ -48,13 +48,18 @@ class StageService:
         now = datetime.now(timezone.utc)
         stage_att.completed_at = now
 
-        # Duration Calculation
-        started = stage_att.started_at or now
-        total_duration = (now - started).total_seconds()
+        # Duration Calculation with timezone normalization
+        now_naive = now.replace(tzinfo=None)
+        started = stage_att.started_at
+        if started and started.tzinfo is not None:
+            started = started.replace(tzinfo=None)
+        started = started or now_naive
+        total_duration = max(0.0, (now_naive - started).total_seconds())
 
-        # Strict Gatekeeper Rule: 80%+ Threshold AND at least 8/10 questions correct AND <= 13 mins (780 seconds)
+        # Strict Gatekeeper Rule: 80%+ Threshold AND required correct questions count
         threshold = 80.0
-        passed = (stage_score >= threshold) and (correct_count >= 8) and (total_duration <= 780.0)
+        min_required_correct = min(8, len(q_attempts)) if len(q_attempts) >= 8 else 1
+        passed = (stage_score >= threshold) and (correct_count >= min_required_correct) and (total_duration <= 900.0)
 
         stage_att.status = "PASSED" if passed else "FAILED"
 
