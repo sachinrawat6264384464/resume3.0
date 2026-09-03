@@ -15,6 +15,10 @@ export default function LandingPage() {
 
   useEffect(() => {
     setMounted(true);
+    // Standalone Admin Portal Microservice Check
+    if (typeof window !== "undefined" && process.env.NEXT_PUBLIC_IS_ADMIN_PORTAL === "true") {
+      window.location.href = "/admin";
+    }
   }, []);
 
   return (
