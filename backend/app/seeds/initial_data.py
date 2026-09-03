@@ -73,13 +73,13 @@ async def seed_database():
                 experience_level="MID",
                 target_role="Senior DevOps Engineer",
                 notes="Sachin Rawat Candidate Profile.",
-                xp=4200,
-                level=5,
-                streak_days=15,
-                readiness_score=88.0,
-                target_salary_band="₹18–25 LPA",
-                skills_matrix_json={"Linux": 90, "AWS": 86, "Docker": 82, "Kubernetes": 80, "Terraform": 78},
-                badges_json=["Linux Warrior", "Cloud Explorer", "AWS Ninja", "DevOps Master"]
+                xp=0,
+                level=1,
+                streak_days=1,
+                readiness_score=0.0,
+                target_salary_band="₹18–40 LPA",
+                skills_matrix_json={"Linux": 0, "AWS": 0, "Docker": 0, "Kubernetes": 0, "Terraform": 0},
+                badges_json=["Registered Engineer"]
             )
             db.add(sachin_profile)
             await db.flush()

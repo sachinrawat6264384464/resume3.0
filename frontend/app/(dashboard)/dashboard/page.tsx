@@ -67,42 +67,42 @@ export default function CandidateDashboardPage() {
     }
   };
 
-  // Fallback candidate metrics for seamless initial & offline rendering
+  // Default initial candidate metrics for clean un-attempted state
   const defaultCandidateMetrics = {
-    readiness_score: (user as any)?.readiness_score || 88.0,
-    xp: (user as any)?.xp || 4200,
-    streak_days: (user as any)?.streak_days || 15,
+    readiness_score: (user as any)?.readiness_score || 0.0,
+    xp: (user as any)?.xp || 0,
+    streak_days: (user as any)?.streak_days || 1,
     readiness_breakdown: {
-      technical: 90,
-      problem_solving: 86,
-      communication: 88,
-      system_design: 84,
-      devops_mindset: 82
+      technical: 0,
+      problem_solving: 0,
+      communication: 0,
+      system_design: 0,
+      devops_mindset: 0
     },
     stages_progress: [
-      { id: 1, name: "Profile & Career Pitch", score: "85%", status: "completed" },
-      { id: 2, name: "Linux Systems Warrior", score: "80%", status: "completed" },
-      { id: 3, name: "Multi-Cloud Architecture", score: "78%", status: "in_progress" },
+      { id: 1, name: "Profile & Career Pitch", score: "0%", status: "in_progress" },
+      { id: 2, name: "Linux Systems Warrior", score: "--", status: "locked" },
+      { id: 3, name: "Multi-Cloud Architecture", score: "--", status: "locked" },
       { id: 4, name: "DevOps & Containers", score: "--", status: "locked" },
       { id: 5, name: "Production Incident Boss Battle", score: "--", status: "locked" }
     ],
     resume_ats: {
-      score: 86,
+      score: 0,
       matched_jd: (user as any)?.target_role || "Senior DevOps Engineer",
-      skills_matched: "18 / 24",
-      keywords_found: "86%",
-      ats_score: "86 / 100"
+      skills_matched: "0 / 24",
+      keywords_found: "0%",
+      ats_score: "0 / 100"
     },
     top_skills: ["Linux Admin", "AWS IAM & VPC", "Docker Containers", "Kubernetes EKS", "Terraform IaC"]
   };
 
   const activeMetrics = dbMetrics || defaultCandidateMetrics;
 
-  // Real Candidate Data
+  // Real Candidate Data from DB
   const candidateName = user?.full_name || "Sachin Rawat";
-  const userXp = user?.xp ?? activeMetrics?.xp ?? 4200;
-  const userStreak = user?.streak_days ?? activeMetrics?.streak_days ?? 15;
-  const readiness = Math.round(activeMetrics?.readiness_score ?? 88);
+  const userXp = user?.xp ?? activeMetrics?.xp ?? 0;
+  const userStreak = user?.streak_days ?? activeMetrics?.streak_days ?? 1;
+  const readiness = Math.round(activeMetrics?.readiness_score ?? 0);
   const readinessBreakdown = activeMetrics?.readiness_breakdown || defaultCandidateMetrics.readiness_breakdown;
   const stagesProgress = activeMetrics?.stages_progress || defaultCandidateMetrics.stages_progress;
   const resumeAts = activeMetrics?.resume_ats || defaultCandidateMetrics.resume_ats;
