@@ -17,30 +17,12 @@ export default function AdminCandidatesPage() {
     setLoading(true);
     try {
       const res = await apiFetch("/candidates");
-      if (res?.data) {
-        setCandidates(res.data);
+      if (res) {
+        const rawList = res.data ? (Array.isArray(res.data) ? res.data : (res.data.items || [])) : (Array.isArray(res) ? res : []);
+        setCandidates(rawList);
       }
     } catch (e) {
       console.warn("Failed to fetch candidates:", e);
-      // Mock Sachin Rawat real candidate fallback if backend sleeping
-      setCandidates([
-        {
-          id: "cand-sachin-01",
-          student_id: "STU-2026-099",
-          user: {
-            full_name: "Sachin Rawat",
-            email: "sachin@cloudops.internal",
-            phone_number: "+91 99999 88888"
-          },
-          target_role: "Senior DevOps Engineer",
-          course: "Multi-Cloud & DevOps Mastery",
-          batch: "Cohort 2026-A",
-          level: 1,
-          xp: 0,
-          readiness_score: 0.0,
-          created_at: "2026-09-02"
-        }
-      ]);
     } finally {
       setLoading(false);
     }

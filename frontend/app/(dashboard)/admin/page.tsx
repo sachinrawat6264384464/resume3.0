@@ -40,17 +40,18 @@ export default function AdminAnalyticsPage() {
 
   useEffect(() => {
     const isAdminPortalEnv = process.env.NEXT_PUBLIC_IS_ADMIN_PORTAL === "true";
+    const isAdminUser = user?.role === "ADMIN" || user?.role === "SUPER_ADMIN" || (user as any)?.is_admin === true;
 
-    // STRICT MICROSERVICE ISOLATION:
-    // /admin URL is 100% REMOVED/BLOCKED on Candidate Portal (resume3-0.vercel.app).
-    // It can ONLY be accessed on Dedicated Admin Microservice (resume3-admin.vercel.app).
-    if (!isAdminPortalEnv) {
-      router.replace("/dashboard");
-      return;
+    // Allow Admin portal access when in Admin environment OR when logged in with Admin Role
+    if (!isAdminPortalEnv && !isAdminUser && typeof window !== "undefined" && !window.location.hostname.includes("admin")) {
+      if (user?.role === "CANDIDATE") {
+        router.replace("/dashboard");
+        return;
+      }
     }
 
     loadAnalytics();
-  }, [router]);
+  }, [router, user]);
 
   const handleRetentionCleanup = async () => {
     if (!confirm("Run 90-day recording retention cleanup? This will permanently purge recordings older than 90 days.")) return;
