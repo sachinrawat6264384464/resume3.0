@@ -179,30 +179,39 @@ export default function LoginPage() {
           </div>
 
           {/* Middle Split: 5 Features (Left) + 3D Robot Image (Right) */}
-          <div className="flex flex-col sm:flex-row items-center justify-start gap-3 sm:gap-4 my-1.5 flex-1 min-h-0">
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-center my-2 flex-1 min-h-0">
             
             {/* Features Checklist */}
-            <div className="flex flex-col gap-3.5 shrink-0 w-full sm:w-[40%]">
+            <div className="md:col-span-5 flex flex-col gap-3 shrink-0">
               {features.map((f, i) => (
                 <div key={i} className="flex items-center gap-3">
-                  <div className="w-9.5 h-9.5 rounded-2xl bg-[#FF9900] text-white flex items-center justify-center shrink-0 shadow-lg shadow-[#FF9900]/25">
-                    <f.icon className="w-4.5 h-4.5" />
+                  <div className="w-8.5 h-8.5 rounded-xl bg-[#FF9900] text-white flex items-center justify-center shrink-0 shadow-md shadow-[#FF9900]/20">
+                    <f.icon className="w-4 h-4" />
                   </div>
                   <div className="flex flex-col min-w-0">
-                    <span className="text-sm sm:text-lg font-black text-slate-900 dark:text-white truncate">{f.title}</span>
-                    <span className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 font-semibold truncate">{f.desc}</span>
+                    <span className="text-xs sm:text-sm font-black text-slate-900 dark:text-white truncate">{f.title}</span>
+                    <span className="text-[11px] text-slate-500 dark:text-slate-400 font-semibold truncate">{f.desc}</span>
                   </div>
                 </div>
               ))}
             </div>
 
-            {/* 3D Robot & Laptop Image */}
-            <div className="w-full sm:w-[64%] flex items-center justify-center sm:justify-start relative h-full min-h-0 -ml-2 sm:-ml-5">
+            {/* 3D Robot & Laptop Image (Light Mode vs Dark Mode) */}
+            <div className="md:col-span-7 flex items-center justify-center relative">
+              {/* Light Mode Graphic */}
               <img 
                 src="/images/exact_login_hero_3d.png" 
-                alt="CloudOps AI Robot & Laptop 3D Illustration" 
-                className="w-full max-w-[580px] lg:max-w-[700px] max-h-[440px] lg:max-h-[500px] object-contain mix-blend-multiply contrast-[1.08] brightness-[1.02] dark:mix-blend-normal transition-transform duration-500 hover:scale-[1.03]" 
+                alt="CloudOps AI Robot 3D" 
+                className="w-full max-w-[340px] sm:max-w-[420px] max-h-[320px] object-contain mix-blend-multiply contrast-[1.08] dark:hidden transition-transform duration-500 hover:scale-[1.02]" 
               />
+              {/* Dark Mode Sci-Fi 3D Graphic */}
+              <div className="hidden dark:block w-full max-w-[340px] sm:max-w-[420px] rounded-3xl bg-slate-900/80 border border-slate-800 shadow-2xl p-2 overflow-hidden">
+                <img 
+                  src="/images/hero_3d_dark_bg.png" 
+                  alt="CloudOps AI Robot Dark Mode 3D" 
+                  className="w-full max-h-[280px] object-cover rounded-2xl transition-transform duration-500 hover:scale-[1.03]" 
+                />
+              </div>
             </div>
 
           </div>
