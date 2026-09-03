@@ -27,16 +27,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         localStorage.removeItem("auth_user");
       }
     }
-    setMounted(true);
   }, [setAuth]);
-
-  if (!mounted) {
-    return (
-      <div className="flex-1 flex items-center justify-center min-h-[60vh]">
-        <Loader2 className="w-8 h-8 text-[#FF9900] animate-spin" />
-      </div>
-    );
-  }
 
   return (
     <div className="flex min-h-screen w-full bg-slate-50 dark:bg-[#050810]">

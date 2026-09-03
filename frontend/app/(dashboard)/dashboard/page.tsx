@@ -17,16 +17,12 @@ export default function CandidateDashboardPage() {
   const { user, setAuth } = useAuthStore();
   
   const [theme, setTheme] = useState<"light" | "dark">("light");
-  const [mounted, setMounted] = useState(false);
   const [dbMetrics, setDbMetrics] = useState<any>(null);
   const [candProfile, setCandProfile] = useState<any>(null);
-
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
 
   // Always fetch fresh real data from backend — no stale localStorage cache
   useEffect(() => {
-    setMounted(true);
-
     if (typeof window !== "undefined") {
       localStorage.removeItem("cached_dash_metrics");
     }
