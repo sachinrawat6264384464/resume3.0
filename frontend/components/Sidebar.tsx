@@ -81,7 +81,7 @@ export function Sidebar() {
       
       {/* Brand Header */}
       <div className="p-5 pb-3">
-        <Link href="/" className="flex items-center gap-3 group">
+        <Link prefetch={false} href="/" className="flex items-center gap-3 group">
           <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-[#FF6B00] via-amber-500 to-orange-400 p-[1.5px] shadow-md shadow-[#FF6B00]/20 group-hover:scale-105 transition-transform">
             <div className="w-full h-full bg-[#0B1E36] rounded-[10px] flex items-center justify-center text-white">
               <Cloud className="w-4 h-4 text-[#FF6B00] fill-[#FF6B00]/20" />
@@ -107,7 +107,7 @@ export function Sidebar() {
         {navItems.map((item) => {
           const isActive = pathname === item.href;
           return (
-            <Link
+            <Link prefetch={false}
               key={item.label}
               href={item.href}
               className={`flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-black transition-all ${
@@ -127,7 +127,7 @@ export function Sidebar() {
       <div className="p-3.5 border-t border-slate-200 dark:border-slate-800 flex flex-col gap-3">
         
         {isAnalyzing && (
-          <Link
+          <Link prefetch={false}
             href="/resume-ats"
             className="p-3 rounded-2xl bg-amber-50 dark:bg-amber-950/70 border border-[#FF9900] shadow-md flex items-center gap-2.5 animate-pulse text-xs font-bold text-amber-900 dark:text-amber-200 hover:scale-[1.02] transition-all"
           >
@@ -170,7 +170,7 @@ export function Sidebar() {
             <div className="flex items-center gap-2.5">
               <div className="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-700 overflow-hidden shrink-0 flex items-center justify-center text-xs font-bold text-slate-700 dark:text-slate-300">
                 {user.avatar_url ? (
-                  <img src={user.avatar_url} alt="Avatar" className="w-full h-full object-cover" />
+                  <img loading="lazy" decoding="async" src={user.avatar_url} alt="Avatar" className="w-full h-full object-cover" />
                 ) : (
                   <span>{displayName?.charAt(0)?.toUpperCase() || "C"}</span>
                 )}

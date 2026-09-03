@@ -51,7 +51,7 @@ export default function CandidateResultsPage() {
     <div className="flex flex-col gap-8 max-w-5xl mx-auto w-full py-4">
       {/* Navigation Breadcrumb */}
       <div className="flex items-center justify-between">
-        <Link
+        <Link prefetch={false}
           href="/dashboard"
           className="text-xs text-slate-400 hover:text-white flex items-center gap-1.5 transition-colors"
         >

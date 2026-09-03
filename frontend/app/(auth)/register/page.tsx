@@ -219,8 +219,8 @@ export default function RegisterPage() {
 
           {/* 3D Robot Artwork */}
           <div className="md:col-span-7 flex items-center justify-center">
-            <img
-              src="/images/roadmap_aws_light_3d-removebg-preview.png"
+            <img loading="lazy" decoding="async"
+              src="/images/roadmap_aws_light_3d-removebg-preview.webp"
               alt="CloudOps AI AWS 3D Badge"
               className="w-full max-w-[560px] sm:max-w-[680px] max-h-[480px] sm:max-h-[550px] object-contain drop-shadow-2xl transition-transform duration-500 hover:scale-[1.05] scale-110 sm:scale-125 my-auto"
             />
@@ -440,7 +440,7 @@ export default function RegisterPage() {
 
                   <p className="text-center text-[11px] text-slate-500 dark:text-slate-400">
                     Already have an account?{" "}
-                    <Link href="/login" className="font-bold text-[#FF9900] hover:underline">
+                    <Link prefetch={false} href="/login" className="font-bold text-[#FF9900] hover:underline">
                       Sign In to Portal →
                     </Link>
                   </p>

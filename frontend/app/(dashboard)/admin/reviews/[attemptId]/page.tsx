@@ -78,7 +78,7 @@ export default function AdminAttemptReviewPage() {
     <div className="flex flex-col gap-6 max-w-6xl mx-auto w-full py-2">
       {/* Back link */}
       <div className="flex items-center justify-between">
-        <Link
+        <Link prefetch={false}
           href="/admin"
           className="text-xs text-slate-400 hover:text-white flex items-center gap-1.5 transition-colors"
         >

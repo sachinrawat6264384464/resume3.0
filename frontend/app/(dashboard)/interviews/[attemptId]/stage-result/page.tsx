@@ -159,7 +159,7 @@ export default function StageResultPage() {
         {/* Action Buttons */}
         <div className="flex flex-col sm:flex-row items-center gap-3 w-full justify-center pt-2">
           {isPassed && nextStage ? (
-            <Link
+            <Link prefetch={false}
               href={`/interviews/${attemptId}/room`}
               className="w-full sm:w-auto py-3.5 px-8 rounded-xl font-semibold text-xs text-white bg-gradient-to-r from-indigo-600 via-indigo-500 to-cyan-500 hover:opacity-90 shadow-xl shadow-indigo-600/30 flex items-center justify-center gap-2"
             >
@@ -167,7 +167,7 @@ export default function StageResultPage() {
               <ArrowRight className="w-4 h-4" />
             </Link>
           ) : (
-            <Link
+            <Link prefetch={false}
               href={`/results/${attemptId}`}
               className="w-full sm:w-auto py-3.5 px-8 rounded-xl font-semibold text-xs text-white bg-gradient-to-r from-indigo-600 to-cyan-600 hover:opacity-90 shadow-xl shadow-indigo-600/30 flex items-center justify-center gap-2"
             >
@@ -177,7 +177,7 @@ export default function StageResultPage() {
             </Link>
           )}
 
-          <Link
+          <Link prefetch={false}
             href="/dashboard"
             className="w-full sm:w-auto py-3.5 px-6 rounded-xl font-semibold text-xs text-slate-300 glass-panel hover:bg-white/10 border border-white/10"
           >

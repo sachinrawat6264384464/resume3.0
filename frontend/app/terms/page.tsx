@@ -10,7 +10,7 @@ export default function TermsOfServicePage() {
       {/* Header Bar */}
       <header className="border-b border-slate-800 bg-[#0B1E36]/80 backdrop-blur-md sticky top-0 z-50">
         <div className="max-w-[1536px] mx-auto px-4 sm:px-6 lg:px-12 py-4 flex items-center justify-between">
-          <Link 
+          <Link prefetch={false} 
             href="/#faq" 
             className="flex items-center gap-2 text-xs sm:text-sm font-black text-slate-300 hover:text-[#FF6B00] transition-colors"
           >
@@ -110,11 +110,11 @@ export default function TermsOfServicePage() {
 
         {/* Footer Navigation */}
         <div className="pt-8 border-t border-slate-800 flex items-center justify-between">
-          <Link href="/security" className="text-xs font-bold text-slate-400 hover:text-[#FF6B00] transition-colors flex items-center gap-1">
+          <Link prefetch={false} href="/security" className="text-xs font-bold text-slate-400 hover:text-[#FF6B00] transition-colors flex items-center gap-1">
             <span>Next: Security Compliance</span>
             <ChevronRight className="w-3.5 h-3.5" />
           </Link>
-          <Link href="/#faq" className="text-xs font-bold text-[#FF6B00] hover:underline">
+          <Link prefetch={false} href="/#faq" className="text-xs font-bold text-[#FF6B00] hover:underline">
             Return to Footer
           </Link>
         </div>

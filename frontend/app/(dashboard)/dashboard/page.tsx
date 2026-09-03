@@ -153,7 +153,7 @@ export default function CandidateDashboardPage() {
             </p>
 
             <div className="flex items-center gap-3 pt-1">
-              <Link 
+              <Link prefetch={false} 
                 href="/interviews"
                 className="py-2.5 px-5 rounded-xl font-black text-xs text-slate-950 bg-gradient-to-r from-[#FF9900] via-amber-400 to-orange-400 hover:from-amber-400 hover:to-orange-500 shadow-md shadow-[#FF9900]/25 flex items-center gap-2 transition-all"
               >
@@ -161,7 +161,7 @@ export default function CandidateDashboardPage() {
                 <span>Continue Interview</span>
               </Link>
 
-              <Link 
+              <Link prefetch={false} 
                 href="/resume-ats"
                 className="py-2.5 px-4 rounded-xl font-bold text-xs text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:bg-amber-50 flex items-center gap-2 shadow-sm transition-all"
               >
@@ -178,8 +178,8 @@ export default function CandidateDashboardPage() {
 
           {/* 3D Visual Illustration */}
           <div className="w-full sm:w-[240px] shrink-0 z-10 flex justify-center">
-            <img 
-              src="/images/hero_cloud_ai_3d.png" 
+            <img loading="lazy" decoding="async" 
+              src="/images/hero_cloud_ai_3d.webp" 
               alt="3D DevOps Cloud Graphic" 
               className="w-full max-w-[220px] max-h-[170px] object-contain drop-shadow-xl hover:scale-105 transition-transform duration-500" 
             />
@@ -271,7 +271,7 @@ export default function CandidateDashboardPage() {
             </div>
           </div>
 
-          <Link
+          <Link prefetch={false}
             href="/performance"
             className="w-full py-2 rounded-xl text-xs font-bold text-[#FF9900] bg-amber-50 dark:bg-amber-950/40 border border-[#FF9900]/30 hover:bg-amber-100 flex items-center justify-center gap-1 transition-all shadow-sm"
           >
@@ -449,7 +449,7 @@ export default function CandidateDashboardPage() {
             </div>
           </div>
 
-          <Link
+          <Link prefetch={false}
             href="/resume-ats"
             className="w-full py-2 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-300 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-100 flex items-center justify-center gap-1 transition-all shadow-sm"
           >
@@ -484,7 +484,7 @@ export default function CandidateDashboardPage() {
             )}
           </div>
 
-          <Link
+          <Link prefetch={false}
             href="/performance"
             className="text-xs font-bold text-[#FF9900] hover:underline flex items-center justify-end gap-1 mt-1"
           >
@@ -522,7 +522,7 @@ export default function CandidateDashboardPage() {
             </div>
           </div>
 
-          <Link
+          <Link prefetch={false}
             href="/interviews"
             className="w-full py-2.5 rounded-xl font-black text-xs text-slate-950 bg-gradient-to-r from-[#FF9900] via-amber-400 to-orange-400 hover:from-amber-400 hover:to-orange-500 shadow-md shadow-[#FF9900]/20 flex items-center justify-center gap-1.5 transition-all"
           >
@@ -568,7 +568,7 @@ export default function CandidateDashboardPage() {
             ))}
           </div>
 
-          <Link
+          <Link prefetch={false}
             href="/roadmap"
             className="text-xs font-bold text-[#FF9900] hover:underline flex items-center justify-end gap-1"
           >
@@ -644,7 +644,7 @@ export default function CandidateDashboardPage() {
             )}
           </div>
 
-          <Link
+          <Link prefetch={false}
             href="/leaderboard"
             className="text-xs font-bold text-[#FF9900] hover:underline flex items-center justify-end gap-1"
           >
@@ -667,7 +667,7 @@ export default function CandidateDashboardPage() {
           </p>
         </div>
 
-        <Link
+        <Link prefetch={false}
           href="/interviews"
           className="py-2.5 px-5 rounded-xl font-bold text-xs text-[#FF9900] bg-white dark:bg-slate-900 border border-[#FF9900]/30 hover:bg-amber-50 shadow-sm flex items-center gap-1.5 transition-all shrink-0"
         >

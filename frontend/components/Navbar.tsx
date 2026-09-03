@@ -34,7 +34,7 @@ export function Navbar() {
     <header className="sticky top-0 z-50 w-full glass-panel border-b border-slate-200/80 dark:border-white/10 transition-colors duration-300">
       <div className="w-full px-4 sm:px-6 lg:px-8 xl:px-12 h-16 flex items-center justify-between">
         {/* Brand Logo */}
-        <Link href="/" className="flex items-center gap-2.5 group">
+        <Link prefetch={false} href="/" className="flex items-center gap-2.5 group">
           <div className="relative flex items-center justify-center w-9 h-9 rounded-xl bg-[#FF9900] text-white shadow-lg shadow-[#FF9900]/25 group-hover:scale-105 transition-transform duration-300">
             <Cloud className="w-5 h-5 fill-white/20" />
           </div>
@@ -49,7 +49,7 @@ export function Navbar() {
         {/* Navigation links */}
         {isAuthenticated ? (
           <nav className="hidden md:flex items-center gap-1">
-            <Link
+            <Link prefetch={false}
               href="/dashboard"
               className={`px-3.5 py-2 rounded-xl text-xs font-semibold transition-all flex items-center gap-2 ${
                 pathname === "/dashboard"
@@ -61,7 +61,7 @@ export function Navbar() {
               Candidate Hub
             </Link>
 
-            <Link
+            <Link prefetch={false}
               href="/resume-ats"
               className={`px-3.5 py-2 rounded-xl text-xs font-semibold transition-all flex items-center gap-2 ${
                 pathname === "/resume-ats"
@@ -73,7 +73,7 @@ export function Navbar() {
               Resume ATS
             </Link>
 
-            <Link
+            <Link prefetch={false}
               href="/practice"
               className={`px-3.5 py-2 rounded-xl text-xs font-semibold transition-all flex items-center gap-2 ${
                 pathname === "/practice"
@@ -85,7 +85,7 @@ export function Navbar() {
               Quick Practice
             </Link>
 
-            <Link
+            <Link prefetch={false}
               href="/performance"
               className={`px-3.5 py-2 rounded-xl text-xs font-semibold transition-all flex items-center gap-2 ${
                 pathname === "/performance"
@@ -97,7 +97,7 @@ export function Navbar() {
               Performance
             </Link>
 
-            <Link
+            <Link prefetch={false}
               href="/leaderboard"
               className={`px-3.5 py-2 rounded-xl text-xs font-semibold transition-all flex items-center gap-2 ${
                 pathname === "/leaderboard"
@@ -111,7 +111,7 @@ export function Navbar() {
 
             {user?.role === "ADMIN" || user?.role === "SUPER_ADMIN" ? (
               <>
-                <Link
+                <Link prefetch={false}
                   href="/admin"
                   className={`px-3.5 py-2 rounded-xl text-xs font-semibold transition-all flex items-center gap-2 ${
                     pathname === "/admin"
@@ -122,7 +122,7 @@ export function Navbar() {
                   <Shield className="w-4 h-4 text-blue-600 dark:text-indigo-400" />
                   Admin Analytics
                 </Link>
-                <Link
+                <Link prefetch={false}
                   href="/admin/templates"
                   className={`px-3.5 py-2 rounded-xl text-xs font-semibold transition-all flex items-center gap-2 ${
                     pathname?.startsWith("/admin/templates")
@@ -139,16 +139,16 @@ export function Navbar() {
         ) : (
           /* Public Menu */
           <nav className="hidden md:flex items-center gap-3 lg:gap-6">
-            <Link href="#features" className="text-xs font-semibold text-slate-600 dark:text-slate-400 hover:text-blue-600 dark:hover:text-cyan-400 transition-colors">
+            <Link prefetch={false} href="#features" className="text-xs font-semibold text-slate-600 dark:text-slate-400 hover:text-blue-600 dark:hover:text-cyan-400 transition-colors">
               Features
             </Link>
-            <Link href="#how-it-works" className="text-xs font-semibold text-slate-600 dark:text-slate-400 hover:text-blue-600 dark:hover:text-cyan-400 transition-colors">
+            <Link prefetch={false} href="#how-it-works" className="text-xs font-semibold text-slate-600 dark:text-slate-400 hover:text-blue-600 dark:hover:text-cyan-400 transition-colors">
               How it Works
             </Link>
-            <Link href="/leaderboard" className="text-xs font-semibold text-slate-600 dark:text-slate-400 hover:text-blue-600 dark:hover:text-cyan-400 transition-colors">
+            <Link prefetch={false} href="/leaderboard" className="text-xs font-semibold text-slate-600 dark:text-slate-400 hover:text-blue-600 dark:hover:text-cyan-400 transition-colors">
               Leaderboard
             </Link>
-            <Link href="#pricing" className="text-xs font-semibold text-slate-600 dark:text-slate-400 hover:text-blue-600 dark:hover:text-cyan-400 transition-colors">
+            <Link prefetch={false} href="#pricing" className="text-xs font-semibold text-slate-600 dark:text-slate-400 hover:text-blue-600 dark:hover:text-cyan-400 transition-colors">
               Pricing
             </Link>
           </nav>
@@ -181,13 +181,13 @@ export function Navbar() {
             </div>
           ) : (
             <div className="flex items-center gap-2">
-              <Link
+              <Link prefetch={false}
                 href="/login"
                 className="px-3 sm:px-4 py-2 text-xs font-bold text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 hover:bg-slate-50 border border-slate-200 dark:border-slate-700 rounded-xl shadow-sm transition-all"
               >
                 Login
               </Link>
-              <Link
+              <Link prefetch={false}
                 href="/register"
                 className="px-4 py-2 text-xs font-black text-slate-950 bg-gradient-to-r from-[#FF9900] via-amber-400 to-orange-400 hover:from-amber-400 hover:to-orange-500 rounded-xl transition-all shadow-md shadow-[#FF9900]/25 flex items-center gap-1.5 whitespace-nowrap shrink-0"
               >

@@ -56,7 +56,7 @@ export default function LandingPage() {
         <div className="max-w-[1536px] mx-auto px-4 sm:px-6 lg:px-12 h-20 flex items-center justify-between">
           
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-3 group">
+          <Link prefetch={false} href="/" className="flex items-center gap-3 group">
             <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-[#FF6B00] via-amber-500 to-orange-400 p-[1.5px] shadow-md shadow-[#FF6B00]/20 group-hover:scale-105 transition-transform">
               <div className="w-full h-full bg-[#0B1E36] rounded-[14px] flex items-center justify-center text-white">
                 <Cloud className="w-5 h-5 text-[#FF6B00] fill-[#FF6B00]/20" />
@@ -84,14 +84,14 @@ export default function LandingPage() {
           <div className="flex items-center gap-4">
             <ThemeToggle />
 
-            <Link 
+            <Link prefetch={false} 
               href="/login" 
               className="text-xs font-extrabold text-slate-700 dark:text-slate-300 hover:text-[#0B1E36] dark:hover:text-white px-2 py-2 transition-colors"
             >
               Sign In
             </Link>
 
-            <Link 
+            <Link prefetch={false} 
               href="/register" 
               className="text-xs font-black text-white bg-gradient-to-r from-[#FF6B00] via-amber-500 to-orange-500 hover:from-orange-500 hover:to-amber-600 px-5 py-3 rounded-full shadow-lg shadow-[#FF6B00]/25 flex items-center gap-2 hover:scale-[1.02] active:scale-[0.98] transition-all"
             >
@@ -108,7 +108,7 @@ export default function LandingPage() {
         {/* High-Tech Engineer Server Room Background Image with Fade from Left to Right */}
         <div 
           className="absolute inset-0 z-0 bg-cover bg-right bg-no-repeat opacity-95 dark:opacity-80 pointer-events-none transition-opacity duration-500"
-          style={{ backgroundImage: `url('/images/hero_engineer_datacenter.png')` }}
+          style={{ backgroundImage: `url('/images/hero_engineer_datacenter.webp')` }}
         />
         <div className="absolute inset-0 z-0 bg-gradient-to-r from-white via-white/90 via-45% to-transparent dark:from-[#070b14] dark:via-[#070b14]/90 dark:via-45% dark:to-transparent pointer-events-none" />
 
@@ -130,7 +130,7 @@ export default function LandingPage() {
 
               {/* Action Pill CTAs */}
               <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3.5 pt-1">
-                <Link
+                <Link prefetch={false}
                   href="/register"
                   className="py-4 px-7 rounded-full font-black text-xs text-white bg-gradient-to-r from-[#FF6B00] via-amber-500 to-orange-500 hover:from-orange-500 hover:to-amber-600 shadow-xl shadow-[#FF6B00]/30 flex items-center justify-center gap-2.5 hover:scale-[1.02] active:scale-[0.98] transition-all"
                 >
@@ -153,8 +153,8 @@ export default function LandingPage() {
                 {/* 1. AI Voice Interview */}
                 <div className="flex flex-col gap-2 group cursor-pointer">
                   <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-[22px] overflow-hidden shadow-lg shadow-slate-200/60 dark:shadow-black/60 border border-slate-200/90 dark:border-slate-800 bg-slate-100 dark:bg-slate-900 group-hover:scale-105 group-hover:shadow-xl transition-all shrink-0">
-                    <img 
-                      src="/images/thumb_voice_mic.png" 
+                    <img loading="lazy" decoding="async" 
+                      src="/images/thumb_voice_mic.webp" 
                       alt="AI Voice Interview Studio Mic" 
                       className="w-full h-full object-cover" 
                     />
@@ -166,8 +166,8 @@ export default function LandingPage() {
                 {/* 2. ATS Resume Score */}
                 <div className="flex flex-col gap-2 group cursor-pointer">
                   <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-[22px] overflow-hidden shadow-lg shadow-slate-200/60 dark:shadow-black/60 border border-slate-200/90 dark:border-slate-800 bg-slate-100 dark:bg-slate-900 group-hover:scale-105 group-hover:shadow-xl transition-all shrink-0">
-                    <img 
-                      src="/images/thumb_ats_score.png" 
+                    <img loading="lazy" decoding="async" 
+                      src="/images/thumb_ats_score.webp" 
                       alt="ATS Resume Analytics Laptop" 
                       className="w-full h-full object-cover" 
                     />
@@ -179,8 +179,8 @@ export default function LandingPage() {
                 {/* 3. 5-Stage System */}
                 <div className="flex flex-col gap-2 group cursor-pointer">
                   <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-[22px] overflow-hidden shadow-lg shadow-slate-200/60 dark:shadow-black/60 border border-slate-200/90 dark:border-slate-800 bg-slate-100 dark:bg-slate-900 group-hover:scale-105 group-hover:shadow-xl transition-all shrink-0">
-                    <img 
-                      src="/images/thumb_5stage_aws.png" 
+                    <img loading="lazy" decoding="async" 
+                      src="/images/thumb_5stage_aws.webp" 
                       alt="AWS 3D Cloud Badge" 
                       className="w-full h-full object-cover" 
                     />
@@ -192,8 +192,8 @@ export default function LandingPage() {
                 {/* 4. 30-Day Roadmap */}
                 <div className="flex flex-col gap-2 group cursor-pointer">
                   <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-[22px] overflow-hidden shadow-lg shadow-slate-200/60 dark:shadow-black/60 border border-slate-200/90 dark:border-slate-800 bg-gradient-to-br from-[#0B1E36] to-[#102A4C] p-1.5 group-hover:scale-105 group-hover:shadow-xl group-hover:border-[#FF6B00] transition-all shrink-0 flex items-center justify-center">
-                    <img 
-                      src="/images/roadmap_aws_light_3d-removebg-preview.png" 
+                    <img loading="lazy" decoding="async" 
+                      src="/images/roadmap_aws_light_3d-removebg-preview.webp" 
                       alt="3D AWS Cloud Architecture Skill Roadmap" 
                       className="w-full h-full object-contain filter drop-shadow-md group-hover:scale-110 transition-transform" 
                     />
@@ -226,7 +226,7 @@ export default function LandingPage() {
 
                     <div className="flex flex-col items-center text-center p-3 rounded-2xl bg-white/5 border border-white/10">
                       <div className="w-13 h-13 rounded-full overflow-hidden border-2 border-[#FF6B00] mb-2 shadow-md">
-                        <img 
+                        <img loading="lazy" decoding="async" 
                           src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=200" 
                           alt="Rahul Rawat Profile" 
                           className="w-full h-full object-cover" 
@@ -566,10 +566,10 @@ export default function LandingPage() {
 
             <div className="flex items-center gap-3 shrink-0">
               <div className="flex -space-x-2.5 overflow-hidden">
-                <img className="inline-block h-8 w-8 rounded-full ring-2 ring-white dark:ring-slate-800 object-cover" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=100" alt="User 1" />
-                <img className="inline-block h-8 w-8 rounded-full ring-2 ring-white dark:ring-slate-800 object-cover" src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=100" alt="User 2" />
-                <img className="inline-block h-8 w-8 rounded-full ring-2 ring-white dark:ring-slate-800 object-cover" src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=100" alt="User 3" />
-                <img className="inline-block h-8 w-8 rounded-full ring-2 ring-white dark:ring-slate-800 object-cover" src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=100" alt="User 4" />
+                <img loading="lazy" decoding="async" className="inline-block h-8 w-8 rounded-full ring-2 ring-white dark:ring-slate-800 object-cover" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=100" alt="User 1" />
+                <img loading="lazy" decoding="async" className="inline-block h-8 w-8 rounded-full ring-2 ring-white dark:ring-slate-800 object-cover" src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=100" alt="User 2" />
+                <img loading="lazy" decoding="async" className="inline-block h-8 w-8 rounded-full ring-2 ring-white dark:ring-slate-800 object-cover" src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=100" alt="User 3" />
+                <img loading="lazy" decoding="async" className="inline-block h-8 w-8 rounded-full ring-2 ring-white dark:ring-slate-800 object-cover" src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=100" alt="User 4" />
               </div>
               <span className="text-xs font-black text-slate-900 dark:text-white">10,000+ Engineers <span className="text-slate-400 font-medium block text-[10px]">are leveling up</span></span>
             </div>
@@ -582,7 +582,7 @@ export default function LandingPage() {
         {/* High-Tech Ambient Cloud Network Background Image Overlay for Voice AI */}
         <div 
           className="absolute inset-0 z-0 bg-cover bg-center bg-no-repeat opacity-20 dark:opacity-40 pointer-events-none transition-opacity duration-500"
-          style={{ backgroundImage: `url('/images/hero_bg_cloud_network.png')` }}
+          style={{ backgroundImage: `url('/images/hero_bg_cloud_network.webp')` }}
         />
         <div className="absolute inset-0 z-0 bg-gradient-to-b from-slate-50/90 via-slate-50/60 to-slate-50/90 dark:from-[#070b14]/90 dark:via-[#070b14]/60 dark:to-[#070b14]/90 pointer-events-none" />
 
@@ -673,8 +673,8 @@ export default function LandingPage() {
                 <div className="p-6 sm:p-8 flex flex-col gap-6 relative z-10">
                   
                   <div className="relative rounded-2xl overflow-hidden border border-slate-700/80 bg-slate-900/80 shadow-2xl group-hover:scale-[1.02] transition-transform duration-500">
-                    <img 
-                      src="/images/thumb_voice_chamber_3d.png" 
+                    <img loading="lazy" decoding="async" 
+                      src="/images/thumb_voice_chamber_3d.webp" 
                       alt="Voice AI Microphone Chamber 3D Render" 
                       className="w-full h-60 sm:h-64 object-cover"
                     />
@@ -824,11 +824,11 @@ export default function LandingPage() {
           {/* 5 Horizontal Stage Cards (With 3D Photo Thumbnails) */}
           <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
             {[
-              { id: "01", name: "PROFILE PITCH", desc: "Tell us about yourself & your goals", img: "/images/thumb_voice_mic.png" },
-              { id: "02", name: "LINUX WARRIOR", desc: "Excel in shells, scripts & tools like a pro", img: "/images/card_linux_kernel.png" },
-              { id: "03", name: "MULTI CLOUD", desc: "AWS, GCP & Azure basics & core services", img: "/images/thumb_5stage_aws.png" },
-              { id: "04", name: "CONTAINERS & K8S", desc: "Containerize & orchestrate like a SRE", img: "/images/card_docker_k8s.png" },
-              { id: "05", name: "INCIDENT BOSS", desc: "Crack real incidents, root cause & resolve", img: "/images/thumb_boss_battle.png" },
+              { id: "01", name: "PROFILE PITCH", desc: "Tell us about yourself & your goals", img: "/images/thumb_voice_mic.webp" },
+              { id: "02", name: "LINUX WARRIOR", desc: "Excel in shells, scripts & tools like a pro", img: "/images/card_linux_kernel.webp" },
+              { id: "03", name: "MULTI CLOUD", desc: "AWS, GCP & Azure basics & core services", img: "/images/thumb_5stage_aws.webp" },
+              { id: "04", name: "CONTAINERS & K8S", desc: "Containerize & orchestrate like a SRE", img: "/images/card_docker_k8s.webp" },
+              { id: "05", name: "INCIDENT BOSS", desc: "Crack real incidents, root cause & resolve", img: "/images/thumb_boss_battle.webp" },
             ].map((st, idx) => (
               <motion.div 
                 key={idx}
@@ -850,7 +850,7 @@ export default function LandingPage() {
 
                   {/* 3D Thumbnail Render */}
                   <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-[22px] overflow-hidden shadow-lg shadow-slate-200/60 dark:shadow-black/60 border border-slate-200/90 dark:border-slate-800 bg-slate-100 dark:bg-slate-900 group-hover:scale-105 transition-all shrink-0 mx-auto my-3">
-                    <img 
+                    <img loading="lazy" decoding="async" 
                       src={st.img} 
                       alt={st.name} 
                       className="w-full h-full object-cover" 
@@ -861,7 +861,7 @@ export default function LandingPage() {
                   <p className="text-xs text-slate-500 dark:text-slate-400 text-center mt-1.5 leading-relaxed font-medium">{st.desc}</p>
                 </div>
 
-                <Link href="/login" className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-center gap-1.5 text-xs font-extrabold text-[#FF6B00] group-hover:translate-x-0.5 transition-transform">
+                <Link prefetch={false} href="/login" className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-center gap-1.5 text-xs font-extrabold text-[#FF6B00] group-hover:translate-x-0.5 transition-transform">
                   <span>Explore Stage</span>
                   <ArrowRight className="w-3.5 h-3.5" />
                 </Link>
@@ -957,8 +957,8 @@ export default function LandingPage() {
                 <div className="p-6 sm:p-8 flex flex-col gap-6 relative z-10">
                   
                   <div className="relative rounded-2xl overflow-hidden border border-slate-700/80 bg-slate-900/80 shadow-2xl group-hover:scale-[1.02] transition-transform duration-500">
-                    <img 
-                      src="/images/ats_resume_laptop_3d.png" 
+                    <img loading="lazy" decoding="async" 
+                      src="/images/ats_resume_laptop_3d.webp" 
                       alt="ATS Resume Scanner 3D Render" 
                       className="w-full h-64 sm:h-72 object-cover"
                     />
@@ -1024,7 +1024,7 @@ export default function LandingPage() {
                 Uncover missing critical keywords (IRSA, Terraform state locking, Prometheus metrics) and automatically rewrite bullet points with quantified STAR metrics.
               </p>
 
-              <Link
+              <Link prefetch={false}
                 href="/resume-ats"
                 className="w-fit py-3.5 px-7 rounded-2xl font-black text-xs text-white bg-[#0B1E36] dark:bg-slate-800 hover:bg-slate-800 dark:hover:bg-slate-700 border border-slate-700 shadow-xl shadow-[#0B1E36]/20 flex items-center gap-2.5 transition-all"
               >
@@ -1039,8 +1039,8 @@ export default function LandingPage() {
                 {/* 1. Keyword Gap Detection */}
                 <div className="flex flex-col items-center text-center gap-2 group cursor-pointer">
                   <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-[22px] overflow-hidden shadow-lg shadow-slate-200/60 dark:shadow-black/60 border border-slate-200/90 dark:border-slate-800 bg-slate-100 dark:bg-slate-900 group-hover:scale-105 transition-all shrink-0">
-                    <img 
-                      src="/images/thumb_ats_keyword.png" 
+                    <img loading="lazy" decoding="async" 
+                      src="/images/thumb_ats_keyword.webp" 
                       alt="Keyword Gap Detection" 
                       className="w-full h-full object-cover" 
                     />
@@ -1051,8 +1051,8 @@ export default function LandingPage() {
                 {/* 2. AI-Powered Rewriting */}
                 <div className="flex flex-col items-center text-center gap-2 group cursor-pointer">
                   <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-[22px] overflow-hidden shadow-lg shadow-slate-200/60 dark:shadow-black/60 border border-slate-200/90 dark:border-slate-800 bg-slate-100 dark:bg-slate-900 group-hover:scale-105 transition-all shrink-0">
-                    <img 
-                      src="/images/thumb_ats_rewrite.png" 
+                    <img loading="lazy" decoding="async" 
+                      src="/images/thumb_ats_rewrite.webp" 
                       alt="AI-Powered Rewriting" 
                       className="w-full h-full object-cover" 
                     />
@@ -1063,8 +1063,8 @@ export default function LandingPage() {
                 {/* 3. STAR Metric Scoring */}
                 <div className="flex flex-col items-center text-center gap-2 group cursor-pointer">
                   <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-[22px] overflow-hidden shadow-lg shadow-slate-200/60 dark:shadow-black/60 border border-slate-200/90 dark:border-slate-800 bg-slate-100 dark:bg-slate-900 group-hover:scale-105 transition-all shrink-0">
-                    <img 
-                      src="/images/thumb_ats_star.png" 
+                    <img loading="lazy" decoding="async" 
+                      src="/images/thumb_ats_star.webp" 
                       alt="STAR Metric Scoring" 
                       className="w-full h-full object-cover" 
                     />
@@ -1075,8 +1075,8 @@ export default function LandingPage() {
                 {/* 4. ATS Match Optimization */}
                 <div className="flex flex-col items-center text-center gap-2 group cursor-pointer">
                   <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-[22px] overflow-hidden shadow-lg shadow-slate-200/60 dark:shadow-black/60 border border-slate-200/90 dark:border-slate-800 bg-slate-100 dark:bg-slate-900 group-hover:scale-105 transition-all shrink-0">
-                    <img 
-                      src="/images/thumb_ats_match.png" 
+                    <img loading="lazy" decoding="async" 
+                      src="/images/thumb_ats_match.webp" 
                       alt="ATS Match Optimization" 
                       className="w-full h-full object-cover" 
                     />
@@ -1158,8 +1158,8 @@ export default function LandingPage() {
             >
               <div>
                 <div className="h-48 relative bg-slate-950 overflow-hidden">
-                  <img 
-                    src="/images/card_linux_kernel.png" 
+                  <img loading="lazy" decoding="async" 
+                    src="/images/card_linux_kernel.webp" 
                     alt="Linux Kernel & Networking" 
                     className="w-full h-full object-cover opacity-90 group-hover:scale-105 transition-transform duration-500" 
                   />
@@ -1203,8 +1203,8 @@ export default function LandingPage() {
             >
               <div>
                 <div className="h-48 relative bg-slate-950 overflow-hidden">
-                  <img 
-                    src="/images/card_aws_vpc.png" 
+                  <img loading="lazy" decoding="async" 
+                    src="/images/card_aws_vpc.webp" 
                     alt="AWS VPC IAM & Security" 
                     className="w-full h-full object-cover opacity-90 group-hover:scale-105 transition-transform duration-500" 
                   />
@@ -1248,8 +1248,8 @@ export default function LandingPage() {
             >
               <div>
                 <div className="h-48 relative bg-slate-950 overflow-hidden">
-                  <img 
-                    src="/images/card_docker_k8s.png" 
+                  <img loading="lazy" decoding="async" 
+                    src="/images/card_docker_k8s.webp" 
                     alt="Docker & Kubernetes EKS" 
                     className="w-full h-full object-cover opacity-90 group-hover:scale-105 transition-transform duration-500" 
                   />
@@ -1293,8 +1293,8 @@ export default function LandingPage() {
             >
               <div>
                 <div className="h-48 relative bg-slate-950 overflow-hidden">
-                  <img 
-                    src="/images/card_terraform_iac.png" 
+                  <img loading="lazy" decoding="async" 
+                    src="/images/card_terraform_iac.webp" 
                     alt="Terraform IaC & Incidents" 
                     className="w-full h-full object-cover opacity-90 group-hover:scale-105 transition-transform duration-500" 
                   />
@@ -1437,7 +1437,7 @@ export default function LandingPage() {
                   Can&apos;t find what you&apos;re looking for? Submit a ticket directly to our technical admin team for rapid response.
                 </p>
 
-                <Link
+                <Link prefetch={false}
                   href="/login"
                   className="w-full py-3.5 px-5 rounded-2xl font-black text-xs text-center text-white bg-gradient-to-r from-[#FF6B00] to-orange-600 hover:from-orange-600 hover:to-amber-600 shadow-lg shadow-[#FF6B00]/20 transition-all flex items-center justify-center gap-2 relative z-10"
                 >
@@ -1519,7 +1519,7 @@ export default function LandingPage() {
             </div>
 
             <div className="flex flex-col sm:flex-row items-center gap-3 shrink-0 relative z-10 w-full sm:w-auto">
-              <Link
+              <Link prefetch={false}
                 href="/register"
                 className="w-full sm:w-auto py-4 px-8 rounded-full font-black text-xs text-white bg-gradient-to-r from-[#FF6B00] via-amber-500 to-orange-500 hover:from-orange-500 hover:to-amber-600 shadow-xl shadow-[#FF6B00]/30 flex items-center justify-center gap-2 hover:scale-[1.02] transition-all"
               >
@@ -1528,7 +1528,7 @@ export default function LandingPage() {
                 <ArrowRight className="w-4 h-4" />
               </Link>
 
-              <Link
+              <Link prefetch={false}
                 href="/resume-ats"
                 className="w-full sm:w-auto py-4 px-7 rounded-full font-extrabold text-xs text-white bg-white/10 border border-white/20 hover:bg-white/20 flex items-center justify-center gap-2 transition-all"
               >
@@ -1581,7 +1581,7 @@ export default function LandingPage() {
               <a href="#voice-ai" className="text-slate-400 hover:text-[#FF6B00] transition-colors font-medium">Voice AI Chamber</a>
               <a href="#ats" className="text-slate-400 hover:text-[#FF6B00] transition-colors font-medium">6-Factor ATS Analyzer</a>
               <a href="#roadmap" className="text-slate-400 hover:text-[#FF6B00] transition-colors font-medium">30-Day AI Roadmap</a>
-              <Link href="/leaderboard" className="text-slate-400 hover:text-[#FF6B00] transition-colors font-medium">Leaderboard & XP</Link>
+              <Link prefetch={false} href="/leaderboard" className="text-slate-400 hover:text-[#FF6B00] transition-colors font-medium">Leaderboard & XP</Link>
             </div>
 
             {/* Column 3: TECH STACKS */}
@@ -1597,9 +1597,9 @@ export default function LandingPage() {
             {/* Column 4: RESOURCES & HELP */}
             <div className="flex flex-col gap-3 text-xs">
               <span className="font-black text-white uppercase tracking-wider text-[11px]">RESOURCES & HELP</span>
-              <Link href="/help" className="text-slate-400 hover:text-[#FF6B00] transition-colors font-medium">Engineering Help Desk</Link>
+              <Link prefetch={false} href="/help" className="text-slate-400 hover:text-[#FF6B00] transition-colors font-medium">Engineering Help Desk</Link>
               <a href="#faq" className="text-slate-400 hover:text-[#FF6B00] transition-colors font-medium">FAQ & Documentation</a>
-              <Link href="/login" className="text-slate-400 hover:text-[#FF6B00] transition-colors font-medium">Candidate Login</Link>
+              <Link prefetch={false} href="/login" className="text-slate-400 hover:text-[#FF6B00] transition-colors font-medium">Candidate Login</Link>
               <a href="https://resume3-admin.vercel.app" target="_blank" rel="noreferrer" className="text-slate-400 hover:text-[#FF6B00] transition-colors font-medium">Admin Portal</a>
             </div>
 
@@ -1641,10 +1641,10 @@ export default function LandingPage() {
             <span>© 2026 CloudOps AI Assessment OS. Built for Cloud Engineers worldwide.</span>
             
             <div className="flex items-center gap-6 text-[11px] font-medium flex-wrap">
-              <Link href="/privacy" className="hover:text-[#FF6B00] transition-colors">Privacy Policy</Link>
-              <Link href="/terms" className="hover:text-[#FF6B00] transition-colors">Terms of Service</Link>
-              <Link href="/security" className="hover:text-[#FF6B00] transition-colors">Security Compliance</Link>
-              <Link href="/retention" className="hover:text-[#FF6B00] transition-colors">90-Day Data Retention Policy</Link>
+              <Link prefetch={false} href="/privacy" className="hover:text-[#FF6B00] transition-colors">Privacy Policy</Link>
+              <Link prefetch={false} href="/terms" className="hover:text-[#FF6B00] transition-colors">Terms of Service</Link>
+              <Link prefetch={false} href="/security" className="hover:text-[#FF6B00] transition-colors">Security Compliance</Link>
+              <Link prefetch={false} href="/retention" className="hover:text-[#FF6B00] transition-colors">90-Day Data Retention Policy</Link>
             </div>
           </div>
 

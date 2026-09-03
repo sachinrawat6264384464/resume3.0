@@ -313,7 +313,7 @@ export default function InterviewsPage() {
                       <span>Stage Passed! Score: {selectedStage.score}</span>
                       <CheckCircle2 className="w-4 h-4 text-emerald-600" />
                     </div>
-                    <Link
+                    <Link prefetch={false}
                       href={`/interviews/stage-${selectedStage.id}`}
                       className="w-full py-3.5 rounded-xl font-bold text-xs text-slate-800 dark:text-slate-200 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 flex items-center justify-center gap-2 transition-all text-center"
                     >

@@ -1,6 +1,17 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+  compress: true,
+  swcMinify: true,
+  experimental: {
+    optimizePackageImports: [
+      "lucide-react",
+      "recharts",
+      "framer-motion",
+      "@tanstack/react-query",
+      "react-icons"
+    ],
+  },
   images: {
     domains: ["images.unsplash.com", "lh3.googleusercontent.com", "avatars.githubusercontent.com"],
   },
