@@ -94,105 +94,47 @@ CERTIFICATIONS
 - AWS Certified Solutions Architect - Associate
 - Certified Kubernetes Administrator (CKA)`;
 
-  const generateClientATSResult = (text: string, title: string, jd: string): ResumeATSResponse => {
-    const commonSkills = ["AWS", "Docker", "Kubernetes", "Terraform", "Linux", "CI/CD", "Python", "Prometheus", "Grafana", "IAM", "VPC", "EKS", "Git", "Bash", "Jenkins", "Helm"];
-    const textUpper = (text + " " + jd).toUpperCase();
-    const matching = commonSkills.filter(s => textUpper.includes(s.toUpperCase()));
-    const missing = commonSkills.filter(s => !matching.includes(s) && jd.toUpperCase().includes(s.toUpperCase()));
-    if (missing.length === 0) missing.push("Istio Service Mesh", "Trivy Security", "ArgoCD");
-
-    const score = Math.min(94, Math.max(68, Math.round((matching.length / (matching.length + (missing.length || 1))) * 100) + 15));
-
-    return {
-      ats_score: score,
-      breakdown: {
-        skills_match: Math.min(100, score + 4),
-        experience_match: Math.max(60, score - 2),
-        keywords_match: Math.min(100, score + 2),
-        projects_match: Math.max(65, score - 5),
-        certifications_match: 85,
-        job_role_match: score
-      },
-      matching_skills: matching.length > 0 ? matching : ["AWS", "Docker", "Linux", "Terraform", "CI/CD"],
-      missing_skills: missing,
-      weak_areas: ["Multi-stage Docker builds", "Zero-Trust Security Policies"],
-      strong_areas: ["AWS Infrastructure", "Containerization & Orchestration"],
-      recommended_interview_stages: [
-        { stage_id: 2, title: "Linux Systems Warrior", reason: "Matches core OS requirements" },
-        { stage_id: 3, title: "Multi-Cloud Architecture", reason: "Deep AWS/VPC skills detected" }
-      ],
-      candidate_profile: {
-        candidate_name: user?.full_name || "Candidate User",
-        years_of_experience: 3,
-        primary_skills: matching,
-        cloud_platforms: ["AWS"],
-        devops_tools: ["Docker", "Kubernetes", "Terraform"],
-        devsecops_tools: ["Trivy"],
-        ai_skills: [],
-        certifications: ["AWS Certified Solutions Architect"],
-        education: ["B.Tech in Computer Science"],
-        experience: [],
-        projects: []
-      },
-      bullet_suggestions: [
-        {
-          current: "Managed AWS infrastructure and deployed application updates.",
-          improved: "Automated AWS multi-region infrastructure provisioning using Terraform IaC, reducing deployment lead time by 45% and maintaining 99.9% uptime.",
-          impact_metrics_added: ["45% lead time reduction", "99.9% uptime"],
-          skills_highlighted: ["AWS", "Terraform", "IaC"],
-          rationale: "Quantified deployment efficiency and infrastructure availability metrics."
-        },
-        {
-          current: "Configured Jenkins CI/CD pipelines to build Docker containers.",
-          improved: "Engineered scalable GitHub Actions & Docker multi-stage CI/CD pipelines, accelerating container build speeds by 60% and enforcing Trivy vulnerability scanning.",
-          impact_metrics_added: ["60% faster builds", "Automated security scanning"],
-          skills_highlighted: ["CI/CD", "Docker", "Trivy"],
-          rationale: "Added security scanning details and build acceleration percentage."
-        },
-        {
-          current: "Handled Kubernetes pod troubleshooting and monitoring.",
-          improved: "Orchestrated AWS EKS production cluster deployments with Prometheus & Grafana alerting, reducing Mean Time to Resolution (MTTR) by 35%.",
-          impact_metrics_added: ["35% MTTR reduction", "Prometheus alerting"],
-          skills_highlighted: ["Kubernetes", "EKS", "Prometheus"],
-          rationale: "Framed pod troubleshooting around incident MTTR reduction metrics."
-        }
-      ]
-    };
-  };
-
   const handleAnalyze = async () => {
     setIsAnalyzing(true);
     setAnalysisError(null);
-    const textToAnalyze = selectedFile ? (selectedFile.name + " " + sampleResumeContent) : (resumeText.trim() || sampleResumeContent);
-
     try {
-      // 3.5 second fast timeout race so candidate never waits on sleeping Render server
-      const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout")), 3500));
-      let fetchPromise;
+      let res;
       if (selectedFile) {
         const formData = new FormData();
         formData.append("file", selectedFile);
         formData.append("job_title", jobTitle);
         formData.append("job_description", jobDescription);
-        fetchPromise = apiFetch("/resumes/parse-and-match", { method: "POST", body: formData });
-      } else {
-        fetchPromise = apiFetch("/resumes/parse-text", {
+
+        res = await apiFetch("/resumes/parse-and-match", {
           method: "POST",
-          body: JSON.stringify({ resume_text: textToAnalyze, job_title: jobTitle, job_description: jobDescription })
+          body: formData
+        });
+      } else {
+        const textToAnalyze = resumeText.trim() || sampleResumeContent;
+        res = await apiFetch("/resumes/parse-text", {
+          method: "POST",
+          body: JSON.stringify({
+            resume_text: textToAnalyze,
+            job_title: jobTitle,
+            job_description: jobDescription
+          })
         });
       }
 
-      const res: any = await Promise.race([fetchPromise, timeoutPromise]);
       if (res?.data) {
         setAtsResult(res.data);
       } else {
-        setAtsResult(generateClientATSResult(textToAnalyze, jobTitle, jobDescription));
+        setIsAnalyzing(false);
       }
     } catch (err: any) {
-      console.warn("ATS backend notice - using instant client ATS engine:", err);
-      setAtsResult(generateClientATSResult(textToAnalyze, jobTitle, jobDescription));
-    } finally {
-      setIsAnalyzing(false);
+      const msg = err.message || "";
+      if (msg.includes("Failed to fetch") || msg.includes("NetworkError") || msg.includes("timeout")) {
+        setAnalysisError("⚠️ Server is waking up (Render cold-start). Please wait 30 seconds and try again — the analysis will work on retry.");
+      } else if (msg.includes("401") || msg.includes("Unauthorized")) {
+        setAnalysisError("⚠️ Session expired. Please sign out and sign back in, then retry the analysis.");
+      } else {
+        setAnalysisError(msg || "Analysis failed. Please try again.");
+      }
     }
   };
 
