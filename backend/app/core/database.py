@@ -4,8 +4,25 @@ from sqlalchemy.orm import declarative_base
 from app.core.config import settings
 
 # Engine configuration
+db_url = settings.DATABASE_URL
+if db_url.startswith("postgresql://"):
+    db_url = db_url.replace("postgresql://", "postgresql+asyncpg://", 1)
+elif db_url.startswith("postgres://"):
+    db_url = db_url.replace("postgres://", "postgresql+asyncpg://", 1)
+
+# Remove problematic query params for asyncpg on Windows
+if "&channel_binding=require" in db_url:
+    db_url = db_url.replace("&channel_binding=require", "")
+if "?channel_binding=require" in db_url:
+    db_url = db_url.replace("?channel_binding=require", "")
+
+if "?sslmode=require" in db_url:
+    db_url = db_url.replace("?sslmode=require", "?ssl=require")
+elif "&sslmode=require" in db_url:
+    db_url = db_url.replace("&sslmode=require", "&ssl=require")
+
 engine_kwargs = {}
-if "sqlite" in settings.DATABASE_URL:
+if "sqlite" in db_url:
     engine_kwargs["connect_args"] = {"check_same_thread": False}
 else:
     # PostgreSQL / Neon settings
@@ -14,7 +31,7 @@ else:
     engine_kwargs["pool_pre_ping"] = True
 
 engine = create_async_engine(
-    settings.DATABASE_URL,
+    db_url,
     echo=settings.DEBUG,
     **engine_kwargs
 )

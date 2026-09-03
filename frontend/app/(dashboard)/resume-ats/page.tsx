@@ -1,21 +1,68 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { 
   FileText, Upload, Sparkles, CheckCircle2, AlertTriangle, 
   ArrowRight, Download, RefreshCw, Check, X, Edit3, 
-  Briefcase, Award, Zap, ShieldCheck, Flame, ChevronRight, Loader2
+  Briefcase, Award, Zap, ShieldCheck, Flame, ChevronRight, Loader2,
+  Scan, Layers, Cpu, FileCheck, HelpCircle
 } from "lucide-react";
 import { apiFetch } from "@/lib/api";
+import { useAuthStore } from "@/lib/store";
 import { ResumeATSResponse, BulletImprovementItem } from "@/types";
 
-const SAMPLE_DEVOPS_RESUME = `Rahul Sharma
-rahul.sharma@example.com | +91 98765 43210 | Bengaluru, India
-LinkedIn: linkedin.com/in/rahul-devops | GitHub: github.com/rahul-cloud
+const PRESET_JDS = [
+  {
+    title: "Senior DevOps Engineer (AWS/K8s Focus)",
+    desc: "Seeking Senior DevOps Engineer with deep expertise in AWS (VPC, IAM, EKS, RDS), Terraform IaC, Docker multi-stage builds, GitHub Actions CI/CD pipelines, DevSecOps (Trivy), and high-availability architecture."
+  },
+  {
+    title: "Cloud Infrastructure Architect (Multi-Cloud)",
+    desc: "Looking for a Principal Cloud Architect to design multi-cloud infrastructure (AWS/GCP), zero-trust security boundaries, Kubernetes service meshes (Istio), and FinOps cost governance."
+  },
+  {
+    title: "Site Reliability Engineer (SRE & Outage Triage)",
+    desc: "Looking for an SRE to manage 99.99% SLOs, Prometheus/Grafana alerting runbooks, Linux kernel heap memory triage, and automated incident response runbooks."
+  }
+];
+
+export default function ResumeATSPage() {
+  const router = useRouter();
+  const user = useAuthStore((state) => state.user);
+
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [resumeText, setResumeText] = useState("");
+  const [jobTitle, setJobTitle] = useState(PRESET_JDS[0].title);
+  const [jobDescription, setJobDescription] = useState(PRESET_JDS[0].desc);
+  const [isCustomRole, setIsCustomRole] = useState(false);
+  const [customRoleInput, setCustomRoleInput] = useState("");
+  
+  const [isLoading, setIsLoading] = useState(false);
+  const [atsResult, setAtsResult] = useState<ResumeATSResponse | null>(null);
+  const [acceptedBullets, setAcceptedBullets] = useState<Record<number, boolean>>({});
+
+  // 1. Fetch Latest Saved Resume ATS Audit from Database on Mount
+  useEffect(() => {
+    async function loadLatestAuditFromDB() {
+      try {
+        const res = await apiFetch("/resumes/latest");
+        if (res?.data) {
+          setAtsResult(res.data);
+        }
+      } catch (err) {
+        console.warn("Notice: No saved resume audit found in DB yet:", err);
+      }
+    }
+    loadLatestAuditFromDB();
+  }, []);
+
+  const sampleResumeContent = `${user?.full_name || "Sachin Rawat"}
+${user?.email || "sachin@example.com"} | +91 98765 43210 | Bengaluru, India
+Target Role: Senior Cloud & DevOps Engineer
 
 SUMMARY
-DevOps & Cloud Engineer with 4 years of experience specializing in AWS, Docker, Kubernetes, and Terraform. Proven track record in automating deployment pipelines and maintaining infrastructure uptime.
+DevOps & Cloud Engineer with experience specializing in AWS, Docker, Kubernetes (EKS), and Terraform. Proven track record in automating deployment pipelines and maintaining infrastructure uptime.
 
 SKILLS
 Cloud: AWS (VPC, IAM, EC2, S3, RDS, CloudWatch, EKS)
@@ -26,7 +73,7 @@ OS & Scripting: Linux (Ubuntu/RHEL), Bash, Python
 EXPERIENCE
 CloudTech Solutions — DevOps Engineer (2022 - Present)
 - Managed AWS infrastructure and deployed application updates across multiple environments.
-- Worked on Jenkins CI/CD pipelines to build and deploy Docker containers.
+- Configured Jenkins CI/CD pipelines to build and deploy Docker containers.
 - Handled Kubernetes pod troubleshooting and cluster monitoring using Prometheus.
 - Created Terraform scripts for provisioning VPCs and EC2 instances.
 
@@ -39,32 +86,6 @@ CERTIFICATIONS
 - AWS Certified Solutions Architect - Associate
 - Certified Kubernetes Administrator (CKA)`;
 
-const PRESET_JDS = [
-  {
-    title: "Senior DevOps Engineer (₹18–25 LPA)",
-    desc: "Seeking Senior DevOps Engineer with deep expertise in AWS, Kubernetes (EKS), Terraform IaC, GitHub Actions, DevSecOps (Trivy), and high-availability architecture."
-  },
-  {
-    title: "Cloud Infrastructure Architect (₹25–40 LPA)",
-    desc: "Looking for a Principal/Lead Cloud Architect to design multi-cloud infrastructure (AWS/GCP), zero-trust security, Kubernetes service meshes (Istio), and FinOps cost governance."
-  },
-  {
-    title: "Site Reliability Engineer (SRE) (₹15–22 LPA)",
-    desc: "Looking for an SRE to manage 99.99% SLOs, Prometheus/Grafana alerting, Linux kernel triage, and automated incident response runbooks."
-  }
-];
-
-export default function ResumeATSPage() {
-  const router = useRouter();
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [resumeText, setResumeText] = useState(SAMPLE_DEVOPS_RESUME);
-  const [jobTitle, setJobTitle] = useState(PRESET_JDS[0].title);
-  const [jobDescription, setJobDescription] = useState(PRESET_JDS[0].desc);
-  
-  const [isLoading, setIsLoading] = useState(false);
-  const [atsResult, setAtsResult] = useState<ResumeATSResponse | null>(null);
-  const [acceptedBullets, setAcceptedBullets] = useState<Record<number, boolean>>({});
-
   const handleAnalyze = async () => {
     setIsLoading(true);
     try {
@@ -75,445 +96,420 @@ export default function ResumeATSPage() {
         formData.append("job_title", jobTitle);
         formData.append("job_description", jobDescription);
 
-        // Native fetch for multipart
-        const token = localStorage.getItem("auth_token");
-        const headers: HeadersInit = {};
-        if (token) headers["Authorization"] = `Bearer ${token}`;
-
-        const raw = await fetch("http://localhost:8000/api/v1/resumes/parse-and-match", {
+        res = await apiFetch("/resumes/parse-and-match", {
           method: "POST",
-          headers,
           body: formData
         });
-        res = await raw.json();
       } else {
+        const textToAnalyze = resumeText.trim() || sampleResumeContent;
         res = await apiFetch("/resumes/parse-text", {
           method: "POST",
           body: JSON.stringify({
-            resume_text: resumeText,
+            resume_text: textToAnalyze,
             job_title: jobTitle,
             job_description: jobDescription
           })
         });
       }
 
-      if (res.data) {
+      if (res?.data) {
         setAtsResult(res.data);
       }
     } catch (err: any) {
-      alert(err.message || "Failed to analyze resume.");
+      alert(err.message || "Failed to analyze resume ATS match");
     } finally {
       setIsLoading(false);
     }
   };
 
-  const toggleAcceptBullet = (idx: number) => {
-    setAcceptedBullets((prev) => ({ ...prev, [idx]: !prev[idx] }));
-  };
-
-  const handleExportResume = () => {
-    if (!atsResult) return;
-    let exportContent = `# ${atsResult.candidate_profile.candidate_name}\n\n`;
-    exportContent += `**Role**: ${atsResult.candidate_profile.current_designation}\n`;
-    exportContent += `**Email**: ${atsResult.candidate_profile.email || "N/A"} | **Phone**: ${atsResult.candidate_profile.phone || "N/A"}\n\n`;
-    exportContent += `### Professional Summary\n${atsResult.candidate_profile.summary}\n\n`;
-    exportContent += `### Core Skills & Tools\n${atsResult.candidate_profile.primary_skills.join(", ")}, ${atsResult.candidate_profile.devops_tools.join(", ")}\n\n`;
-    exportContent += `### High-Impact Experience\n`;
-    
-    atsResult.bullet_suggestions.forEach((b, idx) => {
-      const textToUse = acceptedBullets[idx] ? b.improved : b.current;
-      exportContent += `- ${textToUse}\n`;
-    });
-
-    const blob = new Blob([exportContent], { type: "text/markdown" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `${atsResult.candidate_profile.candidate_name.replace(/\s+/g, "_")}_Improved_Resume.md`;
-    a.click();
-  };
-
   return (
-    <div className="flex flex-col gap-8 max-w-7xl mx-auto pb-16">
-      {/* Header */}
-      <div className="p-6 sm:p-8 rounded-3xl glass-panel-glow border border-cyan-500/20 relative overflow-hidden flex flex-col sm:flex-row sm:items-center justify-between gap-6">
-        <div className="flex flex-col gap-2 z-10">
-          <div className="flex items-center gap-2">
-            <span className="px-2.5 py-0.5 rounded-full text-xs font-mono font-medium bg-cyan-500/20 text-cyan-300 border border-cyan-500/30">
-              AI Resume ATS Studio
-            </span>
-            <span className="text-xs text-slate-400 font-mono">Multi-Cloud & DevOps Edition</span>
+    <div className="max-w-[1350px] mx-auto flex flex-col gap-8 pb-16 text-slate-900 dark:text-slate-100 font-sans">
+      
+      {/* HEADER BANNER */}
+      <div className="p-6 sm:p-8 rounded-[32px] bg-gradient-to-r from-[#232F3E] via-[#1c2532] to-[#232F3E] text-white border border-[#FF9900]/30 shadow-2xl relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-6">
+        
+        <div className="flex flex-col gap-3 z-10 max-w-2xl">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#FF9900]/10 border border-[#FF9900]/30 text-[#FF9900] text-xs font-black w-fit">
+            <Sparkles className="w-3.5 h-3.5" />
+            <span>AI RESUME ATS STUDIO • OCR ENHANCED</span>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">
-            Review & Improve Your Resume
+
+          <h1 className="text-3xl sm:text-4xl font-black tracking-tight text-white leading-tight">
+            Resume ATS <span className="text-[#FF9900]">Score Audit & STAR Rewriter</span>
           </h1>
-          <p className="text-sm text-slate-300 max-w-2xl leading-relaxed">
-            Benchmark your resume against target Job Descriptions. Uncover ATS score bottlenecks, generate metrics-driven STAR bullet points, and bridge gaps with recommended mock challenges.
+
+          <p className="text-xs sm:text-sm text-slate-300 font-medium leading-relaxed">
+            Benchmark your resume against target AWS & DevOps job descriptions. Upload PDF, DOCX, or scanned images — our <span className="text-[#FF9900] font-bold">OCR Engine</span> extracts text, scores 6 ATS pillars, and rewrites bullet points with STAR metrics.
           </p>
         </div>
 
-        <div className="absolute right-0 bottom-0 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none" />
+        <div className="flex items-center gap-4 bg-slate-900/80 p-4 rounded-2xl border border-slate-800 shrink-0 z-10">
+          <div className="w-12 h-12 rounded-2xl bg-[#FF9900]/10 border border-[#FF9900]/30 flex items-center justify-center text-[#FF9900]">
+            <Scan className="w-6 h-6" />
+          </div>
+          <div className="flex flex-col">
+            <span className="text-xs font-mono font-bold text-slate-400">OCR & ATS ENGINE</span>
+            <span className="text-xl font-black text-white">6-Factor Audit</span>
+          </div>
+        </div>
+
       </div>
 
-      {/* Input Stage (Upload & JD Selector) */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Step 1: Resume Upload / Text Area */}
-        <div className="p-6 rounded-3xl bg-slate-900/80 border border-white/10 flex flex-col gap-4">
-          <div className="flex items-center justify-between">
-            <h2 className="text-base font-bold text-white flex items-center gap-2">
-              <FileText className="w-5 h-5 text-cyan-400" />
-              1. Your Resume (PDF / DOCX or Text)
-            </h2>
+      {/* INPUT FORM SECTION */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        
+        {/* STEP 1: RESUME UPLOAD & OCR SCANNER CARD */}
+        <div className="lg:col-span-6 p-6 rounded-[28px] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xl flex flex-col gap-5">
+          
+          <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
+            <div className="flex items-center gap-2">
+              <div className="w-7 h-7 rounded-lg bg-[#FF9900]/10 text-[#FF9900] flex items-center justify-center font-black text-xs">
+                1
+              </div>
+              <h2 className="text-base font-black text-[#232F3E] dark:text-white">
+                Your Resume (PDF, DOCX, or Scanned Image)
+              </h2>
+            </div>
+            
             <button
-              onClick={() => setResumeText(SAMPLE_DEVOPS_RESUME)}
-              className="text-xs text-cyan-400 hover:text-cyan-300 font-mono transition-colors"
+              onClick={() => {
+                setSelectedFile(null);
+                setResumeText(sampleResumeContent);
+              }}
+              className="text-xs font-bold text-[#FF9900] hover:underline flex items-center gap-1"
             >
-              Load Sample Resume
+              <RefreshCw className="w-3 h-3" />
+              <span>Load Template</span>
             </button>
           </div>
 
-          {/* File Drag-and-Drop */}
-          <div className="border-2 border-dashed border-white/10 hover:border-cyan-500/40 rounded-2xl p-4 text-center flex flex-col items-center justify-center gap-2 bg-slate-950/40 transition-colors">
-            <Upload className="w-6 h-6 text-slate-400" />
-            <div className="text-xs text-slate-300">
-              {selectedFile ? (
-                <span className="text-cyan-300 font-mono font-medium">{selectedFile.name}</span>
-              ) : (
-                <span>Drag & drop PDF / DOCX or click to browse</span>
-              )}
-            </div>
+          {/* Drag & Drop Upload Zone */}
+          <div className="p-6 rounded-2xl border-2 border-dashed border-slate-300 dark:border-slate-700 bg-slate-50/60 dark:bg-slate-800/40 hover:border-[#FF9900] transition-all flex flex-col items-center justify-center gap-3 text-center cursor-pointer relative">
             <input
               type="file"
-              accept=".pdf,.docx,.txt"
-              onChange={(e) => setSelectedFile(e.target.files?.[0] || null)}
-              className="text-xs text-slate-500 file:mr-3 file:py-1 file:px-3 file:rounded-lg file:border-0 file:text-xs file:bg-cyan-500/20 file:text-cyan-300 hover:file:bg-cyan-500/30 cursor-pointer"
+              accept=".pdf,.docx,.txt,.png,.jpg,.jpeg"
+              onChange={(e) => {
+                if (e.target.files && e.target.files[0]) {
+                  setSelectedFile(e.target.files[0]);
+                }
+              }}
+              className="absolute inset-0 opacity-0 cursor-pointer"
             />
+            <div className="w-12 h-12 rounded-2xl bg-[#FF9900]/10 border border-[#FF9900]/30 flex items-center justify-center text-[#FF9900]">
+              <Upload className="w-6 h-6" />
+            </div>
+
+            {selectedFile ? (
+              <div className="flex flex-col gap-1">
+                <span className="text-xs font-black text-slate-900 dark:text-white flex items-center justify-center gap-1.5">
+                  <FileCheck className="w-4 h-4 text-emerald-600" />
+                  {selectedFile.name}
+                </span>
+                <span className="text-[10px] text-slate-500 font-mono">
+                  {(selectedFile.size / 1024).toFixed(1)} KB • Ready for OCR Parsing
+                </span>
+              </div>
+            ) : (
+              <div className="flex flex-col gap-1">
+                <span className="text-xs font-bold text-slate-800 dark:text-slate-200">
+                  Drag & Drop PDF, DOCX, or Image file (.png, .jpg)
+                </span>
+                <span className="text-[10px] text-slate-500 font-medium">
+                  Supports Optical Character Recognition (OCR) for scanned documents
+                </span>
+              </div>
+            )}
           </div>
 
-          <div className="flex flex-col gap-1">
-            <label className="text-xs text-slate-400 font-mono">Or paste resume text below:</label>
+          {/* Resume Raw Text Area */}
+          <div className="flex flex-col gap-1.5">
+            <div className="flex items-center justify-between">
+              <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                Or paste resume text below:
+              </label>
+              {resumeText && (
+                <button
+                  onClick={() => setResumeText("")}
+                  className="text-[10px] font-bold text-slate-400 hover:text-slate-600"
+                >
+                  Clear Text
+                </button>
+              )}
+            </div>
             <textarea
               rows={8}
               value={resumeText}
               onChange={(e) => setResumeText(e.target.value)}
-              placeholder="Paste plain text resume here..."
-              className="w-full rounded-xl bg-slate-950/70 border border-white/10 p-3 text-xs text-slate-200 font-mono focus:outline-none focus:border-cyan-500/50 resize-none"
+              placeholder="Paste your resume content (Summary, Experience bullet points, Skills, Certifications)..."
+              className="w-full p-3.5 rounded-xl text-xs font-mono bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 focus:outline-none focus:border-[#FF9900]"
             />
           </div>
+
         </div>
 
-        {/* Step 2: Target Job Description */}
-        <div className="p-6 rounded-3xl bg-slate-900/80 border border-white/10 flex flex-col gap-4 justify-between">
-          <div className="flex flex-col gap-4">
-            <div className="flex items-center justify-between">
-              <h2 className="text-base font-bold text-white flex items-center gap-2">
-                <Briefcase className="w-5 h-5 text-indigo-400" />
-                2. Target Job Role & Description
-              </h2>
-            </div>
-
-            {/* Presets */}
-            <div className="flex flex-col gap-2">
-              <span className="text-xs text-slate-400 font-mono">Select a Target Benchmark Role:</span>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                {PRESET_JDS.map((preset) => (
-                  <button
-                    key={preset.title}
-                    onClick={() => {
-                      setJobTitle(preset.title);
-                      setJobDescription(preset.desc);
-                    }}
-                    className={`p-2.5 rounded-xl text-left text-xs font-mono transition-all border ${
-                      jobTitle === preset.title
-                        ? "bg-indigo-500/20 border-indigo-500/50 text-indigo-200"
-                        : "bg-slate-950/50 border-white/5 text-slate-400 hover:bg-white/5"
-                    }`}
-                  >
-                    {preset.title.split(" (")[0]}
-                  </button>
-                ))}
+        {/* STEP 2: TARGET ROLE & JOB DESCRIPTION CARD */}
+        <div className="lg:col-span-6 p-6 rounded-[28px] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xl flex flex-col justify-between gap-5">
+          
+          <div className="flex flex-col gap-5">
+            
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
+              <div className="flex items-center gap-2">
+                <div className="w-7 h-7 rounded-lg bg-[#FF9900]/10 text-[#FF9900] flex items-center justify-center font-black text-xs">
+                  2
+                </div>
+                <h2 className="text-base font-black text-[#232F3E] dark:text-white">
+                  Target Job Role & Benchmark Description
+                </h2>
               </div>
             </div>
 
-            <div className="flex flex-col gap-1">
-              <label className="text-xs text-slate-400 font-mono">Job Description:</label>
+            {/* Target Role Selector Pills */}
+            <div className="flex flex-col gap-2">
+              <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                Select Benchmark Target Role:
+              </label>
+              <div className="flex flex-wrap gap-2">
+                {PRESET_JDS.map((item, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => {
+                      setIsCustomRole(false);
+                      setJobTitle(item.title);
+                      setJobDescription(item.desc);
+                    }}
+                    className={`px-3 py-2 rounded-xl text-xs font-bold transition-all text-left ${
+                      !isCustomRole && jobTitle === item.title
+                        ? "bg-[#232F3E] text-white border border-[#FF9900] shadow-md"
+                        : "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200"
+                    }`}
+                  >
+                    {item.title}
+                  </button>
+                ))}
+
+                {/* Custom / Other Role Button Pill */}
+                <button
+                  onClick={() => {
+                    setIsCustomRole(true);
+                    if (!customRoleInput) {
+                      setCustomRoleInput("Custom Target Role");
+                      setJobTitle("Custom Target Role");
+                    } else {
+                      setJobTitle(customRoleInput);
+                    }
+                  }}
+                  className={`px-3 py-2 rounded-xl text-xs font-bold transition-all text-left flex items-center gap-1.5 ${
+                    isCustomRole
+                      ? "bg-[#FF9900] text-slate-950 font-black shadow-md"
+                      : "bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-400 border border-amber-300 dark:border-amber-700/50 hover:bg-amber-100"
+                  }`}
+                >
+                  <span>✏️ + Custom / Other Role</span>
+                </button>
+              </div>
+
+              {/* Custom Role Input Box */}
+              {isCustomRole && (
+                <div className="flex flex-col gap-1 mt-1 animate-fadeIn">
+                  <label className="text-[11px] font-bold text-[#FF9900]">
+                    Type Custom Benchmark Target Role Title:
+                  </label>
+                  <input
+                    type="text"
+                    value={customRoleInput}
+                    onChange={(e) => {
+                      setCustomRoleInput(e.target.value);
+                      setJobTitle(e.target.value || "Custom Role");
+                    }}
+                    placeholder="e.g. Full Stack Developer, Data Engineer, React Developer, AI/ML Specialist..."
+                    className="w-full px-3.5 py-2.5 rounded-xl text-xs bg-slate-50 dark:bg-slate-800 border border-[#FF9900] text-slate-900 dark:text-white font-bold focus:outline-none focus:ring-2 focus:ring-[#FF9900]/20 shadow-sm"
+                  />
+                </div>
+              )}
+            </div>
+
+            {/* Job Description Textarea */}
+            <div className="flex flex-col gap-1.5">
+              <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                Job Description Requirements:
+              </label>
               <textarea
-                rows={6}
+                rows={7}
                 value={jobDescription}
                 onChange={(e) => setJobDescription(e.target.value)}
-                placeholder="Paste the target job description..."
-                className="w-full rounded-xl bg-slate-950/70 border border-white/10 p-3 text-xs text-slate-200 font-mono focus:outline-none focus:border-indigo-500/50 resize-none"
+                className="w-full p-3.5 rounded-xl text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 focus:outline-none focus:border-[#FF9900]"
               />
             </div>
+
           </div>
 
+          {/* Primary Action Button */}
           <button
             onClick={handleAnalyze}
             disabled={isLoading}
-            className="w-full py-4 rounded-xl bg-gradient-to-r from-cyan-500 to-indigo-600 hover:from-cyan-400 hover:to-indigo-500 text-white font-bold text-sm flex items-center justify-center gap-2 shadow-lg shadow-cyan-500/20 transition-all disabled:opacity-50"
+            className="w-full py-4 rounded-2xl font-black text-xs text-slate-950 bg-gradient-to-r from-[#FF9900] via-amber-400 to-orange-400 hover:from-amber-400 hover:to-orange-500 shadow-xl shadow-[#FF9900]/25 flex items-center justify-center gap-2 hover:scale-[1.01] transition-all disabled:opacity-50 mt-2"
           >
             {isLoading ? (
               <>
-                <Loader2 className="w-5 h-5 animate-spin" />
-                <span>Analyzing ATS Match & Generating Rewrites...</span>
+                <Loader2 className="w-4 h-4 animate-spin" />
+                <span>Running AI OCR & ATS Benchmark Analysis...</span>
               </>
             ) : (
               <>
-                <Sparkles className="w-5 h-5" />
-                <span>Run AI ATS Benchmark Analysis</span>
+                <Sparkles className="w-4 h-4" />
+                <span>Run AI ATS Benchmark Analysis 🚀</span>
               </>
             )}
           </button>
+
         </div>
+
       </div>
 
-      {/* Analysis Results View */}
+      {/* STEP 3: ATS AUDIT REPORT DISPLAY (Rendered when atsResult is present) */}
       {atsResult && (
-        <div className="flex flex-col gap-8 animate-fadeIn">
-          {/* Top Score Card & Breakdown */}
-          <div className="p-8 rounded-3xl bg-slate-900/90 border border-white/10 flex flex-col lg:flex-row items-center justify-between gap-8">
-            {/* Main Score Circular Badge */}
-            <div className="flex flex-col items-center text-center gap-2 min-w-[200px]">
-              <span className="text-xs font-mono text-slate-400 uppercase tracking-widest">Overall ATS Match</span>
-              <div className="w-32 h-32 rounded-full bg-gradient-to-tr from-cyan-500 via-indigo-500 to-emerald-400 p-[3px] shadow-xl shadow-cyan-500/20 flex items-center justify-center">
-                <div className="w-full h-full bg-slate-950 rounded-full flex flex-col items-center justify-center">
-                  <span className="text-4xl font-extrabold text-white font-mono">{Math.round(atsResult.ats_score)}%</span>
-                  <span className="text-[10px] text-cyan-300 font-mono uppercase">ATS Compatible</span>
-                </div>
+        <div className="flex flex-col gap-8 pt-4 animate-fadeIn">
+          
+          {/* OVERALL SCORE & 6-FACTOR PILLARS */}
+          <div className="p-8 rounded-[32px] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xl grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+            
+            {/* Score Radial Donut */}
+            <div className="lg:col-span-4 flex flex-col items-center justify-center gap-3 p-6 rounded-2xl bg-gradient-to-b from-slate-900 to-[#232F3E] text-white text-center shadow-lg">
+              <span className="text-xs font-mono font-bold text-[#FF9900] uppercase tracking-widest">OVERALL ATS MATCH</span>
+              <div className="relative flex items-center justify-center my-2">
+                <div className="text-5xl font-black text-white font-mono">{atsResult.ats_score}%</div>
               </div>
-              <span className="text-xs font-medium text-slate-300">
-                {atsResult.ats_score >= 80 ? "🔥 Excellent Fit" : "⚠️ Needs Improvement"}
+              <span className="text-xs font-bold text-slate-300">
+                {atsResult.ats_score >= 80 ? "🎯 Excellent Match" : "⚠️ Key Gaps Detected"}
               </span>
             </div>
 
-            {/* 6 Dimension Breakdown */}
-            <div className="flex-1 w-full grid grid-cols-2 sm:grid-cols-3 gap-4">
+            {/* 6-Factor Pillar Progress Bars */}
+            <div className="lg:col-span-8 grid grid-cols-1 sm:grid-cols-2 gap-4">
               {[
-                { label: "Skills Match", val: atsResult.breakdown.skills_match, color: "bg-cyan-400" },
-                { label: "Experience Match", val: atsResult.breakdown.experience_match, color: "bg-indigo-400" },
-                { label: "Keywords Match", val: atsResult.breakdown.keywords_match, color: "bg-purple-400" },
-                { label: "Projects Match", val: atsResult.breakdown.projects_match, color: "bg-emerald-400" },
-                { label: "Certifications", val: atsResult.breakdown.certifications_match, color: "bg-amber-400" },
-                { label: "Role Trajectory", val: atsResult.breakdown.job_role_match, color: "bg-blue-400" },
-              ].map((item) => (
-                <div key={item.label} className="p-4 rounded-2xl bg-slate-950/60 border border-white/5 flex flex-col gap-2">
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="text-slate-400 font-mono">{item.label}</span>
-                    <span className="font-bold text-white font-mono">{item.val}%</span>
+                { label: "Skills Match", val: atsResult.breakdown.skills_match },
+                { label: "Experience Alignment", val: atsResult.breakdown.experience_match },
+                { label: "Keywords Found", val: atsResult.breakdown.keywords_match },
+                { label: "Projects Impact", val: atsResult.breakdown.projects_match },
+                { label: "Certifications", val: atsResult.breakdown.certifications_match },
+                { label: "Role Fit", val: atsResult.breakdown.job_role_match },
+              ].map((p, idx) => (
+                <div key={idx} className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700 flex flex-col gap-1.5">
+                  <div className="flex items-center justify-between text-xs font-bold">
+                    <span className="text-slate-700 dark:text-slate-300">{p.label}</span>
+                    <span className="text-[#FF9900] font-mono">{p.val}%</span>
                   </div>
-                  <div className="w-full h-1.5 rounded-full bg-slate-800 overflow-hidden">
-                    <div className={`h-full ${item.color} rounded-full`} style={{ width: `${item.val}%` }} />
+                  <div className="w-full h-2 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-[#FF9900] rounded-full transition-all duration-500"
+                      style={{ width: `${Math.min(100, Math.max(0, Number(p.val) || 0))}%` }}
+                    />
                   </div>
                 </div>
               ))}
             </div>
+
           </div>
 
-          {/* Skills Match Matrix & Gaps */}
+          {/* MATCHING SKILLS VS MISSING SKILLS */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            
             {/* Matching Skills */}
-            <div className="p-6 rounded-3xl bg-slate-900/60 border border-white/5 flex flex-col gap-3">
-              <h3 className="text-sm font-bold text-emerald-300 flex items-center gap-2">
-                <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-                You Already Have ({atsResult.matching_skills.length} matching skills)
+            <div className="p-6 rounded-[28px] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xl flex flex-col gap-3">
+              <h3 className="text-sm font-black text-emerald-600 flex items-center gap-2">
+                <CheckCircle2 className="w-4 h-4" />
+                Matching Skills Found ({atsResult.matching_skills.length})
               </h3>
-              <div className="flex flex-wrap gap-2 pt-1">
-                {atsResult.matching_skills.map((s) => (
-                  <span key={s} className="px-3 py-1 rounded-lg text-xs font-mono bg-emerald-500/10 text-emerald-300 border border-emerald-500/20">
-                    ✓ {s}
+              <div className="flex flex-wrap gap-2">
+                {atsResult.matching_skills.map((sk, idx) => (
+                  <span key={idx} className="px-3 py-1 rounded-xl text-xs font-bold bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
+                    {sk}
                   </span>
                 ))}
               </div>
             </div>
 
             {/* Missing Skills */}
-            <div className="p-6 rounded-3xl bg-slate-900/60 border border-white/5 flex flex-col gap-3">
-              <h3 className="text-sm font-bold text-rose-300 flex items-center gap-2">
-                <AlertTriangle className="w-4 h-4 text-rose-400" />
-                You Should Improve / Add ({atsResult.missing_skills.length} missing skills)
+            <div className="p-6 rounded-[28px] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xl flex flex-col gap-3">
+              <h3 className="text-sm font-black text-rose-600 flex items-center gap-2">
+                <AlertTriangle className="w-4 h-4" />
+                Missing Critical JD Skills ({atsResult.missing_skills.length})
               </h3>
-              <div className="flex flex-wrap gap-2 pt-1">
-                {atsResult.missing_skills.map((s) => (
-                  <span key={s} className="px-3 py-1 rounded-lg text-xs font-mono bg-rose-500/10 text-rose-300 border border-rose-500/20">
-                    + {s}
+              <div className="flex flex-wrap gap-2">
+                {atsResult.missing_skills.map((sk, idx) => (
+                  <span key={idx} className="px-3 py-1 rounded-xl text-xs font-bold bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800">
+                    {sk}
                   </span>
                 ))}
               </div>
             </div>
+
           </div>
 
-          {/* Bullet Improvement Engine (Accept / Edit / Reject) */}
-          <div className="p-8 rounded-3xl bg-slate-900/80 border border-white/10 flex flex-col gap-6">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              <div>
-                <h3 className="text-lg font-bold text-white flex items-center gap-2">
-                  <Sparkles className="w-5 h-5 text-cyan-400" />
-                  Resume Improvement Studio (STAR Method)
+          {/* STAR BULLET REWRITER STUDIO */}
+          {atsResult.bullet_suggestions && atsResult.bullet_suggestions.length > 0 && (
+            <div className="p-6 sm:p-8 rounded-[32px] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xl flex flex-col gap-6">
+              
+              <div className="flex flex-col gap-1">
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#FF9900]/10 text-[#FF9900] text-xs font-black w-fit">
+                  <Sparkles className="w-3.5 h-3.5" />
+                  <span>STAR METRIC BULLET REWRITER</span>
+                </div>
+                <h3 className="text-xl font-black text-[#232F3E] dark:text-white mt-1">
+                  AI Enhanced STAR Bullet Points
                 </h3>
-                <p className="text-xs text-slate-400 mt-1">
-                  Replace passive responsibility statements with quantified, high-impact accomplishments.
+                <p className="text-xs text-slate-500 font-medium">
+                  We transformed weak resume bullets into high-impact STAR framework statements with quantifiable metrics.
                 </p>
               </div>
 
-              <button
-                onClick={handleExportResume}
-                className="px-4 py-2 rounded-xl bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-300 border border-cyan-500/30 text-xs font-mono font-bold flex items-center gap-2 transition-colors self-start"
-              >
-                <Download className="w-4 h-4" />
-                Download Improved Resume
-              </button>
-            </div>
-
-            <div className="flex flex-col gap-4">
-              {atsResult.bullet_suggestions.map((bullet, idx) => {
-                const isAccepted = acceptedBullets[idx];
-                return (
-                  <div
-                    key={idx}
-                    className={`p-5 rounded-2xl border transition-all flex flex-col gap-4 ${
-                      isAccepted
-                        ? "bg-emerald-950/20 border-emerald-500/40"
-                        : "bg-slate-950/70 border-white/5"
-                    }`}
-                  >
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                      {/* Current Bullet */}
-                      <div className="flex flex-col gap-1">
-                        <span className="text-[11px] font-mono uppercase text-slate-500">Current Resume Bullet:</span>
-                        <p className="text-xs text-slate-400 italic">"{bullet.current}"</p>
-                      </div>
-
-                      {/* AI Suggestion */}
-                      <div className="flex flex-col gap-2">
-                        <div className="flex items-center justify-between">
-                          <span className="text-[11px] font-mono uppercase text-cyan-400 flex items-center gap-1">
-                            <Sparkles className="w-3 h-3" /> AI Improved (STAR Framework):
-                          </span>
-                          <span className="text-[10px] text-slate-400 font-mono">
-                            {bullet.skills_highlighted.join(" • ")}
-                          </span>
-                        </div>
-
-                        <textarea
-                          rows={3}
-                          value={bullet.improved}
-                          onChange={(e) => {
-                            const newText = e.target.value;
-                            setAtsResult((prev) => {
-                              if (!prev) return prev;
-                              const updated = [...prev.bullet_suggestions];
-                              updated[idx] = { ...updated[idx], improved: newText };
-                              return { ...prev, bullet_suggestions: updated };
-                            });
-                          }}
-                          className="w-full rounded-xl bg-slate-900 border border-white/10 p-2.5 text-xs text-slate-200 font-mono focus:outline-none focus:border-cyan-500/50 resize-none leading-relaxed"
-                        />
-
-                        <div className="flex flex-wrap items-center gap-2 pt-1">
-                          {bullet.impact_metrics_added.map((m, mIdx) => (
-                            <span key={mIdx} className="px-2 py-0.5 rounded text-[10px] font-mono bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
-                              ⭐ {m}
-                            </span>
-                          ))}
-                        </div>
-                      </div>
+              <div className="flex flex-col gap-4">
+                {atsResult.bullet_suggestions.map((item, idx) => (
+                  <div key={idx} className="p-5 rounded-2xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700 flex flex-col gap-3">
+                    
+                    {/* Before */}
+                    <div className="flex flex-col gap-1">
+                      <span className="text-[10px] font-bold text-slate-400 uppercase">BEFORE (CURRENT BULLET)</span>
+                      <p className="text-xs text-slate-600 dark:text-slate-400 line-through">
+                        {item.current}
+                      </p>
                     </div>
 
-                    {/* Actions: Copy, Tone Options, Accept */}
-                    <div className="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-white/5">
-                      <div className="flex items-center gap-2">
-                        <span className="text-[10px] font-mono text-slate-500">AI Tone:</span>
-                        {["More Metrics", "More Technical", "Shorter"].map((tone) => (
-                          <button
-                            key={tone}
-                            onClick={async () => {
-                              try {
-                                const res = await apiFetch("/resumes/improve-bullet", {
-                                  method: "POST",
-                                  body: JSON.stringify({
-                                    bullet_text: bullet.current,
-                                    target_role: jobTitle,
-                                    skills_focus: bullet.skills_highlighted
-                                  })
-                                });
-                                if (res.data) {
-                                  setAtsResult((prev) => {
-                                    if (!prev) return prev;
-                                    const updated = [...prev.bullet_suggestions];
-                                    updated[idx] = {
-                                      ...updated[idx],
-                                      improved: res.data.improved,
-                                      impact_metrics_added: res.data.impact_metrics_added
-                                    };
-                                    return { ...prev, bullet_suggestions: updated };
-                                  });
-                                }
-                              } catch (e: any) {
-                                alert("Failed to regenerate bullet: " + e.message);
-                              }
-                            }}
-                            className="px-2 py-1 rounded bg-slate-900 hover:bg-slate-800 border border-white/5 text-[10px] font-mono text-slate-300 transition-colors"
-                          >
-                            ↻ {tone}
-                          </button>
-                        ))}
-                      </div>
-
-                      <div className="flex items-center gap-2">
-                        <button
-                          onClick={() => {
-                            navigator.clipboard.writeText(bullet.improved);
-                            alert("Copied improved bullet to clipboard!");
-                          }}
-                          className="px-3 py-1.5 rounded-lg text-xs font-mono text-slate-400 hover:text-white bg-slate-900 border border-white/10 transition-colors"
-                        >
-                          📋 Copy
-                        </button>
-
-                        <button
-                          onClick={() => toggleAcceptBullet(idx)}
-                          className={`px-3.5 py-1.5 rounded-lg text-xs font-mono font-medium flex items-center gap-1.5 transition-colors ${
-                            isAccepted
-                              ? "bg-emerald-500 text-slate-950 font-bold"
-                              : "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500/20"
-                          }`}
-                        >
-                          <Check className="w-3.5 h-3.5" />
-                          {isAccepted ? "Accepted" : "Accept Suggestion"}
-                        </button>
-                      </div>
+                    {/* After */}
+                    <div className="flex flex-col gap-1.5 pt-2 border-t border-slate-200 dark:border-slate-700">
+                      <span className="text-[10px] font-bold text-emerald-600 uppercase">AFTER (STAR METRICS ADDED)</span>
+                      <p className="text-xs font-bold text-slate-900 dark:text-white leading-relaxed">
+                        {item.improved}
+                      </p>
                     </div>
+
+                    <div className="flex items-center justify-between pt-2">
+                      <span className="text-[11px] font-medium text-slate-500 italic">
+                        {item.rationale}
+                      </span>
+                      <button
+                        onClick={() => setAcceptedBullets(prev => ({ ...prev, [idx]: true }))}
+                        className={`px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all ${
+                          acceptedBullets[idx]
+                            ? "bg-emerald-600 text-white"
+                            : "bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 hover:bg-[#FF9900] hover:text-slate-950"
+                        }`}
+                      >
+                        {acceptedBullets[idx] ? <Check className="w-3.5 h-3.5" /> : <Edit3 className="w-3.5 h-3.5" />}
+                        <span>{acceptedBullets[idx] ? "Accepted" : "Accept Bullet"}</span>
+                      </button>
+                    </div>
+
                   </div>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Recommended Interview Journey Bridge */}
-          <div className="p-8 rounded-3xl bg-gradient-to-r from-indigo-900/40 via-purple-900/40 to-slate-900/40 border border-indigo-500/30 flex flex-col md:flex-row items-center justify-between gap-6">
-            <div className="flex flex-col gap-2">
-              <div className="flex items-center gap-2">
-                <span className="px-2.5 py-0.5 rounded-full text-xs font-mono font-bold bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
-                  Step 2 Connect
-                </span>
-                <span className="text-xs text-slate-400 font-mono">Personalized Interview Challenge</span>
+                ))}
               </div>
-              <h3 className="text-xl font-bold text-white">Ready to bridge your {atsResult.missing_skills.length} missing skill gaps?</h3>
-              <p className="text-xs text-slate-300 max-w-xl">
-                We've mapped your exact resume gaps directly into our 5-stage interview challenge sequence. Practice with voice AI to level up.
-              </p>
-            </div>
 
-            <button
-              onClick={() => router.push("/dashboard")}
-              className="px-6 py-4 rounded-xl bg-gradient-to-r from-indigo-500 to-cyan-500 hover:from-indigo-400 hover:to-cyan-400 text-white font-bold text-sm flex items-center gap-2 shadow-lg shadow-indigo-500/20 transition-all shrink-0"
-            >
-              <span>Start Recommended Interview</span>
-              <ArrowRight className="w-4 h-4" />
-            </button>
-          </div>
+            </div>
+          )}
+
         </div>
       )}
+
     </div>
   );
 }

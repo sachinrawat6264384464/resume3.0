@@ -16,12 +16,12 @@ class Candidate(TimeStampedModel):
     notes = Column(Text, nullable=True)
 
     # Gamification & Readiness
-    xp = Column(Integer, default=120, nullable=False)
+    xp = Column(Integer, default=0, nullable=False)
     level = Column(Integer, default=1, nullable=False)
     streak_days = Column(Integer, default=1, nullable=False)
     last_active_at = Column(DateTime(timezone=True), nullable=True)
-    readiness_score = Column(Float, default=70.0, nullable=False)
-    target_salary_band = Column(String(50), default="₹12–18 LPA", nullable=False)
+    readiness_score = Column(Float, default=0.0, nullable=False)
+    target_salary_band = Column(String(50), default="₹8–12 LPA", nullable=False)
     skills_matrix_json = Column(JSON, default=dict, nullable=False)
     badges_json = Column(JSON, default=list, nullable=False)
 

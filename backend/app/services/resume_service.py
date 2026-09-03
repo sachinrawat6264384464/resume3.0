@@ -3,6 +3,7 @@ from typing import Optional, Dict, Any, List
 from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi import HTTPException, status
 from app.ai import get_ai_provider
+from app.services.langchain_matcher import LangChainMatcher
 from app.schemas.resume import (
     ResumeProfile, ATSScoreBreakdown, RecommendedInterviewStage,
     BulletImprovementItem, ResumeATSResponse
@@ -43,6 +44,30 @@ class ResumeService:
                     text = page.extract_text()
                     if text:
                         extracted_text += text + "\n"
+
+                # Scanned PDF OCR Fallback
+                if not extracted_text.strip():
+                    try:
+                        import pytesseract
+                        from PIL import Image
+                        import fitz # PyMuPDF
+                        doc = fitz.open(stream=file_bytes, filetype="pdf")
+                        for page in doc:
+                            pix = page.get_pixmap()
+                            img = Image.open(io.BytesIO(pix.tobytes("png")))
+                            extracted_text += pytesseract.image_to_string(img) + "\n"
+                    except Exception as ocr_err:
+                        print(f"Scanned PDF OCR notice ({ocr_err})")
+
+            elif name_lower.endswith((".png", ".jpg", ".jpeg")):
+                try:
+                    import pytesseract
+                    from PIL import Image
+                    img = Image.open(io.BytesIO(file_bytes))
+                    extracted_text = pytesseract.image_to_string(img)
+                except Exception as img_err:
+                    print(f"Image OCR notice ({img_err})")
+
             elif name_lower.endswith(".docx"):
                 import docx
                 doc = docx.Document(io.BytesIO(file_bytes))
@@ -50,10 +75,8 @@ class ResumeService:
                     if p.text:
                         extracted_text += p.text + "\n"
             else:
-                # Text / Markdown fallback
                 extracted_text = file_bytes.decode("utf-8", errors="ignore")
         except Exception as e:
-            # Fallback to UTF-8 decode
             print(f"Document parsing error ({e}), falling back to raw decode.")
             extracted_text = file_bytes.decode("utf-8", errors="ignore")
 
@@ -68,20 +91,31 @@ class ResumeService:
         job_title: str = "CloudOps / DevOps Engineer",
         job_description: Optional[str] = None
     ) -> ResumeATSResponse:
-        jd_text = (job_description.strip() if job_description and len(job_description.strip()) > 20 else DEFAULT_CLOUDOPS_JD)
+        jd_text = (job_description.strip() if (job_description and job_description.strip()) else DEFAULT_CLOUDOPS_JD)
         
         # 1. AI Profile Extraction
         profile_data = await self.ai.extract_resume_profile(resume_text)
         candidate_profile = ResumeProfile.model_validate(profile_data)
 
-        # 2. AI ATS Matching & Gap Analysis
+        # 2. LangChain Semantic ATS Matching & Gap Analysis (Authoritative)
+        lc_match = LangChainMatcher.run_semantic_ats_match(
+            resume_text=resume_text,
+            job_title=job_title,
+            job_description=jd_text
+        )
+
         match_data = await self.ai.match_resume_ats(
             job_title=job_title,
             job_description=jd_text,
             resume_profile=profile_data
         )
 
-        breakdown_data = match_data.get("breakdown", {})
+        # LangChain Semantic Output is authoritative
+        breakdown_data = lc_match.get("breakdown", {})
+        matching_skills = lc_match.get("matching_skills", [])
+        missing_skills = lc_match.get("missing_skills", [])
+        overall_ats = lc_match.get("ats_score", 78.5)
+
         breakdown = ATSScoreBreakdown(
             skills_match=float(breakdown_data.get("skills_match", 75.0)),
             experience_match=float(breakdown_data.get("experience_match", 70.0)),
@@ -101,22 +135,30 @@ class ResumeService:
             for idx, s in enumerate(stages_data, start=1)
         ]
 
-        # 3. Generate sample bullet point rewrites
+        # 3. Extract real candidate bullet points directly from uploaded document text
         sample_bullets = []
         for exp in candidate_profile.experience:
             for bp in exp.bullet_points:
-                if len(bp.strip()) > 15:
-                    sample_bullets.append(bp)
+                clean_bp = bp.strip().lstrip("-•*").strip()
+                if len(clean_bp) > 15:
+                    sample_bullets.append(clean_bp)
                 if len(sample_bullets) >= 3:
                     break
-            if len(sample_bullets) >= 3:
-                break
+
+        if len(sample_bullets) < 3:
+            raw_lines = [l.strip().lstrip("-•*").strip() for l in resume_text.split("\n") if len(l.strip()) > 20]
+            for l in raw_lines:
+                if not any(header in l.lower() for header in ["summary", "skills", "experience", "education", "projects", "certifications", "target role"]):
+                    if l not in sample_bullets:
+                        sample_bullets.append(l)
+                    if len(sample_bullets) >= 3:
+                        break
 
         if not sample_bullets:
             sample_bullets = [
-                "Managed AWS infrastructure and deployed application updates.",
-                "Configured Jenkins CI/CD pipelines for microservices.",
-                "Handled Kubernetes pod troubleshooting and Docker builds."
+                "Managed cloud infrastructure and deployed application updates across environments.",
+                "Configured CI/CD deployment pipelines for containerized microservices.",
+                "Handled server troubleshooting and infrastructure monitoring."
             ]
 
         bullet_suggestions = []
@@ -133,12 +175,12 @@ class ResumeService:
             )
 
         return ResumeATSResponse(
-            ats_score=float(match_data.get("ats_score", 75.0)),
+            ats_score=float(overall_ats),
             breakdown=breakdown,
-            matching_skills=match_data.get("matching_skills", ["Linux", "AWS", "Docker", "Terraform"]),
-            missing_skills=match_data.get("missing_skills", ["DevSecOps", "GitHub Actions", "AWS EKS"]),
-            weak_areas=match_data.get("weak_areas", ["Experience section lacks quantifiable metrics"]),
-            strong_areas=match_data.get("strong_areas", ["Strong multi-cloud and containerization background"]),
+            matching_skills=matching_skills,
+            missing_skills=missing_skills,
+            weak_areas=lc_match.get("weak_areas", []),
+            strong_areas=lc_match.get("strong_areas", []),
             recommended_interview_stages=recommended_stages,
             candidate_profile=candidate_profile,
             bullet_suggestions=bullet_suggestions

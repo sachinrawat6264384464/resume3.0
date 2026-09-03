@@ -4,77 +4,153 @@
 
 @layer base {
   :root {
-    --background: 224 71% 4%;
-    --foreground: 213 31% 91%;
-    --card: 224 71% 6%;
-    --card-foreground: 213 31% 91%;
-    --popover: 224 71% 6%;
-    --popover-foreground: 213 31% 91%;
-    --primary: 239 84% 67%;
+    --background: 36 100% 99%;
+    --foreground: 222.2 84% 4.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+    --primary: 36 100% 50%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 222 47% 11%;
-    --secondary-foreground: 210 40% 98%;
-    --muted: 223 47% 11%;
-    --muted-foreground: 215 20.2% 65.1%;
-    --accent: 216 34% 17%;
-    --accent-foreground: 210 40% 98%;
-    --destructive: 0 63% 31%;
+    --secondary: 36 50% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+    --muted: 36 30% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+    --accent: 36 100% 50%;
+    --accent-foreground: 222.2 47.4% 11.2%;
+    --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
-    --border: 216 34% 17%;
-    --input: 216 34% 17%;
-    --ring: 239 84% 67%;
-    --radius: 0.75rem;
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 36 100% 50%;
+    --radius: 1rem;
+  }
+
+  .dark {
+    --background: 24 30% 5%;
+    --foreground: 213 31% 91%;
+    --card: 24 30% 7%;
+    --card-foreground: 213 31% 91%;
+    --popover: 24 30% 7%;
+    --popover-foreground: 213 31% 91%;
+    --primary: 36 100% 50%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 24 30% 15%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 24 30% 15%;
+    --muted-foreground: 215 20.2% 65.1%;
+    --accent: 36 100% 50%;
+    --accent-foreground: 210 40% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 24 30% 15%;
+    --input: 24 30% 15%;
+    --ring: 36 100% 50%;
+  }
+
+  h1, h2, h3, .font-display, .font-heading, .font-oswald {
+    font-family: 'Oswald', 'Plus Jakarta Sans', sans-serif !important;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
   }
 }
 
+/* Light Mode Body & Warm Ember Background */
+html.light body,
 body {
-  color: hsl(var(--foreground));
-  background: hsl(var(--background));
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  color: #0f172a;
+  background-color: #fdfaf7;
   background-image: 
-    radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.12) 0px, transparent 50%),
-    radial-gradient(at 100% 100%, rgba(6, 182, 212, 0.08) 0px, transparent 50%);
+    radial-gradient(circle at 10% 10%, rgba(255, 153, 0, 0.12) 0%, transparent 40%),
+    radial-gradient(circle at 90% 80%, rgba(249, 115, 22, 0.08) 0%, transparent 50%),
+    radial-gradient(circle at 50% 50%, rgba(234, 88, 12, 0.04) 0%, transparent 60%);
+  font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
   min-height: 100vh;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
-/* Glassmorphic card styling */
+/* Dark Mode Body & Warm Obsidian Ember Background (Reference Image Match) */
+html.dark body {
+  color: #f8fafc;
+  background-color: #0d0a08;
+  background-image: 
+    radial-gradient(circle at 15% 15%, rgba(255, 153, 0, 0.22) 0%, transparent 45%),
+    radial-gradient(circle at 85% 85%, rgba(234, 88, 12, 0.15) 0%, transparent 50%);
+  font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+/* Glass Panels */
 .glass-panel {
-  background: rgba(15, 23, 42, 0.75);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-}
-
-.glass-panel-glow {
-  background: rgba(15, 23, 42, 0.85);
+  background: rgba(255, 255, 255, 0.88);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(99, 102, 241, 0.25);
-  box-shadow: 0 0 30px -10px rgba(99, 102, 241, 0.2);
+  border: 1px solid rgba(255, 153, 0, 0.2);
+  box-shadow: 0 10px 30px -5px rgba(255, 153, 0, 0.08);
+  transition: all 0.3s ease;
 }
 
-.glass-input {
-  background: rgba(15, 23, 42, 0.6);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  color: #fff;
+html.dark .glass-panel {
+  background: rgba(15, 11, 9, 0.88);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 153, 0, 0.15);
+  box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.6);
 }
 
-.glass-input:focus {
-  border-color: #6366f1;
-  outline: none;
-  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.25);
+.glass-card-elevated {
+  background: #ffffff;
+  border: 1px solid rgba(255, 153, 0, 0.2);
+  box-shadow: 0 20px 40px -15px rgba(255, 153, 0, 0.1);
 }
 
-/* Custom glowing borders */
-.glow-border {
+html.dark .glass-card-elevated {
+  background: rgba(20, 15, 12, 0.9);
+  border: 1px solid rgba(255, 153, 0, 0.2);
+  box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.7);
+}
+
+/* AWS Orange Buttons */
+.btn-royal-blue,
+.btn-orange-glow {
+  background: linear-gradient(135deg, #FF9900 0%, #f97316 50%, #ea580c 100%);
+  color: #0f172a;
+  font-weight: 900;
+  box-shadow: 0 8px 20px -4px rgba(255, 153, 0, 0.4);
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.btn-royal-blue:hover,
+.btn-orange-glow:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 28px -4px rgba(255, 153, 0, 0.55);
+}
+
+/* Floating Widget Animation */
+@keyframes floatSlow {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-8px); }
+}
+
+.animate-float {
+  animation: floatSlow 5s ease-in-out infinite;
+}
+
+.animate-float-delayed {
+  animation: floatSlow 6s ease-in-out 2.5s infinite;
+}
+
+/* Glowing accent borders */
+.glow-border-blue,
+.glow-border-orange {
   position: relative;
 }
 
-.glow-border::before {
+.glow-border-blue::before,
+.glow-border-orange::before {
   content: '';
   position: absolute;
   inset: -1px;
-  background: linear-gradient(90deg, #6366f1, #06b6d4, #8b5cf6, #6366f1);
+  background: linear-gradient(90deg, #FF9900, #f97316, #fbbf24, #FF9900);
   background-size: 300% 300%;
   border-radius: inherit;
   z-index: -1;
@@ -87,21 +163,27 @@ body {
   100% { background-position: 0% 50%; }
 }
 
-/* Custom scrollbar */
+/* Completely Hide All Scrollbars */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  display: none;
+  width: 0px !important;
+  height: 0px !important;
+  background: transparent;
 }
 
-::-webkit-scrollbar-track {
-  background: rgba(15, 23, 42, 0.5);
+html, body {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
 }
 
-::-webkit-scrollbar-thumb {
-  background: rgba(99, 102, 241, 0.3);
-  border-radius: 4px;
+@keyframes marquee {
+  0% { transform: translateX(0%); }
+  100% { transform: translateX(-50%); }
 }
 
-::-webkit-scrollbar-thumb:hover {
-  background: rgba(99, 102, 241, 0.5);
+.animate-marquee {
+  display: flex;
+  width: max-content;
+  animation: marquee 25s linear infinite;
 }
+

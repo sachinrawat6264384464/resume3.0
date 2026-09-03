@@ -122,15 +122,15 @@ class CandidateService:
             experience_level=cand_in.experience_level,
             target_role=cand_in.target_role,
             notes=cand_in.notes,
-            xp=cand_in.xp or 120,
+            xp=cand_in.xp if cand_in.xp != 120 else 0,
             level=cand_in.level or 1,
             streak_days=cand_in.streak_days or 1,
-            readiness_score=cand_in.readiness_score or 70.0,
-            target_salary_band=cand_in.target_salary_band or "₹12–18 LPA",
+            readiness_score=cand_in.readiness_score if cand_in.readiness_score != 70.0 else 0.0,
+            target_salary_band=cand_in.target_salary_band if cand_in.target_salary_band != "₹12–18 LPA" else "₹8–12 LPA",
             skills_matrix_json=cand_in.skills_matrix_json or {
-                "Linux": 85, "AWS": 80, "Docker": 75, "Kubernetes": 70, "Terraform": 65, "DevSecOps": 50, "AI": 40
+                "Linux": 0, "AWS": 0, "Docker": 0, "Kubernetes": 0, "Terraform": 0
             },
-            badges_json=cand_in.badges_json or ["Linux Warrior", "Cloud Explorer"]
+            badges_json=cand_in.badges_json or ["Registered Engineer"]
         )
         self.db.add(candidate)
         await self.db.flush()
@@ -167,7 +167,13 @@ class CandidateService:
         await self.db.flush()
         return cand
 
-    async def update_ats_profile(self, candidate_id: str, ats_score: float, profile_data: dict) -> Candidate:
+    async def update_ats_profile(
+        self, 
+        candidate_id: str, 
+        ats_score: float, 
+        profile_data: dict,
+        matching_skills: Optional[List[str]] = None
+    ) -> Candidate:
         stmt = select(Candidate).where(Candidate.id == candidate_id)
         res = await self.db.execute(stmt)
         cand = res.scalar_one_or_none()
@@ -177,9 +183,16 @@ class CandidateService:
         cand.latest_ats_score = ats_score
         cand.resume_data_json = profile_data
         
+        # Build skills_matrix_json from LangChain matching_skills
+        matrix = dict(cand.skills_matrix_json or {})
+        if matching_skills:
+            for sk in matching_skills:
+                matrix[sk] = 85.0
+        cand.skills_matrix_json = matrix
+        
         # Boost readiness score based on ATS score
         if ats_score > 0:
-            cand.readiness_score = round(max(cand.readiness_score, (cand.readiness_score * 0.6 + ats_score * 0.4)), 1)
+            cand.readiness_score = round(max(cand.readiness_score or 0.0, ((cand.readiness_score or 0.0) * 0.4 + ats_score * 0.6)), 1)
         
         await self.db.flush()
         return cand

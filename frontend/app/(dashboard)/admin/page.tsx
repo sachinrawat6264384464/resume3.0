@@ -60,7 +60,7 @@ export default function AdminAnalyticsPage() {
   ];
 
   return (
-    <div className="flex flex-col gap-8 max-w-7xl mx-auto w-full py-2">
+    <div className="flex flex-col gap-8 w-full w-full py-2">
       {/* Header & Quick Action Bar */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>

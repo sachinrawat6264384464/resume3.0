@@ -4,402 +4,375 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { 
-  Cloud, Play, CheckCircle2, AlertTriangle, 
-  Clock, ArrowRight, BookOpen, Layers, Award, Loader2, Sparkles,
-  Flame, Star, ShieldCheck, Zap, TrendingUp, Trophy, FileText, ChevronRight
+  Flame, Zap, Moon, Sun, ArrowRight, Play, Upload, Award, 
+  CheckCircle2, Lock, Clock, Calendar, Search, Bell, Sparkles,
+  ChevronRight, BarChart2, ShieldCheck, Check, Laptop, Trophy,
+  FileText, Cpu, Compass
 } from "lucide-react";
 import { useAuthStore } from "@/lib/store";
 import { apiFetch } from "@/lib/api";
-import { InterviewTemplate, Candidate } from "@/types";
+import { Header } from "@/components/Header";
 
 export default function CandidateDashboardPage() {
   const router = useRouter();
-  const { user } = useAuthStore();
+  const { user, setAuth } = useAuthStore();
+  
+  const [theme, setTheme] = useState<"light" | "dark">("light");
+  const [mounted, setMounted] = useState(false);
+  const [dbMetrics, setDbMetrics] = useState<any>(null);
 
-  const [templates, setTemplates] = useState<InterviewTemplate[]>([]);
-  const [candidateProfile, setCandidateProfile] = useState<Candidate | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [startingId, setStartingId] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  // Profile Modal & OTP verification state
-  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
-  const [phoneInput, setPhoneInput] = useState("");
-  const [targetRoleInput, setTargetRoleInput] = useState("");
-  const [salaryBandInput, setSalaryBandInput] = useState("₹18–25 LPA");
-  const [otpInput, setOtpInput] = useState("");
-  const [otpSent, setOtpSent] = useState(false);
-  const [isSavingProfile, setIsSavingProfile] = useState(false);
-
+  // Always fetch fresh real data from backend — no stale localStorage cache
   useEffect(() => {
-    async function loadDashboard() {
-      try {
-        const tRes = await apiFetch("/interviews/templates");
-        setTemplates(tRes.data || []);
+    setMounted(true);
 
-        const cRes = await apiFetch(`/candidates/me/profile`);
-        if (cRes.data) {
-          setCandidateProfile(cRes.data);
-          setPhoneInput(cRes.data.phone || "+91 98765 43210");
-          setTargetRoleInput(cRes.data.target_role || "Senior DevOps Engineer");
-          setSalaryBandInput(cRes.data.target_salary_band || "₹18–25 LPA");
+    // Clear any old stale cache so it never shows up as fallback
+    if (typeof window !== "undefined") {
+      localStorage.removeItem("cached_dash_metrics");
+    }
+
+    // Fetch Real DB Data directly from backend
+    const fetchUserData = async () => {
+      try {
+        const [userRes, metricsRes] = await Promise.all([
+          apiFetch("/auth/me").catch(() => null),
+          apiFetch("/candidates/me/dashboard-metrics").catch(() => null)
+        ]);
+
+        if (userRes?.data) {
+          const token = localStorage.getItem("auth_token") || "";
+          setAuth(userRes.data, token);
+        }
+        if (metricsRes?.data) {
+          setDbMetrics(metricsRes.data);
         }
       } catch (e) {
-        console.warn("Failed to fetch dashboard data:", e);
+        console.warn("Dashboard fetch notice:", e);
       } finally {
-        setIsLoading(false);
+        setLoading(false);
+      }
+    };
+    fetchUserData();
+  }, []);
+
+  const toggleTheme = () => {
+    const nextTheme = theme === "dark" ? "light" : "dark";
+    setTheme(nextTheme);
+    if (typeof document !== "undefined") {
+      if (nextTheme === "dark") {
+        document.documentElement.classList.add("dark");
+      } else {
+        document.documentElement.classList.remove("dark");
       }
     }
-
-    loadDashboard();
-  }, [user]);
-
-  const handleSaveProfile = async () => {
-    setIsSavingProfile(true);
-    try {
-      const res = await apiFetch("/candidates/me/profile", {
-        method: "PUT",
-        body: JSON.stringify({
-          phone: phoneInput,
-          target_role: targetRoleInput,
-          target_salary_band: salaryBandInput
-        })
-      });
-      setCandidateProfile(res.data);
-      alert("Profile updated successfully!");
-      setIsProfileModalOpen(false);
-    } catch (e: any) {
-      alert("Failed to update profile: " + (e.message || "Error"));
-    } finally {
-      setIsSavingProfile(false);
-    }
   };
 
-  const handleVerifyOtp = async () => {
-    if (otpInput.length < 4) {
-      alert("Please enter a 4-6 digit OTP");
-      return;
-    }
-    setIsSavingProfile(true);
-    try {
-      const res = await apiFetch("/candidates/me/verify-otp", {
-        method: "POST"
-      });
-      setCandidateProfile(res.data);
-      alert("🎉 Mobile verified! +50 XP and 'Verified Candidate' badge awarded!");
-      setOtpSent(false);
-      setIsProfileModalOpen(false);
-    } catch (e: any) {
-      alert("Failed to verify OTP: " + (e.message || "Error"));
-    } finally {
-      setIsSavingProfile(false);
-    }
+  // Real DB Data
+  const candidateName = user?.full_name || "Candidate";
+  const userXp = user?.xp ?? dbMetrics?.xp ?? 0;
+  const userStreak = user?.streak_days ?? dbMetrics?.streak_days ?? 0;
+  const readiness = Math.round(dbMetrics?.readiness_score ?? 0);
+  const readinessBreakdown = dbMetrics?.readiness_breakdown || {
+    technical: 0,
+    problem_solving: 0,
+    communication: 0,
+    system_design: 0,
+    devops_mindset: 0
   };
-
-  const handleStartInterview = async (templateId: string) => {
-    setStartingId(templateId);
-    try {
-      const res = await apiFetch("/attempts/start", {
-        method: "POST",
-        body: JSON.stringify({ interview_template_id: templateId }),
-      });
-      const attemptId = res.data.id;
-      router.push(`/interviews/${attemptId}/pre-check`);
-    } catch (err: any) {
-      alert(err.message || "Failed to start interview attempt");
-      setStartingId(null);
-    }
+  const stagesProgress = dbMetrics?.stages_progress || [
+    { id: 1, name: "Profile & Career Pitch", score: "0%", status: "in_progress" },
+    { id: 2, name: "Linux Systems Warrior", score: "--", status: "locked" },
+    { id: 3, name: "Multi-Cloud Architecture", score: "--", status: "locked" },
+    { id: 4, name: "DevOps & Containers", score: "--", status: "locked" },
+    { id: 5, name: "Production Incident Boss Battle", score: "--", status: "locked" }
+  ];
+  const resumeAts = dbMetrics?.resume_ats || {
+    score: 0,
+    matched_jd: (user as any)?.target_role || "Senior DevOps Engineer",
+    skills_matched: "0 / 24",
+    keywords_found: "0%",
+    ats_score: "0 / 100"
   };
-
-  if (isLoading) {
-    return (
-      <div className="flex-1 flex items-center justify-center min-h-[50vh]">
-        <Loader2 className="w-8 h-8 text-indigo-500 animate-spin" />
-      </div>
-    );
-  }
-
-  const activeTemplate = templates[0];
-  const readiness = candidateProfile?.readiness_score || 84;
-  const xp = candidateProfile?.xp || 3450;
-  const level = candidateProfile?.level || 4;
-  const streak = candidateProfile?.streak_days || 12;
-  const targetBand = candidateProfile?.target_salary_band || "₹18–25 LPA";
-  const badges = candidateProfile?.badges_json || ["Linux Warrior", "Cloud Explorer", "AWS Ninja", "Kubernetes Warrior"];
-  const isVerified = badges.includes("Verified Candidate");
+  const topSkills = dbMetrics?.top_skills || [];
+  const upcomingInterview = dbMetrics?.upcoming_interview || {
+    title: "Stage 1: Profile & Career Pitch",
+    subtitle: "Introduction & Resume Pitch",
+    date: "Today",
+    time: "10:00 AM"
+  };
+  const leaderboardData = dbMetrics?.leaderboard || [];
 
   return (
-    <div className="flex flex-col gap-8 pb-16">
-      {/* Gamified Profile Header */}
-      <div className="p-6 sm:p-8 rounded-3xl glass-panel-glow border border-indigo-500/20 relative overflow-hidden flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-        <div className="flex flex-col gap-3 z-10">
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="px-3 py-1 rounded-full text-xs font-mono font-bold bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 flex items-center gap-1.5">
-              <Trophy className="w-3.5 h-3.5 text-amber-400" />
-              Level {level} Cloud Engineer
-            </span>
-            <span className="px-3 py-1 rounded-full text-xs font-mono font-bold bg-amber-500/10 text-amber-300 border border-amber-500/20 flex items-center gap-1.5">
-              <Flame className="w-3.5 h-3.5 text-amber-400" />
-              {streak} Day Streak
-            </span>
-            <span className="px-3 py-1 rounded-full text-xs font-mono font-bold bg-cyan-500/10 text-cyan-300 border border-cyan-500/20 flex items-center gap-1.5">
-              <Star className="w-3.5 h-3.5 text-cyan-400" />
-              {xp.toLocaleString()} XP
-            </span>
-          </div>
+    <div className="flex flex-col gap-6 max-w-[1400px] mx-auto pb-12 text-slate-900 dark:text-slate-100 font-sans">
+      
+      {/* Interactive Global Header (Notifications & Profile Menu with Logout) */}
+      <Header />
 
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
-            Welcome back, {user?.full_name || "Rahul Sharma"}! 👋
+      {/* TOP WELCOME TITLE */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-black tracking-tight text-slate-900 dark:text-white flex items-center gap-2">
+            Welcome back, {candidateName.split(' ')[0]} 👋
           </h1>
-          <p className="text-sm text-slate-300 max-w-xl leading-relaxed">
-            Your journey to crack high-package DevOps & CloudOps roles. Pass each challenge stage with <strong className="text-cyan-300">≥ 80% score</strong> to unlock the 40 LPA Final Boss interview.
+          <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mt-0.5">
+            Continue your CloudOps AI journey and become production ready.
           </p>
-
-          <div className="flex items-center gap-3 pt-1">
-            <button
-              onClick={() => setIsProfileModalOpen(true)}
-              className="px-3 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 text-xs font-mono text-slate-300 border border-white/10 flex items-center gap-1.5 transition-colors"
-            >
-              <Sparkles className="w-3.5 h-3.5 text-cyan-400" />
-              <span>Edit Target Role & Verify Mobile</span>
-            </button>
-            {isVerified ? (
-              <span className="px-2.5 py-0.5 rounded-full text-[11px] font-mono bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 flex items-center gap-1">
-                <CheckCircle2 className="w-3 h-3" /> Verified Candidate
-              </span>
-            ) : (
-              <span className="px-2.5 py-0.5 rounded-full text-[11px] font-mono bg-amber-500/20 text-amber-300 border border-amber-500/30 flex items-center gap-1">
-                <AlertTriangle className="w-3 h-3" /> Phone Unverified (+50 XP)
-              </span>
-            )}
-          </div>
         </div>
-
-        {/* Readiness Target Metric */}
-        <div className="flex flex-col sm:flex-row items-center gap-4 z-10">
-          <div className="p-5 rounded-2xl bg-slate-900/90 border border-white/10 text-center sm:text-right min-w-[200px] flex flex-col gap-1">
-            <span className="text-[10px] font-mono text-slate-400 uppercase tracking-widest block">Interview Readiness</span>
-            <div className="flex items-baseline justify-center sm:justify-end gap-1">
-              <span className="text-3xl font-black text-cyan-400 font-mono">{readiness}%</span>
-              <span className="text-xs text-slate-400 font-mono">Ready</span>
-            </div>
-            <div className="w-full h-2 rounded-full bg-slate-800 overflow-hidden my-1">
-              <div className="h-full bg-gradient-to-r from-indigo-500 to-cyan-400 rounded-full" style={{ width: `${readiness}%` }} />
-            </div>
-            <span className="text-[11px] font-mono text-emerald-300 font-semibold block">Target: {targetBand}</span>
-          </div>
-        </div>
-
-        <div className="absolute right-0 bottom-0 w-96 h-96 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
       </div>
 
-      {/* Recommended Next Challenge & Skills Overview */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Recommended Next Challenge Banner */}
-        <div className="lg:col-span-2 p-6 sm:p-8 rounded-3xl bg-gradient-to-br from-indigo-950/50 via-slate-900 to-slate-950 border border-indigo-500/30 flex flex-col justify-between gap-6 shadow-xl">
-          <div className="flex flex-col gap-3">
-            <div className="flex items-center justify-between">
-              <span className="px-2.5 py-0.5 rounded-full text-xs font-mono font-bold bg-cyan-500/20 text-cyan-300 border border-cyan-500/30">
-                Recommended Next Step
-              </span>
-              <span className="text-xs text-slate-400 font-mono">Stage 04 / 05</span>
-            </div>
-            <div>
-              <h2 className="text-xl sm:text-2xl font-bold text-white tracking-tight flex items-center gap-2">
-                🚀 Challenge 04 — DevOps & Containerization Engineer
-              </h2>
-              <p className="text-sm text-slate-300 mt-2 leading-relaxed">
-                Tackle Docker multi-stage build optimization, Kubernetes StatefulSets vs Deployments, and zero-downtime Blue/Green release architectures.
-              </p>
-            </div>
-          </div>
+      {/* ROW 1: HERO BANNER + YOUR READINESS SCORE */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch">
+        
+        {/* Hero Banner Card */}
+        <div className="lg:col-span-8 bg-gradient-to-r from-amber-50/90 via-orange-50/50 to-white dark:from-slate-900 dark:via-slate-900 dark:to-slate-900 rounded-[24px] border border-amber-200/80 dark:border-[#FF9900]/30 p-6 sm:p-7 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-6 relative overflow-hidden">
+          
+          <div className="flex flex-col gap-3.5 z-10 max-w-md">
+            <h2 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight leading-snug">
+              AI-Powered Interviews.<br />
+              <span className="text-[#FF9900]">Real-World Ready.</span>
+            </h2>
+            <p className="text-xs text-slate-600 dark:text-slate-400 font-medium leading-relaxed">
+              5-Stage Voice Interviews, AI Scoring, ATS Resume Analyzer & Career OS for Cloud Engineers.
+            </p>
 
-          <div className="flex flex-wrap items-center justify-between gap-4 pt-4 border-t border-white/5">
-            <div className="flex items-center gap-4 text-xs font-mono text-slate-400">
-              <span>Passing: <strong className="text-cyan-300">80%</strong></span>
-              <span>Reward: <strong className="text-amber-300">+300 XP</strong></span>
-              <span>Mode: <strong className="text-indigo-300">Practice & Voice</strong></span>
-            </div>
-
-            {activeTemplate && (
-              <button
-                onClick={() => handleStartInterview(activeTemplate.id)}
-                disabled={startingId === activeTemplate.id}
-                className="px-6 py-3 rounded-xl bg-gradient-to-r from-indigo-500 to-cyan-500 hover:from-indigo-400 hover:to-cyan-400 text-white font-bold text-xs font-mono flex items-center gap-2 shadow-lg shadow-indigo-500/20 transition-all disabled:opacity-50"
+            <div className="flex items-center gap-3 pt-1">
+              <Link 
+                href="/interviews"
+                className="py-2.5 px-5 rounded-xl font-black text-xs text-slate-950 bg-gradient-to-r from-[#FF9900] via-amber-400 to-orange-400 hover:from-amber-400 hover:to-orange-500 shadow-md shadow-[#FF9900]/25 flex items-center gap-2 transition-all"
               >
-                {startingId === activeTemplate.id ? (
-                  <>
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    <span>Launching Chamber...</span>
-                  </>
-                ) : (
-                  <>
-                    <Play className="w-4 h-4 fill-white" />
-                    <span>Launch Challenge 04</span>
-                  </>
-                )}
-              </button>
-            )}
+                <Play className="w-3.5 h-3.5 fill-slate-950 text-slate-950" />
+                <span>Continue Interview</span>
+              </Link>
+
+              <Link 
+                href="/resume-ats"
+                className="py-2.5 px-4 rounded-xl font-bold text-xs text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:bg-amber-50 flex items-center gap-2 shadow-sm transition-all"
+              >
+                <Upload className="w-3.5 h-3.5 text-[#FF9900]" />
+                <span>Upload Resume</span>
+              </Link>
+            </div>
+
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-amber-100/70 dark:bg-amber-950/60 border border-[#FF9900]/30 text-[#FF9900] text-[11px] font-extrabold w-fit mt-1">
+              <Sparkles className="w-3 h-3 text-[#FF9900]" />
+              <span>Target Salary: {dbMetrics?.target_salary_band || "₹18 – ₹40 LPA"}</span>
+            </div>
           </div>
+
+          {/* 3D Visual Illustration */}
+          <div className="w-full sm:w-[240px] shrink-0 z-10 flex justify-center">
+            <img 
+              src="/images/hero_cloud_ai_3d.png" 
+              alt="3D DevOps Cloud Graphic" 
+              className="w-full max-w-[220px] max-h-[170px] object-contain drop-shadow-xl hover:scale-105 transition-transform duration-500" 
+            />
+          </div>
+
         </div>
 
-        {/* Skills Mastery Matrix */}
-        <div className="p-6 rounded-3xl bg-slate-900/80 border border-white/10 flex flex-col justify-between gap-4">
-          <div>
-            <h3 className="text-sm font-bold text-white flex items-center gap-2">
-              <Zap className="w-4 h-4 text-amber-400" />
-              Skills Mastery Matrix
+        {/* Your Readiness Score Widget */}
+        <div className="lg:col-span-4 bg-white dark:bg-slate-900 rounded-[24px] border border-slate-200 dark:border-slate-800 p-5 shadow-sm flex flex-col justify-between">
+          
+          <div className="flex items-center justify-between">
+            <h3 className="text-xs font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">
+              Your Readiness Score
             </h3>
-            <p className="text-xs text-slate-400 mt-1">Real-time performance across technical domains</p>
+            <span className="text-[10px] font-extrabold text-[#FF9900] bg-amber-50 dark:bg-amber-950/40 px-2 py-0.5 rounded-full border border-[#FF9900]/30">
+              Live
+            </span>
           </div>
 
-          <div className="flex flex-col gap-2.5">
-            {[
-              { skill: "Linux Systems", score: 88, color: "bg-emerald-400" },
-              { skill: "AWS Cloud", score: 84, color: "bg-cyan-400" },
-              { skill: "Docker & K8s", score: 78, color: "bg-indigo-400" },
-              { skill: "Terraform IaC", score: 74, color: "bg-purple-400" },
-              { skill: "DevSecOps", score: 62, color: "bg-amber-400" },
-              { skill: "AI Automation", score: 55, color: "bg-rose-400" }
-            ].map((s) => (
-              <div key={s.skill} className="flex flex-col gap-1">
-                <div className="flex justify-between text-xs font-mono">
-                  <span className="text-slate-400">{s.skill}</span>
-                  <span className="text-white font-bold">{s.score}%</span>
-                </div>
-                <div className="w-full h-1.5 rounded-full bg-slate-800 overflow-hidden">
-                  <div className={`h-full ${s.color} rounded-full`} style={{ width: `${s.score}%` }} />
-                </div>
+          <div className="flex items-center gap-4 my-3">
+            {/* 5-Segment Donut Chart */}
+            <div className="relative w-[88px] h-[88px] shrink-0 flex items-center justify-center">
+              {(() => {
+                const pillars = [
+                  { val: readinessBreakdown.technical,       color: "#FF9900" },
+                  { val: readinessBreakdown.problem_solving, color: "#8b5cf6" },
+                  { val: readinessBreakdown.communication,   color: "#10b981" },
+                  { val: readinessBreakdown.system_design,   color: "#f59e0b" },
+                  { val: readinessBreakdown.devops_mindset,  color: "#ef4444" },
+                ];
+                const total = pillars.reduce((s, p) => s + (p.val || 0), 0) || 1;
+                const circumference = 2 * Math.PI * 38;
+                let offset = 0;
+                return (
+                  <svg className="w-full h-full -rotate-90" viewBox="0 0 100 100">
+                    {/* Track */}
+                    <circle cx="50" cy="50" r="38" stroke="#f1f5f9" strokeWidth="10" fill="transparent" />
+                    {pillars.map((p, i) => {
+                      const dash = ((p.val || 0) / total) * circumference;
+                      const gap = circumference - dash;
+                      const seg = (
+                        <circle
+                          key={i}
+                          cx="50" cy="50" r="38"
+                          stroke={p.color}
+                          strokeWidth="10"
+                          fill="transparent"
+                          strokeDasharray={`${Math.max(0, dash - 2)} ${gap + 2}`}
+                          strokeDashoffset={-offset}
+                          strokeLinecap="round"
+                        />
+                      );
+                      offset += dash;
+                      return seg;
+                    })}
+                  </svg>
+                );
+              })()}
+              <div className="absolute inset-0 flex flex-col items-center justify-center">
+                <span className="text-lg font-black text-slate-900 dark:text-white leading-none">{readiness}%</span>
+                <span className="text-[7px] font-bold text-slate-400 uppercase tracking-widest text-center leading-tight mt-0.5">
+                  Ready
+                </span>
               </div>
-            ))}
+            </div>
+
+            {/* Breakdown with mini bars */}
+            <div className="flex flex-col gap-1.5 flex-1 min-w-0">
+              {[
+                { name: "Technical",       val: readinessBreakdown.technical,       color: "bg-[#FF9900]" },
+                { name: "Problem Solving", val: readinessBreakdown.problem_solving, color: "bg-violet-500" },
+                { name: "Communication",   val: readinessBreakdown.communication,   color: "bg-emerald-500" },
+                { name: "System Design",   val: readinessBreakdown.system_design,   color: "bg-amber-500" },
+                { name: "DevOps Mindset",  val: readinessBreakdown.devops_mindset,  color: "bg-red-500" },
+              ].map((item, i) => (
+                <div key={i} className="flex flex-col gap-0.5">
+                  <div className="flex items-center justify-between text-[10px]">
+                    <span className="text-slate-500 dark:text-slate-400 font-semibold truncate">{item.name}</span>
+                    <span className="font-black text-slate-900 dark:text-white ml-1 shrink-0">{item.val ?? 0}%</span>
+                  </div>
+                  <div className="h-1 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                    <div
+                      className={`h-full rounded-full transition-all duration-700 ${item.color}`}
+                      style={{ width: `${Math.min(100, item.val ?? 0)}%` }}
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
 
-          <div className="pt-2 border-t border-white/5 flex items-center justify-between text-xs font-mono">
-            <span className="text-slate-400">Improve:</span>
-            <span className="text-rose-300 font-medium">🔴 DevSecOps & AI</span>
-          </div>
+          <Link
+            href="/performance"
+            className="w-full py-2 rounded-xl text-xs font-bold text-[#FF9900] bg-amber-50 dark:bg-amber-950/40 border border-[#FF9900]/30 hover:bg-amber-100 flex items-center justify-center gap-1 transition-all shadow-sm"
+          >
+            <BarChart2 className="w-3.5 h-3.5" />
+            <span>View Full Report</span>
+          </Link>
+
         </div>
+
       </div>
 
-      {/* 5 Core Challenge Stages Progression Map */}
-      <div className="flex flex-col gap-4">
+      {/* ROW 2: 5-STAGE INTERVIEW PROGRESS ROW */}
+      <div className="bg-white dark:bg-slate-900 rounded-[24px] border border-slate-200 dark:border-slate-800 p-5 shadow-sm flex flex-col gap-4">
+        
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-lg font-bold text-white tracking-tight">5 Core Career Challenge Stages</h2>
-            <p className="text-xs text-slate-400">Progression ladder from Foundation to the Production Incident Final Boss</p>
+            <h3 className="text-sm font-black text-slate-900 dark:text-white tracking-tight">
+              5-Stage Interview Progress
+            </h3>
+            <p className="text-[11px] text-slate-500 font-medium mt-0.5">
+              Click any unlocked stage to attempt or re-attempt anytime for higher XP & readiness score!
+            </p>
           </div>
-          <Link
-            href="/resume-ats"
-            className="text-xs text-cyan-400 hover:text-cyan-300 font-mono flex items-center gap-1 transition-colors"
-          >
-            <FileText className="w-3.5 h-3.5" />
-            <span>Check Resume Match</span>
-          </Link>
+          <span className="text-[11px] font-bold text-slate-400 shrink-0 hidden sm:inline">
+            Score 80%+ to unlock next stage
+          </span>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-          {[
-            {
-              num: 1,
-              title: "Introduce Yourself",
-              tag: "Profile",
-              score: 86,
-              status: "PASSED",
-              badge: "Linux Warrior",
-              icon: "🏆",
-              desc: "Personal pitch & technical stack overview."
-            },
-            {
-              num: 2,
-              title: "Linux Warrior",
-              tag: "Diagnostics",
-              score: 84,
-              status: "PASSED",
-              badge: "Cloud Explorer",
-              icon: "🐧",
-              desc: "I/O wait, systemd triage, and socket binding."
-            },
-            {
-              num: 3,
-              title: "Cloud Infrastructure",
-              tag: "AWS & IAM",
-              score: 82,
-              status: "PASSED",
-              badge: "AWS Ninja",
-              icon: "☁️",
-              desc: "IAM Roles/STS, VPC routing, and NAT Gateways."
-            },
-            {
-              num: 4,
-              title: "DevOps & Containers",
-              tag: "CI/CD & K8s",
-              score: null,
-              status: "IN_PROGRESS",
-              badge: "Kubernetes Warrior",
-              icon: "🚀",
-              desc: "Multi-stage Docker, StatefulSets, Canary rollouts."
-            },
-            {
-              num: 5,
-              title: "Troubleshooting Boss",
-              tag: "Incident Response",
-              score: null,
-              status: "LOCKED",
-              badge: "40 LPA Challenger",
-              icon: "🔥",
-              desc: "Final Boss: CrashLoopBackOff & 502/504 errors."
-            }
-          ].map((stage) => {
-            const isPassed = stage.status === "PASSED";
-            const isInProgress = stage.status === "IN_PROGRESS";
-            const isLocked = stage.status === "LOCKED";
+        {/* 5 Stages Cards Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+          {stagesProgress.map((s: any) => {
+            const isCompleted = s.status === "completed";
+            const isInProgress = s.status === "in_progress";
+            const isLocked = s.status === "locked";
+
+            const handleCardClick = () => {
+              if (isLocked) return;
+              const targetUrl = s.attempt_id ? `/interviews/${s.attempt_id}/room` : `/interviews/1/room`;
+              router.push(targetUrl);
+            };
 
             return (
               <div
-                key={stage.num}
-                className={`p-5 rounded-3xl border flex flex-col justify-between gap-4 transition-all ${
-                  isPassed
-                    ? "bg-slate-900/80 border-emerald-500/30"
+                key={s.id}
+                onClick={handleCardClick}
+                className={`p-3.5 rounded-2xl border flex flex-col justify-between gap-3 transition-all relative overflow-hidden ${
+                  isCompleted
+                    ? "bg-emerald-50/90 dark:bg-emerald-950/40 border-emerald-500/80 shadow-sm hover:border-emerald-600 hover:shadow-md cursor-pointer"
                     : isInProgress
-                    ? "bg-indigo-950/40 border-indigo-500/50 shadow-lg shadow-indigo-500/10 ring-1 ring-indigo-500/30"
-                    : "bg-slate-950/40 border-white/5 opacity-60"
+                    ? "bg-amber-50/90 dark:bg-amber-950/40 border-[#FF9900] ring-2 ring-[#FF9900]/20 shadow-md hover:border-orange-500 hover:shadow-lg cursor-pointer"
+                    : "bg-slate-50/50 dark:bg-slate-900/40 border-slate-200/60 dark:border-slate-800/80 opacity-60 cursor-not-allowed"
                 }`}
               >
-                <div className="flex flex-col gap-2">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xl">{stage.icon}</span>
-                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-mono font-bold ${
-                      isPassed
-                        ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30"
-                        : isInProgress
-                        ? "bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 animate-pulse"
-                        : "bg-slate-800 text-slate-400"
+                <div className="flex items-center justify-between">
+                  <div className={`w-7 h-7 rounded-full flex items-center justify-center font-black text-xs ${
+                    isCompleted
+                      ? "bg-emerald-500 text-white shadow-md shadow-emerald-500/20"
+                      : isInProgress
+                      ? "bg-[#FF9900] text-slate-950 shadow-md shadow-[#FF9900]/20"
+                      : "bg-slate-200 dark:bg-slate-800 text-slate-500"
+                  }`}>
+                    {isCompleted ? <CheckCircle2 className="w-4 h-4" /> : s.id}
+                  </div>
+                  
+                  {s.score && s.score !== "--" && (
+                    <span className={`px-2 py-0.5 rounded-lg font-mono font-extrabold text-[10.5px] ${
+                      isCompleted
+                        ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/60 dark:text-emerald-200"
+                        : "bg-amber-100 text-[#FF9900] dark:bg-amber-900/60"
                     }`}>
-                      {stage.status}
+                      Score: {s.score}
                     </span>
-                  </div>
-
-                  <div>
-                    <span className="text-[10px] font-mono text-slate-400 block">Challenge 0{stage.num}</span>
-                    <h4 className="font-bold text-white text-sm leading-tight">{stage.title}</h4>
-                    <p className="text-[11px] text-slate-400 mt-1 leading-snug">{stage.desc}</p>
-                  </div>
+                  )}
                 </div>
 
-                <div className="pt-3 border-t border-white/5 flex items-center justify-between text-xs font-mono">
-                  {isPassed ? (
+                <div>
+                  <h4 className="text-xs font-black text-slate-900 dark:text-white leading-snug">{s.name}</h4>
+                  {s.subtitle && (
+                    <p className="text-[10px] text-slate-500 dark:text-slate-400 font-medium truncate mt-0.5">{s.subtitle}</p>
+                  )}
+                </div>
+
+                <div className={`pt-2 border-t flex items-center justify-between text-[10px] font-bold ${
+                  isCompleted
+                    ? "border-emerald-200/60 dark:border-emerald-800/60 text-emerald-700 dark:text-emerald-300"
+                    : isInProgress
+                    ? "border-amber-200/60 dark:border-amber-800/60 text-[#FF9900]"
+                    : "border-slate-200/60 dark:border-slate-800/60 text-slate-400"
+                }`}>
+                  {isCompleted && (
                     <>
-                      <span className="text-emerald-400 font-bold">{stage.score}% Score</span>
-                      <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                      <div className="flex items-center gap-1">
+                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                        <span>Completed</span>
+                      </div>
+                      <span className="font-extrabold underline text-emerald-800 dark:text-emerald-200">
+                        Re-attempt 🔄
+                      </span>
                     </>
-                  ) : isInProgress ? (
+                  )}
+                  {isInProgress && (
                     <>
-                      <span className="text-cyan-300 font-bold">Active Round</span>
-                      <Play className="w-4 h-4 text-cyan-400 fill-cyan-400" />
+                      <div className="flex items-center gap-1">
+                        <Clock className="w-3.5 h-3.5 text-[#FF9900] shrink-0 animate-pulse" />
+                        <span>Active Stage</span>
+                      </div>
+                      <span className="font-extrabold text-[#FF9900]">
+                        Start →
+                      </span>
                     </>
-                  ) : (
+                  )}
+                  {isLocked && (
                     <>
-                      <span className="text-slate-500">Requires Stage 04</span>
-                      <span className="text-slate-500">🔒</span>
+                      <div className="flex items-center gap-1 text-slate-400">
+                        <Lock className="w-3.5 h-3.5 shrink-0" />
+                        <span>Locked</span>
+                      </div>
                     </>
                   )}
                 </div>
@@ -407,159 +380,286 @@ export default function CandidateDashboardPage() {
             );
           })}
         </div>
+
       </div>
 
-      {/* Earned Badges & Trophy Cabinet */}
-      <div className="p-6 rounded-3xl bg-slate-900/60 border border-white/5 flex flex-col gap-4">
-        <div className="flex items-center justify-between">
-          <h3 className="text-sm font-bold text-white flex items-center gap-2">
-            <Award className="w-4 h-4 text-indigo-400" />
-            Your Badges & Achievements ({badges.length})
-          </h3>
-          <Link href="/leaderboard" className="text-xs text-indigo-400 hover:text-indigo-300 font-mono transition-colors">
-            View Global Leaderboard →
-          </Link>
-        </div>
-
-        <div className="flex flex-wrap gap-3">
-          {badges.map((b) => (
-            <div key={b} className="px-3.5 py-2 rounded-xl bg-slate-950 border border-white/10 flex items-center gap-2">
-              <Award className="w-4 h-4 text-amber-400" />
-              <span className="text-xs font-mono font-medium text-slate-200">{b}</span>
-            </div>
-          ))}
-          <div className="px-3.5 py-2 rounded-xl bg-slate-950/40 border border-white/5 flex items-center gap-2 opacity-50">
-            <span className="text-slate-500">🔒</span>
-            <span className="text-xs font-mono text-slate-500">40 LPA Final Boss Challenger</span>
+      {/* ROW 3: UPCOMING INTERVIEW + ATS SCORE + TOP SKILLS */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch">
+        
+        {/* Resume ATS Score Widget */}
+        <div className="lg:col-span-4 bg-white dark:bg-slate-900 rounded-[24px] border border-slate-200 dark:border-slate-800 p-5 shadow-sm flex flex-col justify-between gap-3">
+          
+          <div className="flex items-center gap-2 text-xs font-black text-slate-900 dark:text-white">
+            <FileText className="w-4 h-4 text-[#FF9900]" />
+            <span>Resume ATS Score</span>
           </div>
-        </div>
-      </div>
 
-      {/* Profile Settings & OTP Verification Modal */}
-      {isProfileModalOpen && (
-        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4 animate-fadeIn">
-          <div className="w-full max-w-lg p-6 sm:p-8 rounded-3xl bg-slate-900 border border-white/10 shadow-2xl flex flex-col gap-6">
-            <div className="flex items-center justify-between border-b border-white/5 pb-4">
-              <div>
-                <h3 className="text-lg font-bold text-white flex items-center gap-2">
-                  <Sparkles className="w-5 h-5 text-cyan-400" />
-                  Candidate Profile & Verification
-                </h3>
-                <p className="text-xs text-slate-400 mt-0.5">Customize your career targets and verify your contact details</p>
+          <div className="flex items-center gap-4 my-1">
+            <div className="relative w-20 h-20 shrink-0 flex items-center justify-center">
+              <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
+                <circle cx="50" cy="50" r="40" stroke="currentColor" strokeWidth="8" fill="transparent" className="text-slate-100 dark:text-slate-800" />
+                <circle cx="50" cy="50" r="40" stroke="currentColor" strokeWidth="8" fill="transparent" strokeDasharray={`${Math.round(resumeAts.score) * 2.51} 251`} strokeLinecap="round" className="text-[#FF9900]" />
+              </svg>
+              <div className="absolute inset-0 flex flex-col items-center justify-center">
+                <span className="text-lg font-black text-slate-900 dark:text-white">{Math.round(resumeAts.score)}%</span>
+                <span className="text-[7px] font-bold text-slate-400 uppercase tracking-widest">
+                  {resumeAts.score > 0 ? "Good Match" : "Not Analyzed"}
+                </span>
               </div>
-              <button
-                onClick={() => setIsProfileModalOpen(false)}
-                className="text-slate-400 hover:text-white text-xs font-mono p-1"
-              >
-                ✕
-              </button>
             </div>
 
-            <div className="flex flex-col gap-4">
-              {/* Target Role */}
-              <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-mono text-slate-400">Target Role Title:</label>
-                <input
-                  type="text"
-                  value={targetRoleInput}
-                  onChange={(e) => setTargetRoleInput(e.target.value)}
-                  placeholder="e.g. Senior DevOps Engineer / CloudOps Architect"
-                  className="w-full rounded-xl bg-slate-950 border border-white/10 p-3 text-xs text-slate-200 font-mono focus:outline-none focus:border-cyan-500/50"
-                />
-              </div>
-
-              {/* Target Salary Band */}
-              <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-mono text-slate-400">Target Salary CTC Band:</label>
-                <div className="grid grid-cols-3 gap-2">
-                  {["₹12–18 LPA", "₹18–25 LPA", "₹25–40 LPA"].map((band) => (
-                    <button
-                      key={band}
-                      onClick={() => setSalaryBandInput(band)}
-                      className={`p-2 rounded-xl text-xs font-mono transition-all border ${
-                        salaryBandInput === band
-                          ? "bg-cyan-500/20 text-cyan-300 border-cyan-500/40 font-bold"
-                          : "bg-slate-950 text-slate-400 border-white/5 hover:bg-white/5"
-                      }`}
-                    >
-                      {band}
-                    </button>
-                  ))}
+            <div className="flex flex-col gap-1.5 flex-1 min-w-0">
+              <span className="text-[10px] font-bold text-slate-400 truncate">Matched JD: {resumeAts.matched_jd}</span>
+              
+              <div className="flex flex-col gap-0.5">
+                <div className="flex justify-between text-[10px] font-semibold text-slate-600 dark:text-slate-400">
+                  <span>Skills Matched</span>
+                  <span className="font-mono font-bold text-emerald-600">{resumeAts.skills_matched}</span>
+                </div>
+                <div className="h-1.5 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                  <div className="h-full bg-emerald-500 rounded-full" style={{ width: `${Math.round(resumeAts.score)}%` }} />
                 </div>
               </div>
 
-              {/* Phone & OTP Verification */}
-              <div className="flex flex-col gap-1.5 p-4 rounded-2xl bg-slate-950/80 border border-white/5">
-                <div className="flex items-center justify-between">
-                  <label className="text-xs font-mono text-slate-300 font-bold">Mobile Phone Verification (+50 XP):</label>
-                  {isVerified ? (
-                    <span className="text-[10px] font-mono text-emerald-400 flex items-center gap-1">
-                      <CheckCircle2 className="w-3.5 h-3.5" /> Verified
-                    </span>
-                  ) : (
-                    <span className="text-[10px] font-mono text-amber-400">Unverified</span>
-                  )}
+              <div className="flex flex-col gap-0.5">
+                <div className="flex justify-between text-[10px] font-semibold text-slate-600 dark:text-slate-400">
+                  <span>Keywords Found</span>
+                  <span className="font-mono font-bold text-[#FF9900]">{resumeAts.keywords_found}</span>
                 </div>
-
-                <div className="flex gap-2 pt-1">
-                  <input
-                    type="text"
-                    value={phoneInput}
-                    onChange={(e) => setPhoneInput(e.target.value)}
-                    placeholder="+91 98765 43210"
-                    disabled={isVerified}
-                    className="flex-1 rounded-xl bg-slate-900 border border-white/10 p-2.5 text-xs text-slate-200 font-mono focus:outline-none focus:border-indigo-500/50 disabled:opacity-50"
-                  />
-                  {!isVerified && !otpSent && (
-                    <button
-                      onClick={() => setOtpSent(true)}
-                      className="px-3 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-mono shrink-0 transition-colors"
-                    >
-                      Send OTP
-                    </button>
-                  )}
+                <div className="h-1.5 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                  <div className="h-full bg-[#FF9900] rounded-full" style={{ width: `${Math.round(resumeAts.score * 0.95)}%` }} />
                 </div>
+              </div>
+            </div>
+          </div>
 
-                {!isVerified && otpSent && (
-                  <div className="flex gap-2 pt-2 animate-fadeIn">
-                    <input
-                      type="text"
-                      value={otpInput}
-                      onChange={(e) => setOtpInput(e.target.value)}
-                      placeholder="Enter 6-digit OTP (e.g. 552140)"
-                      className="flex-1 rounded-xl bg-slate-900 border border-amber-500/40 p-2.5 text-xs text-amber-200 font-mono focus:outline-none"
-                    />
-                    <button
-                      onClick={handleVerifyOtp}
-                      disabled={isSavingProfile}
-                      className="px-3.5 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-emerald-500 hover:from-amber-400 hover:to-emerald-400 text-slate-950 font-bold text-xs font-mono shrink-0 transition-all"
-                    >
-                      Verify (+50 XP)
-                    </button>
-                  </div>
+          <Link
+            href="/resume-ats"
+            className="w-full py-2 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-300 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-100 flex items-center justify-center gap-1 transition-all shadow-sm"
+          >
+            <Sparkles className="w-3.5 h-3.5 text-[#FF9900]" />
+            <span>Improve Resume</span>
+          </Link>
+
+        </div>
+
+        {/* Top Skills Detected Widget */}
+        <div className="lg:col-span-4 bg-white dark:bg-slate-900 rounded-[24px] border border-slate-200 dark:border-slate-800 p-5 shadow-sm flex flex-col justify-between gap-3">
+          
+          <div className="flex items-center justify-between text-xs font-black text-slate-900 dark:text-white">
+            <span className="flex items-center gap-2">
+              <Cpu className="w-4 h-4 text-[#FF9900]" />
+              Top Skills Detected
+            </span>
+          </div>
+
+          <div className="flex flex-wrap gap-1.5 my-1">
+            {topSkills.length > 0 ? (
+              topSkills.map((skill: string, i: number) => (
+                <span 
+                  key={i} 
+                  className="px-2.5 py-1 rounded-xl text-[11px] font-bold text-[#FF9900] bg-amber-50 dark:bg-amber-950/50 border border-[#FF9900]/30"
+                >
+                  {skill}
+                </span>
+              ))
+            ) : (
+              <span className="text-xs text-slate-400 font-medium">Complete Stage 1 to detect skills</span>
+            )}
+          </div>
+
+          <Link
+            href="/performance"
+            className="text-xs font-bold text-[#FF9900] hover:underline flex items-center justify-end gap-1 mt-1"
+          >
+            <span>View All Skills</span>
+            <ArrowRight className="w-3 h-3" />
+          </Link>
+
+        </div>
+
+        {/* Upcoming Interview Card */}
+        <div className="lg:col-span-4 bg-white dark:bg-slate-900 rounded-[24px] border border-slate-200 dark:border-slate-800 p-5 shadow-sm flex flex-col justify-between gap-3">
+          
+          <div className="flex items-center justify-between text-xs font-black text-slate-900 dark:text-white">
+            <span className="flex items-center gap-2">
+              <Calendar className="w-4 h-4 text-[#FF9900]" />
+              Upcoming Interview
+            </span>
+            <Clock className="w-3.5 h-3.5 text-slate-400" />
+          </div>
+
+          <div className="flex flex-col gap-1 my-1">
+            <h4 className="text-sm font-black text-slate-900 dark:text-white">{upcomingInterview.title}</h4>
+            <p className="text-[11px] text-slate-500 font-medium">{upcomingInterview.subtitle}</p>
+            
+            <div className="flex items-center gap-3 text-[11px] font-bold text-slate-600 dark:text-slate-400 mt-2 bg-slate-50 dark:bg-slate-800/60 p-2.5 rounded-xl border border-slate-200/60 dark:border-slate-800">
+              <span className="flex items-center gap-1">
+                <Calendar className="w-3.5 h-3.5 text-[#FF9900]" />
+                {upcomingInterview.date}
+              </span>
+              <span>•</span>
+              <span className="flex items-center gap-1">
+                <Clock className="w-3.5 h-3.5 text-[#FF9900]" />
+                {upcomingInterview.time}
+              </span>
+            </div>
+          </div>
+
+          <Link
+            href="/interviews"
+            className="w-full py-2.5 rounded-xl font-black text-xs text-slate-950 bg-gradient-to-r from-[#FF9900] via-amber-400 to-orange-400 hover:from-amber-400 hover:to-orange-500 shadow-md shadow-[#FF9900]/20 flex items-center justify-center gap-1.5 transition-all"
+          >
+            <Play className="w-3.5 h-3.5 fill-slate-950 text-slate-950" />
+            <span>Start Mock Interview</span>
+          </Link>
+
+        </div>
+
+      </div>
+
+      {/* ROW 4: 30-DAY ROADMAP + STREAK & XP + LEADERBOARD + PRACTICE BANNER */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch">
+        
+        {/* AI Career Roadmap (30 Days) Widget */}
+        <div className="lg:col-span-5 bg-white dark:bg-slate-900 rounded-[24px] border border-slate-200 dark:border-slate-800 p-5 shadow-sm flex flex-col justify-between gap-3">
+          
+          <div className="flex items-center justify-between text-xs font-black text-slate-900 dark:text-white">
+            <span className="flex items-center gap-2">
+              <Compass className="w-4 h-4 text-[#FF9900]" />
+              AI Career Roadmap (30 Days)
+            </span>
+          </div>
+
+          <div className="flex flex-col gap-2 my-1">
+            {(dbMetrics?.roadmap || [
+              { week: "Week 1", title: "Linux & Shell Deep Dive", done: true },
+              { week: "Week 2", title: "AWS Core Services & VPC", done: false },
+              { week: "Week 3", title: "Kubernetes Advanced & Helm", done: false },
+              { week: "Week 4", title: "DevOps Projects & SRE Outages", done: false }
+            ]).map((item: any, i: number) => (
+              <div key={i} className="flex items-center justify-between p-2 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200/60 dark:border-slate-800 text-xs font-bold">
+                <div className="flex items-center gap-2.5">
+                  <span className="text-[10px] font-mono text-slate-400">{item.week}</span>
+                  <span className="text-slate-900 dark:text-white">{item.title}</span>
+                </div>
+                {item.done ? (
+                  <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+                ) : (
+                  <div className="w-4 h-4 rounded-full border-2 border-slate-300 dark:border-slate-700" />
                 )}
               </div>
+            ))}
+          </div>
+
+          <Link
+            href="/roadmap"
+            className="text-xs font-bold text-[#FF9900] hover:underline flex items-center justify-end gap-1"
+          >
+            <span>View Full Roadmap</span>
+            <ArrowRight className="w-3 h-3" />
+          </Link>
+
+        </div>
+
+        {/* Streak & XP Widget */}
+        <div className="lg:col-span-3 bg-white dark:bg-slate-900 rounded-[24px] border border-slate-200 dark:border-slate-800 p-5 shadow-sm flex flex-col justify-between gap-3">
+          
+          <div className="flex items-center gap-2 text-xs font-black text-slate-900 dark:text-white">
+            <Flame className="w-4 h-4 text-orange-500" />
+            <span>Streak & XP</span>
+          </div>
+
+          <div className="flex items-center justify-around my-1">
+            <div className="flex flex-col items-center">
+              <span className="text-2xl font-black text-slate-900 dark:text-white">{userStreak}</span>
+              <span className="text-[10px] font-bold text-slate-400">Day Streak</span>
             </div>
 
-            <div className="flex items-center justify-end gap-3 pt-2 border-t border-white/5">
-              <button
-                onClick={() => setIsProfileModalOpen(false)}
-                className="px-4 py-2 rounded-xl text-xs font-mono text-slate-400 hover:text-white transition-colors"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleSaveProfile}
-                disabled={isSavingProfile}
-                className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-cyan-500 to-indigo-600 hover:from-cyan-400 hover:to-indigo-500 text-white font-bold text-xs font-mono flex items-center gap-1.5 transition-all shadow-lg shadow-cyan-500/20 disabled:opacity-50"
-              >
-                {isSavingProfile ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5" />}
-                <span>Save Profile Changes</span>
-              </button>
+            <div className="h-8 w-[1px] bg-slate-200 dark:bg-slate-800" />
+
+            <div className="flex flex-col items-center">
+              <span className="text-2xl font-black text-slate-900 dark:text-white">{userXp.toLocaleString()}</span>
+              <span className="text-[10px] font-bold text-slate-400">Total XP</span>
             </div>
           </div>
+
+          {/* Mini Sparkline Visualization */}
+          <div className="h-8 w-full bg-slate-50 dark:bg-slate-800/40 rounded-xl p-1 flex items-end justify-between gap-1 border border-slate-200/50 dark:border-slate-800">
+            {[20, 35, 50, 40, 65, 80, 100].map((val, i) => (
+              <div key={i} className="flex-1 bg-[#FF9900] rounded-t" style={{ height: `${userXp > 0 ? val : 10}%` }} />
+            ))}
+          </div>
+
         </div>
-      )}
+
+        {/* Global Leaderboard (Top 3) */}
+        <div className="lg:col-span-4 bg-white dark:bg-slate-900 rounded-[24px] border border-slate-200 dark:border-slate-800 p-5 shadow-sm flex flex-col justify-between gap-3">
+          
+          <div className="flex items-center justify-between text-xs font-black text-slate-900 dark:text-white">
+            <span className="flex items-center gap-2">
+              <Trophy className="w-4 h-4 text-amber-500" />
+              Global Leaderboard (Top 3)
+            </span>
+          </div>
+
+          <div className="flex flex-col gap-2 my-1">
+            {leaderboardData.length > 0 ? (
+              leaderboardData.map((item: any) => (
+                <div key={item.rank} className="flex items-center justify-between p-2 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200/60 dark:border-slate-800 text-xs">
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <span className={`w-5 h-5 rounded-full ${
+                      item.rank === 1 ? "bg-amber-400 text-slate-950" : item.rank === 2 ? "bg-slate-300 text-slate-900" : "bg-amber-700 text-white"
+                    } font-black text-[10px] flex items-center justify-center shrink-0`}>
+                      {item.rank}
+                    </span>
+                    <div className="flex flex-col min-w-0">
+                      <span className="font-bold text-slate-900 dark:text-white truncate">
+                        {item.name} {item.is_me ? "(You)" : ""}
+                      </span>
+                      <span className="text-[10px] text-slate-400 truncate">{item.role}</span>
+                    </div>
+                  </div>
+                  <span className="font-mono font-bold text-slate-900 dark:text-white text-[11px] shrink-0">{item.xp}</span>
+                </div>
+              ))
+            ) : (
+              <span className="text-xs text-slate-400 font-medium">No candidate rankings yet</span>
+            )}
+          </div>
+
+          <Link
+            href="/leaderboard"
+            className="text-xs font-bold text-[#FF9900] hover:underline flex items-center justify-end gap-1"
+          >
+            <span>View Full Leaderboard</span>
+            <ArrowRight className="w-3 h-3" />
+          </Link>
+
+        </div>
+
+      </div>
+
+      {/* PRACTICE BANNER */}
+      <div className="bg-gradient-to-r from-amber-50 via-orange-50/60 to-white dark:from-slate-900 dark:to-slate-900 rounded-[24px] border border-amber-200/60 dark:border-[#FF9900]/30 p-5 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div className="flex flex-col gap-1">
+          <h4 className="text-sm font-black text-slate-900 dark:text-white">
+            Practice more. Get better. Become production ready.
+          </h4>
+          <p className="text-xs text-slate-500 font-medium">
+            Test your incident troubleshooting against real-world AWS & Kubernetes outages.
+          </p>
+        </div>
+
+        <Link
+          href="/interviews"
+          className="py-2.5 px-5 rounded-xl font-bold text-xs text-[#FF9900] bg-white dark:bg-slate-900 border border-[#FF9900]/30 hover:bg-amber-50 shadow-sm flex items-center gap-1.5 transition-all shrink-0"
+        >
+          <span>Start Practice Now</span>
+          <ArrowRight className="w-3.5 h-3.5" />
+        </Link>
+      </div>
+
     </div>
   );
 }

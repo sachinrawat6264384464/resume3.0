@@ -35,10 +35,11 @@ class StageService:
         if not q_attempts:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="No questions found in this stage")
 
-        # Calculate average question overall score
+        # Calculate evaluated scores and correct question count (>= 60% concept match score per question)
         evaluated_scores = [q.overall_score for q in q_attempts if q.overall_score is not None]
+        correct_count = sum(1 for q in q_attempts if (q.overall_score or 0.0) >= 60.0)
+        
         if not evaluated_scores:
-            # Fallback default score if questions were marked completed without individual scores
             stage_score = 0.0
         else:
             stage_score = round(sum(evaluated_scores) / len(evaluated_scores), 1)
@@ -47,8 +48,13 @@ class StageService:
         now = datetime.now(timezone.utc)
         stage_att.completed_at = now
 
-        threshold = stage_att.stage.minimum_score if stage_att.stage else 80.0
-        passed = stage_score >= threshold
+        # Duration Calculation
+        started = stage_att.started_at or now
+        total_duration = (now - started).total_seconds()
+
+        # Strict Gatekeeper Rule: 80%+ Threshold AND at least 8/10 questions correct AND <= 13 mins (780 seconds)
+        threshold = 80.0
+        passed = (stage_score >= threshold) and (correct_count >= 8) and (total_duration <= 780.0)
 
         stage_att.status = "PASSED" if passed else "FAILED"
 
@@ -76,24 +82,21 @@ class StageService:
                 interview_att.status = "COMPLETED"
                 interview_att.completed_at = now
                 interview_att.decision = "PASS"
-                # Trigger final report synthesis
                 report_service = ReportService(self.db)
                 await report_service.synthesize_final_report(interview_att.id)
         else:
-            # Stage failed -> keeps next stage LOCKED
             interview_att.decision = "NEEDS_IMPROVEMENT"
-            # Trigger report synthesis for candidate study feedback
             report_service = ReportService(self.db)
             await report_service.synthesize_final_report(interview_att.id)
 
-        # Gamification: Award XP (+200 completion, +300 passing bonus) and update badges
+        # Gamification: Award +150 XP on passing Stage 1 and update candidate readiness
         try:
             if interview_att.candidate_id:
                 stmt_cand = select(Candidate).where(Candidate.id == interview_att.candidate_id)
                 cand_res = await self.db.execute(stmt_cand)
                 cand = cand_res.scalar_one_or_none()
                 if cand:
-                    xp_gain = 200 + (300 if passed else 0)
+                    xp_gain = 150 if passed else 25
                     cand.xp = (cand.xp or 0) + xp_gain
                     cand.level = max(1, 1 + cand.xp // 300)
                     cand.last_active_at = now
@@ -101,11 +104,11 @@ class StageService:
 
                     badges = list(cand.badges_json or [])
                     badge_map = {
-                        1: "Linux Warrior",
-                        2: "Cloud Explorer",
-                        3: "AWS Ninja",
-                        4: "CI/CD Master",
-                        5: "Production TroubleShooter"
+                        1: "Stage 1 CloudOps Pitch",
+                        2: "Linux Warrior",
+                        3: "Cloud Explorer",
+                        4: "DevOps Master",
+                        5: "Production Incident Hero"
                     }
                     earned_badge = badge_map.get(current_num)
                     if earned_badge and earned_badge not in badges and passed:

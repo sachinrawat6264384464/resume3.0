@@ -9,6 +9,9 @@ export interface User {
   firebase_uid?: string;
   is_active: boolean;
   created_at: string;
+  xp?: number;
+  streak_days?: number;
+  avatar_url?: string;
 }
 
 export interface Candidate {

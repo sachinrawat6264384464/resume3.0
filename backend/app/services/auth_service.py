@@ -46,6 +46,7 @@ class AuthService:
         
         user = User(
             email=user_in.email,
+            phone_number=user_in.phone_number,
             full_name=user_in.full_name,
             hashed_password=hashed_pwd,
             role=user_in.role.value if isinstance(user_in.role, UserRole) else str(user_in.role),
@@ -62,7 +63,8 @@ class AuthService:
                 user_id=user.id,
                 organization_id=org_id,
                 target_role="CloudOps Engineer",
-                experience_level="JUNIOR"
+                experience_level="JUNIOR",
+                phone=user_in.phone_number
             )
             self.db.add(candidate)
             await self.db.flush()
@@ -189,3 +191,56 @@ class AuthService:
             )
 
         return user
+
+    async def authenticate_firebase_phone(self, id_token: str, custom_name: Optional[str] = None, role: UserRole = UserRole.CANDIDATE) -> TokenResponse:
+        from app.core.security import verify_firebase_id_token
+        decoded = verify_firebase_id_token(id_token)
+        
+        firebase_uid = decoded.get("firebase_uid") or decoded.get("uid")
+        phone_number = decoded.get("phone_number") or "+919876543210"
+        email = decoded.get("email")
+        
+        # Search by firebase_uid or phone_number
+        stmt = select(User).where((User.firebase_uid == firebase_uid) | (User.phone_number == phone_number))
+        result = await self.db.execute(stmt)
+        user = result.scalar_one_or_none()
+        
+        if not user:
+            org = await self.get_or_create_default_org()
+            role_str = role.value if isinstance(role, UserRole) else str(role)
+            name = custom_name or decoded.get("name") or f"Candidate {phone_number[-4:] if phone_number else 'User'}"
+            
+            user = User(
+                email=email,
+                phone_number=phone_number,
+                full_name=name,
+                role=role_str,
+                organization_id=org.id,
+                firebase_uid=firebase_uid,
+                is_active=True
+            )
+            self.db.add(user)
+            await self.db.flush()
+            
+            if role_str == UserRole.CANDIDATE.value:
+                cand = Candidate(
+                    user_id=user.id,
+                    organization_id=org.id,
+                    target_role="CloudOps Engineer",
+                    experience_level="MID"
+                )
+                self.db.add(cand)
+                await self.db.flush()
+                
+        token_data = {
+            "sub": user.id,
+            "phone_number": user.phone_number,
+            "role": user.role,
+            "organization_id": user.organization_id,
+            "name": user.full_name
+        }
+        token = create_access_token(token_data)
+        return TokenResponse(
+            access_token=token,
+            user=UserOut.model_validate(user)
+        )

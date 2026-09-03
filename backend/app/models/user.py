@@ -14,7 +14,8 @@ class User(TimeStampedModel):
 
     organization_id = Column(String(36), ForeignKey("organizations.id", ondelete="CASCADE"), nullable=False, index=True)
     firebase_uid = Column(String(128), unique=True, index=True, nullable=True)
-    email = Column(String(255), unique=True, index=True, nullable=False)
+    email = Column(String(255), unique=True, index=True, nullable=True)
+    phone_number = Column(String(50), unique=True, index=True, nullable=True)
     hashed_password = Column(String(255), nullable=True)
     full_name = Column(String(255), nullable=False)
     role = Column(String(30), default=UserRole.CANDIDATE.value, nullable=False, index=True)

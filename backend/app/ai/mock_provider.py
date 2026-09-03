@@ -398,88 +398,80 @@ class MockAIProvider(AIProvider):
         }
 
     async def match_resume_ats(self, job_title: str, job_description: str, resume_profile: Dict[str, Any]) -> Dict[str, Any]:
-        skills = [s.lower() for s in resume_profile.get("primary_skills", []) + resume_profile.get("devops_tools", [])]
+        skills = [s.lower() for s in resume_profile.get("primary_skills", []) + resume_profile.get("devops_tools", []) + resume_profile.get("cloud_platforms", [])]
         jd_lower = job_description.lower()
+        resume_summary = (resume_profile.get("summary", "") + " ".join(resume_profile.get("certifications", []))).lower()
 
-        # Check key skills in JD
+        # 1. Real Skill Overlap Calculation
         matched = []
         missing = []
-        expected = ["linux", "aws", "kubernetes", "docker", "terraform", "ci/cd", "devsecops", "prometheus", "python"]
+        expected = ["linux", "aws", "kubernetes", "docker", "terraform", "ci/cd", "devsecops", "prometheus", "python", "ansible", "helm", "grafana", "git", "jenkins", "gcp", "azure"]
+        
         for exp in expected:
             if exp in jd_lower:
-                if any(exp in s for s in skills):
+                if any(exp in s for s in skills) or exp in resume_summary:
                     matched.append(exp.upper() if len(exp) <= 4 else exp.title())
                 else:
                     missing.append(exp.upper() if len(exp) <= 4 else exp.title())
 
-        if not matched:
-            matched = ["Linux", "AWS", "Docker", "Terraform"]
-        if not missing:
-            missing = ["DevSecOps", "AWS EKS", "ArgoCD"]
+        matched_count = len(matched)
+        missing_count = len(missing)
+        total_jd_expected = max(1, matched_count + missing_count)
+        skills_ratio = matched_count / total_jd_expected
 
-        skills_score = min(95.0, max(50.0, 50.0 + len(matched) * 8.0))
-        exp_score = 76.0
-        kw_score = min(90.0, max(45.0, 45.0 + len(matched) * 7.0))
-        proj_score = 78.0
-        cert_score = 80.0
-        role_score = 75.0
+        # 2. Dynamic 6-Factor Pillar Calculations based on actual candidate data
+        skills_score = round(min(98.0, max(20.0, skills_ratio * 90.0 + 10.0)), 1)
+        
+        yoe = float(resume_profile.get("years_of_experience", 3.0))
+        if "senior" in job_title.lower() or "lead" in job_title.lower():
+            exp_score = round(min(95.0, max(30.0, (yoe / 5.0) * 85.0 + 15.0)), 1)
+        else:
+            exp_score = round(min(95.0, max(40.0, (yoe / 3.0) * 85.0 + 15.0)), 1)
+
+        kw_score = round(min(96.0, max(25.0, skills_ratio * 85.0 + 12.0)), 1)
+
+        projects = resume_profile.get("projects", [])
+        proj_score = round(min(95.0, max(30.0, len(projects) * 35.0 + 25.0)), 1)
+
+        certs = resume_profile.get("certifications", [])
+        cert_score = round(min(98.0, max(20.0, len(certs) * 40.0 + 20.0)), 1)
+
+        role_score = round(min(95.0, max(35.0, (skills_score * 0.6) + (exp_score * 0.4))), 1)
 
         ats_overall = round(
-            skills_score * 0.40 +
+            skills_score * 0.35 +
             exp_score * 0.20 +
             kw_score * 0.15 +
-            proj_score * 0.10 +
+            proj_score * 0.12 +
             cert_score * 0.10 +
-            role_score * 0.05,
+            role_score * 0.08,
             1
         )
 
         return {
             "ats_score": ats_overall,
             "breakdown": {
-                "skills_match": round(skills_score, 1),
+                "skills_match": skills_score,
                 "experience_match": exp_score,
-                "keywords_match": round(kw_score, 1),
+                "keywords_match": kw_score,
                 "projects_match": proj_score,
                 "certifications_match": cert_score,
                 "job_role_match": role_score
             },
-            "matching_skills": matched,
-            "missing_skills": missing,
+            "matching_skills": matched if matched else ["Linux", "AWS"],
+            "missing_skills": missing if missing else ["DevSecOps"],
             "weak_areas": [
-                "Experience descriptions list responsibilities but lack quantifiable business impact metrics (e.g., % deployment speed improvement, $ cloud cost optimization).",
-                "Missing explicit mention of automated DevSecOps vulnerability scans (Trivy / SAST) in CI/CD stages."
+                f"Resume matches {matched_count} out of {total_jd_expected} core JD requirements.",
+                "Bullet points could include more quantifiable STAR performance metrics."
             ],
             "strong_areas": [
-                "Solid core hands-on foundation across Linux operating systems, Docker containers, and AWS.",
-                "Demonstrated experience with Terraform infrastructure as code and remote state locking."
+                f"Demonstrated hands-on experience in {', '.join(matched[:3]) if matched else 'CloudOps'}.",
+                "Clear alignment with multi-cloud and containerized infrastructure."
             ],
             "recommended_interview_stages": [
-                {
-                    "stage_id": 1,
-                    "title": "Introduce Yourself & Self Profile",
-                    "reason": "Establish baseline communication and technical career narrative"
-                },
-                {
-                    "stage_id": 2,
-                    "title": "Linux Systems Warrior",
-                    "reason": "Verify deep OS kernel, I/O wait, and process diagnostics"
-                },
-                {
-                    "stage_id": 3,
-                    "title": "Cloud Infrastructure & Multi-Cloud",
-                    "reason": "Directly address core AWS VPC, IAM, and networking requirements"
-                },
-                {
-                    "stage_id": 4,
-                    "title": "DevOps & Containerization Engineer",
-                    "reason": "Evaluate Docker multi-stage builds and Kubernetes pod lifecycle"
-                },
-                {
-                    "stage_id": 5,
-                    "title": "Production Troubleshooting Final Boss",
-                    "reason": "Test live outage mitigation and CrashLoopBackOff remediation"
-                }
+                {"stage_id": 1, "title": "Profile & Career Pitch", "reason": "Validate technical background"},
+                {"stage_id": 2, "title": "Linux Systems Warrior", "reason": "Evaluate core OS triage"},
+                {"stage_id": 3, "title": "Multi-Cloud Architecture", "reason": "Test cloud architecture knowledge"}
             ]
         }
 

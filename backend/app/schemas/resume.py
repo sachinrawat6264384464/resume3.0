@@ -60,6 +60,7 @@ class ResumeATSResponse(BaseSchema):
     recommended_interview_stages: List[RecommendedInterviewStage]
     candidate_profile: ResumeProfile
     bullet_suggestions: List[BulletImprovementItem]
+    cloudinary_url: Optional[str] = None
 
 class BulletImprovementRequest(BaseModel):
     role: str = "CloudOps / DevOps Engineer"

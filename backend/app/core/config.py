@@ -1,6 +1,11 @@
 import os
 from typing import List, Optional
+from dotenv import load_dotenv
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+# Load project .env file with override=True so it takes priority over OS env vars
+env_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), ".env")
+load_dotenv(dotenv_path=env_path, override=True)
 
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", case_sensitive=True, extra="ignore")
@@ -35,6 +40,17 @@ class Settings(BaseSettings):
     FIREBASE_CREDENTIALS_PATH: Optional[str] = None
     MOCK_AUTH_ENABLED: bool = True  # Allows instant dev/demo login without external Firebase setup
     
+    # SMS Gateway Provider (Fast2SMS / Twilio)
+    FAST2SMS_API_KEY: Optional[str] = None
+    TWILIO_ACCOUNT_SID: Optional[str] = None
+    TWILIO_AUTH_TOKEN: Optional[str] = None
+    TWILIO_PHONE_NUMBER: Optional[str] = None
+    
+    # Meta WhatsApp Business Cloud API
+    META_WHATSAPP_TOKEN: Optional[str] = None
+    META_WHATSAPP_PHONE_ID: Optional[str] = None
+
+    
     # AI Engine Provider (ollama, openai, gemini, or mock)
     AI_PROVIDER: str = "mock"  # "mock", "ollama", "openai"
     OLLAMA_BASE_URL: str = "http://localhost:11434"
@@ -45,16 +61,30 @@ class Settings(BaseSettings):
     # Speech-to-Text Provider (whisper, faster-whisper, mock)
     STT_PROVIDER: str = "mock"  # "mock", "whisper"
     
-    # Storage Provider (local, google_drive)
-    STORAGE_PROVIDER: str = "local"  # "local", "google_drive"
+    # Storage Provider (local, google_drive, cloudinary)
+    STORAGE_PROVIDER: str = "cloudinary"  # "local", "google_drive", "cloudinary"
     LOCAL_STORAGE_DIR: str = "./storage/recordings"
     GOOGLE_DRIVE_FOLDER_ID: Optional[str] = None
     GOOGLE_DRIVE_SERVICE_ACCOUNT_FILE: Optional[str] = None
+    
+    # Cloudinary Storage
+    CLOUDINARY_CLOUD_NAME: Optional[str] = None
+    CLOUDINARY_API_KEY: Optional[str] = None
+    CLOUDINARY_API_SECRET: Optional[str] = None
+    CLOUDINARY_URL: Optional[str] = None
     
     # Recording Retention
     RECORDING_RETENTION_DAYS: int = 90
     
     # Default Assessment Passing Score (percentage)
     DEFAULT_PASSING_SCORE: float = 80.0
+
+    # Email / SMTP Configuration (Gmail App Password)
+    SMTP_SERVER: str = "smtp.gmail.com"
+    SMTP_PORT: int = 587
+    SMTP_USERNAME: Optional[str] = None
+    SMTP_PASSWORD: Optional[str] = None
+    SMTP_FROM_EMAIL: Optional[str] = None
+    SMTP_FROM_NAME: str = "CloudOps AI Assessment Platform"
 
 settings = Settings()

@@ -43,7 +43,7 @@ export default function AdminTemplatesPage() {
   }
 
   return (
-    <div className="flex flex-col gap-6 max-w-7xl mx-auto w-full py-2">
+    <div className="flex flex-col gap-6 w-full w-full py-2">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>

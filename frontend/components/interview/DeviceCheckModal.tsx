@@ -1,36 +1,64 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useEffect, useState, useRef } from "react";
 import { 
-  Camera, Mic, Volume2, ShieldCheck, CheckCircle2, 
-  AlertCircle, ArrowRight, Video, Lock, Info 
+  Camera, Mic, Volume2, ShieldCheck, CheckCircle2, AlertCircle, 
+  RefreshCw, Play, VolumeX, Sparkles, ArrowRight, Eye, VideoOff,
+  UserCheck, ShieldAlert, Hand
 } from "lucide-react";
-import { useDeviceCheckStore } from "@/lib/store";
 import { AudioVisualizer } from "@/lib/media-recorder";
 
 interface DeviceCheckModalProps {
-  onReadyToStart: (stream: MediaStream) => void;
+  templateTitle: string;
   targetRole?: string;
-  templateTitle?: string;
+  onReadyToStart: (stream: MediaStream) => void;
 }
 
-export function DeviceCheckModal({ onReadyToStart, targetRole = "CloudOps Engineer", templateTitle = "Technical Assessment" }: DeviceCheckModalProps) {
+export function DeviceCheckModal({ templateTitle, onReadyToStart }: DeviceCheckModalProps) {
   const [stream, setStream] = useState<MediaStream | null>(null);
   const [cameraActive, setCameraActive] = useState(false);
+  const [faceDetected, setFaceDetected] = useState(false);
+  const [isHandDetected, setIsHandDetected] = useState(false);
+
   const [micVolume, setMicVolume] = useState(0);
+  const [micTested, setMicTested] = useState(false);
   const [speakerSuccess, setSpeakerSuccess] = useState(false);
+
   const [consent, setConsent] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
-  const videoRef = useRef<HTMLVideoElement>(null);
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const visualizerRef = useRef<AudioVisualizer | null>(null);
 
-  // Initialize Media Stream
+  // Helper to release camera tracks & extinguish hardware light
+  const stopAllMediaTracks = () => {
+    if (visualizerRef.current) {
+      try { visualizerRef.current.close(); } catch (e) {}
+    }
+    if (videoRef.current) {
+      try {
+        videoRef.current.pause();
+        videoRef.current.srcObject = null;
+      } catch (e) {}
+    }
+    if (stream) {
+      stream.getTracks().forEach((t) => {
+        t.stop();
+        t.enabled = false;
+      });
+      setStream(null);
+    }
+    setCameraActive(false);
+  };
+
+  // 1. Initialize Media Devices (Webcam Stream + Mic Audio)
   useEffect(() => {
     let activeStream: MediaStream | null = null;
 
     async function initMedia() {
       try {
+        setErrorMsg(null);
         const s = await navigator.mediaDevices.getUserMedia({
           video: { width: { ideal: 1280 }, height: { ideal: 720 } },
           audio: true,
@@ -43,14 +71,19 @@ export function DeviceCheckModal({ onReadyToStart, targetRole = "CloudOps Engine
           videoRef.current.srcObject = s;
         }
 
-        // Init visualizer
+        // Initialize Audio Visualizer for Mic Volume Testing
         const viz = new AudioVisualizer();
         viz.init(s);
         visualizerRef.current = viz;
 
         const interval = setInterval(() => {
           if (visualizerRef.current) {
-            setMicVolume(visualizerRef.current.getVolumeLevel());
+            const vol = visualizerRef.current.getVolumeLevel();
+            setMicVolume(vol);
+            // Strict 60%+ Mic Volume Threshold Rule
+            if (vol >= 60) {
+              setMicTested(true);
+            }
           }
         }, 100);
 
@@ -65,14 +98,132 @@ export function DeviceCheckModal({ onReadyToStart, targetRole = "CloudOps Engine
     initMedia();
 
     return () => {
-      if (visualizerRef.current) {
-        visualizerRef.current.close();
-      }
-      if (activeStream) {
-        activeStream.getTracks().forEach((t) => t.stop());
-      }
+      stopAllMediaTracks();
     };
   }, []);
+
+  // 2. AI Face & Finger-Gap Anti-Spoofing Engine (Blocks Open Hands, Palms & Spread Fingers)
+  useEffect(() => {
+    if (!cameraActive || !videoRef.current) return;
+
+    const faceCheckInterval = setInterval(async () => {
+      const video = videoRef.current;
+      if (!video || video.readyState < 2) return;
+
+      try {
+        const canvas = canvasRef.current || document.createElement("canvas");
+        canvasRef.current = canvas;
+        canvas.width = 160;
+        canvas.height = 120;
+        const ctx = canvas.getContext("2d");
+        if (ctx) {
+          ctx.drawImage(video, 0, 0, 160, 120);
+
+          const imgData = ctx.getImageData(0, 0, 160, 120);
+          const data = imgData.data;
+
+          // 1. Horizontal Finger Gap & Edge Transition Scanner across 3 scanlines (y: 25, 40, 55)
+          // Open hand with spread fingers creates 4 to 10 skin-to-background transitions!
+          // A real human face/head creates max 2 smooth edge transitions.
+          let maxFingerTransitions = 0;
+          let totalSkinCount = 0;
+
+          for (let y = 25; y <= 55; y += 15) {
+            let transitions = 0;
+            let inSkin = false;
+            for (let x = 25; x <= 135; x += 2) {
+              const idx = (y * 160 + x) * 4;
+              const r = data[idx], g = data[idx + 1], b = data[idx + 2];
+              const isSkin = (r > 45 && g > 25 && b > 15 && r > g && r > b && (r - Math.min(g, b) > 10));
+              if (isSkin) totalSkinCount++;
+
+              if (isSkin !== inSkin) {
+                transitions++;
+                inSkin = isSkin;
+              }
+            }
+            maxFingerTransitions = Math.max(maxFingerTransitions, transitions);
+          }
+
+          const hasSpreadFingers = maxFingerTransitions >= 4;
+
+          // 2. Dual Eye Pupil Socket Verification (y: 30..50, x: 45..65 left eye, x: 95..115 right eye, x: 72..88 nose)
+          let leftEyeLum = 0, rightEyeLum = 0, noseLum = 0;
+          let leftCnt = 0, rightCnt = 0, noseCnt = 0;
+
+          for (let y = 30; y <= 50; y += 3) {
+            for (let x = 45; x <= 65; x += 3) {
+              const idx = (y * 160 + x) * 4;
+              leftEyeLum += (data[idx] * 0.3 + data[idx + 1] * 0.59 + data[idx + 2] * 0.11);
+              leftCnt++;
+            }
+            for (let x = 95; x <= 115; x += 3) {
+              const idx = (y * 160 + x) * 4;
+              rightEyeLum += (data[idx] * 0.3 + data[idx + 1] * 0.59 + data[idx + 2] * 0.11);
+              rightCnt++;
+            }
+            for (let x = 72; x <= 88; x += 3) {
+              const idx = (y * 160 + x) * 4;
+              noseLum += (data[idx] * 0.3 + data[idx + 1] * 0.59 + data[idx + 2] * 0.11);
+              noseCnt++;
+            }
+          }
+
+          const avgLeftEye = leftEyeLum / (leftCnt || 1);
+          const avgRightEye = rightEyeLum / (rightCnt || 1);
+          const avgNose = noseLum / (noseCnt || 1);
+
+          const hasEyeSockets = (avgLeftEye < avgNose * 0.97) && (avgRightEye < avgNose * 0.97);
+
+          // 3. Arm/Wrist Extension Test (Scanning side margins x: 125..155 at y: 45..75)
+          let sideArmSkinPixels = 0;
+          for (let y = 45; y <= 75; y += 5) {
+            for (let x = 125; x <= 155; x += 3) {
+              const idx = (y * 160 + x) * 4;
+              const r = data[idx], g = data[idx + 1], b = data[idx + 2];
+              if (r > 45 && g > 25 && b > 15 && r > g && r > b && (r - Math.min(g, b) > 10)) {
+                sideArmSkinPixels++;
+              }
+            }
+          }
+          const isArmExtendingToSide = sideArmSkinPixels > 15;
+
+          // 4. Center Oval Circle Skin Coverage (x: 40..120, y: 20..80)
+          let centerSkinPixels = 0;
+          for (let y = 20; y <= 80; y += 4) {
+            for (let x = 40; x <= 120; x += 4) {
+              const idx = (y * 160 + x) * 4;
+              const r = data[idx], g = data[idx + 1], b = data[idx + 2];
+              if (r > 45 && g > 25 && b > 15 && r > g && r > b && (r - Math.min(g, b) > 10)) {
+                centerSkinPixels++;
+              }
+            }
+          }
+          const centerSkinRatio = centerSkinPixels / (80 * 60 / 16);
+
+          // Decision: If spread fingers OR side arm OR palm covering eyes -> REJECT AS HAND!
+          if (hasSpreadFingers || isArmExtendingToSide || (centerSkinRatio > 0.15 && !hasEyeSockets)) {
+            // 🔴 HAND / PALM / SPREAD FINGERS DETECTED!
+            setIsHandDetected(true);
+            setFaceDetected(false);
+          } else if (centerSkinRatio >= 0.12 && hasEyeSockets && !hasSpreadFingers) {
+            // 🟢 REAL HUMAN FACE DETECTED & CENTERED!
+            setFaceDetected(true);
+            setIsHandDetected(false);
+          } else {
+            // Face missing or out of frame
+            setFaceDetected(false);
+            setIsHandDetected(false);
+          }
+        }
+      } catch (e) {
+        setFaceDetected(false);
+        setIsHandDetected(false);
+      }
+    }, 300);
+
+    return () => clearInterval(faceCheckInterval);
+  }, [cameraActive]);
 
   const testSpeaker = () => {
     try {
@@ -93,172 +244,292 @@ export function DeviceCheckModal({ onReadyToStart, targetRole = "CloudOps Engine
     }
   };
 
-  const isComplete = cameraActive && micVolume >= 0 && consent;
+  const isComplete = cameraActive && faceDetected && !isHandDetected && micTested && speakerSuccess && consent;
+
+  const getMissingRequirements = () => {
+    const missing = [];
+    if (!cameraActive) missing.push("Webcam stream");
+    if (isHandDetected) missing.push("Remove hand & position face in camera");
+    else if (!faceDetected) missing.push("Center your face in camera frame");
+    if (!micTested) missing.push("Speak louder into mic (Need ≥ 60% Level)");
+    if (!speakerSuccess) missing.push("Click 'Play Chime' to test speaker");
+    if (!consent) missing.push("Accept privacy consent");
+    return missing;
+  };
 
   const handleStart = () => {
     if (stream && isComplete) {
+      stopAllMediaTracks(); // Stop pre-check camera stream so main room starts clean
       onReadyToStart(stream);
     }
   };
 
   return (
-    <div className="w-full max-w-4xl mx-auto p-6 sm:p-8 rounded-3xl glass-panel-glow border border-white/10 flex flex-col gap-6">
+    <div className="w-full max-w-4xl mx-auto p-6 sm:p-8 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl flex flex-col gap-6 text-slate-900 dark:text-slate-100 font-sans">
+      
       {/* Header */}
       <div>
-        <div className="flex items-center gap-2 text-xs font-mono text-cyan-400 uppercase tracking-wider mb-1">
-          <ShieldCheck className="w-4 h-4" />
-          <span>Pre-Interview Hardware Verification</span>
+        <div className="inline-flex items-center gap-2 text-xs font-mono font-bold text-blue-600 dark:text-cyan-400 bg-blue-50 dark:bg-cyan-950/60 border border-blue-200 dark:border-cyan-800/80 px-3 py-1 rounded-full uppercase tracking-wider mb-2">
+          <ShieldCheck className="w-4 h-4 text-blue-600 dark:text-cyan-400" />
+          <span>PRE-INTERVIEW HARDWARE VERIFICATION</span>
         </div>
-        <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">
-          System & Device Check: {templateTitle}
+        <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
+          System & Device Check: <span className="text-blue-600 dark:text-blue-400">{templateTitle}</span>
         </h1>
-        <p className="text-sm text-slate-400 mt-1">
-          Verify your camera, microphone, and audio settings before commencing the AI assessment.
+        <p className="text-sm font-medium text-slate-600 dark:text-slate-300 mt-1">
+          Verify your camera, AI face alignment, microphone level (≥ 60%), and audio settings before commencing.
         </p>
       </div>
 
       {errorMsg && (
-        <div className="flex items-center gap-3 p-4 rounded-2xl bg-rose-500/10 border border-rose-500/30 text-rose-400 text-sm">
-          <AlertCircle className="w-5 h-5 flex-shrink-0" />
+        <div className="flex items-center gap-3 p-4 rounded-2xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-300 text-sm font-bold">
+          <AlertCircle className="w-5 h-5 flex-shrink-0 text-rose-600" />
           <span>{errorMsg}</span>
         </div>
       )}
 
-      {/* Grid: Camera Preview on Left, Device Checks on Right */}
+      {/* Main Grid: Webcam Preview (Left) vs Hardware Verification Cards (Right) */}
       <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
-        {/* Camera Preview */}
-        <div className="md:col-span-7 flex flex-col gap-3">
-          <div className="relative rounded-2xl overflow-hidden glass-panel border border-white/10 bg-slate-950 aspect-video flex items-center justify-center">
-            {cameraActive ? (
-              <video
-                ref={videoRef}
-                autoPlay
-                playsInline
-                muted
-                className="w-full h-full object-cover scale-x-[-1]"
-              />
-            ) : (
-              <div className="flex flex-col items-center text-slate-500">
-                <Camera className="w-10 h-10 mb-2 opacity-40 animate-pulse" />
-                <span className="text-xs">Initializing Webcam...</span>
+        
+        {/* Left Side: Real-time Camera Feed with AI Face Box */}
+        <div className="md:col-span-6 flex flex-col gap-3">
+          <div className="relative aspect-video w-full rounded-2xl bg-slate-950 overflow-hidden border border-slate-800 shadow-lg flex items-center justify-center">
+            
+            <video
+              ref={videoRef}
+              autoPlay
+              playsInline
+              muted
+              className={`w-full h-full object-cover transform -scale-x-100 ${!cameraActive ? "hidden" : ""}`}
+            />
+
+            {!cameraActive && (
+              <div className="flex flex-col items-center gap-2 text-slate-400 p-6 text-center">
+                <VideoOff className="w-10 h-10 text-slate-600 animate-pulse" />
+                <span className="text-xs font-mono font-bold">Initializing Webcam Feed...</span>
               </div>
             )}
-            <div className="absolute top-3 left-3 px-2.5 py-1 rounded-full bg-slate-950/80 border border-white/10 text-[11px] font-mono text-emerald-400 flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-              <span>CAMERA READY</span>
-            </div>
+
+            {/* AI Face Centering & Hand Detection Bounding Overlay */}
+            {cameraActive && (
+              <div className="absolute inset-0 pointer-events-none flex flex-col items-center justify-between p-4">
+                
+                {/* Status Badge Top Overlay */}
+                <div className={`px-3 py-1 rounded-full text-xs font-mono font-bold border shadow-md ${
+                  isHandDetected
+                    ? "bg-rose-950/90 text-rose-300 border-rose-500 animate-pulse"
+                    : faceDetected
+                    ? "bg-emerald-950/90 text-emerald-300 border-emerald-500"
+                    : "bg-amber-950/90 text-amber-300 border-amber-500 animate-pulse"
+                }`}>
+                  {isHandDetected
+                    ? "🔴 HAND DETECTED — SHOW YOUR FACE"
+                    : faceDetected
+                    ? "🟢 FACE DETECTED & CENTERED"
+                    : "🔴 NO FACE DETECTED"}
+                </div>
+
+                {/* Center Face Target Frame */}
+                <div className={`w-36 h-44 rounded-full border-2 border-dashed flex items-center justify-center transition-all ${
+                  isHandDetected
+                    ? "border-rose-500 bg-rose-500/10 scale-105"
+                    : faceDetected
+                    ? "border-emerald-400 bg-emerald-500/10"
+                    : "border-amber-400/60 bg-amber-500/5 animate-pulse"
+                }`}>
+                  {isHandDetected ? (
+                    <Hand className="w-10 h-10 text-rose-400 animate-bounce" />
+                  ) : faceDetected ? (
+                    <UserCheck className="w-10 h-10 text-emerald-400 opacity-80" />
+                  ) : (
+                    <Camera className="w-8 h-8 text-amber-400/60" />
+                  )}
+                </div>
+
+                {/* Bottom Overlay Instructions */}
+                <div className="bg-slate-900/90 backdrop-blur-md px-3 py-1 rounded-lg border border-slate-800 text-[11px] font-mono text-slate-300">
+                  {isHandDetected
+                    ? "⚠️ Hand detected! Please show your face clearly inside the frame."
+                    : faceDetected
+                    ? "✓ Face features centered & verified"
+                    : "⚠️ Position your face clearly inside the oval frame"}
+                </div>
+              </div>
+            )}
           </div>
-          <span className="text-xs text-slate-500 text-center">Ensure your face is well-lit and clearly visible within the frame.</span>
         </div>
 
-        {/* Device Controls */}
-        <div className="md:col-span-5 flex flex-col gap-4 justify-between">
-          <div className="flex flex-col gap-3">
-            {/* Camera Check Card */}
-            <div className="flex items-center justify-between p-3.5 rounded-xl glass-panel border border-white/10">
+        {/* Right Side: 4 Hardware Verification Checklist Cards */}
+        <div className="md:col-span-6 flex flex-col justify-between gap-3">
+          
+          <div className="flex flex-col gap-2.5">
+            
+            {/* 1. Webcam & AI Face Detection Check Card */}
+            <div className="flex items-center justify-between p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/80 shadow-sm">
               <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-indigo-500/10 text-indigo-400">
+                <div className="p-2.5 rounded-xl bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400">
                   <Camera className="w-4 h-4" />
                 </div>
                 <div>
-                  <div className="text-xs font-semibold text-white">Webcam Stream</div>
-                  <div className="text-[11px] text-slate-400">HD 720p resolution</div>
+                  <div className="text-xs font-bold text-slate-900 dark:text-white">Webcam & AI Face Detection</div>
+                  <div className="text-[11px] font-medium text-slate-500 dark:text-slate-400">
+                    {isHandDetected
+                      ? "Hand detected — show your face"
+                      : faceDetected
+                      ? "Face centered & verified"
+                      : "Position face in camera"}
+                  </div>
                 </div>
               </div>
-              {cameraActive ? (
-                <CheckCircle2 className="w-5 h-5 text-emerald-400" />
+              {cameraActive && faceDetected && !isHandDetected ? (
+                <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700 font-bold text-xs flex-shrink-0">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                  <span>Face Verified ✓</span>
+                </div>
+              ) : isHandDetected ? (
+                <span className="text-[11px] font-bold text-rose-700 bg-rose-100 dark:bg-rose-950/60 px-2 py-0.5 rounded-md border border-rose-300 flex-shrink-0">
+                  Hand Detected ✋
+                </span>
               ) : (
-                <span className="text-xs text-slate-500">Waiting...</span>
+                <span className="text-[11px] font-bold text-amber-700 bg-amber-100 dark:bg-amber-950/60 px-2 py-0.5 rounded-md border border-amber-300 flex-shrink-0">
+                  Center Face 👤
+                </span>
               )}
             </div>
 
-            {/* Microphone Check Card */}
-            <div className="flex flex-col gap-2 p-3.5 rounded-xl glass-panel border border-white/10">
+            {/* 2. Microphone Check Card (Strict ≥ 60% Rule) */}
+            <div className="flex flex-col gap-2 p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/80 shadow-sm">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-lg bg-indigo-500/10 text-indigo-400">
+                  <div className="p-2.5 rounded-xl bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400">
                     <Mic className="w-4 h-4" />
                   </div>
                   <div>
-                    <div className="text-xs font-semibold text-white">Microphone Input</div>
-                    <div className="text-[11px] text-slate-400">Speak to test level</div>
+                    <div className="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                      <span>Microphone Input</span>
+                      {micVolume > 0 && (
+                        <span className={`text-xs font-mono font-bold ${micVolume >= 60 ? "text-emerald-600 dark:text-emerald-400" : "text-amber-600 dark:text-amber-400"}`}>
+                          {micVolume}% Level
+                        </span>
+                      )}
+                    </div>
+                    <div className="text-[11px] font-medium text-slate-500 dark:text-slate-400">
+                      {micTested 
+                        ? "Microphone input verified (≥ 60% Peak Level)" 
+                        : micVolume > 0 
+                        ? `Current: ${micVolume}%. Speak louder to reach 60% threshold.` 
+                        : "Speak out loud into mic to test volume level"}
+                    </div>
                   </div>
                 </div>
-                <span className="text-xs font-mono text-cyan-400">{micVolume}%</span>
+                {micTested ? (
+                  <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700 font-bold text-xs flex-shrink-0">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                    <span>Tested ✓</span>
+                  </div>
+                ) : (
+                  <span className="text-[11px] font-bold text-amber-700 bg-amber-100 dark:bg-amber-950/60 px-2 py-0.5 rounded-md border border-amber-300 animate-pulse flex-shrink-0">
+                    {micVolume > 0 ? `Speak Louder (${micVolume}%/60%)` : "Speak Louder (≥ 60%) 🎙️"}
+                  </span>
+                )}
               </div>
               {/* Audio meter */}
-              <div className="w-full h-2 rounded-full bg-slate-800 overflow-hidden">
+              <div className="w-full h-2.5 rounded-full bg-slate-200 dark:bg-slate-700 overflow-hidden">
                 <div
-                  className="h-full bg-gradient-to-r from-indigo-500 via-cyan-400 to-emerald-400 transition-all duration-75"
+                  className={`h-full transition-all duration-75 ${
+                    micVolume >= 60
+                      ? "bg-gradient-to-r from-blue-500 via-indigo-500 to-emerald-500"
+                      : "bg-gradient-to-r from-amber-400 to-amber-500"
+                  }`}
                   style={{ width: `${Math.min(100, micVolume * 1.5)}%` }}
                 />
               </div>
             </div>
 
-            {/* Speaker Check Card */}
-            <div className="flex items-center justify-between p-3.5 rounded-xl glass-panel border border-white/10">
+            {/* 3. Speaker Check Card */}
+            <div className="flex items-center justify-between p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/80 shadow-sm">
               <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-indigo-500/10 text-indigo-400">
+                <div className="p-2.5 rounded-xl bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400">
                   <Volume2 className="w-4 h-4" />
                 </div>
                 <div>
-                  <div className="text-xs font-semibold text-white">AI Voice Output</div>
-                  <div className="text-[11px] text-slate-400">Audio playback test</div>
+                  <div className="text-xs font-bold text-slate-900 dark:text-white">AI Voice Output</div>
+                  <div className="text-[11px] font-medium text-slate-500 dark:text-slate-400">Audio playback test</div>
                 </div>
               </div>
               <button
+                type="button"
                 onClick={testSpeaker}
-                className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
                   speakerSuccess
-                    ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30"
-                    : "bg-white/10 hover:bg-white/20 text-white"
+                    ? "bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700"
+                    : "bg-blue-600 text-white hover:bg-blue-700 shadow-sm"
                 }`}
               >
-                {speakerSuccess ? "Tested ✓" : "Play Chime"}
+                {speakerSuccess ? (
+                  <>
+                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                    <span>Tested ✓</span>
+                  </>
+                ) : (
+                  <>
+                    <Play className="w-3.5 h-3.5 fill-white" />
+                    <span>Play Chime</span>
+                  </>
+                )}
               </button>
             </div>
-          </div>
 
-          {/* Privacy & Recording Consent Disclosure */}
-          <div className="p-4 rounded-2xl bg-indigo-950/40 border border-indigo-500/20 flex flex-col gap-2.5">
-            <div className="flex items-start gap-2.5">
-              <Info className="w-4 h-4 text-cyan-400 flex-shrink-0 mt-0.5" />
-              <div className="text-xs text-slate-300 leading-relaxed">
-                <strong className="text-white">Recording & Privacy Disclosure:</strong> Audio and video are temporarily recorded for AI technical evaluation and instructor review. Recordings are stored securely and automatically purged after 90 days.
-              </div>
+            {/* 4. Privacy & Recording Consent Checkbox */}
+            <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/80 shadow-sm">
+              <label className="flex items-start gap-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={consent}
+                  onChange={(e) => setConsent(e.target.checked)}
+                  className="mt-0.5 rounded border-slate-300 text-blue-600 focus:ring-blue-500 w-4 h-4 cursor-pointer"
+                />
+                <span className="text-xs text-slate-600 dark:text-slate-300 leading-snug font-medium">
+                  I consent to AI proctoring, webcam facial verification, and audio response recording for evaluation.
+                </span>
+              </label>
             </div>
 
-            <label className="flex items-center gap-2.5 mt-1 cursor-pointer select-none">
-              <input
-                type="checkbox"
-                checked={consent}
-                onChange={(e) => setConsent(e.target.checked)}
-                className="w-4 h-4 rounded border-slate-700 text-indigo-600 focus:ring-indigo-500 bg-slate-900"
-              />
-              <span className="text-xs font-medium text-white">
-                I agree to the interview recording & privacy policy.
-              </span>
-            </label>
           </div>
+
         </div>
+
       </div>
 
-      {/* Start Button */}
-      <div className="flex items-center justify-between pt-4 border-t border-white/10">
-        <div className="text-xs text-slate-400 flex items-center gap-1.5">
-          <Lock className="w-3.5 h-3.5 text-indigo-400" />
-          <span>Stage 1 unlocks immediately upon start • 80% pass threshold required</span>
+      {/* Footer: Begin Assessment Action Button */}
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4 border-t border-slate-200 dark:border-slate-800">
+        
+        {/* Missing Requirements List */}
+        <div className="text-xs text-slate-500 dark:text-slate-400 font-medium">
+          {!isComplete && (
+            <div className="flex items-center gap-1.5 text-amber-600 dark:text-amber-400 font-bold">
+              <AlertCircle className="w-4 h-4 flex-shrink-0" />
+              <span>Pending: {getMissingRequirements().join(" • ")}</span>
+            </div>
+          )}
         </div>
 
         <button
+          type="button"
           onClick={handleStart}
           disabled={!isComplete}
-          className="px-8 py-3.5 rounded-xl font-semibold text-sm text-white bg-gradient-to-r from-indigo-600 via-indigo-500 to-cyan-500 hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed shadow-xl shadow-indigo-600/30 flex items-center gap-2 transition-all transform hover:scale-[1.02] active:scale-[0.98]"
+          className={`w-full sm:w-auto px-8 py-3.5 rounded-2xl font-black text-sm tracking-wide transition-all shadow-xl flex items-center justify-center gap-2 ${
+            isComplete
+              ? "bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 hover:from-blue-500 hover:to-indigo-600 text-white shadow-blue-500/25 cursor-pointer hover:scale-[1.02]"
+              : "bg-slate-200 dark:bg-slate-800 text-slate-400 dark:text-slate-600 cursor-not-allowed border border-slate-300 dark:border-slate-700"
+          }`}
         >
-          <span>Begin Assessment</span>
+          <span>Begin Voice AI Assessment</span>
           <ArrowRight className="w-4 h-4" />
         </button>
+
       </div>
+
     </div>
   );
 }

@@ -12,11 +12,11 @@ class CandidateBase(BaseSchema):
     experience_level: str = "JUNIOR"
     target_role: str = "CloudOps Engineer"
     notes: Optional[str] = None
-    xp: int = 120
+    xp: int = 0
     level: int = 1
     streak_days: int = 1
-    readiness_score: float = 70.0
-    target_salary_band: str = "₹12–18 LPA"
+    readiness_score: float = 0.0
+    target_salary_band: str = "₹8–12 LPA"
     skills_matrix_json: Dict[str, Any] = {}
     badges_json: List[str] = []
     latest_ats_score: Optional[float] = 0.0

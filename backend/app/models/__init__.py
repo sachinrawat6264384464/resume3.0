@@ -11,6 +11,10 @@ from app.models.stage_attempt import StageAttempt
 from app.models.question_attempt import QuestionAttempt
 from app.models.recording import Recording
 from app.models.audit_log import AuditLog
+from app.models.roadmap import CandidateRoadmap
+from app.models.certificate import CandidateCertificate
+from app.models.support import SupportTicket
+from app.models.resume_audit import ResumeAudit
 
 __all__ = [
     "Base",
@@ -27,5 +31,9 @@ __all__ = [
     "StageAttempt",
     "QuestionAttempt",
     "Recording",
-    "AuditLog"
+    "AuditLog",
+    "CandidateRoadmap",
+    "CandidateCertificate",
+    "SupportTicket",
+    "ResumeAudit"
 ]

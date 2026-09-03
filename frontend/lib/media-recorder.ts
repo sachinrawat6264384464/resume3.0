@@ -35,15 +35,35 @@ export class AudioVisualizer {
 
   close() {
     if (this.source) {
-      this.source.disconnect();
+      try { this.source.disconnect(); } catch (e) {}
       this.source = null;
     }
     if (this.audioCtx && this.audioCtx.state !== 'closed') {
-      this.audioCtx.close();
+      try { this.audioCtx.close(); } catch (e) {}
       this.audioCtx = null;
     }
   }
 }
+
+export const forceStopAllWebcams = () => {
+  if (typeof window === "undefined") return;
+  try {
+    const videos = document.querySelectorAll("video");
+    videos.forEach((vid) => {
+      if (vid.srcObject) {
+        const stream = vid.srcObject as MediaStream;
+        stream.getTracks().forEach((track) => {
+          track.stop();
+          track.enabled = false;
+        });
+        vid.srcObject = null;
+      }
+      try { vid.pause(); } catch (e) {}
+    });
+  } catch (e) {
+    console.warn("Camera force release notice:", e);
+  }
+};
 
 export class QuestionRecorder {
   private mediaRecorder: MediaRecorder | null = null;

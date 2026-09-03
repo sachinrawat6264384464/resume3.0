@@ -25,16 +25,40 @@ export async function apiFetch<T = any>(
     headers,
   });
 
+  const responseText = await res.text();
+
   if (!res.ok) {
     let errorMsg = `API Error: ${res.statusText}`;
-    try {
-      const errJson = await res.json();
-      errorMsg = errJson.detail || errJson.message || errorMsg;
-    } catch {
-      // ignore
+    if (responseText && responseText.trim()) {
+      try {
+        const errJson = JSON.parse(responseText);
+        errorMsg = errJson.detail || errJson.message || errorMsg;
+      } catch {
+        errorMsg = responseText;
+      }
     }
     throw new Error(errorMsg);
   }
 
-  return res.json();
+  if (!responseText || !responseText.trim()) {
+    return {} as T;
+  }
+
+  try {
+    return JSON.parse(responseText);
+  } catch (parseErr) {
+    console.warn("API response was not valid JSON:", parseErr);
+    return {} as T;
+  }
+}
+
+export async function firebasePhoneLogin(idToken: string, fullName?: string, role: string = "CANDIDATE") {
+  return apiFetch("/auth/firebase-phone-login", {
+    method: "POST",
+    body: JSON.stringify({
+      id_token: idToken,
+      full_name: fullName,
+      role: role
+    })
+  });
 }
