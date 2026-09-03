@@ -18,8 +18,8 @@ export default function LoginPage() {
 
   const [isAdminPortal, setIsAdminPortal] = useState(false);
   const [role, setRole] = useState<"CANDIDATE" | "ADMIN">("CANDIDATE");
-  const [email, setEmail] = useState("sachin@cloudops.internal");
-  const [password, setPassword] = useState("Sachin@12345");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -31,21 +31,14 @@ export default function LoginPage() {
       if (isFlag) {
         setIsAdminPortal(true);
         setRole("ADMIN");
-        setEmail("admin@cloudops.internal");
-        setPassword("Admin@12345");
       }
     }
   }, []);
 
   const handleRoleSwitch = (selectedRole: "CANDIDATE" | "ADMIN") => {
     setRole(selectedRole);
-    if (selectedRole === "ADMIN") {
-      setEmail("admin@cloudops.internal");
-      setPassword("Admin@12345");
-    } else {
-      setEmail("sachin@cloudops.internal");
-      setPassword("Sachin@12345");
-    }
+    setEmail("");
+    setPassword("");
   };
 
   const handleGoogleSignIn = async () => {
@@ -290,125 +283,142 @@ export default function LoginPage() {
 
         </div>
 
-        {/* Right Column: Sign In Card */}
+        {/* Right Column: Premium Redesigned Sign In Card */}
         <div className="lg:col-span-5 w-full flex items-center justify-end">
-          <div className="bg-white dark:bg-slate-900 rounded-[28px] p-6 sm:p-8 border border-slate-200/80 dark:border-slate-800 shadow-2xl shadow-slate-300/40 dark:shadow-none flex flex-col gap-5.5 w-full">
+          <div className="relative w-full rounded-[32px] overflow-hidden">
             
-            {/* Header */}
-            <div>
-              <h2 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
-                {isAdminPortal ? "ADMINISTRATOR LOGIN" : "WELCOME BACK!"}
-              </h2>
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 font-medium">
-                {isAdminPortal 
-                  ? "Sign in to access CloudOps AI Admin Intelligence Suite"
-                  : "Sign in to continue your CloudOps AI journey"
-                }
-              </p>
-            </div>
+            {/* Gradient glow background */}
+            <div className="absolute inset-0 bg-gradient-to-br from-[#FF9900]/10 via-amber-400/5 to-orange-500/10 dark:from-[#FF9900]/15 dark:via-amber-400/8 dark:to-orange-500/15 rounded-[32px]" />
+            <div className="absolute -top-10 -right-10 w-40 h-40 bg-[#FF9900]/20 rounded-full blur-3xl" />
+            <div className="absolute -bottom-10 -left-10 w-32 h-32 bg-amber-400/15 rounded-full blur-2xl" />
 
-            {/* Login Form */}
-            <form onSubmit={handleLoginSubmit} className="flex flex-col gap-3.5">
-              <h3 className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider">
-                Sign In with Credentials
-              </h3>
-
-              {error && (
-                <div className="p-3 rounded-xl bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/20 text-red-600 dark:text-red-400 text-xs font-medium">
-                  {error}
+            <div className="relative bg-white/90 dark:bg-slate-900/95 backdrop-blur-xl rounded-[32px] p-6 sm:p-8 border border-[#FF9900]/20 dark:border-[#FF9900]/15 shadow-2xl shadow-[#FF9900]/10 dark:shadow-[#FF9900]/5 flex flex-col gap-5">
+              
+              {/* Logo + Title */}
+              <div className="flex flex-col gap-1">
+                <div className="flex items-center gap-2.5 mb-1">
+                  <div className="w-9 h-9 rounded-2xl bg-gradient-to-tr from-[#FF6B00] via-amber-500 to-orange-400 flex items-center justify-center shadow-lg shadow-[#FF6B00]/30">
+                    <Cloud className="w-4.5 h-4.5 text-white" />
+                  </div>
+                  <div>
+                    <span className="text-[11px] font-black text-[#FF9900] uppercase tracking-widest block leading-none">CloudOps AI</span>
+                    <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider leading-none">{isAdminPortal ? "Admin Intelligence Suite" : "Candidate Assessment OS"}</span>
+                  </div>
                 </div>
-              )}
-
-              <div>
-                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
-                  Email Address
-                </label>
-                <div className="relative">
-                  <input
-                    type="email"
-                    required
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="w-full pl-10 pr-4 py-3 rounded-xl text-xs border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 focus:outline-none focus:border-[#FF9900] font-medium text-slate-900 dark:text-white transition-all shadow-sm"
-                    placeholder={isAdminPortal ? "admin@cloudops.internal" : "sachin@cloudops.internal"}
-                  />
-                  <Mail className="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5" />
-                </div>
+                <h2 className="text-2xl sm:text-[28px] font-black text-slate-900 dark:text-white tracking-tight leading-tight">
+                  {isAdminPortal ? "Admin Access" : "Welcome Back! 👋"}
+                </h2>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">
+                  {isAdminPortal 
+                    ? "Restricted portal — authorized personnel only"
+                    : "Sign in to continue your CloudOps AI journey"
+                  }
+                </p>
               </div>
 
-              <div>
-                <div className="flex items-center justify-between mb-1.5">
-                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                    Password
-                  </label>
-                  <Link href="#" className="text-[11px] font-bold text-[#FF9900] hover:underline">
-                    Forgot Password?
-                  </Link>
-                </div>
-                <div className="relative">
-                  <input
-                    key={showPassword ? "login-text-visible" : "login-pass-hidden"}
-                    type={showPassword ? "text" : "password"}
-                    required
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="w-full pl-10 pr-10 py-3 rounded-xl text-xs border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 focus:outline-none focus:border-[#FF9900] font-medium text-slate-900 dark:text-white transition-all shadow-sm"
-                    placeholder={showPassword ? "Enter password" : "••••••••••••"}
-                  />
-                  <Lock className="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5" />
-                  <button
-                    type="button"
-                    onMouseDown={(e) => e.preventDefault()}
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-2.5 top-2.5 z-20 w-7 h-7 rounded-lg text-slate-400 hover:text-[#FF9900] hover:bg-slate-200/60 dark:hover:bg-slate-800/80 transition-all flex items-center justify-center cursor-pointer select-none"
-                    title={showPassword ? "Hide Password" : "Show Password"}
-                  >
-                    {showPassword ? (
-                      <EyeOff className="w-4 h-4 text-[#FF9900]" />
-                    ) : (
-                      <Eye className="w-4 h-4" />
-                    )}
-                  </button>
-                </div>
+              {/* Divider */}
+              <div className="flex items-center gap-2">
+                <div className="flex-1 h-px bg-gradient-to-r from-transparent via-slate-200 dark:via-slate-800 to-transparent" />
+                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-2">Sign In with Email</span>
+                <div className="flex-1 h-px bg-gradient-to-r from-transparent via-slate-200 dark:via-slate-800 to-transparent" />
               </div>
 
-              <button
-                type="submit"
-                disabled={isLoading}
-                className="w-full py-3.5 rounded-xl font-bold text-xs text-slate-950 bg-gradient-to-r from-[#FF9900] via-amber-400 to-orange-400 hover:from-amber-400 hover:to-orange-500 shadow-lg shadow-[#FF9900]/25 flex items-center justify-center gap-2 transition-all mt-1"
-              >
-                {isLoading ? (
-                  <>
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    <span>Signing In...</span>
-                  </>
-                ) : (
-                  <>
-                    <span>{isAdminPortal ? "Sign In to Admin Portal" : "Sign In to Candidate Portal"}</span>
-                    <ArrowRight className="w-4 h-4" />
-                  </>
+              {/* Login Form */}
+              <form onSubmit={handleLoginSubmit} className="flex flex-col gap-4">
+
+                {error && (
+                  <div className="p-3 rounded-2xl bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/20 text-red-600 dark:text-red-400 text-xs font-semibold flex items-center gap-2">
+                    <span className="w-1.5 h-1.5 rounded-full bg-red-500 shrink-0" />
+                    {error}
+                  </div>
                 )}
-              </button>
 
-              {!isAdminPortal && (
-                <div className="text-center mt-2">
-                  <span className="text-xs text-slate-500 font-medium">Don't have an account? </span>
-                  <Link href="/register" className="text-xs font-bold text-[#FF9900] hover:underline">
-                    Create Student Account →
-                  </Link>
+                {/* Email Field */}
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-[11px] font-black text-slate-600 dark:text-slate-300 uppercase tracking-wider">
+                    Email Address
+                  </label>
+                  <div className="relative group">
+                    <Mail className="w-4 h-4 text-slate-400 group-focus-within:text-[#FF9900] absolute left-3.5 top-1/2 -translate-y-1/2 transition-colors z-10" />
+                    <input
+                      type="email"
+                      required
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      className="w-full pl-10 pr-4 py-3.5 rounded-2xl text-sm border-2 border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 focus:outline-none focus:border-[#FF9900] focus:bg-white dark:focus:bg-slate-900 font-medium text-slate-900 dark:text-white transition-all placeholder:text-slate-400 dark:placeholder:text-slate-600"
+                      placeholder={isAdminPortal ? "admin@cloudops.internal" : "you@cloudops.internal"}
+                    />
+                  </div>
                 </div>
-              )}
-            </form>
 
-            <div className="text-center pt-2 border-t border-slate-100 dark:border-slate-800">
-              <span className="text-[11px] text-slate-400 font-medium flex items-center justify-center gap-1">
-                {isAdminPortal 
-                  ? "🔒 Restricted Access. Authorized Admin Personnel Only."
-                  : "🔒 Secure. Private. Built for Cloud Engineers."
-                }
-              </span>
+                {/* Password Field */}
+                <div className="flex flex-col gap-1.5">
+                  <div className="flex items-center justify-between">
+                    <label className="text-[11px] font-black text-slate-600 dark:text-slate-300 uppercase tracking-wider">
+                      Password
+                    </label>
+                    <Link href="#" className="text-[10px] font-bold text-[#FF9900] hover:underline">
+                      Forgot Password?
+                    </Link>
+                  </div>
+                  <div className="relative group">
+                    <Lock className="w-4 h-4 text-slate-400 group-focus-within:text-[#FF9900] absolute left-3.5 top-1/2 -translate-y-1/2 transition-colors z-10" />
+                    <input
+                      type={showPassword ? "text" : "password"}
+                      required
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      className="w-full pl-10 pr-11 py-3.5 rounded-2xl text-sm border-2 border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 focus:outline-none focus:border-[#FF9900] focus:bg-white dark:focus:bg-slate-900 font-medium text-slate-900 dark:text-white transition-all placeholder:text-slate-400 dark:placeholder:text-slate-600"
+                      placeholder="Enter your password"
+                    />
+                    <button
+                      type="button"
+                      onMouseDown={(e) => e.preventDefault()}
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 w-7 h-7 rounded-xl text-slate-400 hover:text-[#FF9900] flex items-center justify-center transition-colors"
+                    >
+                      {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Submit Button */}
+                <button
+                  type="submit"
+                  disabled={isLoading}
+                  className="w-full py-4 rounded-2xl font-black text-sm text-white bg-gradient-to-r from-[#FF6B00] via-[#FF9900] to-amber-500 hover:from-orange-600 hover:to-amber-600 shadow-xl shadow-[#FF9900]/30 hover:shadow-[#FF9900]/40 flex items-center justify-center gap-2.5 transition-all hover:scale-[1.01] active:scale-[0.99] mt-1 disabled:opacity-70 disabled:cursor-not-allowed"
+                >
+                  {isLoading ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <span>Authenticating...</span>
+                    </>
+                  ) : (
+                    <>
+                      <span>{isAdminPortal ? "Access Admin Suite →" : "Sign In to Portal →"}</span>
+                    </>
+                  )}
+                </button>
+
+                {!isAdminPortal && (
+                  <p className="text-center text-[11px] text-slate-500 dark:text-slate-400">
+                    New here?{" "}
+                    <Link href="/register" className="font-bold text-[#FF9900] hover:underline">
+                      Create your CloudOps Account →
+                    </Link>
+                  </p>
+                )}
+              </form>
+
+              {/* Security Footer */}
+              <div className="flex items-center justify-center gap-2 pt-1 border-t border-slate-100 dark:border-slate-800/60">
+                <Shield className="w-3.5 h-3.5 text-slate-400" />
+                <span className="text-[10px] text-slate-400 font-semibold">
+                  {isAdminPortal ? "Restricted Access — Admin Only" : "256-bit encrypted · Private · Built for Engineers"}
+                </span>
+              </div>
+
             </div>
-
           </div>
         </div>
 
