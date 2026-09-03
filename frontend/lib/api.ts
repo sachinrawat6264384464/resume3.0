@@ -1,4 +1,9 @@
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || "https://resume3-0.onrender.com/api/v1";
+function getApiBase(): string {
+  if (typeof window !== "undefined" && (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1")) {
+    return process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1";
+  }
+  return process.env.NEXT_PUBLIC_API_URL || "https://resume3-0.onrender.com/api/v1";
+}
 
 export async function apiFetch<T = any>(
   endpoint: string,
@@ -18,7 +23,8 @@ export async function apiFetch<T = any>(
     headers["Content-Type"] = "application/json";
   }
 
-  const url = endpoint.startsWith("http") ? endpoint : `${API_BASE}${endpoint}`;
+  const apiBase = getApiBase();
+  const url = endpoint.startsWith("http") ? endpoint : `${apiBase}${endpoint}`;
 
   let attempts = 0;
   const maxAttempts = 4;

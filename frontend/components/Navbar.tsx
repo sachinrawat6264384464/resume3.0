@@ -19,7 +19,9 @@ export function Navbar() {
     '/practice', '/leaderboard', '/interviews', '/roadmap', '/certificates', '/mock', '/achievements', '/settings', '/help'
   ].some(route => pathname?.startsWith(route));
 
-  if (pathname === "/" || pathname === "/login" || pathname === "/register" || isDashboardRoute) {
+  const isLegalRoute = ['/privacy', '/terms', '/security', '/retention'].some(route => pathname?.startsWith(route));
+
+  if (pathname === "/" || pathname === "/login" || pathname === "/register" || isDashboardRoute || isLegalRoute) {
     return null;
   }
 

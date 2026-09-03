@@ -10,7 +10,7 @@ import {
   ChevronRight, Play, Zap, Flame, Award, BarChart3, HelpCircle,
   ExternalLink, Code2, AlertTriangle, ArrowUpRight, Check,
   Home, Flag, Monitor, Globe, Database, Archive, Briefcase, FolderCheck, FileText, User,
-  ChevronDown, ChevronUp, Lock, RefreshCw, Layers3, Activity, Target, AlignLeft, Scale, LayoutGrid, Search, ShieldCheck, TrendingUp, Calendar
+  ChevronDown, ChevronUp, Lock, RefreshCw, Layers3, Activity, Target, AlignLeft, Scale, LayoutGrid, Search, ShieldCheck, TrendingUp, Calendar, MessageSquare
 } from "lucide-react";
 
 export default function LandingPage() {
@@ -104,13 +104,13 @@ export default function LandingPage() {
       </header>
 
       {/* 2. HERO SECTION */}
-      <section className="relative z-10 pt-10 pb-16 lg:pt-16 lg:pb-20 overflow-hidden">
-        {/* High-Tech Ambient Cloud Network Background Image Overlay */}
+      <section className="relative z-10 pt-10 pb-16 lg:pt-16 lg:pb-24 overflow-hidden">
+        {/* High-Tech Engineer Server Room Background Image with Fade from Left to Right */}
         <div 
-          className="absolute inset-0 z-0 bg-cover bg-center bg-no-repeat opacity-25 dark:opacity-40 pointer-events-none transition-opacity duration-500"
-          style={{ backgroundImage: `url('/images/hero_bg_cloud_network.png')` }}
+          className="absolute inset-0 z-0 bg-cover bg-right bg-no-repeat opacity-95 dark:opacity-80 pointer-events-none transition-opacity duration-500"
+          style={{ backgroundImage: `url('/images/hero_engineer_datacenter.png')` }}
         />
-        <div className="absolute inset-0 z-0 bg-gradient-to-b from-transparent via-[#FAFAFA]/70 to-[#FAFAFA] dark:via-[#070b14]/70 dark:to-[#070b14] pointer-events-none" />
+        <div className="absolute inset-0 z-0 bg-gradient-to-r from-white via-white/90 via-45% to-transparent dark:from-[#070b14] dark:via-[#070b14]/90 dark:via-45% dark:to-transparent pointer-events-none" />
 
         <div className="max-w-[1536px] mx-auto px-4 sm:px-6 lg:px-12 relative z-10">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
@@ -118,13 +118,13 @@ export default function LandingPage() {
             {/* Hero Left Column */}
             <div className="lg:col-span-5 flex flex-col gap-6">
               
-              <h1 className="text-4xl sm:text-5xl lg:text-[56px] font-black text-[#0B1E36] dark:text-white tracking-tight leading-[1.08] font-sans uppercase">
+              <h1 className="text-4xl sm:text-5xl lg:text-[56px] font-black text-[#0B1E36] dark:text-white tracking-tight leading-[1.05] font-sans uppercase">
                 LAND YOUR NEXT<br />
                 <span className="text-[#FF6B00]">CLOUD ENGINEERING</span><br />
                 ROLE.
               </h1>
 
-              <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed font-medium max-w-lg">
+              <p className="text-sm sm:text-base text-slate-600 dark:text-slate-300 leading-relaxed font-medium max-w-lg">
                 Practice real AWS incidents, improve your interview skills, and see exactly what to fix.
               </p>
 
@@ -132,7 +132,7 @@ export default function LandingPage() {
               <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3.5 pt-1">
                 <Link
                   href="/register"
-                  className="py-3.5 px-6 rounded-full font-black text-xs text-white bg-gradient-to-r from-[#FF6B00] via-amber-500 to-orange-500 hover:from-orange-500 hover:to-amber-600 shadow-xl shadow-[#FF6B00]/30 flex items-center justify-center gap-2 hover:scale-[1.02] transition-all"
+                  className="py-4 px-7 rounded-full font-black text-xs text-white bg-gradient-to-r from-[#FF6B00] via-amber-500 to-orange-500 hover:from-orange-500 hover:to-amber-600 shadow-xl shadow-[#FF6B00]/30 flex items-center justify-center gap-2.5 hover:scale-[1.02] active:scale-[0.98] transition-all"
                 >
                   <Mic className="w-4 h-4" />
                   <span>Start Free AI Interview</span>
@@ -140,46 +140,68 @@ export default function LandingPage() {
 
                 <a
                   href="#ats"
-                  className="py-3.5 px-6 rounded-full font-extrabold text-xs text-[#0B1E36] dark:text-white bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 hover:border-[#FF6B00] dark:hover:border-[#FF6B00] flex items-center justify-center gap-2 shadow-xs transition-all"
+                  className="py-4 px-7 rounded-full font-extrabold text-xs text-[#0B1E36] dark:text-white bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 hover:border-[#FF6B00] dark:hover:border-[#FF6B00] flex items-center justify-center gap-2.5 shadow-xs hover:scale-[1.02] transition-all"
                 >
                   <FileText className="w-4 h-4 text-slate-700 dark:text-slate-300" />
                   <span>Analyze My Resume</span>
                 </a>
               </div>
 
-              {/* 4 Feature Thumbnails below CTAs */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-6 border-t border-slate-200/80 dark:border-slate-800 mt-2">
-                <div className="flex flex-col gap-1">
-                  <div className="w-10 h-10 rounded-xl bg-orange-100/80 dark:bg-orange-950/60 text-[#FF6B00] flex items-center justify-center mb-1">
-                    <Mic className="w-5 h-5" />
+              {/* 4 Feature Real 3D Image Cards below CTAs (Prominent Large Size) */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-7 border-t border-slate-200/80 dark:border-slate-800 mt-2">
+                
+                {/* 1. AI Voice Interview */}
+                <div className="flex flex-col gap-2 group cursor-pointer">
+                  <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-[22px] overflow-hidden shadow-lg shadow-slate-200/60 dark:shadow-black/60 border border-slate-200/90 dark:border-slate-800 bg-slate-100 dark:bg-slate-900 group-hover:scale-105 group-hover:shadow-xl transition-all shrink-0">
+                    <img 
+                      src="/images/thumb_voice_mic.png" 
+                      alt="AI Voice Interview Studio Mic" 
+                      className="w-full h-full object-cover" 
+                    />
                   </div>
-                  <span className="text-xs font-black text-[#0B1E36] dark:text-white">AI Voice Interview</span>
-                  <span className="text-[10px] text-slate-500 dark:text-slate-400 font-medium leading-tight">Real-world AWS incident practice</span>
+                  <span className="text-sm font-black text-[#0B1E36] dark:text-white group-hover:text-[#FF6B00] transition-colors leading-tight">AI Voice Interview</span>
+                  <span className="text-xs text-slate-500 dark:text-slate-400 font-medium leading-relaxed">Real-world AWS incident practice</span>
                 </div>
 
-                <div className="flex flex-col gap-1">
-                  <div className="w-10 h-10 rounded-xl bg-amber-100/80 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 flex items-center justify-center mb-1">
-                    <BarChart3 className="w-5 h-5" />
+                {/* 2. ATS Resume Score */}
+                <div className="flex flex-col gap-2 group cursor-pointer">
+                  <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-[22px] overflow-hidden shadow-lg shadow-slate-200/60 dark:shadow-black/60 border border-slate-200/90 dark:border-slate-800 bg-slate-100 dark:bg-slate-900 group-hover:scale-105 group-hover:shadow-xl transition-all shrink-0">
+                    <img 
+                      src="/images/thumb_ats_score.png" 
+                      alt="ATS Resume Analytics Laptop" 
+                      className="w-full h-full object-cover" 
+                    />
                   </div>
-                  <span className="text-xs font-black text-[#0B1E36] dark:text-white">ATS Resume Score</span>
-                  <span className="text-[10px] text-slate-500 dark:text-slate-400 font-medium leading-tight">See your match score instantly</span>
+                  <span className="text-sm font-black text-[#0B1E36] dark:text-white group-hover:text-[#FF6B00] transition-colors leading-tight">ATS Resume Score</span>
+                  <span className="text-xs text-slate-500 dark:text-slate-400 font-medium leading-relaxed">See your match score instantly</span>
                 </div>
 
-                <div className="flex flex-col gap-1">
-                  <div className="w-10 h-10 rounded-xl bg-blue-100/80 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 flex items-center justify-center mb-1">
-                    <Layers className="w-5 h-5" />
+                {/* 3. 5-Stage System */}
+                <div className="flex flex-col gap-2 group cursor-pointer">
+                  <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-[22px] overflow-hidden shadow-lg shadow-slate-200/60 dark:shadow-black/60 border border-slate-200/90 dark:border-slate-800 bg-slate-100 dark:bg-slate-900 group-hover:scale-105 group-hover:shadow-xl transition-all shrink-0">
+                    <img 
+                      src="/images/thumb_5stage_aws.png" 
+                      alt="AWS 3D Cloud Badge" 
+                      className="w-full h-full object-cover" 
+                    />
                   </div>
-                  <span className="text-xs font-black text-[#0B1E36] dark:text-white">5-Stage System</span>
-                  <span className="text-[10px] text-slate-500 dark:text-slate-400 font-medium leading-tight">80%+ score to unlock next stage</span>
+                  <span className="text-sm font-black text-[#0B1E36] dark:text-white group-hover:text-[#FF6B00] transition-colors leading-tight">5-Stage System</span>
+                  <span className="text-xs text-slate-500 dark:text-slate-400 font-medium leading-relaxed">80%+ score to unlock next stage</span>
                 </div>
 
-                <div className="flex flex-col gap-1">
-                  <div className="w-10 h-10 rounded-xl bg-emerald-100/80 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mb-1">
-                    <Map className="w-5 h-5" />
+                {/* 4. 30-Day Roadmap */}
+                <div className="flex flex-col gap-2 group cursor-pointer">
+                  <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-[22px] overflow-hidden shadow-lg shadow-slate-200/60 dark:shadow-black/60 border border-slate-200/90 dark:border-slate-800 bg-gradient-to-br from-[#0B1E36] to-[#102A4C] p-1.5 group-hover:scale-105 group-hover:shadow-xl group-hover:border-[#FF6B00] transition-all shrink-0 flex items-center justify-center">
+                    <img 
+                      src="/images/roadmap_aws_light_3d-removebg-preview.png" 
+                      alt="3D AWS Cloud Architecture Skill Roadmap" 
+                      className="w-full h-full object-contain filter drop-shadow-md group-hover:scale-110 transition-transform" 
+                    />
                   </div>
-                  <span className="text-xs font-black text-[#0B1E36] dark:text-white">30-Day Roadmap</span>
-                  <span className="text-[10px] text-slate-500 dark:text-slate-400 font-medium leading-tight">Personalized plan to land offers</span>
+                  <span className="text-sm font-black text-[#0B1E36] dark:text-white group-hover:text-[#FF6B00] transition-colors leading-tight">30-Day Roadmap</span>
+                  <span className="text-xs text-slate-500 dark:text-slate-400 font-medium leading-relaxed">Personalized plan to land offers</span>
                 </div>
+
               </div>
 
             </div>
@@ -187,229 +209,232 @@ export default function LandingPage() {
             {/* Hero Right Column: AWS Architecture Mock Visual with Background Engineer Photo Overlay */}
             <div className="lg:col-span-7 relative">
               
-              {/* Background Engineer Photo Overlay matching Screenshot 3 */}
-              <div className="absolute -inset-4 rounded-3xl bg-gradient-to-r from-orange-400/20 via-blue-500/10 to-transparent blur-2xl pointer-events-none -z-10" />
+              {/* Floating ambient glow */}
+              <div className="absolute -inset-4 rounded-3xl bg-gradient-to-r from-orange-400/20 via-blue-500/15 to-amber-500/10 blur-2xl pointer-events-none -z-10" />
 
-              <div className="w-full rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-2xl shadow-slate-300/60 dark:shadow-black/60 overflow-hidden flex flex-col md:flex-row min-h-[460px] relative transition-colors duration-300">
+              <div className="w-full rounded-[28px] bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-2xl shadow-slate-400/30 dark:shadow-black/70 overflow-hidden flex flex-col md:flex-row min-h-[470px] relative transition-colors duration-300">
                 
                 {/* Dark Blue Sidebar */}
-                <div className="w-full md:w-48 bg-[#0B1E36] p-5 text-white flex flex-col gap-5 shrink-0">
-                  <div className="flex items-center gap-2">
-                    <div className="w-6 h-6 rounded-lg bg-[#FF6B00] flex items-center justify-center text-white font-bold">
-                      <Cloud className="w-3.5 h-3.5" />
+                <div className="w-full md:w-52 bg-[#0B1E36] p-5 text-white flex flex-col justify-between shrink-0">
+                  <div className="flex flex-col gap-5">
+                    <div className="flex items-center gap-2">
+                      <div className="w-7 h-7 rounded-xl bg-[#FF6B00] flex items-center justify-center text-white font-bold shadow-md shadow-[#FF6B00]/30">
+                        <Cloud className="w-4 h-4" />
+                      </div>
+                      <span className="text-sm font-black tracking-tight text-white">CloudOps AI</span>
                     </div>
-                    <span className="text-xs font-black tracking-tight">CloudOps AI</span>
-                  </div>
 
-                  <div className="flex flex-col items-center text-center p-3 rounded-2xl bg-white/5 border border-white/10">
-                    <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-[#FF6B00] mb-1.5 shadow-md">
-                      <img 
-                        src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=200" 
-                        alt="Rahul Rawat Profile" 
-                        className="w-full h-full object-cover" 
-                      />
+                    <div className="flex flex-col items-center text-center p-3 rounded-2xl bg-white/5 border border-white/10">
+                      <div className="w-13 h-13 rounded-full overflow-hidden border-2 border-[#FF6B00] mb-2 shadow-md">
+                        <img 
+                          src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=200" 
+                          alt="Rahul Rawat Profile" 
+                          className="w-full h-full object-cover" 
+                        />
+                      </div>
+                      <span className="text-xs font-black text-white">Rahul Rawat</span>
+                      <span className="text-[10px] text-slate-300 font-semibold">Cloud Engineer</span>
                     </div>
-                    <span className="text-xs font-black text-white">Rahul Rawat</span>
-                    <span className="text-[10px] text-slate-400 font-medium">Cloud Engineer</span>
+
+                    {/* Interactive Sidebar Navigation Tabs */}
+                    <div className="flex flex-col gap-1.5 text-[11px] font-semibold">
+                      <button
+                        onClick={() => setActiveHeroTab("overview")}
+                        className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl transition-all text-left ${
+                          activeHeroTab === "overview"
+                            ? "bg-white/15 text-white font-bold border border-white/20 shadow-xs"
+                            : "text-slate-400 hover:text-white hover:bg-white/5"
+                        }`}
+                      >
+                        <Home className={`w-3.5 h-3.5 ${activeHeroTab === "overview" ? "text-[#FF6B00]" : ""}`} />
+                        <span>Overview</span>
+                      </button>
+
+                      <button
+                        onClick={() => setActiveHeroTab("practice")}
+                        className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl transition-all text-left ${
+                          activeHeroTab === "practice"
+                            ? "bg-white/15 text-white font-bold border border-white/20 shadow-xs"
+                            : "text-slate-400 hover:text-white hover:bg-white/5"
+                        }`}
+                      >
+                        <Mic className={`w-3.5 h-3.5 ${activeHeroTab === "practice" ? "text-[#FF6B00]" : ""}`} />
+                        <span>Interview Practice</span>
+                      </button>
+
+                      <button
+                        onClick={() => setActiveHeroTab("ats")}
+                        className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl transition-all text-left ${
+                          activeHeroTab === "ats"
+                            ? "bg-white/15 text-white font-bold border border-white/20 shadow-xs"
+                            : "text-slate-400 hover:text-white hover:bg-white/5"
+                        }`}
+                      >
+                        <FileText className={`w-3.5 h-3.5 ${activeHeroTab === "ats" ? "text-[#FF6B00]" : ""}`} />
+                        <span>ATS Analyzer</span>
+                      </button>
+
+                      <button
+                        onClick={() => setActiveHeroTab("roadmap")}
+                        className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl transition-all text-left ${
+                          activeHeroTab === "roadmap"
+                            ? "bg-white/15 text-white font-bold border border-white/20 shadow-xs"
+                            : "text-slate-400 hover:text-white hover:bg-white/5"
+                        }`}
+                      >
+                        <Flag className={`w-3.5 h-3.5 ${activeHeroTab === "roadmap" ? "text-[#FF6B00]" : ""}`} />
+                        <span>Roadmap</span>
+                      </button>
+
+                      <button
+                        onClick={() => setActiveHeroTab("profile")}
+                        className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl transition-all text-left ${
+                          activeHeroTab === "profile"
+                            ? "bg-white/15 text-white font-bold border border-white/20 shadow-xs"
+                            : "text-slate-400 hover:text-white hover:bg-white/5"
+                        }`}
+                      >
+                        <User className={`w-3.5 h-3.5 ${activeHeroTab === "profile" ? "text-[#FF6B00]" : ""}`} />
+                        <span>Profile</span>
+                      </button>
+                    </div>
                   </div>
 
-                  {/* Interactive Sidebar Navigation Tabs */}
-                  <div className="flex flex-col gap-1 text-[11px] font-semibold">
-                    <button
-                      onClick={() => setActiveHeroTab("overview")}
-                      className={`flex items-center gap-2 px-3 py-2 rounded-xl transition-all text-left ${
-                        activeHeroTab === "overview"
-                          ? "bg-white/15 text-white font-bold border border-white/20 shadow-xs"
-                          : "text-slate-400 hover:text-white hover:bg-white/5"
-                      }`}
-                    >
-                      <Home className={`w-3.5 h-3.5 ${activeHeroTab === "overview" ? "text-[#FF6B00]" : ""}`} />
-                      <span>Overview</span>
-                    </button>
-
-                    <button
-                      onClick={() => setActiveHeroTab("practice")}
-                      className={`flex items-center gap-2 px-3 py-2 rounded-xl transition-all text-left ${
-                        activeHeroTab === "practice"
-                          ? "bg-white/15 text-white font-bold border border-white/20 shadow-xs"
-                          : "text-slate-400 hover:text-white hover:bg-white/5"
-                      }`}
-                    >
-                      <Mic className={`w-3.5 h-3.5 ${activeHeroTab === "practice" ? "text-[#FF6B00]" : ""}`} />
-                      <span>Interview Practice</span>
-                    </button>
-
-                    <button
-                      onClick={() => setActiveHeroTab("ats")}
-                      className={`flex items-center gap-2 px-3 py-2 rounded-xl transition-all text-left ${
-                        activeHeroTab === "ats"
-                          ? "bg-white/15 text-white font-bold border border-white/20 shadow-xs"
-                          : "text-slate-400 hover:text-white hover:bg-white/5"
-                      }`}
-                    >
-                      <FileText className={`w-3.5 h-3.5 ${activeHeroTab === "ats" ? "text-[#FF6B00]" : ""}`} />
-                      <span>ATS Analyzer</span>
-                    </button>
-
-                    <button
-                      onClick={() => setActiveHeroTab("roadmap")}
-                      className={`flex items-center gap-2 px-3 py-2 rounded-xl transition-all text-left ${
-                        activeHeroTab === "roadmap"
-                          ? "bg-white/15 text-white font-bold border border-white/20 shadow-xs"
-                          : "text-slate-400 hover:text-white hover:bg-white/5"
-                      }`}
-                    >
-                      <Flag className={`w-3.5 h-3.5 ${activeHeroTab === "roadmap" ? "text-[#FF6B00]" : ""}`} />
-                      <span>Roadmap</span>
-                    </button>
-
-                    <button
-                      onClick={() => setActiveHeroTab("profile")}
-                      className={`flex items-center gap-2 px-3 py-2 rounded-xl transition-all text-left ${
-                        activeHeroTab === "profile"
-                          ? "bg-white/15 text-white font-bold border border-white/20 shadow-xs"
-                          : "text-slate-400 hover:text-white hover:bg-white/5"
-                      }`}
-                    >
-                      <User className={`w-3.5 h-3.5 ${activeHeroTab === "profile" ? "text-[#FF6B00]" : ""}`} />
-                      <span>Profile</span>
-                    </button>
-                  </div>
                 </div>
 
                 {/* Dynamic Right Content Panel */}
-                <div className="flex-1 p-6 bg-slate-50/60 dark:bg-slate-900/60 flex flex-col justify-between gap-6">
+                <div className="flex-1 p-6 bg-slate-50/70 dark:bg-slate-900/70 flex flex-col justify-between gap-5">
                   
                   {activeHeroTab === "overview" && (
                     <>
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
-                          <span className="text-xs font-black text-[#FF6B00]">aws</span>
-                          <span className="text-xs font-black text-slate-900">AWS Incident Simulation</span>
+                          <span className="px-2 py-0.5 rounded text-[10px] font-mono font-black text-[#FF6B00] bg-orange-500/10 border border-[#FF6B00]/30 uppercase">AWS</span>
+                          <span className="text-xs font-black text-slate-900 dark:text-white">AWS Incident Simulation OS</span>
                         </div>
-                        <span className="text-xs font-extrabold px-3 py-1 rounded-full bg-emerald-100 text-emerald-700 border border-emerald-200 flex items-center gap-1">
+                        <span className="text-xs font-extrabold px-3 py-1 rounded-full bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800 flex items-center gap-1.5 shadow-xs">
                           <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
                           94% Match Score
                         </span>
                       </div>
 
                       {/* AWS Connected Architecture Flow */}
-                      <div className="p-3.5 rounded-2xl bg-white border border-slate-200/80 shadow-xs flex items-center justify-between overflow-x-auto gap-2">
-                        <div className="flex flex-col items-center gap-1 shrink-0">
-                          <div className="w-9 h-9 rounded-xl bg-slate-800 text-white flex items-center justify-center shadow-md">
+                      <div className="p-4 rounded-2xl bg-white dark:bg-slate-950 border border-slate-200/80 dark:border-slate-800 shadow-sm flex items-center justify-between overflow-x-auto gap-2">
+                        <div className="flex flex-col items-center gap-1.5 shrink-0">
+                          <div className="w-10 h-10 rounded-xl bg-slate-900 text-white flex items-center justify-center shadow-md border border-slate-700">
                             <Monitor className="w-4 h-4" />
                           </div>
-                          <span className="text-[9px] font-bold text-slate-600">Client</span>
+                          <span className="text-[10px] font-bold text-slate-600 dark:text-slate-300">Client</span>
                         </div>
-                        <span className="text-slate-300 font-bold text-xs">➔</span>
+                        <span className="text-[#FF6B00] font-bold text-xs">➔</span>
 
-                        <div className="flex flex-col items-center gap-1 shrink-0">
-                          <div className="w-9 h-9 rounded-xl bg-purple-600 text-white flex items-center justify-center shadow-md">
+                        <div className="flex flex-col items-center gap-1.5 shrink-0">
+                          <div className="w-10 h-10 rounded-xl bg-purple-600 text-white flex items-center justify-center shadow-md shadow-purple-500/20">
                             <Globe className="w-4 h-4" />
                           </div>
-                          <span className="text-[9px] font-bold text-slate-600">Route 53</span>
+                          <span className="text-[10px] font-bold text-slate-600 dark:text-slate-300">Route 53</span>
                         </div>
-                        <span className="text-slate-300 font-bold text-xs">➔</span>
+                        <span className="text-[#FF6B00] font-bold text-xs">➔</span>
 
-                        <div className="flex flex-col items-center gap-1 shrink-0">
-                          <div className="w-9 h-9 rounded-xl bg-indigo-600 text-white flex items-center justify-center shadow-md">
+                        <div className="flex flex-col items-center gap-1.5 shrink-0">
+                          <div className="w-10 h-10 rounded-xl bg-indigo-600 text-white flex items-center justify-center shadow-md shadow-indigo-500/20">
                             <Layers className="w-4 h-4" />
                           </div>
-                          <span className="text-[9px] font-bold text-slate-600">ALB</span>
+                          <span className="text-[10px] font-bold text-slate-600 dark:text-slate-300">ALB</span>
                         </div>
-                        <span className="text-slate-300 font-bold text-xs">➔</span>
+                        <span className="text-[#FF6B00] font-bold text-xs">➔</span>
 
-                        <div className="flex flex-col items-center gap-1 shrink-0">
-                          <div className="w-9 h-9 rounded-xl bg-[#FF6B00] text-white flex items-center justify-center shadow-md">
+                        <div className="flex flex-col items-center gap-1.5 shrink-0">
+                          <div className="w-10 h-10 rounded-xl bg-[#FF6B00] text-white flex items-center justify-center shadow-md shadow-orange-500/20">
                             <Cpu className="w-4 h-4" />
                           </div>
-                          <span className="text-[9px] font-bold text-slate-600">EC2</span>
+                          <span className="text-[10px] font-bold text-slate-600 dark:text-slate-300">EC2</span>
                         </div>
-                        <span className="text-slate-300 font-bold text-xs">➔</span>
+                        <span className="text-[#FF6B00] font-bold text-xs">➔</span>
 
-                        <div className="flex flex-col items-center gap-1 shrink-0">
-                          <div className="w-9 h-9 rounded-xl bg-blue-600 text-white flex items-center justify-center shadow-md">
+                        <div className="flex flex-col items-center gap-1.5 shrink-0">
+                          <div className="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center shadow-md shadow-blue-500/20">
                             <Database className="w-4 h-4" />
                           </div>
-                          <span className="text-[9px] font-bold text-slate-600">RDS</span>
+                          <span className="text-[10px] font-bold text-slate-600 dark:text-slate-300">RDS</span>
                         </div>
-                        <span className="text-slate-300 font-bold text-xs">➔</span>
+                        <span className="text-[#FF6B00] font-bold text-xs">➔</span>
 
-                        <div className="flex flex-col items-center gap-1 shrink-0">
-                          <div className="w-9 h-9 rounded-xl bg-emerald-600 text-white flex items-center justify-center shadow-md">
+                        <div className="flex flex-col items-center gap-1.5 shrink-0">
+                          <div className="w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center shadow-md shadow-emerald-500/20">
                             <Archive className="w-4 h-4" />
                           </div>
-                          <span className="text-[9px] font-bold text-slate-600">S3</span>
+                          <span className="text-[10px] font-bold text-slate-600 dark:text-slate-300">S3</span>
                         </div>
                       </div>
 
                       {/* 3 Metric Columns */}
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                        <div className="p-3 rounded-2xl bg-white border border-slate-200/80 shadow-xs flex flex-col gap-2">
-                          <span className="text-[11px] font-black text-slate-900 flex items-center gap-1">
-                            <Code2 className="w-3.5 h-3.5 text-[#FF6B00]" />
+                        <div className="p-3.5 rounded-2xl bg-white dark:bg-slate-950 border border-slate-200/80 dark:border-slate-800 shadow-xs flex flex-col gap-2.5">
+                          <span className="text-xs font-black text-slate-900 dark:text-white flex items-center gap-1.5">
+                            <Code2 className="w-4 h-4 text-[#FF6B00]" />
                             Skills
                           </span>
-                          <div className="flex flex-col gap-1.5 text-[9px] font-bold text-slate-600">
+                          <div className="flex flex-col gap-2 text-[10px] font-bold text-slate-600 dark:text-slate-300">
                             <div>
-                              <div className="flex justify-between mb-0.5"><span>AWS Services</span></div>
-                              <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
-                                <div className="h-full bg-[#FF6B00] w-[90%]" />
+                              <div className="flex justify-between mb-1"><span>AWS Services</span></div>
+                              <div className="h-1.5 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                                <div className="h-full bg-gradient-to-r from-[#FF6B00] to-amber-500 w-[90%]" />
                               </div>
                             </div>
                             <div>
-                              <div className="flex justify-between mb-0.5"><span>Networking</span></div>
-                              <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
-                                <div className="h-full bg-[#FF6B00] w-[84%]" />
+                              <div className="flex justify-between mb-1"><span>Networking</span></div>
+                              <div className="h-1.5 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                                <div className="h-full bg-gradient-to-r from-[#FF6B00] to-amber-500 w-[84%]" />
                               </div>
                             </div>
                             <div>
-                              <div className="flex justify-between mb-0.5"><span>IAM & Security</span></div>
-                              <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
-                                <div className="h-full bg-[#FF6B00] w-[78%]" />
+                              <div className="flex justify-between mb-1"><span>IAM & Security</span></div>
+                              <div className="h-1.5 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                                <div className="h-full bg-gradient-to-r from-[#FF6B00] to-amber-500 w-[78%]" />
                               </div>
                             </div>
                           </div>
                         </div>
 
-                        <div className="p-3 rounded-2xl bg-white border border-slate-200/80 shadow-xs flex flex-col gap-2">
-                          <span className="text-[11px] font-black text-slate-900 flex items-center gap-1">
-                            <Briefcase className="w-3.5 h-3.5 text-blue-500" />
+                        <div className="p-3.5 rounded-2xl bg-white dark:bg-slate-950 border border-slate-200/80 dark:border-slate-800 shadow-xs flex flex-col gap-2.5">
+                          <span className="text-xs font-black text-slate-900 dark:text-white flex items-center gap-1.5">
+                            <Briefcase className="w-4 h-4 text-blue-500" />
                             Experience
                           </span>
-                          <div className="flex flex-col gap-1.5 text-[10px]">
-                            <div className="flex justify-between font-bold text-slate-700">
+                          <div className="flex flex-col gap-2 text-[10.5px]">
+                            <div className="flex justify-between font-bold text-slate-700 dark:text-slate-300">
                               <span>Cloud Engineer</span>
-                              <span className="text-slate-400">3.2 yrs</span>
+                              <span className="text-slate-400 font-mono">3.2 yrs</span>
                             </div>
-                            <div className="flex justify-between font-bold text-slate-700">
+                            <div className="flex justify-between font-bold text-slate-700 dark:text-slate-300">
                               <span>DevOps Engineer</span>
-                              <span className="text-slate-400">1.8 yrs</span>
+                              <span className="text-slate-400 font-mono">1.8 yrs</span>
                             </div>
-                            <div className="flex justify-between font-bold text-slate-700">
+                            <div className="flex justify-between font-bold text-slate-700 dark:text-slate-300">
                               <span>SRE Intern</span>
-                              <span className="text-slate-400">0.6 yrs</span>
+                              <span className="text-slate-400 font-mono">0.6 yrs</span>
                             </div>
                           </div>
                         </div>
 
-                        <div className="p-3 rounded-2xl bg-white border border-slate-200/80 shadow-xs flex flex-col gap-2">
-                          <span className="text-[11px] font-black text-slate-900 flex items-center gap-1">
-                            <FolderCheck className="w-3.5 h-3.5 text-emerald-500" />
+                        <div className="p-3.5 rounded-2xl bg-white dark:bg-slate-950 border border-slate-200/80 dark:border-slate-800 shadow-xs flex flex-col gap-2.5">
+                          <span className="text-xs font-black text-slate-900 dark:text-white flex items-center gap-1.5">
+                            <FolderCheck className="w-4 h-4 text-emerald-500" />
                             Projects
                           </span>
-                          <div className="flex flex-col gap-1.5 text-[9.5px] font-bold text-slate-700">
+                          <div className="flex flex-col gap-2 text-[10px] font-bold text-slate-700 dark:text-slate-300">
                             <div className="flex items-center justify-between">
-                              <span className="truncate pr-1">Multi Region Web ...</span>
-                              <CheckCircle2 className="w-3 h-3 text-emerald-500 shrink-0" />
+                              <span className="truncate pr-1">Multi-Region Web App</span>
+                              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
                             </div>
                             <div className="flex items-center justify-between">
-                              <span className="truncate pr-1">CI/CD with GitHub ...</span>
-                              <CheckCircle2 className="w-3 h-3 text-emerald-500 shrink-0" />
+                              <span className="truncate pr-1">CI/CD with GitHub Actions</span>
+                              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
                             </div>
                             <div className="flex items-center justify-between">
-                              <span className="truncate pr-1">Serverless Data Pip...</span>
-                              <CheckCircle2 className="w-3 h-3 text-emerald-500 shrink-0" />
+                              <span className="truncate pr-1">Serverless Data Pipeline</span>
+                              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
                             </div>
                           </div>
                         </div>
@@ -420,29 +445,28 @@ export default function LandingPage() {
                   {activeHeroTab === "practice" && (
                     <div className="flex flex-col gap-4">
                       <div className="flex items-center justify-between">
-                        <span className="text-xs font-black text-[#0B1E36]">Voice AI Interview Chamber</span>
-                        <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-[#FF6B00]">Stage 3 Active</span>
+                        <span className="text-xs font-black text-[#0B1E36] dark:text-white">Voice AI Interview Chamber</span>
+                        <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-amber-100 text-[#FF6B00] border border-amber-300">Stage 3 Active</span>
                       </div>
 
-                      <div className="p-4 rounded-2xl bg-[#0B1E36] text-white flex flex-col gap-3">
+                      <div className="p-4 rounded-2xl bg-[#0B1E36] text-white flex flex-col gap-3.5 shadow-lg">
                         <div className="flex items-center justify-between text-xs">
-                          <span className="text-slate-400 font-mono">PROMPT #3</span>
-                          <span className="text-emerald-400 font-bold flex items-center gap-1">
-                            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
+                          <span className="text-[#FF6B00] font-mono font-bold">PROMPT #3 (VPC MESH)</span>
+                          <span className="text-emerald-400 font-bold flex items-center gap-1 text-[11px]">
+                            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
                             Microphone Active
                           </span>
                         </div>
-                        <p className="text-xs text-slate-200 font-medium">
+                        <p className="text-xs text-slate-200 font-medium leading-relaxed">
                           &ldquo;Explain how you configure AWS IRSA (IAM Roles for Service Accounts) to grant fine-grained permissions to a Pod running in EKS.&rdquo;
                         </p>
 
                         <div className="flex items-center justify-between pt-2 border-t border-slate-800">
-                          <div className="flex items-center gap-1">
-                            {[12, 24, 18, 32, 14, 28, 20, 16].map((h, idx) => (
-                              <div key={idx} className="w-1 bg-[#FF6B00] rounded-full animate-waveform" style={{ height: `${h}px` }} />
-                            ))}
+                          <div className="flex items-center gap-1 text-[#FF6B00]">
+                            <Activity className="w-4 h-4 animate-pulse" />
+                            <span className="text-[10px] font-mono font-bold tracking-widest text-[#FF6B00]">|||||||||||||||||||</span>
                           </div>
-                          <span className="text-[10px] text-slate-400 font-mono">Speech Cadence: 142 WPM</span>
+                          <span className="text-[11px] text-emerald-400 font-mono font-bold">Cadence: 142 WPM (Ideal)</span>
                         </div>
                       </div>
                     </div>
@@ -451,33 +475,40 @@ export default function LandingPage() {
                   {activeHeroTab === "ats" && (
                     <div className="flex flex-col gap-3">
                       <div className="flex items-center justify-between">
-                        <span className="text-xs font-black text-[#0B1E36]">ATS Bullet Point STAR Rewriter</span>
-                        <span className="text-xs font-bold text-emerald-600">+34% Match Call Rate</span>
+                        <span className="text-xs font-black text-[#0B1E36] dark:text-white">ATS Bullet Point STAR Rewriter</span>
+                        <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400">+34% Interview Call Rate</span>
                       </div>
 
-                      <div className="p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-xs">
-                        <span className="text-[10px] font-black text-rose-600 uppercase">WEAK BULLET:</span>
-                        <p className="text-slate-700 italic font-medium mt-1">Managed AWS EC2 instances and set up Docker containers.</p>
+                      <div className="p-3.5 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/50 text-xs flex flex-col gap-1">
+                        <span className="text-[10px] font-black text-rose-600 dark:text-rose-400 uppercase">WEAK UNQUANTIFIED BULLET:</span>
+                        <p className="text-slate-700 dark:text-slate-300 italic font-medium">&ldquo;Managed AWS EC2 instances and set up Docker containers for deployments.&rdquo;</p>
                       </div>
 
-                      <div className="p-3.5 rounded-xl bg-emerald-50 border border-emerald-200 text-xs">
-                        <span className="text-[10px] font-black text-emerald-700 uppercase">QUANTIFIED STAR BULLET:</span>
-                        <p className="text-slate-800 font-medium mt-1">Architected multi-stage Docker builds on AWS EKS with Terraform IaC, reducing container size by <strong className="text-emerald-700">62%</strong>.</p>
+                      <div className="p-3.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-900/50 text-xs flex flex-col gap-1">
+                        <span className="text-[10px] font-black text-emerald-700 dark:text-emerald-400 uppercase">QUANTIFIED STAR BULLET:</span>
+                        <p className="text-slate-800 dark:text-slate-200 font-medium leading-relaxed">&ldquo;Architected multi-stage Docker builds on AWS EKS with Terraform IaC, reducing container image size by <strong className="text-emerald-700 dark:text-emerald-400 font-black">62%</strong> and zero downtime.&rdquo;</p>
                       </div>
                     </div>
                   )}
 
                   {activeHeroTab === "roadmap" && (
                     <div className="flex flex-col gap-3">
-                      <span className="text-xs font-black text-[#0B1E36]">30-Day Guided Sprint Progress</span>
-                      <div className="grid grid-cols-2 gap-2 text-xs">
-                        <div className="p-3 rounded-xl bg-white border border-slate-200">
-                          <span className="text-[10px] font-bold text-[#FF6B00]">WEEK 1</span>
-                          <p className="font-bold text-slate-800">Linux Kernel & Sockets</p>
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-black text-[#0B1E36] dark:text-white">30-Day Guided Sprint Progress</span>
+                        <span className="text-xs font-mono font-bold text-[#FF6B00]">Day 14 of 30</span>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-3 text-xs">
+                        <div className="p-3.5 rounded-2xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 flex flex-col gap-1 shadow-xs">
+                          <span className="text-[10px] font-black text-[#FF6B00]">WEEK 1 (COMPLETED)</span>
+                          <p className="font-extrabold text-slate-800 dark:text-white">Linux Kernel & Sockets</p>
+                          <span className="text-[10px] text-emerald-500 font-bold">100% Mastered ✓</span>
                         </div>
-                        <div className="p-3 rounded-xl bg-white border border-slate-200">
-                          <span className="text-[10px] font-bold text-blue-600">WEEK 2</span>
-                          <p className="font-bold text-slate-800">AWS VPC & IRSA Binding</p>
+
+                        <div className="p-3.5 rounded-2xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 flex flex-col gap-1 shadow-xs">
+                          <span className="text-[10px] font-black text-blue-500">WEEK 2 (IN PROGRESS)</span>
+                          <p className="font-extrabold text-slate-800 dark:text-white">AWS VPC & IRSA Binding</p>
+                          <span className="text-[10px] text-blue-500 font-bold">Stage 3 Gate Unlocked 🔓</span>
                         </div>
                       </div>
                     </div>
@@ -486,17 +517,18 @@ export default function LandingPage() {
                   {activeHeroTab === "profile" && (
                     <div className="flex flex-col gap-3">
                       <div className="flex items-center justify-between">
-                        <span className="text-xs font-black text-[#0B1E36]">Candidate Matrix Profile</span>
-                        <span className="text-xs font-bold text-[#FF6B00]">Level 1 (0 XP)</span>
+                        <span className="text-xs font-black text-[#0B1E36] dark:text-white">Candidate Matrix Profile</span>
+                        <span className="text-xs font-black text-[#FF6B00] bg-orange-100 dark:bg-orange-950/60 px-2.5 py-0.5 rounded-full border border-orange-300">Level 5 (1,850 XP)</span>
                       </div>
-                      <div className="p-4 rounded-2xl bg-slate-900 text-white flex items-center justify-between">
+
+                      <div className="p-4 rounded-2xl bg-[#0B1E36] text-white flex items-center justify-between shadow-lg">
                         <div>
-                          <span className="text-[10px] text-slate-400 font-bold block">READINESS SCORE</span>
-                          <span className="text-2xl font-black text-emerald-400">94.8%</span>
+                          <span className="text-[10px] text-slate-400 font-bold block uppercase tracking-wider">READINESS SCORE</span>
+                          <span className="text-2xl font-black text-emerald-400 font-mono">94.8%</span>
                         </div>
                         <div className="text-right">
-                          <span className="text-[10px] text-slate-400 font-bold block">TARGET BAND</span>
-                          <span className="text-xs font-bold text-amber-300">₹12–18 LPA</span>
+                          <span className="text-[10px] text-slate-400 font-bold block uppercase tracking-wider">TARGET SALARY BAND</span>
+                          <span className="text-xs font-extrabold text-amber-300 bg-amber-400/10 px-2.5 py-1 rounded-lg border border-amber-400/30">₹12–18 LPA</span>
                         </div>
                       </div>
                     </div>
@@ -510,10 +542,10 @@ export default function LandingPage() {
           </div>
         </div>
 
-        {/* TRUST BANNER AT BOTTOM OF HERO (Screenshot 1) */}
+        {/* TRUST BANNER AT BOTTOM OF HERO (Identical to Screenshot) */}
         <div className="max-w-[1536px] mx-auto px-4 sm:px-6 lg:px-12 mt-12">
-          <div className="p-4 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-xs flex flex-col lg:flex-row items-center justify-between gap-6 transition-colors duration-300">
-            <span className="text-xs font-black text-[#0B1E36] dark:text-white tracking-wider uppercase">
+          <div className="p-4 sm:p-5 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-lg shadow-slate-200/50 dark:shadow-black/50 flex flex-col lg:flex-row items-center justify-between gap-6 transition-colors duration-300">
+            <span className="text-xs font-black text-[#0B1E36] dark:text-white tracking-wider uppercase shrink-0">
               TRUSTED BY CLOUD ENGINEERS WORLDWIDE
             </span>
 
@@ -532,13 +564,14 @@ export default function LandingPage() {
               </div>
             </div>
 
-            <div className="flex items-center gap-2">
-              <div className="flex -space-x-2 overflow-hidden">
-                <img className="inline-block h-7 w-7 rounded-full ring-2 ring-white dark:ring-slate-800" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=100" alt="" />
-                <img className="inline-block h-7 w-7 rounded-full ring-2 ring-white dark:ring-slate-800" src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=100" alt="" />
-                <img className="inline-block h-7 w-7 rounded-full ring-2 ring-white dark:ring-slate-800" src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=100" alt="" />
+            <div className="flex items-center gap-3 shrink-0">
+              <div className="flex -space-x-2.5 overflow-hidden">
+                <img className="inline-block h-8 w-8 rounded-full ring-2 ring-white dark:ring-slate-800 object-cover" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=100" alt="User 1" />
+                <img className="inline-block h-8 w-8 rounded-full ring-2 ring-white dark:ring-slate-800 object-cover" src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=100" alt="User 2" />
+                <img className="inline-block h-8 w-8 rounded-full ring-2 ring-white dark:ring-slate-800 object-cover" src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=100" alt="User 3" />
+                <img className="inline-block h-8 w-8 rounded-full ring-2 ring-white dark:ring-slate-800 object-cover" src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=100" alt="User 4" />
               </div>
-              <span className="text-xs font-black text-slate-900 dark:text-white">10,000+ Engineers <span className="text-slate-400 font-medium">are leveling up</span></span>
+              <span className="text-xs font-black text-slate-900 dark:text-white">10,000+ Engineers <span className="text-slate-400 font-medium block text-[10px]">are leveling up</span></span>
             </div>
           </div>
         </div>
@@ -612,120 +645,160 @@ export default function LandingPage() {
 
             </div>
 
-            {/* Right Dark Audio Stream Chamber Mock */}
+            {/* Right Column: 3D Voice AI Studio Chamber Showcase Card */}
             <div className="lg:col-span-6">
-              <div className="p-6 sm:p-8 rounded-3xl bg-[#0B1E36] text-white border border-slate-800 shadow-2xl flex flex-col gap-6">
+              <div className="rounded-[32px] bg-gradient-to-b from-[#0B1E36] via-[#102A4C] to-[#0B1E36] border border-slate-700/80 shadow-2xl overflow-hidden flex flex-col relative transition-all duration-300 group">
                 
-                <div className="flex items-center justify-between border-b border-slate-800 pb-4">
+                {/* Header Bar */}
+                <div className="p-6 border-b border-slate-800 flex items-center justify-between relative z-10">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-2xl bg-[#FF6B00]/20 border border-[#FF6B00]/40 flex items-center justify-center text-[#FF6B00]">
-                      <Mic className="w-5 h-5" />
+                    <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-[#FF6B00] to-amber-500 p-[1.5px] shadow-md">
+                      <div className="w-full h-full bg-[#0B1E36] rounded-[13px] flex items-center justify-center text-white">
+                        <Mic className="w-5 h-5 text-[#FF6B00]" />
+                      </div>
                     </div>
                     <div className="flex flex-col">
-                      <span className="text-xs font-bold text-slate-300">Live Voice Stream Capture</span>
-                      <span className="text-sm font-black text-white">Stage 3: AWS VPC Route Troubleshooting</span>
+                      <h3 className="text-sm font-black text-white tracking-tight">Voice AI Interview Chamber</h3>
+                      <span className="text-xs text-slate-400 font-medium">Whisper STT & Real-Time Cadence Scoring</span>
                     </div>
                   </div>
-                  <span className="text-xs font-mono font-bold text-emerald-400 bg-emerald-950/80 px-3 py-1 rounded-full border border-emerald-800">
-                    138 WPM (Ideal Cadence)
+
+                  <span className="px-3.5 py-1.5 rounded-full text-xs font-mono font-bold text-emerald-400 bg-emerald-950/60 border border-emerald-800/80 flex items-center gap-1.5 shadow-xs">
+                    <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                    138 WPM (Ideal)
                   </span>
                 </div>
 
-                {/* Animated Audio Waveform Box */}
-                <div className="p-4 rounded-2xl bg-slate-900/90 border border-slate-800 flex items-center justify-between">
-                  <div className="flex items-center gap-1 text-[#FF6B00]">
-                    <Activity className="w-4 h-4 animate-pulse" />
-                    <span className="text-xs font-mono font-bold tracking-widest">|||||||||||||||||||||||||||||||||||||</span>
+                {/* 3D Microphone Image Showcase Body */}
+                <div className="p-6 sm:p-8 flex flex-col gap-6 relative z-10">
+                  
+                  <div className="relative rounded-2xl overflow-hidden border border-slate-700/80 bg-slate-900/80 shadow-2xl group-hover:scale-[1.02] transition-transform duration-500">
+                    <img 
+                      src="/images/thumb_voice_chamber_3d.png" 
+                      alt="Voice AI Microphone Chamber 3D Render" 
+                      className="w-full h-60 sm:h-64 object-cover"
+                    />
+
+                    {/* Floating Floating Badges over Image */}
+                    <div className="absolute top-4 left-4 px-3 py-1.5 rounded-xl bg-[#0B1E36]/90 backdrop-blur-md border border-slate-700 text-[11px] font-bold text-white flex items-center gap-2 shadow-lg">
+                      <Activity className="w-3.5 h-3.5 text-[#FF6B00] animate-pulse" />
+                      <span>Live Speech-to-Text Active</span>
+                    </div>
+
+                    <div className="absolute bottom-4 right-4 px-3 py-1.5 rounded-xl bg-[#FF6B00] text-white text-[11px] font-black flex items-center gap-1.5 shadow-xl">
+                      <Trophy className="w-3.5 h-3.5" />
+                      <span>Stage 3 Gated Pass</span>
+                    </div>
                   </div>
-                  <span className="text-xs font-mono font-bold text-slate-400">00:42 / 02:00</span>
+
+                  {/* Transcribed Speech Quote Box */}
+                  <div className="p-4 rounded-2xl bg-slate-900/90 border border-slate-700/80 text-xs text-slate-200 leading-relaxed font-sans relative">
+                    <span className="text-lg font-serif text-[#FF6B00] absolute top-2 left-3">&ldquo;</span>
+                    <p className="pl-4">
+                      To route private EC2 traffic to the internet while keeping subnet isolation, I would deploy a <span className="text-[#FF6B00] font-bold">NAT Gateway</span> in the public subnet and point private route tables to the <span className="text-[#FF6B00] font-bold">NAT GW</span> instance....&rdquo;
+                    </p>
+                  </div>
+
+                  {/* 4 Micro Feature Cards */}
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                    <div className="flex items-center gap-2 p-2.5 rounded-xl bg-white/5 border border-white/10">
+                      <div className="w-7 h-7 rounded-lg bg-[#FF6B00]/20 text-[#FF6B00] flex items-center justify-center shrink-0">
+                        <Mic className="w-3.5 h-3.5" />
+                      </div>
+                      <div className="flex flex-col">
+                        <span className="text-[11px] font-bold text-white">Live STT</span>
+                        <span className="text-[9px] text-slate-400">Real-time transcribing</span>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2 p-2.5 rounded-xl bg-white/5 border border-white/10">
+                      <div className="w-7 h-7 rounded-lg bg-blue-500/20 text-blue-400 flex items-center justify-center shrink-0">
+                        <Activity className="w-3.5 h-3.5" />
+                      </div>
+                      <div className="flex flex-col">
+                        <span className="text-[11px] font-bold text-white">Cadence Check</span>
+                        <span className="text-[9px] text-slate-400">WPM & clarity</span>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2 p-2.5 rounded-xl bg-white/5 border border-white/10">
+                      <div className="w-7 h-7 rounded-lg bg-purple-500/20 text-purple-400 flex items-center justify-center shrink-0">
+                        <Target className="w-3.5 h-3.5" />
+                      </div>
+                      <div className="flex flex-col">
+                        <span className="text-[11px] font-bold text-white">Accuracy Score</span>
+                        <span className="text-[9px] text-slate-400">Contextual depth</span>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2 p-2.5 rounded-xl bg-white/5 border border-white/10">
+                      <div className="w-7 h-7 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0">
+                        <Cpu className="w-3.5 h-3.5" />
+                      </div>
+                      <div className="flex flex-col">
+                        <span className="text-[11px] font-bold text-white">Logic Eval</span>
+                        <span className="text-[9px] text-slate-400">Flow & reasoning</span>
+                      </div>
+                    </div>
+                  </div>
+
                 </div>
 
-                {/* Transcribed Speech Quote Box */}
-                <div className="p-4 rounded-2xl bg-slate-900/60 border border-slate-800/80 text-xs text-slate-300 leading-relaxed font-sans relative">
-                  <span className="text-lg font-serif text-[#FF6B00] absolute top-2 left-3">&ldquo;</span>
-                  <p className="pl-4">
-                    To route private EC2 traffic to the internet while keeping subnet isolation, I would deploy a <span className="text-[#FF6B00] font-bold">NAT Gateway</span> in the public subnet and point private route tables to the <span className="text-[#FF6B00] font-bold">NAT GW</span> instance....&rdquo;
-                  </p>
-                </div>
-
-                {/* 4 Micro Feature Icons below Speech Box */}
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2">
-                  <div className="flex items-center gap-2 p-2.5 rounded-xl bg-white/5 border border-white/10">
-                    <div className="w-7 h-7 rounded-lg bg-[#FF6B00]/20 text-[#FF6B00] flex items-center justify-center shrink-0">
-                      <Mic className="w-3.5 h-3.5" />
-                    </div>
-                    <div className="flex flex-col">
-                      <span className="text-[11px] font-bold text-white">Live STT</span>
-                      <span className="text-[9px] text-slate-400">Real-time transcription</span>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-2 p-2.5 rounded-xl bg-white/5 border border-white/10">
-                    <div className="w-7 h-7 rounded-lg bg-blue-500/20 text-blue-400 flex items-center justify-center shrink-0">
-                      <Activity className="w-3.5 h-3.5" />
-                    </div>
-                    <div className="flex flex-col">
-                      <span className="text-[11px] font-bold text-white">Cadence Check</span>
-                      <span className="text-[9px] text-slate-400">Pace & clarity analysis</span>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-2 p-2.5 rounded-xl bg-white/5 border border-white/10">
-                    <div className="w-7 h-7 rounded-lg bg-purple-500/20 text-purple-400 flex items-center justify-center shrink-0">
-                      <Target className="w-3.5 h-3.5" />
-                    </div>
-                    <div className="flex flex-col">
-                      <span className="text-[11px] font-bold text-white">Accuracy Score</span>
-                      <span className="text-[9px] text-slate-400">Contextual relevance</span>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-2 p-2.5 rounded-xl bg-white/5 border border-white/10">
-                    <div className="w-7 h-7 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0">
-                      <Cpu className="w-3.5 h-3.5" />
-                    </div>
-                    <div className="flex flex-col">
-                      <span className="text-[11px] font-bold text-white">Logic Evaluation</span>
-                      <span className="text-[9px] text-slate-400">Flow & reasoning</span>
-                    </div>
-                  </div>
-                </div>
-
+                <div className="absolute -right-20 -bottom-20 w-80 h-80 bg-[#FF6B00]/15 rounded-full blur-3xl pointer-events-none" />
               </div>
             </div>
 
           </div>
 
-          {/* Bottom Strip (Screenshot 2) */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-12">
-            <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-xs flex items-center gap-3 transition-colors duration-300">
-              <div className="w-10 h-10 rounded-xl bg-orange-100 dark:bg-orange-950/60 text-[#FF6B00] flex items-center justify-center shrink-0">
-                <Target className="w-5 h-5" />
+          {/* Bottom Feature Strip (Unified Card matching Screenshot 100%) */}
+          <div className="mt-12 rounded-[28px] bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-xl shadow-slate-200/60 dark:shadow-black/60 p-6 sm:p-8 transition-colors duration-300">
+            <div className="grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-slate-100 dark:divide-slate-800 gap-6 md:gap-0">
+              
+              {/* Item 1 */}
+              <div className="flex items-center gap-4 md:px-6 first:pl-0">
+                <div className="w-14 h-14 rounded-full bg-orange-100/80 dark:bg-orange-950/50 text-[#FF6B00] flex items-center justify-center shrink-0 shadow-xs">
+                  <Target className="w-6 h-6 text-[#FF6B00]" />
+                </div>
+                <div className="flex flex-col">
+                  <h3 className="text-sm font-black text-[#0B1E36] dark:text-white tracking-tight leading-snug">
+                    Real-World <span className="text-[#FF6B00]">Simulation</span>
+                  </h3>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 font-medium leading-relaxed mt-1">
+                    Interview-like spoken audio environments.
+                  </p>
+                </div>
               </div>
-              <div className="flex flex-col">
-                <span className="text-xs font-black text-[#0B1E36] dark:text-white">Real-World Simulation</span>
-                <span className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">Interview-like audio environments</span>
-              </div>
-            </div>
 
-            <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-xs flex items-center gap-3 transition-colors duration-300">
-              <div className="w-10 h-10 rounded-xl bg-amber-100 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
-                <BarChart3 className="w-5 h-5" />
+              {/* Item 2 */}
+              <div className="flex items-center gap-4 md:px-6 pt-4 md:pt-0">
+                <div className="w-14 h-14 rounded-full bg-amber-100/80 dark:bg-amber-950/50 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0 shadow-xs">
+                  <BarChart3 className="w-6 h-6 text-amber-600 dark:text-amber-400" />
+                </div>
+                <div className="flex flex-col">
+                  <h3 className="text-sm font-black text-[#0B1E36] dark:text-white tracking-tight leading-snug">
+                    Data-Driven <span className="text-amber-600 dark:text-amber-400">Feedback</span>
+                  </h3>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 font-medium leading-relaxed mt-1">
+                    Actionable insights to improve speech & logic.
+                  </p>
+                </div>
               </div>
-              <div className="flex flex-col">
-                <span className="text-xs font-black text-[#0B1E36] dark:text-white">Data-Driven Feedback</span>
-                <span className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">Actionable insights to improve</span>
-              </div>
-            </div>
 
-            <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-xs flex items-center gap-3 transition-colors duration-300">
-              <div className="w-10 h-10 rounded-xl bg-[#0B1E36] text-[#FF6B00] flex items-center justify-center shrink-0">
-                <Trophy className="w-5 h-5" />
+              {/* Item 3 */}
+              <div className="flex items-center gap-4 md:px-6 pt-4 md:pt-0 last:pr-0">
+                <div className="w-14 h-14 rounded-full bg-slate-100 dark:bg-slate-800 text-[#0B1E36] dark:text-white flex items-center justify-center shrink-0 shadow-xs">
+                  <Trophy className="w-6 h-6 text-[#FF6B00]" />
+                </div>
+                <div className="flex flex-col">
+                  <h3 className="text-sm font-black text-[#0B1E36] dark:text-white tracking-tight leading-snug">
+                    Score <span className="text-[#FF6B00]">What Matters</span>
+                  </h3>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 font-medium leading-relaxed mt-1">
+                    Technical depth, speech clarity & reasoning.
+                  </p>
+                </div>
               </div>
-              <div className="flex flex-col">
-                <span className="text-xs font-black text-[#0B1E36] dark:text-white">Score What Matters</span>
-                <span className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">Technical depth, clarity & logic</span>
-              </div>
+
             </div>
           </div>
 
@@ -748,14 +821,14 @@ export default function LandingPage() {
             </p>
           </div>
 
-          {/* 5 Horizontal Stage Cards */}
+          {/* 5 Horizontal Stage Cards (With 3D Photo Thumbnails) */}
           <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
             {[
-              { id: "01", name: "PROFILE PITCH", desc: "Tell us about yourself & your goals", color: "text-[#FF6B00] bg-orange-100/80", icon: FileText },
-              { id: "02", name: "LINUX WARRIOR", desc: "Excel in shells, scripts & tools like a pro", color: "text-blue-600 bg-blue-100/80", icon: Terminal },
-              { id: "03", name: "MULTI CLOUD", desc: "AWS, GCP & Azure basics & core services", color: "text-emerald-600 bg-emerald-100/80", icon: Cloud },
-              { id: "04", name: "CONTAINERS & K8S", desc: "Containerize & orchestrate like a SRE", color: "text-purple-600 bg-purple-100/80", icon: Layers },
-              { id: "05", name: "INCIDENT BOSS", desc: "Crack real incidents, root cause & resolve", color: "text-amber-600 bg-amber-100/80", icon: Shield },
+              { id: "01", name: "PROFILE PITCH", desc: "Tell us about yourself & your goals", img: "/images/thumb_voice_mic.png" },
+              { id: "02", name: "LINUX WARRIOR", desc: "Excel in shells, scripts & tools like a pro", img: "/images/card_linux_kernel.png" },
+              { id: "03", name: "MULTI CLOUD", desc: "AWS, GCP & Azure basics & core services", img: "/images/thumb_5stage_aws.png" },
+              { id: "04", name: "CONTAINERS & K8S", desc: "Containerize & orchestrate like a SRE", img: "/images/card_docker_k8s.png" },
+              { id: "05", name: "INCIDENT BOSS", desc: "Crack real incidents, root cause & resolve", img: "/images/thumb_boss_battle.png" },
             ].map((st, idx) => (
               <motion.div 
                 key={idx}
@@ -764,10 +837,10 @@ export default function LandingPage() {
                 viewport={{ once: true, margin: "-40px" }}
                 transition={{ duration: 0.5, delay: idx * 0.1, ease: "easeOut" }}
                 whileHover={{ y: -8, scale: 1.03, transition: { duration: 0.25 } }}
-                className="p-5 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 hover:border-[#FF6B00] dark:hover:border-[#FF6B00] shadow-xs hover:shadow-xl hover:shadow-[#FF6B00]/10 transition-all group flex flex-col justify-between cursor-pointer"
+                className="p-5 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 hover:border-[#FF6B00] dark:hover:border-[#FF6B00] shadow-md hover:shadow-xl hover:shadow-[#FF6B00]/10 transition-all group flex flex-col justify-between cursor-pointer"
               >
                 <div>
-                  <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center justify-between mb-2">
                     <span className="text-xs font-black text-[#FF6B00]">STAGE {st.id}</span>
                     <span className="text-[10px] font-mono font-bold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-800 flex items-center gap-1">
                       <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
@@ -775,15 +848,20 @@ export default function LandingPage() {
                     </span>
                   </div>
 
-                  <div className="w-14 h-14 rounded-2xl flex items-center justify-center mb-4 mx-auto" style={{ backgroundColor: idx === 0 ? "#FFF3EB" : idx === 1 ? "#EFF6FF" : idx === 2 ? "#ECFDF5" : idx === 3 ? "#F5F3FF" : "#FFFBEB" }}>
-                    <st.icon className={`w-7 h-7 ${idx === 0 ? "text-[#FF6B00]" : idx === 1 ? "text-blue-600" : idx === 2 ? "text-emerald-600" : idx === 3 ? "text-purple-600" : "text-amber-600"}`} />
+                  {/* 3D Thumbnail Render */}
+                  <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-[22px] overflow-hidden shadow-lg shadow-slate-200/60 dark:shadow-black/60 border border-slate-200/90 dark:border-slate-800 bg-slate-100 dark:bg-slate-900 group-hover:scale-105 transition-all shrink-0 mx-auto my-3">
+                    <img 
+                      src={st.img} 
+                      alt={st.name} 
+                      className="w-full h-full object-cover" 
+                    />
                   </div>
 
-                  <h3 className="text-sm font-black text-[#0B1E36] dark:text-white text-center group-hover:text-[#FF6B00] transition-colors uppercase tracking-tight">{st.name}</h3>
-                  <p className="text-[11px] text-slate-500 dark:text-slate-400 text-center mt-2 leading-relaxed font-medium">{st.desc}</p>
+                  <h3 className="text-sm font-black text-[#0B1E36] dark:text-white text-center group-hover:text-[#FF6B00] transition-colors uppercase tracking-tight leading-snug">{st.name}</h3>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 text-center mt-1.5 leading-relaxed font-medium">{st.desc}</p>
                 </div>
 
-                <Link href="/login" className="mt-5 pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-center gap-1 text-xs font-extrabold text-[#FF6B00]">
+                <Link href="/login" className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-center gap-1.5 text-xs font-extrabold text-[#FF6B00] group-hover:translate-x-0.5 transition-transform">
                   <span>Explore Stage</span>
                   <ArrowRight className="w-3.5 h-3.5" />
                 </Link>
@@ -791,38 +869,56 @@ export default function LandingPage() {
             ))}
           </div>
 
-          {/* Bottom Strip (Screenshot 3) */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-12">
-            <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-xs flex items-center gap-3 transition-colors duration-300">
-              <div className="w-10 h-10 rounded-xl bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
-                <Target className="w-5 h-5" />
+          {/* Bottom Feature Strip (Unified Card matching Screenshot 100%) */}
+          <div className="mt-12 rounded-[28px] bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-xl shadow-slate-200/60 dark:shadow-black/60 p-6 sm:p-8 transition-colors duration-300">
+            <div className="grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-slate-100 dark:divide-slate-800 gap-6 md:gap-0">
+              
+              {/* Item 1 */}
+              <div className="flex items-center gap-4 md:px-6 first:pl-0">
+                <div className="w-14 h-14 rounded-full bg-emerald-100/80 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0 shadow-xs">
+                  <Target className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
+                </div>
+                <div className="flex flex-col">
+                  <h3 className="text-sm font-black text-[#0B1E36] dark:text-white tracking-tight leading-snug">
+                    Hands-on <span className="text-emerald-600 dark:text-emerald-400">Learning</span>
+                  </h3>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 font-medium leading-relaxed mt-1">
+                    Real AWS incidents & interactive tools.
+                  </p>
+                </div>
               </div>
-              <div className="flex flex-col">
-                <span className="text-xs font-black text-[#0B1E36] dark:text-white">Hands-on Learning</span>
-                <span className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">Real AWS incidents & tools</span>
-              </div>
-            </div>
 
-            <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-xs flex items-center gap-3 transition-colors duration-300">
-              <div className="w-10 h-10 rounded-xl bg-blue-100 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0">
-                <BarChart3 className="w-5 h-5" />
+              {/* Item 2 */}
+              <div className="flex items-center gap-4 md:px-6 pt-4 md:pt-0">
+                <div className="w-14 h-14 rounded-full bg-blue-100/80 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0 shadow-xs">
+                  <BarChart3 className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+                </div>
+                <div className="flex flex-col">
+                  <h3 className="text-sm font-black text-[#0B1E36] dark:text-white tracking-tight leading-snug">
+                    AI-Powered <span className="text-blue-600 dark:text-blue-400">Scoring</span>
+                  </h3>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 font-medium leading-relaxed mt-1">
+                    Get instant rubric feedback & improve fast.
+                  </p>
+                </div>
               </div>
-              <div className="flex flex-col">
-                <span className="text-xs font-black text-[#0B1E36] dark:text-white">AI-Powered Scoring</span>
-                <span className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">Get instant feedback & improve</span>
-              </div>
-            </div>
 
-            <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-xs flex items-center gap-3 transition-colors duration-300">
-              <div className="w-10 h-10 rounded-xl bg-amber-100 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
-                <Trophy className="w-5 h-5" />
+              {/* Item 3 */}
+              <div className="flex items-center gap-4 md:px-6 pt-4 md:pt-0 last:pr-0">
+                <div className="w-14 h-14 rounded-full bg-amber-100/80 dark:bg-amber-950/50 text-[#FF6B00] flex items-center justify-center shrink-0 shadow-xs">
+                  <Trophy className="w-6 h-6 text-[#FF6B00]" />
+                </div>
+                <div className="flex flex-col">
+                  <h3 className="text-sm font-black text-[#0B1E36] dark:text-white tracking-tight leading-snug">
+                    Career-Ready <span className="text-[#FF6B00]">Skills</span>
+                  </h3>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 font-medium leading-relaxed mt-1">
+                    Build confidence and land top cloud offers.
+                  </p>
+                </div>
               </div>
-              <div className="flex flex-col">
-                <span className="text-xs font-black text-[#0B1E36] dark:text-white">Career-Ready Skills</span>
-                <span className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">Build confidence. Land roles.</span>
-              </div>
-            </div>
 
+            </div>
           </div>
 
         </div>
@@ -833,93 +929,82 @@ export default function LandingPage() {
         <div className="max-w-[1536px] mx-auto px-4 sm:px-6 lg:px-12">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
             
-            {/* Left Interactive STAR Formula Rewriter Mock Card */}
+            {/* Left Column: 3D ATS Resume Scanner Showcase Card */}
             <div className="lg:col-span-6">
-              <div className="rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-2xl overflow-hidden flex flex-col transition-colors duration-300">
+              <div className="rounded-[32px] bg-gradient-to-b from-[#0B1E36] via-[#102A4C] to-[#0B1E36] border border-slate-700/80 shadow-2xl overflow-hidden flex flex-col relative transition-all duration-300 group">
                 
                 {/* Header Bar */}
-                <div className="bg-[#0B1E36] p-4 text-white flex items-center justify-between">
-                  <div className="flex items-center gap-2.5">
-                    <div className="w-8 h-8 rounded-xl bg-[#FF6B00] text-white flex items-center justify-center font-bold">
-                      <FileText className="w-4 h-4" />
+                <div className="p-6 border-b border-slate-800 flex items-center justify-between relative z-10">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-[#FF6B00] to-amber-500 p-[1.5px] shadow-md">
+                      <div className="w-full h-full bg-[#0B1E36] rounded-[13px] flex items-center justify-center text-white">
+                        <FileCheck className="w-5 h-5 text-[#FF6B00]" />
+                      </div>
                     </div>
-                    <span className="text-xs font-black tracking-tight">STAR Formula Bullet Point Rewriter</span>
+                    <div className="flex flex-col">
+                      <h3 className="text-sm font-black text-white tracking-tight">AI ATS Resume Analyzer OS</h3>
+                      <span className="text-xs text-slate-400 font-medium">6-Factor Scanner & Real-Time Parser</span>
+                    </div>
                   </div>
 
-                  <span className="px-3 py-1 rounded-full text-[10px] font-mono font-bold text-amber-300 border border-amber-400/40 bg-amber-400/10 flex items-center gap-1">
-                    +34% Interview Call Rate 📈
+                  <span className="px-3.5 py-1.5 rounded-full text-xs font-mono font-bold text-emerald-400 bg-emerald-950/60 border border-emerald-800/80 flex items-center gap-1.5 shadow-xs">
+                    <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                    94% ATS Match
                   </span>
                 </div>
 
-                {/* Card Body */}
-                <div className="p-6 flex flex-col gap-4">
+                {/* 3D Laptop Image Showcase Body */}
+                <div className="p-6 sm:p-8 flex flex-col gap-6 relative z-10">
                   
-                  {/* BEFORE (WEAK BULLET) */}
-                  <div className="p-4 rounded-2xl bg-rose-50/80 dark:bg-rose-950/40 border border-rose-200/80 dark:border-rose-900/50 flex items-start justify-between gap-3">
-                    <div className="flex flex-col gap-1.5">
-                      <div className="flex items-center gap-1.5 text-[11px] font-black text-rose-600 dark:text-rose-400 uppercase tracking-wider">
-                        <AlertTriangle className="w-3.5 h-3.5 text-rose-500" />
-                        <span>BEFORE REWRITING (WEAK BULLET)</span>
-                      </div>
-                      <p className="text-xs text-slate-700 dark:text-slate-300 font-medium italic">
-                        &ldquo;Managed AWS EC2 instances and set up Docker containers for deployments.&rdquo;
-                      </p>
+                  <div className="relative rounded-2xl overflow-hidden border border-slate-700/80 bg-slate-900/80 shadow-2xl group-hover:scale-[1.02] transition-transform duration-500">
+                    <img 
+                      src="/images/ats_resume_laptop_3d.png" 
+                      alt="ATS Resume Scanner 3D Render" 
+                      className="w-full h-64 sm:h-72 object-cover"
+                    />
+
+                    {/* Floating Floating Badges over Image */}
+                    <div className="absolute top-4 left-4 px-3 py-1.5 rounded-xl bg-[#0B1E36]/90 backdrop-blur-md border border-slate-700 text-[11px] font-bold text-white flex items-center gap-2 shadow-lg">
+                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+                      <span>STAR Formula Optimized</span>
                     </div>
 
-                    <div className="w-7 h-7 rounded-full bg-rose-500 text-white flex items-center justify-center shrink-0 shadow-xs mt-0.5">
-                      <span className="text-xs font-black">✕</span>
-                    </div>
-                  </div>
-
-                  {/* AFTER AI STAR OPTIMIZATION */}
-                  <div className="p-4 rounded-2xl bg-emerald-50/80 dark:bg-emerald-950/40 border border-emerald-200/80 dark:border-emerald-900/50 flex items-start justify-between gap-3">
-                    <div className="flex flex-col gap-1.5">
-                      <div className="flex items-center gap-1.5 text-[11px] font-black text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">
-                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-                        <span>AFTER AI STAR OPTIMIZATION (QUANTIFIED IMPACT)</span>
-                      </div>
-                      <p className="text-xs text-slate-800 dark:text-slate-200 font-medium leading-relaxed">
-                        &ldquo;Architected multi-stage Docker builds on AWS EKS with Terraform IaC, reducing container image size by <strong className="text-emerald-600 dark:text-emerald-400 font-black">62%</strong> and eliminating production deployment downtime.&rdquo;
-                      </p>
-                    </div>
-
-                    <div className="w-7 h-7 rounded-full bg-emerald-500 text-white flex items-center justify-center shrink-0 shadow-xs mt-0.5">
-                      <Check className="w-4 h-4" />
+                    <div className="absolute bottom-4 right-4 px-3 py-1.5 rounded-xl bg-[#FF6B00] text-white text-[11px] font-black flex items-center gap-1.5 shadow-xl">
+                      <TrendingUp className="w-3.5 h-3.5" />
+                      <span>+34% Interview Call Rate</span>
                     </div>
                   </div>
 
-                  {/* IMPACT YOU CAN SEE */}
-                  <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200/80 dark:border-slate-700 flex flex-col gap-2">
-                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">IMPACT YOU CAN SEE</span>
-                    <div className="grid grid-cols-3 gap-2 pt-1">
-                      <div className="flex flex-col">
-                        <span className="text-sm font-black text-emerald-600 dark:text-emerald-400 flex items-center gap-1 font-mono">
-                          <TrendingUp className="w-3.5 h-3.5 text-emerald-500" />
-                          +62%
-                        </span>
-                        <span className="text-[10px] text-slate-500 dark:text-slate-400 font-bold">Efficiency Gain</span>
-                      </div>
+                  {/* 3 Metrics Bottom Bar */}
+                  <div className="grid grid-cols-3 gap-3 p-4 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-sm">
+                    <div className="flex flex-col">
+                      <span className="text-sm font-black text-emerald-400 font-mono flex items-center gap-1">
+                        <TrendingUp className="w-3.5 h-3.5 text-emerald-400" />
+                        94/100
+                      </span>
+                      <span className="text-[10px] text-slate-400 font-bold">ATS Score</span>
+                    </div>
 
-                      <div className="flex flex-col border-l border-slate-200 dark:border-slate-700 pl-3">
-                        <span className="text-sm font-black text-purple-600 dark:text-purple-400 flex items-center gap-1 font-mono">
-                          <Zap className="w-3.5 h-3.5 text-purple-500" />
-                          0
-                        </span>
-                        <span className="text-[10px] text-slate-500 dark:text-slate-400 font-bold">Deployment Downtime</span>
-                      </div>
+                    <div className="flex flex-col border-l border-white/10 pl-3">
+                      <span className="text-sm font-black text-purple-400 font-mono flex items-center gap-1">
+                        <Zap className="w-3.5 h-3.5 text-purple-400" />
+                        100%
+                      </span>
+                      <span className="text-[10px] text-slate-400 font-bold">Parseability</span>
+                    </div>
 
-                      <div className="flex flex-col border-l border-slate-200 dark:border-slate-700 pl-3">
-                        <span className="text-sm font-black text-[#FF6B00] flex items-center gap-1 font-mono">
-                          <ArrowUpRight className="w-3.5 h-3.5 text-[#FF6B00]" />
-                          +34%
-                        </span>
-                        <span className="text-[10px] text-slate-500 dark:text-slate-400 font-bold">Interview Call Rate</span>
-                      </div>
+                    <div className="flex flex-col border-l border-white/10 pl-3">
+                      <span className="text-sm font-black text-[#FF6B00] font-mono flex items-center gap-1">
+                        <ArrowUpRight className="w-3.5 h-3.5 text-[#FF6B00]" />
+                        +34%
+                      </span>
+                      <span className="text-[10px] text-slate-400 font-bold">Callback Rate</span>
                     </div>
                   </div>
 
                 </div>
 
+                <div className="absolute -right-20 -bottom-20 w-80 h-80 bg-[#FF6B00]/15 rounded-full blur-3xl pointer-events-none" />
               </div>
             </div>
 
@@ -948,42 +1033,57 @@ export default function LandingPage() {
                 <ArrowRight className="w-4 h-4" />
               </Link>
 
-              {/* 5 Feature Icons at bottom right */}
-              <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 pt-6 border-t border-slate-200/80 dark:border-slate-800">
-                <div className="flex flex-col items-center text-center gap-1">
-                  <div className="w-9 h-9 rounded-xl bg-orange-100 dark:bg-orange-950/60 text-[#FF6B00] flex items-center justify-center mb-1">
-                    <Search className="w-4 h-4" />
+              {/* 4 Feature 3D Image Cards below ATS CTAs matching Hero Section */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-7 border-t border-slate-200/80 dark:border-slate-800">
+                
+                {/* 1. Keyword Gap Detection */}
+                <div className="flex flex-col items-center text-center gap-2 group cursor-pointer">
+                  <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-[22px] overflow-hidden shadow-lg shadow-slate-200/60 dark:shadow-black/60 border border-slate-200/90 dark:border-slate-800 bg-slate-100 dark:bg-slate-900 group-hover:scale-105 transition-all shrink-0">
+                    <img 
+                      src="/images/thumb_ats_keyword.png" 
+                      alt="Keyword Gap Detection" 
+                      className="w-full h-full object-cover" 
+                    />
                   </div>
-                  <span className="text-[10px] font-bold text-slate-700 dark:text-slate-300 leading-tight">Keyword Gap Detection</span>
+                  <span className="text-sm font-black text-[#0B1E36] dark:text-white group-hover:text-[#FF6B00] transition-colors leading-tight">Keyword Gap Detection</span>
                 </div>
 
-                <div className="flex flex-col items-center text-center gap-1">
-                  <div className="w-9 h-9 rounded-xl bg-blue-100 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 flex items-center justify-center mb-1">
-                    <Sparkles className="w-4 h-4" />
+                {/* 2. AI-Powered Rewriting */}
+                <div className="flex flex-col items-center text-center gap-2 group cursor-pointer">
+                  <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-[22px] overflow-hidden shadow-lg shadow-slate-200/60 dark:shadow-black/60 border border-slate-200/90 dark:border-slate-800 bg-slate-100 dark:bg-slate-900 group-hover:scale-105 transition-all shrink-0">
+                    <img 
+                      src="/images/thumb_ats_rewrite.png" 
+                      alt="AI-Powered Rewriting" 
+                      className="w-full h-full object-cover" 
+                    />
                   </div>
-                  <span className="text-[10px] font-bold text-slate-700 dark:text-slate-300 leading-tight">AI-Powered Rewriting</span>
+                  <span className="text-sm font-black text-[#0B1E36] dark:text-white group-hover:text-[#FF6B00] transition-colors leading-tight">AI-Powered Rewriting</span>
                 </div>
 
-                <div className="flex flex-col items-center text-center gap-1">
-                  <div className="w-9 h-9 rounded-xl bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mb-1">
-                    <ShieldCheck className="w-4 h-4" />
+                {/* 3. STAR Metric Scoring */}
+                <div className="flex flex-col items-center text-center gap-2 group cursor-pointer">
+                  <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-[22px] overflow-hidden shadow-lg shadow-slate-200/60 dark:shadow-black/60 border border-slate-200/90 dark:border-slate-800 bg-slate-100 dark:bg-slate-900 group-hover:scale-105 transition-all shrink-0">
+                    <img 
+                      src="/images/thumb_ats_star.png" 
+                      alt="STAR Metric Scoring" 
+                      className="w-full h-full object-cover" 
+                    />
                   </div>
-                  <span className="text-[10px] font-bold text-slate-700 dark:text-slate-300 leading-tight">STAR Metric Scoring</span>
+                  <span className="text-sm font-black text-[#0B1E36] dark:text-white group-hover:text-[#FF6B00] transition-colors leading-tight">STAR Metric Scoring</span>
                 </div>
 
-                <div className="flex flex-col items-center text-center gap-1">
-                  <div className="w-9 h-9 rounded-xl bg-purple-100 dark:bg-purple-950/60 text-purple-600 dark:text-purple-400 flex items-center justify-center mb-1">
-                    <Target className="w-4 h-4" />
+                {/* 4. ATS Match Optimization */}
+                <div className="flex flex-col items-center text-center gap-2 group cursor-pointer">
+                  <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-[22px] overflow-hidden shadow-lg shadow-slate-200/60 dark:shadow-black/60 border border-slate-200/90 dark:border-slate-800 bg-slate-100 dark:bg-slate-900 group-hover:scale-105 transition-all shrink-0">
+                    <img 
+                      src="/images/thumb_ats_match.png" 
+                      alt="ATS Match Optimization" 
+                      className="w-full h-full object-cover" 
+                    />
                   </div>
-                  <span className="text-[10px] font-bold text-slate-700 dark:text-slate-300 leading-tight">ATS Match Optimization</span>
+                  <span className="text-sm font-black text-[#0B1E36] dark:text-white group-hover:text-[#FF6B00] transition-colors leading-tight">ATS Match Optimization</span>
                 </div>
 
-                <div className="flex flex-col items-center text-center gap-1">
-                  <div className="w-9 h-9 rounded-xl bg-amber-100 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 flex items-center justify-center mb-1">
-                    <TrendingUp className="w-4 h-4" />
-                  </div>
-                  <span className="text-[10px] font-bold text-slate-700 dark:text-slate-300 leading-tight">Real Impact Insights</span>
-                </div>
               </div>
 
             </div>
@@ -1057,22 +1157,22 @@ export default function LandingPage() {
               className="rounded-3xl bg-[#0B1E36] text-white border border-slate-800 shadow-xl overflow-hidden flex flex-col justify-between group hover:border-[#FF6B00] transition-all cursor-pointer"
             >
               <div>
-                <div className="h-44 relative bg-slate-900 overflow-hidden">
+                <div className="h-48 relative bg-slate-950 overflow-hidden">
                   <img 
-                    src="https://images.unsplash.com/photo-1629654297299-c8506221ca97?auto=format&fit=crop&q=80&w=600" 
-                    alt="Linux Kernel Code" 
-                    className="w-full h-full object-cover opacity-60 group-hover:scale-105 transition-transform duration-500" 
+                    src="/images/card_linux_kernel.png" 
+                    alt="Linux Kernel & Networking" 
+                    className="w-full h-full object-cover opacity-90 group-hover:scale-105 transition-transform duration-500" 
                   />
-                  <span className="absolute top-3 left-3 px-3 py-1 rounded-lg text-[10px] font-mono font-bold bg-[#FF6B00] text-white shadow-md">
+                  <span className="absolute top-3 left-3 px-3 py-1 rounded-full text-[10px] font-black tracking-widest bg-[#FF6B00] text-white shadow-md uppercase">
                     WEEK 1
                   </span>
                 </div>
 
                 <div className="p-5 flex flex-col gap-3">
-                  <div className="w-9 h-9 rounded-xl bg-orange-500/20 text-[#FF6B00] border border-[#FF6B00]/40 flex items-center justify-center">
+                  <div className="w-9 h-9 rounded-xl bg-orange-500/20 text-[#FF6B00] border border-[#FF6B00]/40 flex items-center justify-center shadow-xs">
                     <Terminal className="w-4.5 h-4.5" />
                   </div>
-                  <h3 className="text-base font-black text-white tracking-tight">LINUX KERNEL & NETWORKING</h3>
+                  <h3 className="text-base font-black text-white tracking-tight uppercase">LINUX KERNEL & NETWORKING</h3>
                   <p className="text-xs text-slate-300 font-medium leading-relaxed">
                     In-depth disk I/O, memory heaps, systemd units & sockets.
                   </p>
@@ -1084,7 +1184,7 @@ export default function LandingPage() {
                   href="https://access.redhat.com/documentation" 
                   target="_blank" 
                   rel="noreferrer"
-                  className="flex items-center justify-between text-xs font-extrabold text-[#FF6B00] hover:underline pt-3 border-t border-slate-800"
+                  className="flex items-center justify-between text-xs font-extrabold text-[#FF6B00] hover:underline pt-3 border-t border-slate-800/80"
                 >
                   <span>Official RHEL & Ubuntu Docs</span>
                   <ArrowUpRight className="w-4 h-4" />
@@ -1099,25 +1199,25 @@ export default function LandingPage() {
               viewport={{ once: true, margin: "-40px" }}
               transition={{ duration: 0.6, delay: 0.2, ease: "easeOut" }}
               whileHover={{ y: -8, scale: 1.02, transition: { duration: 0.2 } }}
-              className="rounded-3xl bg-[#0B1E36] text-white border border-slate-800 shadow-xl overflow-hidden flex flex-col justify-between group hover:border-blue-500 transition-all cursor-pointer"
+              className="rounded-3xl bg-[#0B1E36] text-white border border-slate-800/90 shadow-xl overflow-hidden flex flex-col justify-between group hover:border-blue-500 transition-all cursor-pointer"
             >
               <div>
-                <div className="h-44 relative bg-slate-900 overflow-hidden">
+                <div className="h-48 relative bg-slate-950 overflow-hidden">
                   <img 
-                    src="https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&q=80&w=600" 
-                    alt="AWS Cloud Networking" 
-                    className="w-full h-full object-cover opacity-60 group-hover:scale-105 transition-transform duration-500" 
+                    src="/images/card_aws_vpc.png" 
+                    alt="AWS VPC IAM & Security" 
+                    className="w-full h-full object-cover opacity-90 group-hover:scale-105 transition-transform duration-500" 
                   />
-                  <span className="absolute top-3 left-3 px-3 py-1 rounded-lg text-[10px] font-mono font-bold bg-blue-600 text-white shadow-md">
+                  <span className="absolute top-3 left-3 px-3 py-1 rounded-full text-[10px] font-black tracking-widest bg-blue-600 text-white shadow-md uppercase">
                     WEEK 2
                   </span>
                 </div>
 
                 <div className="p-5 flex flex-col gap-3">
-                  <div className="w-9 h-9 rounded-xl bg-blue-500/20 text-blue-400 border border-blue-500/40 flex items-center justify-center">
+                  <div className="w-9 h-9 rounded-xl bg-blue-500/20 text-blue-400 border border-blue-500/40 flex items-center justify-center shadow-xs">
                     <Cloud className="w-4.5 h-4.5" />
                   </div>
-                  <h3 className="text-base font-black text-white tracking-tight">AWS VPC, IAM & SECURITY</h3>
+                  <h3 className="text-base font-black text-white tracking-tight uppercase">AWS VPC, IAM & SECURITY</h3>
                   <p className="text-xs text-slate-300 font-medium leading-relaxed">
                     Master subnets, NAT GW, IAM STS & IRSA policy binding.
                   </p>
@@ -1129,7 +1229,7 @@ export default function LandingPage() {
                   href="https://aws.amazon.com/architecture/well-architected/" 
                   target="_blank" 
                   rel="noreferrer"
-                  className="flex items-center justify-between text-xs font-extrabold text-blue-400 hover:underline pt-3 border-t border-slate-800"
+                  className="flex items-center justify-between text-xs font-extrabold text-blue-400 hover:underline pt-3 border-t border-slate-800/80"
                 >
                   <span>AWS Well-Architected Guide</span>
                   <ArrowUpRight className="w-4 h-4" />
@@ -1144,25 +1244,25 @@ export default function LandingPage() {
               viewport={{ once: true, margin: "-40px" }}
               transition={{ duration: 0.6, delay: 0.3, ease: "easeOut" }}
               whileHover={{ y: -8, scale: 1.02, transition: { duration: 0.2 } }}
-              className="rounded-3xl bg-[#0B1E36] text-white border border-slate-800 shadow-xl overflow-hidden flex flex-col justify-between group hover:border-purple-500 transition-all cursor-pointer"
+              className="rounded-3xl bg-[#0B1E36] text-white border border-slate-800/90 shadow-xl overflow-hidden flex flex-col justify-between group hover:border-purple-500 transition-all cursor-pointer"
             >
               <div>
-                <div className="h-44 relative bg-slate-900 overflow-hidden">
+                <div className="h-48 relative bg-slate-950 overflow-hidden">
                   <img 
-                    src="https://images.unsplash.com/photo-1667372393119-3d4c48d07fc9?auto=format&fit=crop&q=80&w=600" 
-                    alt="Kubernetes Containers" 
-                    className="w-full h-full object-cover opacity-60 group-hover:scale-105 transition-transform duration-500" 
+                    src="/images/card_docker_k8s.png" 
+                    alt="Docker & Kubernetes EKS" 
+                    className="w-full h-full object-cover opacity-90 group-hover:scale-105 transition-transform duration-500" 
                   />
-                  <span className="absolute top-3 left-3 px-3 py-1 rounded-lg text-[10px] font-mono font-bold bg-purple-600 text-white shadow-md">
+                  <span className="absolute top-3 left-3 px-3 py-1 rounded-full text-[10px] font-black tracking-widest bg-purple-600 text-white shadow-md uppercase">
                     WEEK 3
                   </span>
                 </div>
 
                 <div className="p-5 flex flex-col gap-3">
-                  <div className="w-9 h-9 rounded-xl bg-purple-500/20 text-purple-400 border border-purple-500/40 flex items-center justify-center">
+                  <div className="w-9 h-9 rounded-xl bg-purple-500/20 text-purple-400 border border-purple-500/40 flex items-center justify-center shadow-xs">
                     <Layers className="w-4.5 h-4.5" />
                   </div>
-                  <h3 className="text-base font-black text-white tracking-tight">DOCKER & KUBERNETES EKS</h3>
+                  <h3 className="text-base font-black text-white tracking-tight uppercase">DOCKER & KUBERNETES EKS</h3>
                   <p className="text-xs text-slate-300 font-medium leading-relaxed">
                     Multi-stage Docker builds, pod probes & ingress routing.
                   </p>
@@ -1174,7 +1274,7 @@ export default function LandingPage() {
                   href="https://kubernetes.io/docs/home/" 
                   target="_blank" 
                   rel="noreferrer"
-                  className="flex items-center justify-between text-xs font-extrabold text-purple-400 hover:underline pt-3 border-t border-slate-800"
+                  className="flex items-center justify-between text-xs font-extrabold text-purple-400 hover:underline pt-3 border-t border-slate-800/80"
                 >
                   <span>CNCF Kubernetes Docs</span>
                   <ArrowUpRight className="w-4 h-4" />
@@ -1189,25 +1289,25 @@ export default function LandingPage() {
               viewport={{ once: true, margin: "-40px" }}
               transition={{ duration: 0.6, delay: 0.4, ease: "easeOut" }}
               whileHover={{ y: -8, scale: 1.02, transition: { duration: 0.2 } }}
-              className="rounded-3xl bg-[#0B1E36] text-white border border-slate-800 shadow-xl overflow-hidden flex flex-col justify-between group hover:border-[#FF6B00] transition-all cursor-pointer"
+              className="rounded-3xl bg-[#0B1E36] text-white border border-slate-800/90 shadow-xl overflow-hidden flex flex-col justify-between group hover:border-[#FF6B00] transition-all cursor-pointer"
             >
               <div>
-                <div className="h-44 relative bg-slate-900 overflow-hidden">
+                <div className="h-48 relative bg-slate-950 overflow-hidden">
                   <img 
-                    src="https://images.unsplash.com/photo-1558494949-ef010cbdcc31?auto=format&fit=crop&q=80&w=600" 
-                    alt="Terraform Infrastructure" 
-                    className="w-full h-full object-cover opacity-60 group-hover:scale-105 transition-transform duration-500" 
+                    src="/images/card_terraform_iac.png" 
+                    alt="Terraform IaC & Incidents" 
+                    className="w-full h-full object-cover opacity-90 group-hover:scale-105 transition-transform duration-500" 
                   />
-                  <span className="absolute top-3 left-3 px-3 py-1 rounded-lg text-[10px] font-mono font-bold bg-[#FF6B00] text-white shadow-md">
+                  <span className="absolute top-3 left-3 px-3 py-1 rounded-full text-[10px] font-black tracking-widest bg-[#FF6B00] text-white shadow-md uppercase">
                     WEEK 4
                   </span>
                 </div>
 
                 <div className="p-5 flex flex-col gap-3">
-                  <div className="w-9 h-9 rounded-xl bg-orange-500/20 text-[#FF6B00] border border-[#FF6B00]/40 flex items-center justify-center">
+                  <div className="w-9 h-9 rounded-xl bg-orange-500/20 text-[#FF6B00] border border-[#FF6B00]/40 flex items-center justify-center shadow-xs">
                     <Code2 className="w-4.5 h-4.5" />
                   </div>
-                  <h3 className="text-base font-black text-white tracking-tight">TERRAFORM IAC & INCIDENTS</h3>
+                  <h3 className="text-base font-black text-white tracking-tight uppercase">TERRAFORM IAC & INCIDENTS</h3>
                   <p className="text-xs text-slate-300 font-medium leading-relaxed">
                     Remote state locking, module design & outage post mortems.
                   </p>
@@ -1219,7 +1319,7 @@ export default function LandingPage() {
                   href="https://developer.hashicorp.com/terraform/docs" 
                   target="_blank" 
                   rel="noreferrer"
-                  className="flex items-center justify-between text-xs font-extrabold text-[#FF6B00] hover:underline pt-3 border-t border-slate-800"
+                  className="flex items-center justify-between text-xs font-extrabold text-[#FF6B00] hover:underline pt-3 border-t border-slate-800/80"
                 >
                   <span>HashiCorp Docs & Runbooks</span>
                   <ArrowUpRight className="w-4 h-4" />
@@ -1229,143 +1329,225 @@ export default function LandingPage() {
 
           </div>
 
-          {/* Bottom Feature Bar (Screenshot Roadmap) */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-12">
-            <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-xs flex items-center gap-3 transition-colors duration-300">
-              <div className="w-10 h-10 rounded-xl bg-orange-100 dark:bg-orange-950/60 text-[#FF6B00] flex items-center justify-center shrink-0">
-                <Calendar className="w-5 h-5" />
-              </div>
-              <div className="flex flex-col">
-                <span className="text-xs font-black text-[#0B1E36] dark:text-white">30 Days Guided Sprints</span>
-                <span className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">Structured 4-week plan to build real-world skills.</span>
-              </div>
-            </div>
-
-            <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-xs flex items-center gap-3 transition-colors duration-300">
-              <div className="w-10 h-10 rounded-xl bg-[#0B1E36] text-[#FF6B00] flex items-center justify-center shrink-0">
-                <Sparkles className="w-5 h-5" />
-              </div>
-              <div className="flex flex-col">
-                <span className="text-xs font-black text-[#0B1E36] dark:text-white">Score Based Personalization</span>
-                <span className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">Roadmap adapts to your interview performance.</span>
-              </div>
-            </div>
-
-            <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-xs flex items-center gap-3 transition-colors duration-300">
-              <div className="w-10 h-10 rounded-xl bg-purple-100 dark:bg-purple-950/60 text-purple-600 dark:text-purple-400 flex items-center justify-center shrink-0">
-                <FileText className="w-5 h-5" />
-              </div>
-              <div className="flex flex-col">
-                <span className="text-xs font-black text-[#0B1E36] dark:text-white">Official Docs & Labs</span>
-                <span className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">Direct links to trusted docs & hands-on challenges.</span>
-              </div>
-            </div>
-
-            <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-xs flex items-center gap-3 transition-colors duration-300">
-              <div className="w-10 h-10 rounded-xl bg-amber-100 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
-                <TrendingUp className="w-5 h-5" />
-              </div>
-              <div className="flex flex-col">
-                <span className="text-xs font-black text-[#0B1E36] dark:text-white">Track Progress & Improve</span>
-                <span className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">Measure learning, close gaps & boost interview score.</span>
-              </div>
-            </div>
-          </div>
-
-        </div>
-      </section>
-
-      {/* 5. FAQ SECTION */}
-      <section id="faq" className="py-20 relative z-10 bg-slate-50 dark:bg-[#070b14] border-t border-slate-200/80 dark:border-slate-800 transition-colors duration-300">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-12">
-          <div className="text-center mb-12">
-            <span className="text-xs font-black text-[#FF6B00] uppercase tracking-widest">
-              FREQUENTLY ASKED QUESTIONS
-            </span>
-            <h2 className="text-3xl font-black text-[#0B1E36] dark:text-white tracking-tight mt-2">
-              Got Questions? We&apos;ve Got Answers.
-            </h2>
-          </div>
-
-          <div className="flex flex-col gap-3">
-            {faqs.map((faq, idx) => {
-              const isOpen = activeFaq === idx;
-              return (
-                <div
-                  key={idx}
-                  className="rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 overflow-hidden shadow-xs transition-colors duration-300"
-                >
-                  <button
-                    onClick={() => setActiveFaq(isOpen ? null : idx)}
-                    className="w-full p-5 text-left flex items-center justify-between gap-4 font-bold text-sm text-[#0B1E36] dark:text-white hover:text-[#FF6B00] dark:hover:text-[#FF6B00] transition-colors"
-                  >
-                    <span>{faq.q}</span>
-                    {isOpen ? <ChevronUp className="w-5 h-5 text-[#FF6B00] shrink-0" /> : <ChevronDown className="w-5 h-5 text-slate-400 shrink-0" />}
-                  </button>
-                  {isOpen && (
-                    <div className="px-5 pb-5 text-xs text-slate-600 dark:text-slate-300 font-medium leading-relaxed border-t border-slate-100 dark:border-slate-800 pt-3">
-                      {faq.a}
-                    </div>
-                  )}
+          {/* Bottom Feature Bar (Unified Card matching Screenshot 100%) */}
+          <div className="mt-12 rounded-[28px] bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-xl shadow-slate-200/60 dark:shadow-black/60 p-6 sm:p-8 transition-colors duration-300">
+            <div className="grid grid-cols-1 md:grid-cols-4 divide-y md:divide-y-0 md:divide-x divide-slate-100 dark:divide-slate-800 gap-6 md:gap-0">
+              
+              {/* Item 1 */}
+              <div className="flex items-center gap-4 md:px-6 first:pl-0 last:pr-0">
+                <div className="w-14 h-14 rounded-full bg-amber-100/80 dark:bg-amber-950/50 text-[#FF6B00] flex items-center justify-center shrink-0 shadow-xs">
+                  <Calendar className="w-6 h-6 text-[#FF6B00]" />
                 </div>
-              );
-            })}
+                <div className="flex flex-col">
+                  <h3 className="text-sm font-black text-[#0B1E36] dark:text-white tracking-tight leading-snug">
+                    30 Days <span className="text-[#FF6B00]">Guided Sprints</span>
+                  </h3>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 font-medium leading-relaxed mt-1">
+                    Structured 4-week plan to build real-world skills.
+                  </p>
+                </div>
+              </div>
+
+              {/* Item 2 */}
+              <div className="flex items-center gap-4 md:px-6 pt-4 md:pt-0">
+                <div className="w-14 h-14 rounded-full bg-blue-100/80 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0 shadow-xs">
+                  <Target className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+                </div>
+                <div className="flex flex-col">
+                  <h3 className="text-sm font-black text-[#0B1E36] dark:text-white tracking-tight leading-snug">
+                    Score Based <span className="text-blue-600 dark:text-blue-400">Personalization</span>
+                  </h3>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 font-medium leading-relaxed mt-1">
+                    Roadmap adapts to your interview performance.
+                  </p>
+                </div>
+              </div>
+
+              {/* Item 3 */}
+              <div className="flex items-center gap-4 md:px-6 pt-4 md:pt-0">
+                <div className="w-14 h-14 rounded-full bg-purple-100/80 dark:bg-purple-950/50 text-purple-600 dark:text-purple-400 flex items-center justify-center shrink-0 shadow-xs">
+                  <FileText className="w-6 h-6 text-purple-600 dark:text-purple-400" />
+                </div>
+                <div className="flex flex-col">
+                  <h3 className="text-sm font-black text-[#0B1E36] dark:text-white tracking-tight leading-snug">
+                    Official Docs <span className="text-purple-600 dark:text-purple-400">& Labs</span>
+                  </h3>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 font-medium leading-relaxed mt-1">
+                    Direct links to trusted docs & hands-on challenges.
+                  </p>
+                </div>
+              </div>
+
+              {/* Item 4 */}
+              <div className="flex items-center gap-4 md:px-6 pt-4 md:pt-0">
+                <div className="w-14 h-14 rounded-full bg-amber-100/80 dark:bg-amber-950/50 text-[#FF6B00] flex items-center justify-center shrink-0 shadow-xs">
+                  <TrendingUp className="w-6 h-6 text-[#FF6B00]" />
+                </div>
+                <div className="flex flex-col">
+                  <h3 className="text-sm font-black text-[#0B1E36] dark:text-white tracking-tight leading-snug">
+                    Track Progress <span className="text-[#FF6B00]">& Improve</span>
+                  </h3>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 font-medium leading-relaxed mt-1">
+                    Measure learning, close gaps & boost interview score.
+                  </p>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      {/* 5. FAQ SECTION (Redesigned 2-Column Split Layout) */}
+      <section id="faq" className="py-20 lg:py-28 relative z-10 bg-slate-50/70 dark:bg-[#070b14] border-t border-slate-200/80 dark:border-slate-800 transition-colors duration-300">
+        <div className="max-w-[1536px] mx-auto px-4 sm:px-6 lg:px-12">
+          
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
+            
+            {/* Left Column: Heading & Support Box */}
+            <div className="lg:col-span-5 flex flex-col gap-6 lg:sticky lg:top-28">
+              <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-black text-[#FF6B00] bg-orange-500/10 border border-orange-500/20 w-fit">
+                <HelpCircle className="w-4 h-4 text-[#FF6B00]" />
+                <span className="uppercase tracking-widest">FREQUENTLY ASKED QUESTIONS</span>
+              </div>
+
+              <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-[#0B1E36] dark:text-white tracking-tight leading-tight uppercase font-sans">
+                Got Questions?<br />
+                <span className="text-[#FF6B00]">We&apos;ve Got Answers.</span>
+              </h2>
+
+              <p className="text-sm text-slate-600 dark:text-slate-300 font-medium leading-relaxed">
+                Everything you need to know about our strict 80% stage gate progression system, Voice AI interview evaluation engine, and 6-factor ATS Resume Bullet Point Rewriter.
+              </p>
+
+              {/* Support Card Box */}
+              <div className="p-6 rounded-3xl bg-gradient-to-br from-[#0B1E36] via-[#0E2440] to-[#102A4C] text-white border border-slate-800/90 shadow-2xl flex flex-col gap-4 mt-2 relative overflow-hidden">
+                <div className="flex items-center gap-3 relative z-10">
+                  <div className="w-12 h-12 rounded-2xl bg-[#FF6B00]/20 text-[#FF6B00] border border-[#FF6B00]/30 flex items-center justify-center shrink-0 shadow-xs">
+                    <MessageSquare className="w-6 h-6 text-[#FF6B00]" />
+                  </div>
+                  <div className="flex flex-col">
+                    <h4 className="text-sm font-black text-white">Have a specific question?</h4>
+                    <span className="text-xs text-slate-300 font-medium">Candidate support team is active 24/7</span>
+                  </div>
+                </div>
+
+                <p className="text-xs text-slate-300 leading-relaxed font-medium relative z-10">
+                  Can&apos;t find what you&apos;re looking for? Submit a ticket directly to our technical admin team for rapid response.
+                </p>
+
+                <Link
+                  href="/login"
+                  className="w-full py-3.5 px-5 rounded-2xl font-black text-xs text-center text-white bg-gradient-to-r from-[#FF6B00] to-orange-600 hover:from-orange-600 hover:to-amber-600 shadow-lg shadow-[#FF6B00]/20 transition-all flex items-center justify-center gap-2 relative z-10"
+                >
+                  <HelpCircle className="w-4 h-4" />
+                  <span>Contact Support Team</span>
+                  <ArrowUpRight className="w-4 h-4" />
+                </Link>
+
+                <div className="absolute -right-10 -bottom-10 w-40 h-40 bg-[#FF6B00]/10 rounded-full blur-2xl pointer-events-none" />
+              </div>
+            </div>
+
+            {/* Right Column: Glassmorphic Interactive Accordion List */}
+            <div className="lg:col-span-7 flex flex-col gap-4">
+              {faqs.map((faq, idx) => {
+                const isOpen = activeFaq === idx;
+                return (
+                  <div
+                    key={idx}
+                    className={`rounded-2xl transition-all duration-300 border overflow-hidden ${
+                      isOpen
+                        ? "bg-white dark:bg-slate-900 border-[#FF6B00]/50 shadow-xl shadow-orange-500/5 ring-1 ring-[#FF6B00]/20"
+                        : "bg-white/80 dark:bg-slate-900/80 border-slate-200/90 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700"
+                    }`}
+                  >
+                    <button
+                      onClick={() => setActiveFaq(isOpen ? null : idx)}
+                      className="w-full p-5 sm:p-6 text-left flex items-start justify-between gap-4 font-black text-base text-[#0B1E36] dark:text-white group"
+                    >
+                      <div className="flex items-center gap-3">
+                        <span className={`w-7 h-7 rounded-lg text-xs font-mono font-black flex items-center justify-center shrink-0 transition-colors ${
+                          isOpen ? "bg-[#FF6B00] text-white" : "bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 group-hover:bg-orange-100 dark:group-hover:bg-orange-950/40 group-hover:text-[#FF6B00]"
+                        }`}>
+                          0{idx + 1}
+                        </span>
+                        <span className="group-hover:text-[#FF6B00] transition-colors leading-snug">
+                          {faq.q}
+                        </span>
+                      </div>
+
+                      <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 transition-all duration-300 ${
+                        isOpen ? "bg-orange-100 dark:bg-orange-950/60 text-[#FF6B00] rotate-180" : "bg-slate-100 dark:bg-slate-800 text-slate-400 group-hover:text-[#FF6B00]"
+                      }`}>
+                        <ChevronDown className="w-5 h-5" />
+                      </div>
+                    </button>
+
+                    {isOpen && (
+                      <div className="px-6 pb-6 pt-0 text-xs sm:text-sm text-slate-600 dark:text-slate-300 font-medium leading-relaxed border-t border-slate-100 dark:border-slate-800/80 mt-2 pt-4 pl-16">
+                        {faq.a}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+
           </div>
         </div>
       </section>
 
-      {/* 6. HIGH-IMPACT PRE-FOOTER CTA BANNER */}
-      <section className="py-16 relative z-10 bg-[#0B1E36] text-white border-t border-slate-800 overflow-hidden">
-        <div className="max-w-[1536px] mx-auto px-4 sm:px-6 lg:px-12 relative z-10">
-          <div className="p-8 sm:p-12 rounded-3xl bg-gradient-to-r from-[#102A4C] via-[#0B1E36] to-[#102A4C] border border-slate-700 shadow-2xl flex flex-col md:flex-row items-center justify-between gap-8 relative overflow-hidden">
+      {/* 6. UNIFIED HIGH-IMPACT FOOTER WITH INTEGRATED PRE-FOOTER CTA CARD */}
+      <footer className="bg-[#050C17] text-white pt-12 pb-10 border-t border-slate-800/80 font-sans relative overflow-hidden z-10 transition-colors duration-300">
+        <div className="max-w-[1536px] mx-auto px-4 sm:px-6 lg:px-12 flex flex-col gap-14">
+          
+          {/* Top Integrated Pre-Footer CTA Card */}
+          <div className="p-8 sm:p-12 rounded-[32px] bg-gradient-to-r from-[#0B1E36] via-[#102A4C] to-[#0B1E36] border border-slate-700/80 shadow-2xl flex flex-col lg:flex-row items-center justify-between gap-8 relative overflow-hidden">
             
-            <div className="flex flex-col gap-3 max-w-2xl">
-              <span className="px-3.5 py-1 rounded-full text-xs font-black text-[#FF6B00] bg-[#FF6B00]/20 border border-[#FF6B00]/30 w-fit">
+            <div className="flex flex-col gap-3 max-w-2xl text-left relative z-10">
+              <span className="px-3.5 py-1 rounded-full text-xs font-black text-[#FF6B00] bg-[#FF6B00]/15 border border-[#FF6B00]/30 w-fit">
                 ⚡ READY TO LAND YOUR NEXT CLOUD ROLE?
               </span>
-              <h2 className="text-3xl sm:text-4xl font-black text-white tracking-tight uppercase leading-tight">
+              <h2 className="text-3xl sm:text-4xl lg:text-[40px] font-black text-white tracking-tight uppercase leading-tight font-sans">
                 PRACTICE REAL AWS INCIDENTS & GET HIRED FASTER
               </h2>
-              <p className="text-sm text-slate-300 font-medium leading-relaxed">
+              <p className="text-xs sm:text-sm text-slate-300 font-medium leading-relaxed">
                 Join 10,000+ DevOps & SRE engineers mastering technical voice interviews, ATS resume optimization, and 30-day skill roadmaps.
               </p>
             </div>
 
-            <div className="flex flex-col sm:flex-row items-center gap-3 shrink-0">
+            <div className="flex flex-col sm:flex-row items-center gap-3 shrink-0 relative z-10 w-full sm:w-auto">
               <Link
                 href="/register"
-                className="py-3.5 px-7 rounded-full font-black text-xs text-white bg-gradient-to-r from-[#FF6B00] via-amber-500 to-orange-500 hover:from-orange-500 hover:to-amber-600 shadow-xl shadow-[#FF6B00]/30 flex items-center justify-center gap-2 hover:scale-[1.02] transition-all"
+                className="w-full sm:w-auto py-4 px-8 rounded-full font-black text-xs text-white bg-gradient-to-r from-[#FF6B00] via-amber-500 to-orange-500 hover:from-orange-500 hover:to-amber-600 shadow-xl shadow-[#FF6B00]/30 flex items-center justify-center gap-2 hover:scale-[1.02] transition-all"
               >
                 <Mic className="w-4 h-4" />
                 <span>Start Free AI Interview</span>
                 <ArrowRight className="w-4 h-4" />
               </Link>
 
-              <a
-                href="#ats"
-                className="py-3.5 px-6 rounded-full font-extrabold text-xs text-white bg-white/10 border border-white/20 hover:bg-white/20 flex items-center justify-center gap-2 transition-all"
+              <Link
+                href="/resume-ats"
+                className="w-full sm:w-auto py-4 px-7 rounded-full font-extrabold text-xs text-white bg-white/10 border border-white/20 hover:bg-white/20 flex items-center justify-center gap-2 transition-all"
               >
                 <FileText className="w-4 h-4 text-[#FF6B00]" />
                 <span>Audit My Resume (ATS)</span>
-              </a>
+              </Link>
             </div>
 
-            <div className="absolute -right-20 -bottom-20 w-80 h-80 bg-[#FF6B00]/10 rounded-full blur-3xl pointer-events-none" />
+            <div className="absolute -right-20 -bottom-20 w-80 h-80 bg-[#FF6B00]/15 rounded-full blur-3xl pointer-events-none" />
           </div>
-        </div>
-      </section>
 
-      {/* 7. REDESIGNED CORPORATE SAAS FOOTER */}
-      <footer className="bg-[#0B1E36] text-white pt-16 pb-10 border-t border-slate-800 font-sans">
-        <div className="max-w-[1536px] mx-auto px-4 sm:px-6 lg:px-12 flex flex-col gap-12">
-          
+          {/* Main Footer Columns */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-10">
             
-            {/* Column 1: Brand & Status */}
+            {/* Column 1: Brand & Operational Status */}
             <div className="lg:col-span-[1.4] flex flex-col gap-4">
               <div className="flex items-center gap-3">
                 <div className="w-9 h-9 rounded-2xl bg-gradient-to-tr from-[#FF6B00] to-amber-500 p-[1.5px] shadow-md">
-                  <div className="w-full h-full bg-[#0B1E36] rounded-[13px] flex items-center justify-center text-white">
+                  <div className="w-full h-full bg-[#050C17] rounded-[13px] flex items-center justify-center text-white">
                     <Cloud className="w-4.5 h-4.5 text-[#FF6B00]" />
                   </div>
                 </div>
@@ -1378,7 +1560,7 @@ export default function LandingPage() {
                 The premier AI-powered voice interview, skill evaluation, and ATS resume operating system engineered for Cloud Operations, SRE & DevOps professionals.
               </p>
 
-              <div className="flex flex-col gap-2 pt-2">
+              <div className="flex flex-col gap-2 pt-1">
                 <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold text-emerald-400 bg-emerald-950/60 border border-emerald-800/80 w-fit">
                   <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
                   <span>All Systems Operational</span>
@@ -1421,7 +1603,7 @@ export default function LandingPage() {
               <a href="https://resume3-admin.vercel.app" target="_blank" rel="noreferrer" className="text-slate-400 hover:text-[#FF6B00] transition-colors font-medium">Admin Portal</a>
             </div>
 
-            {/* Column 5: NEWSLETTER & COMMUNITY */}
+            {/* Column 5: DEVOPS COMMUNITY */}
             <div className="flex flex-col gap-3 text-xs">
               <span className="font-black text-white uppercase tracking-wider text-[11px]">DEVOPS COMMUNITY</span>
               <p className="text-[11px] text-slate-400 font-medium leading-relaxed">
@@ -1437,7 +1619,7 @@ export default function LandingPage() {
                 />
                 <button
                   type="submit"
-                  className="px-3 py-2 rounded-xl bg-[#FF6B00] hover:bg-orange-500 text-white font-bold transition-all shrink-0"
+                  className="px-3.5 py-2 rounded-xl bg-[#FF6B00] hover:bg-orange-500 text-white font-bold transition-all shrink-0"
                 >
                   ➔
                 </button>
@@ -1454,15 +1636,15 @@ export default function LandingPage() {
 
           </div>
 
-          {/* Bottom Legal & Copyright Bar */}
+          {/* Bottom Legal Bar */}
           <div className="pt-8 border-t border-slate-800/80 flex flex-col md:flex-row items-center justify-between text-xs text-slate-400 gap-4">
             <span>© 2026 CloudOps AI Assessment OS. Built for Cloud Engineers worldwide.</span>
             
             <div className="flex items-center gap-6 text-[11px] font-medium flex-wrap">
-              <span className="hover:text-white cursor-pointer transition-colors">Privacy Policy</span>
-              <span className="hover:text-white cursor-pointer transition-colors">Terms of Service</span>
-              <span className="hover:text-white cursor-pointer transition-colors">Security Compliance</span>
-              <span className="hover:text-white cursor-pointer transition-colors">90-Day Data Retention Policy</span>
+              <Link href="/privacy" className="hover:text-[#FF6B00] transition-colors">Privacy Policy</Link>
+              <Link href="/terms" className="hover:text-[#FF6B00] transition-colors">Terms of Service</Link>
+              <Link href="/security" className="hover:text-[#FF6B00] transition-colors">Security Compliance</Link>
+              <Link href="/retention" className="hover:text-[#FF6B00] transition-colors">90-Day Data Retention Policy</Link>
             </div>
           </div>
 

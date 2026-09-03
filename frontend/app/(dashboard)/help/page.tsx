@@ -80,8 +80,12 @@ export default function HelpPage() {
     if (!mounted) return;
     if (isAdmin) {
       fetchAdminTickets();
+      const interval = setInterval(fetchAdminTickets, 5000);
+      return () => clearInterval(interval);
     } else {
       fetchCandidateTickets();
+      const interval = setInterval(fetchCandidateTickets, 5000);
+      return () => clearInterval(interval);
     }
   }, [isAdmin, mounted]);
 
