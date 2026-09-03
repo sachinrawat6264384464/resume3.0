@@ -56,10 +56,16 @@ app = FastAPI(
 )
 
 # CORS Middleware configuration
-cors_origins = [origin for origin in settings.BACKEND_CORS_ORIGINS if origin != "*"]
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=cors_origins,
+    allow_origins=[
+        "https://resume3-0.vercel.app",
+        "https://resume3-admin.vercel.app",
+        "http://localhost:3000",
+        "http://localhost:3001",
+        "http://127.0.0.1:3000",
+        "http://127.0.0.1:3001"
+    ],
     allow_origin_regex=r"https://.*\.vercel\.app",
     allow_credentials=True,
     allow_methods=["*"],
