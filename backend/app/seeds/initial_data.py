@@ -47,52 +47,7 @@ async def seed_database():
             db.add(admin)
             await db.flush()
 
-        # 3. Main Candidate User (Rahul Sharma)
-        cand_user_stmt = select(User).where(User.email == "candidate@cloudops.internal")
-        res = await db.execute(cand_user_stmt)
-        cand_user = res.scalar_one_or_none()
-        if not cand_user:
-            cand_user = User(
-                organization_id=org.id,
-                email="candidate@cloudops.internal",
-                full_name="Rahul Sharma",
-                hashed_password=get_password_hash("Candidate@12345"),
-                role=UserRole.CANDIDATE.value,
-                is_active=True
-            )
-            db.add(cand_user)
-            await db.flush()
-
-            cand_profile = Candidate(
-                user_id=cand_user.id,
-                organization_id=org.id,
-                student_id="STU-2026-088",
-                phone="+91 98765 43210",
-                course="Multi-Cloud & DevOps Mastery",
-                batch="Cohort 2026-A",
-                experience_level="MID",
-                target_role="Senior DevOps Engineer",
-                notes="Candidate targeting ₹18–25 LPA roles. Strong Linux and AWS foundation.",
-                xp=3450,
-                level=4,
-                streak_days=12,
-                readiness_score=84.0,
-                target_salary_band="₹18–25 LPA",
-                skills_matrix_json={
-                    "Linux": 88,
-                    "AWS": 84,
-                    "Docker": 80,
-                    "Kubernetes": 78,
-                    "Terraform": 74,
-                    "DevSecOps": 62,
-                    "AI Automation": 55
-                },
-                badges_json=["Linux Warrior", "Cloud Explorer", "AWS Ninja", "Kubernetes Warrior"]
-            )
-            db.add(cand_profile)
-            await db.flush()
-
-        # 3b. Sachin Rawat Candidate User
+        # 3. Candidate User (Sachin Rawat)
         sachin_user_stmt = select(User).where(User.email == "sachin@cloudops.internal")
         res = await db.execute(sachin_user_stmt)
         sachin_user = res.scalar_one_or_none()
@@ -129,41 +84,23 @@ async def seed_database():
             db.add(sachin_profile)
             await db.flush()
 
-        # Additional Sample Candidates for Leaderboard
-        sample_candidates = [
-            ("Priya Patel", "priya@cloudops.internal", "Cloud Architect", 2850, 3, 9, 81.0, "₹18–25 LPA", ["Linux Warrior", "Cloud Explorer", "Terraform Expert"]),
-            ("Amit Verma", "amit@cloudops.internal", "DevOps Engineer", 2150, 3, 7, 78.0, "₹12–18 LPA", ["Linux Warrior", "CI/CD Master"]),
-            ("Sneha Reddy", "sneha@cloudops.internal", "Site Reliability Engineer", 1850, 2, 5, 75.0, "₹12–18 LPA", ["Linux Warrior", "Cloud Explorer"]),
-            ("Karan Malhotra", "karan@cloudops.internal", "DevSecOps Specialist", 4100, 5, 16, 91.0, "₹25–40 LPA", ["Linux Warrior", "Cloud Explorer", "AWS Ninja", "DevSecOps Defender", "CI/CD Master"])
-        ]
-        for name, email, role, xp, lvl, streak, readiness, band, badges in sample_candidates:
-            u_res = await db.execute(select(User).where(User.email == email))
-            if not u_res.scalar_one_or_none():
-                u = User(
-                    organization_id=org.id,
-                    email=email,
-                    full_name=name,
-                    hashed_password=get_password_hash("Password@123"),
-                    role=UserRole.CANDIDATE.value,
-                    is_active=True
-                )
-                db.add(u)
-                await db.flush()
-                c = Candidate(
-                    user_id=u.id,
-                    organization_id=org.id,
-                    student_id=f"STU-{xp}",
-                    target_role=role,
-                    xp=xp,
-                    level=lvl,
-                    streak_days=streak,
-                    readiness_score=readiness,
-                    target_salary_band=band,
-                    badges_json=badges,
-                    skills_matrix_json={"Linux": 85, "AWS": 80, "Docker": 75, "Kubernetes": 70, "Terraform": 65}
-                )
-                db.add(c)
-                await db.flush()
+        # Purge any old extra sample candidates (Keeping ONLY admin@cloudops.internal & sachin@cloudops.internal)
+        from sqlalchemy import text
+        cleanup_emails = ["candidate@cloudops.internal", "priya@cloudops.internal", "amit@cloudops.internal", "sneha@cloudops.internal", "karan@cloudops.internal"]
+        for bad_email in cleanup_emails:
+            u_res = await db.execute(select(User).where(User.email == bad_email))
+            bad_u = u_res.scalar_one_or_none()
+            if bad_u:
+                c_res = await db.execute(select(Candidate).where(Candidate.user_id == bad_u.id))
+                bad_c = c_res.scalar_one_or_none()
+                if bad_c:
+                    await db.execute(text("DELETE FROM candidate_roadmaps WHERE candidate_id = :cid"), {"cid": bad_c.id})
+                    await db.execute(text("DELETE FROM candidate_certificates WHERE candidate_id = :cid"), {"cid": bad_c.id})
+                    await db.execute(text("DELETE FROM support_tickets WHERE candidate_id = :cid"), {"cid": bad_c.id})
+                    await db.execute(text("DELETE FROM interview_attempts WHERE candidate_id = :cid"), {"cid": bad_c.id})
+                    await db.execute(text("DELETE FROM candidates WHERE id = :cid"), {"cid": bad_c.id})
+                await db.execute(text("DELETE FROM users WHERE id = :uid"), {"uid": bad_u.id})
+        await db.commit()
 
         # 4. Job Description for CloudOps
         jd_stmt = select(JobDescription).where(JobDescription.title == "Senior DevOps & CloudOps Engineer")
