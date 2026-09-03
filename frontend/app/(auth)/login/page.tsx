@@ -334,12 +334,13 @@ export default function LoginPage() {
                 </div>
                 <div className="relative">
                   <input
+                    key={showPassword ? "login-text-visible" : "login-pass-hidden"}
                     type={showPassword ? "text" : "password"}
                     required
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     className="w-full pl-10 pr-10 py-3 rounded-xl text-xs border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 focus:outline-none focus:border-[#FF9900] font-medium text-slate-900 dark:text-white transition-all shadow-sm"
-                    placeholder="••••••••••••"
+                    placeholder={showPassword ? "Enter password" : "••••••••••••"}
                   />
                   <Lock className="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5" />
                   <button
