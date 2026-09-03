@@ -511,12 +511,12 @@ export default function LandingPage() {
 
         {/* TRUST BANNER AT BOTTOM OF HERO (Screenshot 1) */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-12">
-          <div className="p-4 rounded-3xl bg-white border border-slate-200/80 shadow-xs flex flex-col lg:flex-row items-center justify-between gap-6">
-            <span className="text-xs font-black text-[#0B1E36] tracking-wider uppercase">
+          <div className="p-4 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-xs flex flex-col lg:flex-row items-center justify-between gap-6 transition-colors duration-300">
+            <span className="text-xs font-black text-[#0B1E36] dark:text-white tracking-wider uppercase">
               TRUSTED BY CLOUD ENGINEERS WORLDWIDE
             </span>
 
-            <div className="flex items-center gap-8 flex-wrap justify-center text-xs font-bold text-slate-700">
+            <div className="flex items-center gap-8 flex-wrap justify-center text-xs font-bold text-slate-700 dark:text-slate-300">
               <div className="flex items-center gap-2">
                 <span className="text-[#FF6B00] font-black">aws</span>
                 <span>4.8/5 <span className="text-slate-400 font-medium">(1,200+ reviews)</span></span>
@@ -533,22 +533,22 @@ export default function LandingPage() {
 
             <div className="flex items-center gap-2">
               <div className="flex -space-x-2 overflow-hidden">
-                <img className="inline-block h-7 w-7 rounded-full ring-2 ring-white" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=100" alt="" />
-                <img className="inline-block h-7 w-7 rounded-full ring-2 ring-white" src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=100" alt="" />
-                <img className="inline-block h-7 w-7 rounded-full ring-2 ring-white" src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=100" alt="" />
+                <img className="inline-block h-7 w-7 rounded-full ring-2 ring-white dark:ring-slate-800" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=100" alt="" />
+                <img className="inline-block h-7 w-7 rounded-full ring-2 ring-white dark:ring-slate-800" src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=100" alt="" />
+                <img className="inline-block h-7 w-7 rounded-full ring-2 ring-white dark:ring-slate-800" src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=100" alt="" />
               </div>
-              <span className="text-xs font-black text-slate-900">10,000+ Engineers <span className="text-slate-400 font-medium">are leveling up</span></span>
+              <span className="text-xs font-black text-slate-900 dark:text-white">10,000+ Engineers <span className="text-slate-400 font-medium">are leveling up</span></span>
             </div>
           </div>
         </div>
       </section>
 
       {/* 3. VOICE AI & 5 PILLARS SECTION (Screenshot 2) */}
-      <section id="voice-ai" className="py-20 relative z-10 bg-slate-50 border-t border-slate-200/80">
+      <section id="voice-ai" className="py-20 relative z-10 bg-slate-50 dark:bg-[#070b14] border-t border-slate-200/80 dark:border-slate-800 transition-colors duration-300">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           
           <div className="mb-8">
-            <span className="px-3.5 py-1.5 rounded-full text-xs font-black text-[#FF6B00] bg-orange-100/80 border border-orange-200 flex items-center gap-1.5 w-fit">
+            <span className="px-3.5 py-1.5 rounded-full text-xs font-black text-[#FF6B00] bg-orange-100/80 dark:bg-orange-950/60 border border-orange-200 dark:border-orange-900/50 flex items-center gap-1.5 w-fit">
               <Mic className="w-4 h-4 text-[#FF6B00]" />
               SPEECH & CADENCE ENGINE
             </span>
@@ -558,47 +558,47 @@ export default function LandingPage() {
             
             {/* Left Description & Weight Cards */}
             <div className="lg:col-span-6 flex flex-col gap-6">
-              <h2 className="text-3xl sm:text-4xl lg:text-[40px] font-black text-[#0B1E36] tracking-tight uppercase leading-tight">
+              <h2 className="text-3xl sm:text-4xl lg:text-[40px] font-black text-[#0B1E36] dark:text-white tracking-tight uppercase leading-tight">
                 SPOKEN TECHNICAL AUDIO EVALUATED ACROSS<br />
                 <span className="text-[#FF6B00]">5 OBJECTIVE PILLARS</span>
               </h2>
 
-              <p className="text-sm text-slate-600 leading-relaxed font-medium">
+              <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed font-medium">
                 Our Whisper Speech-to-Text STT engine analyzes your spoken answers in real-time. Evaluate your WPM pacing, technical command accuracy, and logical reasoning under realistic interview pressure.
               </p>
 
               {/* 2 Rubric Cards */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
-                <div className="p-5 rounded-3xl bg-white border border-slate-200/80 shadow-xs flex flex-col gap-2">
+                <div className="p-5 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-xs flex flex-col gap-2 transition-colors duration-300">
                   <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-xl bg-orange-100 text-[#FF6B00] flex items-center justify-center">
+                    <div className="w-8 h-8 rounded-xl bg-orange-100 dark:bg-orange-950/60 text-[#FF6B00] flex items-center justify-center">
                       <Mic className="w-4 h-4" />
                     </div>
                     <div>
-                      <span className="text-xs font-black text-slate-900 block">Technical Accuracy</span>
-                      <span className="text-lg font-black text-[#0B1E36]">40% <span className="text-xs font-bold text-slate-400">Weight</span></span>
+                      <span className="text-xs font-black text-slate-900 dark:text-white block">Technical Accuracy</span>
+                      <span className="text-lg font-black text-[#0B1E36] dark:text-white">40% <span className="text-xs font-bold text-slate-400">Weight</span></span>
                     </div>
                   </div>
-                  <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden mt-1">
+                  <div className="h-2 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden mt-1">
                     <div className="h-full bg-[#FF6B00] w-[40%]" />
                   </div>
-                  <span className="text-[11px] text-slate-500 font-medium">Correctness of AWS & Linux commands</span>
+                  <span className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">Correctness of AWS & Linux commands</span>
                 </div>
 
-                <div className="p-5 rounded-3xl bg-white border border-slate-200/80 shadow-xs flex flex-col gap-2">
+                <div className="p-5 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-xs flex flex-col gap-2 transition-colors duration-300">
                   <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center">
+                    <div className="w-8 h-8 rounded-xl bg-blue-100 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 flex items-center justify-center">
                       <FileText className="w-4 h-4" />
                     </div>
                     <div>
-                      <span className="text-xs font-black text-slate-900 block">Concept Coverage</span>
-                      <span className="text-lg font-black text-[#0B1E36]">25% <span className="text-xs font-bold text-slate-400">Weight</span></span>
+                      <span className="text-xs font-black text-slate-900 dark:text-white block">Concept Coverage</span>
+                      <span className="text-lg font-black text-[#0B1E36] dark:text-white">25% <span className="text-xs font-bold text-slate-400">Weight</span></span>
                     </div>
                   </div>
-                  <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden mt-1">
+                  <div className="h-2 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden mt-1">
                     <div className="h-full bg-blue-600 w-[25%]" />
                   </div>
-                  <span className="text-[11px] text-slate-500 font-medium">System internals & architectural edge cases</span>
+                  <span className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">System internals & architectural edge cases</span>
                 </div>
               </div>
 
@@ -690,33 +690,33 @@ export default function LandingPage() {
 
           {/* Bottom Strip (Screenshot 2) */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-12">
-            <div className="p-4 rounded-2xl bg-white border border-slate-200/80 shadow-xs flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-orange-100 text-[#FF6B00] flex items-center justify-center shrink-0">
+            <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-xs flex items-center gap-3 transition-colors duration-300">
+              <div className="w-10 h-10 rounded-xl bg-orange-100 dark:bg-orange-950/60 text-[#FF6B00] flex items-center justify-center shrink-0">
                 <Target className="w-5 h-5" />
               </div>
               <div className="flex flex-col">
-                <span className="text-xs font-black text-[#0B1E36]">Real-World Simulation</span>
-                <span className="text-[11px] text-slate-500 font-medium">Interview-like audio environments</span>
+                <span className="text-xs font-black text-[#0B1E36] dark:text-white">Real-World Simulation</span>
+                <span className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">Interview-like audio environments</span>
               </div>
             </div>
 
-            <div className="p-4 rounded-2xl bg-white border border-slate-200/80 shadow-xs flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-amber-100 text-amber-600 flex items-center justify-center shrink-0">
+            <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-xs flex items-center gap-3 transition-colors duration-300">
+              <div className="w-10 h-10 rounded-xl bg-amber-100 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
                 <BarChart3 className="w-5 h-5" />
               </div>
               <div className="flex flex-col">
-                <span className="text-xs font-black text-[#0B1E36]">Data-Driven Feedback</span>
-                <span className="text-[11px] text-slate-500 font-medium">Actionable insights to improve</span>
+                <span className="text-xs font-black text-[#0B1E36] dark:text-white">Data-Driven Feedback</span>
+                <span className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">Actionable insights to improve</span>
               </div>
             </div>
 
-            <div className="p-4 rounded-2xl bg-white border border-slate-200/80 shadow-xs flex items-center gap-3">
+            <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-xs flex items-center gap-3 transition-colors duration-300">
               <div className="w-10 h-10 rounded-xl bg-[#0B1E36] text-[#FF6B00] flex items-center justify-center shrink-0">
                 <Trophy className="w-5 h-5" />
               </div>
               <div className="flex flex-col">
-                <span className="text-xs font-black text-[#0B1E36]">Score What Matters</span>
-                <span className="text-[11px] text-slate-500 font-medium">Technical depth, clarity & logic</span>
+                <span className="text-xs font-black text-[#0B1E36] dark:text-white">Score What Matters</span>
+                <span className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">Technical depth, clarity & logic</span>
               </div>
             </div>
           </div>
@@ -725,17 +725,17 @@ export default function LandingPage() {
       </section>
 
       {/* 4. 5-STAGE SYSTEM SECTION (Screenshot 3) */}
-      <section id="features" className="py-20 relative z-10 bg-white border-t border-slate-200/80">
+      <section id="features" className="py-20 relative z-10 bg-white dark:bg-[#070b14] border-t border-slate-200/80 dark:border-slate-800 transition-colors duration-300">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           
           <div className="text-center max-w-3xl mx-auto mb-14">
-            <span className="px-3.5 py-1.5 rounded-full text-xs font-black text-[#FF6B00] bg-orange-100/80 border border-orange-200 inline-flex items-center gap-1.5 mb-3">
+            <span className="px-3.5 py-1.5 rounded-full text-xs font-black text-[#FF6B00] bg-orange-100/80 dark:bg-orange-950/60 border border-orange-200 dark:border-orange-900/50 inline-flex items-center gap-1.5 mb-3">
               🚀 5-STAGE SYSTEM
             </span>
-            <h2 className="text-3xl sm:text-4xl font-black text-[#0B1E36] tracking-tight uppercase">
+            <h2 className="text-3xl sm:text-4xl font-black text-[#0B1E36] dark:text-white tracking-tight uppercase">
               PRACTICE REAL <span className="text-[#FF6B00]">AWS INCIDENTS</span> & GET AI SCORED
             </h2>
-            <p className="text-sm text-slate-600 mt-2 font-medium">
+            <p className="text-sm text-slate-600 dark:text-slate-300 mt-2 font-medium">
               Follow a proven 5-stage system to build real-world chops. Master cloud problem-solving.
             </p>
           </div>
@@ -751,12 +751,12 @@ export default function LandingPage() {
             ].map((st, idx) => (
               <div 
                 key={idx}
-                className="p-5 rounded-3xl bg-white border border-slate-200/90 hover:border-[#FF6B00] shadow-xs hover:shadow-xl hover:shadow-[#FF6B00]/10 transition-all group flex flex-col justify-between"
+                className="p-5 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 hover:border-[#FF6B00] dark:hover:border-[#FF6B00] shadow-xs hover:shadow-xl hover:shadow-[#FF6B00]/10 transition-all group flex flex-col justify-between"
               >
                 <div>
                   <div className="flex items-center justify-between mb-4">
                     <span className="text-xs font-black text-[#FF6B00]">STAGE {st.id}</span>
-                    <span className="text-[10px] font-mono font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200 flex items-center gap-1">
+                    <span className="text-[10px] font-mono font-bold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-800 flex items-center gap-1">
                       <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
                       LIVE
                     </span>
@@ -766,11 +766,11 @@ export default function LandingPage() {
                     <st.icon className={`w-7 h-7 ${idx === 0 ? "text-[#FF6B00]" : idx === 1 ? "text-blue-600" : idx === 2 ? "text-emerald-600" : idx === 3 ? "text-purple-600" : "text-amber-600"}`} />
                   </div>
 
-                  <h3 className="text-sm font-black text-[#0B1E36] text-center group-hover:text-[#FF6B00] transition-colors uppercase tracking-tight">{st.name}</h3>
-                  <p className="text-[11px] text-slate-500 text-center mt-2 leading-relaxed font-medium">{st.desc}</p>
+                  <h3 className="text-sm font-black text-[#0B1E36] dark:text-white text-center group-hover:text-[#FF6B00] transition-colors uppercase tracking-tight">{st.name}</h3>
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400 text-center mt-2 leading-relaxed font-medium">{st.desc}</p>
                 </div>
 
-                <Link href="/login" className="mt-5 pt-3 border-t border-slate-100 flex items-center justify-center gap-1 text-xs font-extrabold text-[#FF6B00]">
+                <Link href="/login" className="mt-5 pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-center gap-1 text-xs font-extrabold text-[#FF6B00]">
                   <span>Explore Stage</span>
                   <ArrowRight className="w-3.5 h-3.5" />
                 </Link>
@@ -780,33 +780,33 @@ export default function LandingPage() {
 
           {/* Bottom Strip (Screenshot 3) */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-12">
-            <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 shadow-xs flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0">
+            <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-xs flex items-center gap-3 transition-colors duration-300">
+              <div className="w-10 h-10 rounded-xl bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
                 <Target className="w-5 h-5" />
               </div>
               <div className="flex flex-col">
-                <span className="text-xs font-black text-[#0B1E36]">Hands-on Learning</span>
-                <span className="text-[11px] text-slate-500 font-medium">Real AWS incidents & tools</span>
+                <span className="text-xs font-black text-[#0B1E36] dark:text-white">Hands-on Learning</span>
+                <span className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">Real AWS incidents & tools</span>
               </div>
             </div>
 
-            <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 shadow-xs flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center shrink-0">
+            <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-xs flex items-center gap-3 transition-colors duration-300">
+              <div className="w-10 h-10 rounded-xl bg-blue-100 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0">
                 <BarChart3 className="w-5 h-5" />
               </div>
               <div className="flex flex-col">
-                <span className="text-xs font-black text-[#0B1E36]">AI-Powered Scoring</span>
-                <span className="text-[11px] text-slate-500 font-medium">Get instant feedback & improve</span>
+                <span className="text-xs font-black text-[#0B1E36] dark:text-white">AI-Powered Scoring</span>
+                <span className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">Get instant feedback & improve</span>
               </div>
             </div>
 
-            <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 shadow-xs flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-amber-100 text-amber-600 flex items-center justify-center shrink-0">
+            <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-xs flex items-center gap-3 transition-colors duration-300">
+              <div className="w-10 h-10 rounded-xl bg-amber-100 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
                 <Trophy className="w-5 h-5" />
               </div>
               <div className="flex flex-col">
-                <span className="text-xs font-black text-[#0B1E36]">Career-Ready Skills</span>
-                <span className="text-[11px] text-slate-500 font-medium">Build confidence. Land roles.</span>
+                <span className="text-xs font-black text-[#0B1E36] dark:text-white">Career-Ready Skills</span>
+                <span className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">Build confidence. Land roles.</span>
               </div>
             </div>
 
@@ -816,13 +816,13 @@ export default function LandingPage() {
       </section>
 
       {/* 5. ATS RESUME ANALYZER & STAR REWRITER SECTION */}
-      <section id="ats" className="py-20 relative z-10 bg-gradient-to-b from-white via-orange-50/20 to-white border-t border-slate-200/80">
+      <section id="ats" className="py-20 relative z-10 bg-gradient-to-b from-white via-orange-50/20 to-white dark:from-[#070b14] dark:via-orange-950/10 dark:to-[#070b14] border-t border-slate-200/80 dark:border-slate-800 transition-colors duration-300">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
             
             {/* Left Interactive STAR Formula Rewriter Mock Card */}
             <div className="lg:col-span-6">
-              <div className="rounded-3xl bg-white border border-slate-200/90 shadow-2xl overflow-hidden flex flex-col">
+              <div className="rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-2xl overflow-hidden flex flex-col transition-colors duration-300">
                 
                 {/* Header Bar */}
                 <div className="bg-[#0B1E36] p-4 text-white flex items-center justify-between">
@@ -842,13 +842,13 @@ export default function LandingPage() {
                 <div className="p-6 flex flex-col gap-4">
                   
                   {/* BEFORE (WEAK BULLET) */}
-                  <div className="p-4 rounded-2xl bg-rose-50/80 border border-rose-200/80 flex items-start justify-between gap-3">
+                  <div className="p-4 rounded-2xl bg-rose-50/80 dark:bg-rose-950/40 border border-rose-200/80 dark:border-rose-900/50 flex items-start justify-between gap-3">
                     <div className="flex flex-col gap-1.5">
-                      <div className="flex items-center gap-1.5 text-[11px] font-black text-rose-600 uppercase tracking-wider">
+                      <div className="flex items-center gap-1.5 text-[11px] font-black text-rose-600 dark:text-rose-400 uppercase tracking-wider">
                         <AlertTriangle className="w-3.5 h-3.5 text-rose-500" />
                         <span>BEFORE REWRITING (WEAK BULLET)</span>
                       </div>
-                      <p className="text-xs text-slate-700 font-medium italic">
+                      <p className="text-xs text-slate-700 dark:text-slate-300 font-medium italic">
                         &ldquo;Managed AWS EC2 instances and set up Docker containers for deployments.&rdquo;
                       </p>
                     </div>
@@ -859,14 +859,14 @@ export default function LandingPage() {
                   </div>
 
                   {/* AFTER AI STAR OPTIMIZATION */}
-                  <div className="p-4 rounded-2xl bg-emerald-50/80 border border-emerald-200/80 flex items-start justify-between gap-3">
+                  <div className="p-4 rounded-2xl bg-emerald-50/80 dark:bg-emerald-950/40 border border-emerald-200/80 dark:border-emerald-900/50 flex items-start justify-between gap-3">
                     <div className="flex flex-col gap-1.5">
-                      <div className="flex items-center gap-1.5 text-[11px] font-black text-emerald-700 uppercase tracking-wider">
+                      <div className="flex items-center gap-1.5 text-[11px] font-black text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">
                         <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
                         <span>AFTER AI STAR OPTIMIZATION (QUANTIFIED IMPACT)</span>
                       </div>
-                      <p className="text-xs text-slate-800 font-medium leading-relaxed">
-                        &ldquo;Architected multi-stage Docker builds on AWS EKS with Terraform IaC, reducing container image size by <strong className="text-emerald-600 font-black">62%</strong> and eliminating production deployment downtime.&rdquo;
+                      <p className="text-xs text-slate-800 dark:text-slate-200 font-medium leading-relaxed">
+                        &ldquo;Architected multi-stage Docker builds on AWS EKS with Terraform IaC, reducing container image size by <strong className="text-emerald-600 dark:text-emerald-400 font-black">62%</strong> and eliminating production deployment downtime.&rdquo;
                       </p>
                     </div>
 
@@ -876,31 +876,31 @@ export default function LandingPage() {
                   </div>
 
                   {/* IMPACT YOU CAN SEE */}
-                  <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 flex flex-col gap-2">
+                  <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200/80 dark:border-slate-700 flex flex-col gap-2">
                     <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">IMPACT YOU CAN SEE</span>
                     <div className="grid grid-cols-3 gap-2 pt-1">
                       <div className="flex flex-col">
-                        <span className="text-sm font-black text-emerald-600 flex items-center gap-1 font-mono">
+                        <span className="text-sm font-black text-emerald-600 dark:text-emerald-400 flex items-center gap-1 font-mono">
                           <TrendingUp className="w-3.5 h-3.5 text-emerald-500" />
                           +62%
                         </span>
-                        <span className="text-[10px] text-slate-500 font-bold">Efficiency Gain</span>
+                        <span className="text-[10px] text-slate-500 dark:text-slate-400 font-bold">Efficiency Gain</span>
                       </div>
 
-                      <div className="flex flex-col border-l border-slate-200 pl-3">
-                        <span className="text-sm font-black text-purple-600 flex items-center gap-1 font-mono">
+                      <div className="flex flex-col border-l border-slate-200 dark:border-slate-700 pl-3">
+                        <span className="text-sm font-black text-purple-600 dark:text-purple-400 flex items-center gap-1 font-mono">
                           <Zap className="w-3.5 h-3.5 text-purple-500" />
                           0
                         </span>
-                        <span className="text-[10px] text-slate-500 font-bold">Deployment Downtime</span>
+                        <span className="text-[10px] text-slate-500 dark:text-slate-400 font-bold">Deployment Downtime</span>
                       </div>
 
-                      <div className="flex flex-col border-l border-slate-200 pl-3">
+                      <div className="flex flex-col border-l border-slate-200 dark:border-slate-700 pl-3">
                         <span className="text-sm font-black text-[#FF6B00] flex items-center gap-1 font-mono">
                           <ArrowUpRight className="w-3.5 h-3.5 text-[#FF6B00]" />
                           +34%
                         </span>
-                        <span className="text-[10px] text-slate-500 font-bold">Interview Call Rate</span>
+                        <span className="text-[10px] text-slate-500 dark:text-slate-400 font-bold">Interview Call Rate</span>
                       </div>
                     </div>
                   </div>
@@ -913,22 +913,22 @@ export default function LandingPage() {
             {/* Right Column: Title & 5 Features */}
             <div className="lg:col-span-6 flex flex-col gap-6">
               <div>
-                <span className="px-3.5 py-1.5 rounded-full text-xs font-black text-[#FF6B00] bg-orange-100/80 border border-orange-200 inline-flex items-center gap-1.5 mb-3">
+                <span className="px-3.5 py-1.5 rounded-full text-xs font-black text-[#FF6B00] bg-orange-100/80 dark:bg-orange-950/60 border border-orange-200 dark:border-orange-900/50 inline-flex items-center gap-1.5 mb-3">
                   ⭐ 6-FACTOR ATS RESUME ENGINE
                 </span>
-                <h2 className="text-3xl sm:text-4xl font-black text-[#0B1E36] tracking-tight uppercase leading-tight">
+                <h2 className="text-3xl sm:text-4xl font-black text-[#0B1E36] dark:text-white tracking-tight uppercase leading-tight">
                   SCAN YOUR RESUME AGAINST<br />
                   REAL <span className="text-[#FF6B00]">CLOUD ENGINEERING JDS</span>
                 </h2>
               </div>
 
-              <p className="text-sm text-slate-600 leading-relaxed font-medium">
+              <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed font-medium">
                 Uncover missing critical keywords (IRSA, Terraform state locking, Prometheus metrics) and automatically rewrite bullet points with quantified STAR metrics.
               </p>
 
               <Link
                 href="/resume-ats"
-                className="w-fit py-3.5 px-7 rounded-2xl font-black text-xs text-white bg-[#0B1E36] hover:bg-slate-800 shadow-xl shadow-[#0B1E36]/20 flex items-center gap-2.5 transition-all"
+                className="w-fit py-3.5 px-7 rounded-2xl font-black text-xs text-white bg-[#0B1E36] dark:bg-slate-800 hover:bg-slate-800 dark:hover:bg-slate-700 border border-slate-700 shadow-xl shadow-[#0B1E36]/20 flex items-center gap-2.5 transition-all"
               >
                 <FileText className="w-4 h-4 text-[#FF6B00]" />
                 <span>Audit Your Resume Now</span>
@@ -936,40 +936,40 @@ export default function LandingPage() {
               </Link>
 
               {/* 5 Feature Icons at bottom right */}
-              <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 pt-6 border-t border-slate-200/80">
+              <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 pt-6 border-t border-slate-200/80 dark:border-slate-800">
                 <div className="flex flex-col items-center text-center gap-1">
-                  <div className="w-9 h-9 rounded-xl bg-orange-100 text-[#FF6B00] flex items-center justify-center mb-1">
+                  <div className="w-9 h-9 rounded-xl bg-orange-100 dark:bg-orange-950/60 text-[#FF6B00] flex items-center justify-center mb-1">
                     <Search className="w-4 h-4" />
                   </div>
-                  <span className="text-[10px] font-bold text-slate-700 leading-tight">Keyword Gap Detection</span>
+                  <span className="text-[10px] font-bold text-slate-700 dark:text-slate-300 leading-tight">Keyword Gap Detection</span>
                 </div>
 
                 <div className="flex flex-col items-center text-center gap-1">
-                  <div className="w-9 h-9 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center mb-1">
+                  <div className="w-9 h-9 rounded-xl bg-blue-100 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 flex items-center justify-center mb-1">
                     <Sparkles className="w-4 h-4" />
                   </div>
-                  <span className="text-[10px] font-bold text-slate-700 leading-tight">AI-Powered Rewriting</span>
+                  <span className="text-[10px] font-bold text-slate-700 dark:text-slate-300 leading-tight">AI-Powered Rewriting</span>
                 </div>
 
                 <div className="flex flex-col items-center text-center gap-1">
-                  <div className="w-9 h-9 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center mb-1">
+                  <div className="w-9 h-9 rounded-xl bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mb-1">
                     <ShieldCheck className="w-4 h-4" />
                   </div>
-                  <span className="text-[10px] font-bold text-slate-700 leading-tight">STAR Metric Scoring</span>
+                  <span className="text-[10px] font-bold text-slate-700 dark:text-slate-300 leading-tight">STAR Metric Scoring</span>
                 </div>
 
                 <div className="flex flex-col items-center text-center gap-1">
-                  <div className="w-9 h-9 rounded-xl bg-purple-100 text-purple-600 flex items-center justify-center mb-1">
+                  <div className="w-9 h-9 rounded-xl bg-purple-100 dark:bg-purple-950/60 text-purple-600 dark:text-purple-400 flex items-center justify-center mb-1">
                     <Target className="w-4 h-4" />
                   </div>
-                  <span className="text-[10px] font-bold text-slate-700 leading-tight">ATS Match Optimization</span>
+                  <span className="text-[10px] font-bold text-slate-700 dark:text-slate-300 leading-tight">ATS Match Optimization</span>
                 </div>
 
                 <div className="flex flex-col items-center text-center gap-1">
-                  <div className="w-9 h-9 rounded-xl bg-amber-100 text-amber-600 flex items-center justify-center mb-1">
+                  <div className="w-9 h-9 rounded-xl bg-amber-100 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 flex items-center justify-center mb-1">
                     <TrendingUp className="w-4 h-4" />
                   </div>
-                  <span className="text-[10px] font-bold text-slate-700 leading-tight">Real Impact Insights</span>
+                  <span className="text-[10px] font-bold text-slate-700 dark:text-slate-300 leading-tight">Real Impact Insights</span>
                 </div>
               </div>
 
@@ -980,50 +980,50 @@ export default function LandingPage() {
       </section>
 
       {/* 6. 30-DAY GUIDED LEARNING SPRINTS ROADMAP SECTION */}
-      <section id="roadmap" className="py-20 relative z-10 bg-white border-t border-slate-200/80">
+      <section id="roadmap" className="py-20 relative z-10 bg-white dark:bg-[#070b14] border-t border-slate-200/80 dark:border-slate-800 transition-colors duration-300">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           
           <div className="text-center max-w-3xl mx-auto mb-16">
             <span className="text-xs font-black text-[#FF6B00] uppercase tracking-widest block mb-2">
               AUTOMATED AI ROADMAP
             </span>
-            <h2 className="text-3xl sm:text-4xl lg:text-[42px] font-black text-[#0B1E36] tracking-tight uppercase leading-tight">
+            <h2 className="text-3xl sm:text-4xl lg:text-[42px] font-black text-[#0B1E36] dark:text-white tracking-tight uppercase leading-tight">
               30-DAY GUIDED LEARNING SPRINTS<br />
               TO RESOLVE SKILL GAPS
             </h2>
-            <p className="text-sm text-slate-600 mt-3 font-medium leading-relaxed max-w-2xl mx-auto">
+            <p className="text-sm text-slate-600 dark:text-slate-300 mt-3 font-medium leading-relaxed max-w-2xl mx-auto">
               Based on your interview scores, our system synthesizes a 4-week study plan with direct links to official documentation & hands-on lab challenges.
             </p>
           </div>
 
           {/* Stepper Timeline Header */}
           <div className="relative max-w-5xl mx-auto mb-10 hidden md:block">
-            <div className="absolute top-4 left-10 right-10 h-[1.5px] border-b-2 border-dashed border-slate-200 z-0" />
+            <div className="absolute top-4 left-10 right-10 h-[1.5px] border-b-2 border-dashed border-slate-200 dark:border-slate-800 z-0" />
             
             <div className="grid grid-cols-4 relative z-10 text-center">
               <div className="flex flex-col items-center gap-1.5">
-                <div className="w-8 h-8 rounded-full bg-white border-2 border-[#FF6B00] text-[#FF6B00] font-black text-xs flex items-center justify-center shadow-xs">
+                <div className="w-8 h-8 rounded-full bg-white dark:bg-slate-900 border-2 border-[#FF6B00] text-[#FF6B00] font-black text-xs flex items-center justify-center shadow-xs">
                   1
                 </div>
                 <span className="text-[10px] font-black font-mono text-[#FF6B00] tracking-widest uppercase">WEEK 1</span>
               </div>
 
               <div className="flex flex-col items-center gap-1.5">
-                <div className="w-8 h-8 rounded-full bg-white border-2 border-blue-500 text-blue-600 font-black text-xs flex items-center justify-center shadow-xs">
+                <div className="w-8 h-8 rounded-full bg-white dark:bg-slate-900 border-2 border-blue-500 text-blue-600 dark:text-blue-400 font-black text-xs flex items-center justify-center shadow-xs">
                   2
                 </div>
-                <span className="text-[10px] font-black font-mono text-blue-600 tracking-widest uppercase">WEEK 2</span>
+                <span className="text-[10px] font-black font-mono text-blue-600 dark:text-blue-400 tracking-widest uppercase">WEEK 2</span>
               </div>
 
               <div className="flex flex-col items-center gap-1.5">
-                <div className="w-8 h-8 rounded-full bg-white border-2 border-purple-500 text-purple-600 font-black text-xs flex items-center justify-center shadow-xs">
+                <div className="w-8 h-8 rounded-full bg-white dark:bg-slate-900 border-2 border-purple-500 text-purple-600 dark:text-purple-400 font-black text-xs flex items-center justify-center shadow-xs">
                   3
                 </div>
-                <span className="text-[10px] font-black font-mono text-purple-600 tracking-widest uppercase">WEEK 3</span>
+                <span className="text-[10px] font-black font-mono text-purple-600 dark:text-purple-400 tracking-widest uppercase">WEEK 3</span>
               </div>
 
               <div className="flex flex-col items-center gap-1.5">
-                <div className="w-8 h-8 rounded-full bg-white border-2 border-[#FF6B00] text-[#FF6B00] font-black text-xs flex items-center justify-center shadow-xs">
+                <div className="w-8 h-8 rounded-full bg-white dark:bg-slate-900 border-2 border-[#FF6B00] text-[#FF6B00] font-black text-xs flex items-center justify-center shadow-xs">
                   4
                 </div>
                 <span className="text-[10px] font-black font-mono text-[#FF6B00] tracking-widest uppercase">WEEK 4</span>
@@ -1190,43 +1190,43 @@ export default function LandingPage() {
 
           {/* Bottom Feature Bar (Screenshot Roadmap) */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-12">
-            <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 shadow-xs flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-orange-100 text-[#FF6B00] flex items-center justify-center shrink-0">
+            <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-xs flex items-center gap-3 transition-colors duration-300">
+              <div className="w-10 h-10 rounded-xl bg-orange-100 dark:bg-orange-950/60 text-[#FF6B00] flex items-center justify-center shrink-0">
                 <Calendar className="w-5 h-5" />
               </div>
               <div className="flex flex-col">
-                <span className="text-xs font-black text-[#0B1E36]">30 Days Guided Sprints</span>
-                <span className="text-[10px] text-slate-500 font-medium">Structured 4-week plan to build real-world skills.</span>
+                <span className="text-xs font-black text-[#0B1E36] dark:text-white">30 Days Guided Sprints</span>
+                <span className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">Structured 4-week plan to build real-world skills.</span>
               </div>
             </div>
 
-            <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 shadow-xs flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center shrink-0">
-                <Target className="w-5 h-5" />
+            <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-xs flex items-center gap-3 transition-colors duration-300">
+              <div className="w-10 h-10 rounded-xl bg-[#0B1E36] text-[#FF6B00] flex items-center justify-center shrink-0">
+                <Sparkles className="w-5 h-5" />
               </div>
               <div className="flex flex-col">
-                <span className="text-xs font-black text-[#0B1E36]">Score Based Personalization</span>
-                <span className="text-[10px] text-slate-500 font-medium">Roadmap adapts to your interview performance.</span>
+                <span className="text-xs font-black text-[#0B1E36] dark:text-white">Score Based Personalization</span>
+                <span className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">Roadmap adapts to your interview performance.</span>
               </div>
             </div>
 
-            <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 shadow-xs flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-purple-100 text-purple-600 flex items-center justify-center shrink-0">
+            <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-xs flex items-center gap-3 transition-colors duration-300">
+              <div className="w-10 h-10 rounded-xl bg-purple-100 dark:bg-purple-950/60 text-purple-600 dark:text-purple-400 flex items-center justify-center shrink-0">
                 <FileText className="w-5 h-5" />
               </div>
               <div className="flex flex-col">
-                <span className="text-xs font-black text-[#0B1E36]">Official Docs & Labs</span>
-                <span className="text-[10px] text-slate-500 font-medium">Direct links to trusted docs & hands-on challenges.</span>
+                <span className="text-xs font-black text-[#0B1E36] dark:text-white">Official Docs & Labs</span>
+                <span className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">Direct links to trusted docs & hands-on challenges.</span>
               </div>
             </div>
 
-            <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 shadow-xs flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-amber-100 text-amber-600 flex items-center justify-center shrink-0">
+            <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-xs flex items-center gap-3 transition-colors duration-300">
+              <div className="w-10 h-10 rounded-xl bg-amber-100 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
                 <TrendingUp className="w-5 h-5" />
               </div>
               <div className="flex flex-col">
-                <span className="text-xs font-black text-[#0B1E36]">Track Progress & Improve</span>
-                <span className="text-[10px] text-slate-500 font-medium">Measure learning, close gaps & boost interview score.</span>
+                <span className="text-xs font-black text-[#0B1E36] dark:text-white">Track Progress & Improve</span>
+                <span className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">Measure learning, close gaps & boost interview score.</span>
               </div>
             </div>
           </div>
@@ -1235,13 +1235,13 @@ export default function LandingPage() {
       </section>
 
       {/* 5. FAQ SECTION */}
-      <section id="faq" className="py-20 relative z-10 bg-slate-50 border-t border-slate-200/80">
+      <section id="faq" className="py-20 relative z-10 bg-slate-50 dark:bg-[#070b14] border-t border-slate-200/80 dark:border-slate-800 transition-colors duration-300">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <span className="text-xs font-black text-[#FF6B00] uppercase tracking-widest">
               FREQUENTLY ASKED QUESTIONS
             </span>
-            <h2 className="text-3xl font-black text-[#0B1E36] tracking-tight mt-2">
+            <h2 className="text-3xl font-black text-[#0B1E36] dark:text-white tracking-tight mt-2">
               Got Questions? We&apos;ve Got Answers.
             </h2>
           </div>
@@ -1252,17 +1252,17 @@ export default function LandingPage() {
               return (
                 <div
                   key={idx}
-                  className="rounded-2xl bg-white border border-slate-200/80 overflow-hidden shadow-xs transition-all"
+                  className="rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 overflow-hidden shadow-xs transition-colors duration-300"
                 >
                   <button
                     onClick={() => setActiveFaq(isOpen ? null : idx)}
-                    className="w-full p-5 text-left flex items-center justify-between gap-4 font-bold text-sm text-[#0B1E36] hover:text-[#FF6B00] transition-colors"
+                    className="w-full p-5 text-left flex items-center justify-between gap-4 font-bold text-sm text-[#0B1E36] dark:text-white hover:text-[#FF6B00] dark:hover:text-[#FF6B00] transition-colors"
                   >
                     <span>{faq.q}</span>
                     {isOpen ? <ChevronUp className="w-5 h-5 text-[#FF6B00] shrink-0" /> : <ChevronDown className="w-5 h-5 text-slate-400 shrink-0" />}
                   </button>
                   {isOpen && (
-                    <div className="px-5 pb-5 text-xs text-slate-600 font-medium leading-relaxed border-t border-slate-100 pt-3">
+                    <div className="px-5 pb-5 text-xs text-slate-600 dark:text-slate-300 font-medium leading-relaxed border-t border-slate-100 dark:border-slate-800 pt-3">
                       {faq.a}
                     </div>
                   )}

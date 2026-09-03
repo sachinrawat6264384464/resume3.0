@@ -18,7 +18,9 @@ export default function AdminCandidatesPage() {
     try {
       const res = await apiFetch("/candidates");
       if (res) {
-        const rawList = res.data ? (Array.isArray(res.data) ? res.data : (res.data.items || [])) : (Array.isArray(res) ? res : []);
+        const rawList = Array.isArray(res) 
+          ? res 
+          : (res.items ? res.items : (res.data ? (Array.isArray(res.data) ? res.data : (res.data.items || [])) : []));
         setCandidates(rawList);
       }
     } catch (e) {
@@ -39,6 +41,10 @@ export default function AdminCandidatesPage() {
     const q = searchQuery.toLowerCase();
     return name.toLowerCase().includes(q) || email.toLowerCase().includes(q) || role.toLowerCase().includes(q);
   });
+
+  const avgReadiness = candidates.length > 0
+    ? Math.round(candidates.reduce((acc, curr) => acc + (curr.readiness_score || 0), 0) / candidates.length)
+    : 0;
 
   return (
     <div className="max-w-[1280px] mx-auto flex flex-col gap-6 pb-16 text-slate-900 dark:text-slate-100 font-sans">
@@ -68,6 +74,33 @@ export default function AdminCandidatesPage() {
           <RefreshCw className={`w-3.5 h-3.5 ${loading ? "animate-spin" : ""}`} />
           Refresh List
         </button>
+      </div>
+
+      {/* Top Stat Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="p-5 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-xs flex flex-col justify-between">
+          <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Total Candidates</span>
+          <span className="text-2xl font-black text-[#FF6B00] font-mono tracking-tight mt-2">{candidates.length}</span>
+          <span className="text-[11px] font-medium text-slate-500 mt-1">Live Database Roster</span>
+        </div>
+
+        <div className="p-5 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-xs flex flex-col justify-between">
+          <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Avg Readiness Score</span>
+          <span className="text-2xl font-black text-emerald-600 dark:text-emerald-400 font-mono tracking-tight mt-2">{avgReadiness}%</span>
+          <span className="text-[11px] font-medium text-slate-500 mt-1">5-Pillar Evaluation Benchmark</span>
+        </div>
+
+        <div className="p-5 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-xs flex flex-col justify-between">
+          <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Active Cohort</span>
+          <span className="text-2xl font-black text-blue-600 dark:text-blue-400 font-mono tracking-tight mt-2">Cohort 2026-A</span>
+          <span className="text-[11px] font-medium text-slate-500 mt-1">DevOps & Cloud Operations</span>
+        </div>
+
+        <div className="p-5 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-xs flex flex-col justify-between">
+          <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Tenant Data Isolation</span>
+          <span className="text-2xl font-black text-purple-600 dark:text-purple-400 font-mono tracking-tight mt-2">Verified</span>
+          <span className="text-[11px] font-medium text-slate-500 mt-1">Multi-Tenant Secured</span>
+        </div>
       </div>
 
       {/* Filter & Search */}

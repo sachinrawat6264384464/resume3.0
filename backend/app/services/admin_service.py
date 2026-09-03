@@ -74,10 +74,11 @@ class AdminService:
 
         if not stage_pass_rates:
             stage_pass_rates = [
-                StagePassRateMetric(stage_number=1, stage_title="Cloud & Linux Fundamentals", total_attempts=12, passed_attempts=11, pass_rate_percentage=91.6),
-                StagePassRateMetric(stage_number=2, stage_title="Containerization & CI/CD", total_attempts=11, passed_attempts=9, pass_rate_percentage=81.8),
-                StagePassRateMetric(stage_number=3, stage_title="IaC & Observability", total_attempts=9, passed_attempts=7, pass_rate_percentage=77.7),
-                StagePassRateMetric(stage_number=4, stage_title="Troubleshooting Scenario", total_attempts=7, passed_attempts=5, pass_rate_percentage=71.4),
+                StagePassRateMetric(stage_number=1, stage_title="Profile & Pitch", total_attempts=0, passed_attempts=0, pass_rate_percentage=0.0),
+                StagePassRateMetric(stage_number=2, stage_title="Linux Warrior", total_attempts=0, passed_attempts=0, pass_rate_percentage=0.0),
+                StagePassRateMetric(stage_number=3, stage_title="Multi-Cloud", total_attempts=0, passed_attempts=0, pass_rate_percentage=0.0),
+                StagePassRateMetric(stage_number=4, stage_title="DevOps & Containers", total_attempts=0, passed_attempts=0, pass_rate_percentage=0.0),
+                StagePassRateMetric(stage_number=5, stage_title="Incident Boss", total_attempts=0, passed_attempts=0, pass_rate_percentage=0.0),
             ]
 
         # Weak topics aggregation

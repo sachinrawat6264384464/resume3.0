@@ -130,15 +130,38 @@ export default function AdminAnalyticsPage() {
     }
   ];
 
-  const recentActivities = [
-    { icon: Users, color: "text-blue-500 bg-blue-50 dark:bg-blue-950", title: "New candidate registered", desc: "Sachin Rawat (sachin@cloudops.internal)", time: "Just now" },
-    { icon: Sparkles, color: "text-amber-500 bg-amber-50 dark:bg-amber-950", title: "5 Core Challenge Stages", desc: "Blueprints Initialized", time: "10 mins ago" },
-    { icon: Mail, color: "text-rose-500 bg-rose-50 dark:bg-rose-950", title: "Support Ticket #TCK-8942", desc: "Microphone Audio Stream Check", time: "1 hour ago" },
-    { icon: Server, color: "text-teal-500 bg-teal-50 dark:bg-teal-950", title: "Retention Cleaner Worker", desc: "90-Day Auto Purge Ready", time: "2 hours ago" },
-  ];
+  // Dynamic Date Range Calculation
+  const now = new Date();
+  const pastDate = new Date();
+  pastDate.setDate(now.getDate() - 6);
+  const formatDate = (d: Date) => d.toLocaleDateString("en-US", { month: "short", day: "2-digit" });
+  const formatFullDate = (d: Date) => d.toLocaleDateString("en-US", { month: "short", day: "2-digit", year: "numeric" });
+  const dateRangeLabel = `${formatFullDate(pastDate)} - ${formatFullDate(now)}`;
+
+  // Last 7 days dynamic date array
+  const last7Days = Array.from({ length: 7 }, (_, i) => {
+    const d = new Date();
+    d.setDate(now.getDate() - (6 - i));
+    return formatDate(d);
+  });
+
+  const recentActivities = displayMetrics.recent_interviews && displayMetrics.recent_interviews.length > 0
+    ? displayMetrics.recent_interviews.slice(0, 4).map((item) => ({
+        icon: Users,
+        color: "text-[#FF6B00] bg-orange-50 dark:bg-orange-950/60",
+        title: `${item.candidate_name} interview`,
+        desc: `${item.template_title} (${item.overall_score ?? 0}%)`,
+        time: item.created_at ? new Date(item.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "Just now"
+      }))
+    : [
+        { icon: Users, color: "text-[#FF6B00] bg-orange-50 dark:bg-orange-950", title: "New candidate registered", desc: "Sachin Rawat (sachin@cloudops.internal)", time: "Just now" },
+        { icon: Sparkles, color: "text-amber-500 bg-amber-50 dark:bg-amber-950", title: "5 Core Challenge Stages", desc: "Blueprints Initialized", time: "10 mins ago" },
+        { icon: Mail, color: "text-rose-500 bg-rose-50 dark:bg-rose-950", title: "Support Ticket #TCK-8942", desc: "Microphone Audio Stream Check", time: "1 hour ago" },
+        { icon: Server, color: "text-teal-500 bg-teal-50 dark:bg-teal-950", title: "Retention Cleaner Worker", desc: "90-Day Auto Purge Ready", time: "2 hours ago" },
+      ];
 
   const topCandidates = [
-    { rank: 1, name: "Sachin Rawat", email: "sachin@cloudops.internal", score: "0.0%", stage: "Stage 1", date: "Registered", medal: "🥇" },
+    { rank: 1, name: "Sachin Rawat", email: "sachin@cloudops.internal", score: `${displayMetrics.average_score ?? 0}%`, stage: "Stage 1", date: "Registered", medal: "🥇" },
   ];
 
   const systemHealth = [
@@ -148,6 +171,9 @@ export default function AdminAnalyticsPage() {
     { service: "Cloudinary CDN Storage", status: "Operational", icon: Cloud },
     { service: "Firebase Auth Engine", status: "Operational", icon: ShieldCheck },
   ];
+
+  const stageRates = displayMetrics.stage_pass_rates || [];
+  const stageColors = ["#FF6B00", "#3B82F6", "#10B981", "#F59E0B", "#8B5CF6"];
 
   return (
     <div className="flex flex-col gap-6 w-full max-w-[1440px] mx-auto pb-12 font-sans text-slate-900 dark:text-slate-100">
@@ -166,15 +192,15 @@ export default function AdminAnalyticsPage() {
         <div className="flex items-center gap-3 flex-wrap">
           {/* Date Filter */}
           <div className="flex items-center gap-2 px-3.5 py-2 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-700 dark:text-slate-300">
-            <Calendar className="w-4 h-4 text-[#FF9900]" />
-            <span>May 27, 2025 - Jun 02, 2025</span>
+            <Calendar className="w-4 h-4 text-[#FF6B00]" />
+            <span>{dateRangeLabel}</span>
             <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
           </div>
 
           {/* AI Blueprint Button */}
           <button
             onClick={() => setIsJDModalOpen(true)}
-            className="px-4 py-2.5 rounded-2xl font-black text-xs text-slate-950 bg-gradient-to-r from-[#FF9900] via-amber-400 to-orange-400 hover:from-amber-400 hover:to-orange-500 shadow-md shadow-[#FF9900]/25 flex items-center gap-1.5 transition-all"
+            className="px-4 py-2.5 rounded-2xl font-black text-xs text-white bg-gradient-to-r from-[#FF6B00] via-amber-500 to-orange-500 hover:from-orange-500 hover:to-amber-600 shadow-md shadow-[#FF6B00]/25 flex items-center gap-1.5 transition-all"
           >
             <Sparkles className="w-4 h-4" />
             <span>AI Blueprint from JD</span>
@@ -237,15 +263,15 @@ export default function AdminAnalyticsPage() {
           <div className="relative w-full h-56 flex flex-col justify-end pt-4">
             {/* Tooltip Overlay */}
             <div className="absolute top-4 left-1/2 -translate-x-1/2 px-3 py-1.5 rounded-xl bg-slate-900 text-white text-[11px] font-bold shadow-xl border border-slate-700 flex items-center gap-2 z-10 animate-bounce">
-              <span className="text-slate-400">May 30, 2025</span>
-              <span className="text-[#FF9900] font-black font-mono">Interviews: 1,842</span>
+              <span className="text-slate-400">{formatDate(now)}</span>
+              <span className="text-[#FF6B00] font-black font-mono">Interviews: {displayMetrics.interviews_completed || 0}</span>
             </div>
 
             <svg viewBox="0 0 500 180" className="w-full h-40 overflow-visible">
               <defs>
                 <linearGradient id="areaGradient" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#f43f5e" stopOpacity="0.35" />
-                  <stop offset="100%" stopColor="#f43f5e" stopOpacity="0.0" />
+                  <stop offset="0%" stopColor="#FF6B00" stopOpacity="0.35" />
+                  <stop offset="100%" stopColor="#FF6B00" stopOpacity="0.0" />
                 </linearGradient>
               </defs>
 
@@ -256,38 +282,34 @@ export default function AdminAnalyticsPage() {
 
               {/* Area Fill */}
               <path
-                d="M 0,120 Q 80,90 160,50 T 320,70 T 480,60 L 500,65 L 500,180 L 0,180 Z"
+                d="M 0,140 Q 80,120 160,90 T 320,100 T 480,70 L 500,65 L 500,180 L 0,180 Z"
                 fill="url(#areaGradient)"
               />
 
               {/* Smooth Spline Path */}
               <path
-                d="M 0,120 Q 80,90 160,50 T 320,70 T 480,60 L 500,65"
+                d="M 0,140 Q 80,120 160,90 T 320,100 T 480,70 L 500,65"
                 fill="none"
-                stroke="#f43f5e"
+                stroke="#FF6B00"
                 strokeWidth="3"
                 strokeLinecap="round"
               />
 
               {/* Data Points */}
-              <circle cx="0" cy="120" r="4" fill="#f43f5e" />
-              <circle cx="80" cy="90" r="4" fill="#f43f5e" />
-              <circle cx="160" cy="50" r="4" fill="#f43f5e" />
-              <circle cx="240" cy="70" r="6" fill="#f43f5e" className="animate-pulse" />
-              <circle cx="320" cy="45" r="4" fill="#f43f5e" />
-              <circle cx="400" cy="55" r="4" fill="#f43f5e" />
-              <circle cx="500" cy="65" r="4" fill="#f43f5e" />
+              <circle cx="0" cy="140" r="4" fill="#FF6B00" />
+              <circle cx="80" cy="120" r="4" fill="#FF6B00" />
+              <circle cx="160" cy="90" r="4" fill="#FF6B00" />
+              <circle cx="240" cy="110" r="4" fill="#FF6B00" />
+              <circle cx="320" cy="100" r="4" fill="#FF6B00" />
+              <circle cx="400" cy="75" r="4" fill="#FF6B00" />
+              <circle cx="500" cy="65" r="6" fill="#FF6B00" className="animate-pulse" />
             </svg>
 
             {/* X-Axis Dates */}
             <div className="flex items-center justify-between text-[10px] font-bold text-slate-400 pt-2 border-t border-slate-100 dark:border-slate-800">
-              <span>May 27</span>
-              <span>May 28</span>
-              <span>May 29</span>
-              <span className="text-rose-500 font-extrabold">May 30</span>
-              <span>May 31</span>
-              <span>Jun 01</span>
-              <span>Jun 02</span>
+              {last7Days.map((d, i) => (
+                <span key={i} className={i === 6 ? "text-[#FF6B00] font-extrabold" : ""}>{d}</span>
+              ))}
             </div>
           </div>
         </div>
@@ -301,40 +323,29 @@ export default function AdminAnalyticsPage() {
             <div className="relative w-36 h-36 shrink-0 flex items-center justify-center">
               <svg viewBox="0 0 36 36" className="w-full h-full transform -rotate-90">
                 <circle cx="18" cy="18" r="14" fill="none" stroke="#e2e8f0" strokeWidth="4" className="dark:stroke-slate-800" />
-                <circle cx="18" cy="18" r="14" fill="none" stroke="#f43f5e" strokeWidth="4.5" strokeDasharray="19 88" strokeDashoffset="0" />
-                <circle cx="18" cy="18" r="14" fill="none" stroke="#3b82f6" strokeWidth="4.5" strokeDasharray="17 88" strokeDashoffset="-19" />
-                <circle cx="18" cy="18" r="14" fill="none" stroke="#10b981" strokeWidth="4.5" strokeDasharray="21 88" strokeDashoffset="-36" />
-                <circle cx="18" cy="18" r="14" fill="none" stroke="#f59e0b" strokeWidth="4.5" strokeDasharray="16 88" strokeDashoffset="-57" />
-                <circle cx="18" cy="18" r="14" fill="none" stroke="#8b5cf6" strokeWidth="4.5" strokeDasharray="15 88" strokeDashoffset="-73" />
+                <circle cx="18" cy="18" r="14" fill="none" stroke="#FF6B00" strokeWidth="4.5" strokeDasharray="30 88" strokeDashoffset="0" />
+                <circle cx="18" cy="18" r="14" fill="none" stroke="#3b82f6" strokeWidth="4.5" strokeDasharray="20 88" strokeDashoffset="-30" />
+                <circle cx="18" cy="18" r="14" fill="none" stroke="#10b981" strokeWidth="4.5" strokeDasharray="15 88" strokeDashoffset="-50" />
+                <circle cx="18" cy="18" r="14" fill="none" stroke="#f59e0b" strokeWidth="4.5" strokeDasharray="12 88" strokeDashoffset="-65" />
+                <circle cx="18" cy="18" r="14" fill="none" stroke="#8b5cf6" strokeWidth="4.5" strokeDasharray="11 88" strokeDashoffset="-77" />
               </svg>
               <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
-                <span className="text-sm font-black text-slate-900 dark:text-white font-mono leading-none">12,842</span>
+                <span className="text-sm font-black text-slate-900 dark:text-white font-mono leading-none">{displayMetrics.total_candidates ?? 1}</span>
                 <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">Total</span>
               </div>
             </div>
 
             {/* Stage Color Legend */}
             <div className="flex flex-col gap-1.5 text-[11px] font-medium text-slate-600 dark:text-slate-300 w-full">
-              <div className="flex items-center justify-between">
-                <span className="flex items-center gap-1.5 font-bold"><span className="w-2 h-2 rounded-full bg-rose-500"></span>Stage 1 - Profile & Pitch</span>
-                <span className="font-mono text-slate-400">2,456 (19.1%)</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="flex items-center gap-1.5 font-bold"><span className="w-2 h-2 rounded-full bg-blue-500"></span>Stage 2 - Linux Warrior</span>
-                <span className="font-mono text-slate-400">2,189 (17.0%)</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="flex items-center gap-1.5 font-bold"><span className="w-2 h-2 rounded-full bg-emerald-500"></span>Stage 3 - Multi-Cloud</span>
-                <span className="font-mono text-slate-400">2,734 (21.3%)</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="flex items-center gap-1.5 font-bold"><span className="w-2 h-2 rounded-full bg-amber-500"></span>Stage 4 - DevOps & Containers</span>
-                <span className="font-mono text-slate-400">2,145 (16.7%)</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="flex items-center gap-1.5 font-bold"><span className="w-2 h-2 rounded-full bg-purple-500"></span>Stage 5 - Incident Boss</span>
-                <span className="font-mono text-slate-400">1,318 (10.3%)</span>
-              </div>
+              {stageRates.slice(0, 5).map((st, idx) => (
+                <div key={idx} className="flex items-center justify-between">
+                  <span className="flex items-center gap-1.5 font-bold">
+                    <span className="w-2 h-2 rounded-full" style={{ backgroundColor: stageColors[idx % stageColors.length] }}></span>
+                    Stage {st.stage_number} - {st.stage_title}
+                  </span>
+                  <span className="font-mono text-slate-400">{st.total_attempts} attempts</span>
+                </div>
+              ))}
             </div>
           </div>
         </div>
