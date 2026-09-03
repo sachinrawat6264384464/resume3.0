@@ -14,7 +14,7 @@ import { apiFetch } from "@/lib/api";
 export function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
-  const { user, isAuthenticated, logout, setAuth } = useAuthStore();
+  const { user, isAuthenticated, logout } = useAuthStore();
 
   const [dbUser, setDbUser] = useState<any>(null);
 
@@ -39,7 +39,11 @@ export function Sidebar() {
     router.push("/login");
   };
 
-  const isAdminMode = typeof window !== "undefined" && process.env.NEXT_PUBLIC_IS_ADMIN_PORTAL === "true";
+  const isAdminMode = typeof window !== "undefined" && (
+    process.env.NEXT_PUBLIC_IS_ADMIN_PORTAL === "true" ||
+    window.location.hostname.includes("admin") ||
+    user?.role === "ADMIN"
+  );
 
   const candidateNavItems = [
     { label: "Candidate Dashboard", href: "/dashboard", icon: LayoutDashboard },
@@ -73,27 +77,28 @@ export function Sidebar() {
 
   const navItems = isAdminMode ? adminNavItems : candidateNavItems;
 
-  // REAL DYNAMIC USER XP & LEVEL (Zero hardcoded numbers)
   const userXp = (user as any)?.xp ?? dbUser?.xp ?? 0;
   const userLevel = (user as any)?.level ?? dbUser?.level ?? 1;
 
   return (
     <aside className="w-[260px] h-screen border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-[#080d1a] flex flex-col sticky top-0 left-0 overflow-y-auto shrink-0 z-30 font-sans">
       
-      {/* Brand Header & Portal Mode Indicator */}
+      {/* Brand Header */}
       <div className="p-5 pb-3">
         <Link href="/" className="flex items-center gap-3 group">
-          <div className="w-9 h-9 rounded-xl bg-[#FF9900] flex items-center justify-center text-white shadow-md shadow-[#FF9900]/25 group-hover:scale-105 transition-transform">
-            <Cloud className="w-5 h-5 fill-white/20 text-white" />
+          <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-[#FF6B00] via-amber-500 to-orange-400 p-[1.5px] shadow-md shadow-[#FF6B00]/20 group-hover:scale-105 transition-transform">
+            <div className="w-full h-full bg-[#0B1E36] rounded-[10px] flex items-center justify-center text-white">
+              <Cloud className="w-4 h-4 text-[#FF6B00] fill-[#FF6B00]/20" />
+            </div>
           </div>
           <div className="flex flex-col">
-            <span className="text-base font-black tracking-tight text-slate-900 dark:text-white leading-none">
-              CloudOps <span className="text-[#FF9900]">AI</span>
+            <span className="text-base font-black tracking-tight text-[#0B1E36] dark:text-white leading-none">
+              CloudOps <span className="text-[#FF6B00]">AI</span>
             </span>
-            <span className={`text-[9px] font-black uppercase tracking-widest mt-1 px-1.5 py-0.5 rounded w-max ${
+            <span className={`text-[9px] font-black uppercase tracking-widest mt-1.5 px-2 py-0.5 rounded-full w-max ${
               isAdminMode 
-                ? 'bg-purple-100 dark:bg-purple-950 text-purple-600 dark:text-purple-400 border border-purple-300 dark:border-purple-800'
-                : 'bg-amber-100 dark:bg-amber-950 text-[#FF9900] border border-[#FF9900]/30'
+                ? 'bg-[#0B1E36] text-white border border-[#FF6B00]/40'
+                : 'bg-orange-100 dark:bg-orange-950/60 text-[#FF6B00] border border-[#FF6B00]/30'
             }`}>
               {isAdminMode ? "ADMIN PANEL PORTAL" : "CANDIDATE PORTAL"}
             </span>
@@ -111,48 +116,46 @@ export function Sidebar() {
               href={item.href}
               className={`flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-black transition-all ${
                 isActive
-                  ? isAdminMode 
-                    ? "bg-rose-50 dark:bg-rose-950/50 text-rose-500 font-extrabold shadow-sm border border-rose-100 dark:border-rose-900/40"
-                    : "bg-gradient-to-r from-[#FF9900] via-amber-500 to-orange-400 text-slate-950 shadow-md shadow-[#FF9900]/25"
-                  : "text-slate-600 hover:text-slate-900 hover:bg-slate-100 dark:text-slate-400 dark:hover:text-slate-200 dark:hover:bg-slate-800/60"
+                  ? "bg-gradient-to-r from-[#FF6B00] via-amber-500 to-orange-500 text-white shadow-md shadow-[#FF6B00]/20 font-extrabold"
+                  : "text-slate-600 dark:text-slate-400 hover:text-[#FF6B00] hover:bg-orange-50 dark:hover:bg-[#FF6B00]/10"
               }`}
             >
-              <item.icon className={`w-4 h-4 ${isActive ? (isAdminMode ? "text-rose-500" : "text-slate-950") : "text-slate-400"}`} />
+              <item.icon className={`w-4 h-4 ${isActive ? "text-white" : "text-slate-400"}`} />
               <span>{item.label}</span>
             </Link>
           );
         })}
       </nav>
 
-      {/* Bottom Section: System Status Card (Admin Mode) or Become CloudOps Pro Banner (Candidate Mode) */}
+      {/* Bottom Section */}
       <div className="p-3.5 border-t border-slate-200 dark:border-slate-800 flex flex-col gap-3">
         
         {isAdminMode ? (
-          <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 flex flex-col gap-1.5 shadow-sm">
-            <div className="w-7 h-7 rounded-xl bg-rose-500 text-white flex items-center justify-center shadow-sm">
-              <Shield className="w-3.5 h-3.5 fill-white/20" />
+          <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 flex flex-col gap-1.5 shadow-xs">
+            <div className="w-7 h-7 rounded-xl bg-[#0B1E36] text-[#FF6B00] flex items-center justify-center shadow-xs">
+              <Shield className="w-3.5 h-3.5" />
             </div>
-            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">System Status</span>
+            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">SYSTEM STATUS</span>
             <span className="text-xs font-black text-emerald-600 dark:text-emerald-400">All Systems Operational</span>
             <div className="w-full h-1 bg-emerald-500 rounded-full mt-0.5" />
             <span className="text-[9px] font-mono text-slate-400 mt-0.5">Last checked: 2 mins ago</span>
           </div>
         ) : (
-          <div className="p-3.5 rounded-2xl bg-gradient-to-b from-amber-50/80 to-amber-100/50 dark:from-amber-950/30 dark:to-amber-900/20 border border-[#FF9900]/30 flex flex-col gap-2">
-            <div className="flex items-center gap-1.5 text-xs font-extrabold text-amber-900 dark:text-amber-200">
-              <Sparkles className="w-3.5 h-3.5 text-[#FF9900] shrink-0" />
+          <div className="p-3.5 rounded-2xl bg-gradient-to-b from-orange-50/80 to-amber-100/50 dark:from-amber-950/30 dark:to-amber-900/20 border border-[#FF6B00]/30 flex flex-col gap-2">
+            <div className="flex items-center gap-1.5 text-xs font-extrabold text-slate-900 dark:text-slate-100">
+              <Sparkles className="w-3.5 h-3.5 text-[#FF6B00] shrink-0" />
               <span>Become CloudOps Pro</span>
             </div>
-            <p className="text-[10px] text-amber-800 dark:text-amber-300 font-medium leading-relaxed">
+            <p className="text-[10px] text-slate-600 dark:text-slate-300 font-medium leading-relaxed">
               Unlock full roadmap, mock interviews, and AI mentorship.
             </p>
-            <button className="w-full py-2 rounded-xl text-[11px] font-black text-slate-950 bg-gradient-to-r from-[#FF9900] via-amber-400 to-orange-400 hover:from-amber-400 hover:to-orange-500 shadow-sm transition-all mt-0.5">
+            <button className="w-full py-2 rounded-xl text-[11px] font-black text-white bg-gradient-to-r from-[#FF6B00] via-amber-500 to-orange-500 hover:from-orange-500 hover:to-amber-600 shadow-sm transition-all mt-0.5">
               Upgrade Now
             </button>
           </div>
         )}
 
-        {/* Logged in User Card (100% Dynamic) */}
+        {/* Logged in User Card */}
         {isAuthenticated && user && (
           <div className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 flex flex-col gap-2">
             <div className="flex items-center gap-2.5">
@@ -160,7 +163,7 @@ export function Sidebar() {
                 {user.avatar_url ? (
                   <img src={user.avatar_url} alt="Avatar" className="w-full h-full object-cover" />
                 ) : (
-                  <span>{user.full_name?.charAt(0) || "U"}</span>
+                  <span>{user.full_name?.charAt(0) || "A"}</span>
                 )}
               </div>
               <div className="flex flex-col min-w-0 flex-1">
@@ -168,26 +171,37 @@ export function Sidebar() {
                   {user.full_name}
                 </span>
                 <span className="text-[10px] font-medium text-slate-500 truncate">
-                  {user.role === "ADMIN" ? "Administrator" : "Cloud Engineer"}
+                  {(user.role === "ADMIN" || isAdminMode) ? "Administrator" : "Cloud Engineer"}
                 </span>
               </div>
             </div>
 
-            <div className="flex items-center justify-between text-[10px] font-bold">
-              <span className="px-2 py-0.5 rounded-full bg-[#FF9900] text-slate-950 font-black">
-                Level {userLevel}
-              </span>
-              <span className="text-slate-500 font-mono">
-                XP: {userXp.toLocaleString()} / 10,000
-              </span>
-            </div>
+            {(user.role === "ADMIN" || isAdminMode) ? (
+              <div className="flex items-center gap-1.5 pt-1.5 border-t border-slate-200/60 dark:border-slate-800">
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shrink-0" />
+                <span className="text-[10px] font-black text-slate-700 dark:text-slate-300 tracking-tight">
+                  Full Administrator Access
+                </span>
+              </div>
+            ) : (
+              <>
+                <div className="flex items-center justify-between text-[10px] font-bold">
+                  <span className="px-2 py-0.5 rounded-full bg-[#FF6B00] text-white font-black">
+                    Level {userLevel}
+                  </span>
+                  <span className="text-slate-500 font-mono">
+                    XP: {userXp.toLocaleString()} / 10,000
+                  </span>
+                </div>
 
-            <div className="w-full h-1.5 bg-slate-200 dark:bg-slate-800 rounded-full overflow-hidden">
-              <div 
-                className="h-full bg-[#FF9900] rounded-full transition-all duration-500" 
-                style={{ width: `${Math.min((userXp / 10000) * 100, 100)}%` }} 
-              />
-            </div>
+                <div className="w-full h-1.5 bg-slate-200 dark:bg-slate-800 rounded-full overflow-hidden">
+                  <div 
+                    className="h-full bg-[#FF6B00] rounded-full transition-all duration-500" 
+                    style={{ width: `${Math.min((userXp / 10000) * 100, 100)}%` }} 
+                  />
+                </div>
+              </>
+            )}
           </div>
         )}
 
