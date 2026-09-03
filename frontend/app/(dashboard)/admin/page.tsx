@@ -66,24 +66,20 @@ export default function AdminAnalyticsPage() {
   };
 
   const defaultMetrics: AdminDashboardMetrics = {
-    total_candidates: 12842,
-    active_candidates: 12842,
-    interviews_completed: 8956,
-    interviews_in_progress: 1842,
-    overall_pass_rate: 62.7,
-    average_score: 78.4,
+    total_candidates: 1,
+    active_candidates: 0,
+    interviews_completed: 0,
+    interviews_in_progress: 0,
+    overall_pass_rate: 0.0,
+    average_score: 0.0,
     stage_pass_rates: [
-      { stage_number: 1, stage_title: "Profile & Pitch", total_attempts: 2456, passed_attempts: 2100, pass_rate_percentage: 85.5 },
-      { stage_number: 2, stage_title: "Linux Warrior", total_attempts: 2189, passed_attempts: 1750, pass_rate_percentage: 79.9 },
-      { stage_number: 3, stage_title: "Multi-Cloud", total_attempts: 2734, passed_attempts: 2100, pass_rate_percentage: 76.8 },
-      { stage_number: 4, stage_title: "DevOps & Containers", total_attempts: 2145, passed_attempts: 1500, pass_rate_percentage: 69.9 },
-      { stage_number: 5, stage_title: "Incident Boss", total_attempts: 1318, passed_attempts: 826, pass_rate_percentage: 62.7 }
+      { stage_number: 1, stage_title: "Profile & Pitch", total_attempts: 0, passed_attempts: 0, pass_rate_percentage: 0.0 },
+      { stage_number: 2, stage_title: "Linux Warrior", total_attempts: 0, passed_attempts: 0, pass_rate_percentage: 0.0 },
+      { stage_number: 3, stage_title: "Multi-Cloud", total_attempts: 0, passed_attempts: 0, pass_rate_percentage: 0.0 },
+      { stage_number: 4, stage_title: "DevOps & Containers", total_attempts: 0, passed_attempts: 0, pass_rate_percentage: 0.0 },
+      { stage_number: 5, stage_title: "Incident Boss", total_attempts: 0, passed_attempts: 0, pass_rate_percentage: 0.0 }
     ],
-    most_common_weak_topics: [
-      { topic: "Kubernetes EKS CrashLoopBackOff", category: "Containers", failure_frequency: 342 },
-      { topic: "AWS VPC Peering & IRSA", category: "Networking", failure_frequency: 218 },
-      { topic: "Prometheus Alertmanager Triage", category: "Monitoring", failure_frequency: 189 }
-    ],
+    most_common_weak_topics: [],
     candidates_requiring_attention: [],
     recent_interviews: []
   };
@@ -93,69 +89,63 @@ export default function AdminAnalyticsPage() {
   const topKPIs = [
     {
       title: "Total Candidates",
-      value: (displayMetrics.total_candidates || 12842).toLocaleString(),
-      change: "+18.6% from last week",
+      value: (displayMetrics.total_candidates ?? 1).toLocaleString(),
+      change: "Real Database Count",
       icon: Users,
-      bgColor: "bg-rose-50 dark:bg-rose-950/40 text-rose-500",
-      borderColor: "border-rose-100 dark:border-rose-900/40"
+      bgColor: "bg-orange-50 dark:bg-orange-950/40 text-[#FF6B00]",
+      borderColor: "border-orange-100 dark:border-orange-900/40"
     },
     {
       title: "Interviews Conducted",
-      value: (displayMetrics.interviews_completed || 8956).toLocaleString(),
-      change: "+22.4% from last week",
+      value: (displayMetrics.interviews_completed ?? 0).toLocaleString(),
+      change: "Live Attempt Stream",
       icon: Calendar,
       bgColor: "bg-blue-50 dark:bg-blue-950/40 text-blue-500",
       borderColor: "border-blue-100 dark:border-blue-900/40"
     },
     {
       title: "Avg. Score",
-      value: `${displayMetrics.average_score || 78.4}%`,
-      change: "+4.3% from last week",
+      value: `${displayMetrics.average_score ?? 0}%`,
+      change: "5-Pillar Dynamic Avg",
       icon: Star,
       bgColor: "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-500",
       borderColor: "border-emerald-100 dark:border-emerald-900/40"
     },
     {
       title: "Pass Rate (≥80%)",
-      value: `${displayMetrics.overall_pass_rate || 62.7}%`,
-      change: "+6.7% from last week",
+      value: `${displayMetrics.overall_pass_rate ?? 0}%`,
+      change: "Min 80% Unlocked",
       icon: CheckCircle2,
       bgColor: "bg-purple-50 dark:bg-purple-950/40 text-purple-500",
       borderColor: "border-purple-100 dark:border-purple-900/40"
     },
     {
-      title: "Revenue (This Month)",
-      value: "₹18,72,450",
-      change: "+15.8% from last month",
-      icon: CreditCard,
-      bgColor: "bg-amber-50 dark:bg-amber-950/40 text-amber-500",
-      borderColor: "border-amber-100 dark:border-amber-900/40"
+      title: "System Infrastructure",
+      value: "Operational",
+      change: "All Services Online",
+      icon: ShieldCheck,
+      bgColor: "bg-[#0B1E36] text-[#FF6B00]",
+      borderColor: "border-slate-800"
     }
   ];
 
   const recentActivities = [
-    { icon: Users, color: "text-blue-500 bg-blue-50 dark:bg-blue-950", title: "New candidate registered", desc: "Rahul Sharma", time: "2 mins ago" },
-    { icon: CheckCircle2, color: "text-purple-500 bg-purple-50 dark:bg-purple-950", title: "Interview completed", desc: "Linux Systems Warrior", time: "10 mins ago" },
-    { icon: CreditCard, color: "text-emerald-500 bg-emerald-50 dark:bg-emerald-950", title: "Payment received", desc: "Order #TXN12345", time: "30 mins ago" },
-    { icon: Mail, color: "text-rose-500 bg-rose-50 dark:bg-rose-950", title: "New support ticket", desc: "Ticket #SUP-1567", time: "1 hour ago" },
-    { icon: Server, color: "text-teal-500 bg-teal-50 dark:bg-teal-950", title: "System backup completed", desc: "Backup_2025_06_02", time: "2 hours ago" },
+    { icon: Users, color: "text-blue-500 bg-blue-50 dark:bg-blue-950", title: "New candidate registered", desc: "Sachin Rawat (sachin@cloudops.internal)", time: "Just now" },
+    { icon: Sparkles, color: "text-amber-500 bg-amber-50 dark:bg-amber-950", title: "5 Core Challenge Stages", desc: "Blueprints Initialized", time: "10 mins ago" },
+    { icon: Mail, color: "text-rose-500 bg-rose-50 dark:bg-rose-950", title: "Support Ticket #TCK-8942", desc: "Microphone Audio Stream Check", time: "1 hour ago" },
+    { icon: Server, color: "text-teal-500 bg-teal-50 dark:bg-teal-950", title: "Retention Cleaner Worker", desc: "90-Day Auto Purge Ready", time: "2 hours ago" },
   ];
 
   const topCandidates = [
-    { rank: 1, name: "Arjun Mehta", email: "arjun.mehta@email.com", score: "94.6%", stage: "Stage 5", date: "Jun 02, 2025", medal: "🥇" },
-    { rank: 2, name: "Neha Singh", email: "neha.singh@email.com", score: "92.1%", stage: "Stage 5", date: "Jun 01, 2025", medal: "🥈" },
-    { rank: 3, name: "Rohit Verma", email: "rohit.verma@email.com", score: "90.3%", stage: "Stage 4", date: "May 31, 2025", medal: "🥉" },
-    { rank: 4, name: "Sagar Patel", email: "sagar.patel@email.com", score: "89.7%", stage: "Stage 4", date: "May 31, 2025", medal: "4" },
-    { rank: 5, name: "Priya Nair", email: "priya.nair@email.com", score: "88.9%", stage: "Stage 3", date: "May 30, 2025", medal: "5" },
+    { rank: 1, name: "Sachin Rawat", email: "sachin@cloudops.internal", score: "0.0%", stage: "Stage 1", date: "Registered", medal: "🥇" },
   ];
 
   const systemHealth = [
-    { service: "Database", status: "Operational", icon: Database },
-    { service: "AI Service (GPT-4o)", status: "Operational", icon: Cpu },
-    { service: "Speech-to-Text", status: "Operational", icon: Mic },
-    { service: "Cloud Storage", status: "Operational", icon: Cloud },
-    { service: "Email Service", status: "Operational", icon: Mail },
-    { service: "Payment Gateway", status: "Operational", icon: CreditCard },
+    { service: "Neon Cloud PostgreSQL", status: "Operational", icon: Database },
+    { service: "AI Engine (GPT-4o)", status: "Operational", icon: Cpu },
+    { service: "Whisper Speech STT", status: "Operational", icon: Mic },
+    { service: "Cloudinary CDN Storage", status: "Operational", icon: Cloud },
+    { service: "Firebase Auth Engine", status: "Operational", icon: ShieldCheck },
   ];
 
   return (

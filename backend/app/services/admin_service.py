@@ -125,12 +125,12 @@ class AdminService:
                 attention_items.append(item)
 
         return AdminDashboardMetrics(
-            total_candidates=total_candidates or 5,
-            active_candidates=len(in_progress_attempts) or 2,
-            interviews_completed=len(completed_attempts) or 8,
-            interviews_in_progress=len(in_progress_attempts) or 2,
-            overall_pass_rate=pass_rate or 80.0,
-            average_score=avg_score or 82.5,
+            total_candidates=total_candidates,
+            active_candidates=len(in_progress_attempts),
+            interviews_completed=len(completed_attempts),
+            interviews_in_progress=len(in_progress_attempts),
+            overall_pass_rate=pass_rate,
+            average_score=avg_score,
             stage_pass_rates=stage_pass_rates,
             most_common_weak_topics=weak_topics,
             candidates_requiring_attention=attention_items,

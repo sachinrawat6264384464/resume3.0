@@ -59,20 +59,13 @@ export function Sidebar() {
 
   const adminNavItems = [
     { label: "Dashboard", href: "/admin", icon: LayoutDashboard },
-    { label: "Users & Candidates", href: "/admin", icon: Users },
-    { label: "Interviews", href: "/interviews", icon: CheckSquare },
-    { label: "Assessments", href: "/admin/templates", icon: CheckSquare },
-    { label: "Resume Analyzer", href: "/resume-ats", icon: FileText },
-    { label: "Payments & Billing", href: "/admin", icon: CreditCard },
-    { label: "Reports & Analytics", href: "/admin", icon: BarChart3 },
+    { label: "Users & Candidates", href: "/admin/candidates", icon: Users },
+    { label: "Assessments & Blueprints", href: "/admin/templates", icon: CheckSquare },
+    { label: "Reports & Analytics", href: "/admin/reports", icon: BarChart3 },
     { label: "Leaderboard", href: "/leaderboard", icon: Trophy },
-    { label: "Subscriptions", href: "/admin", icon: CreditCard },
-    { label: "System Settings", href: "/settings", icon: Settings },
-    { label: "AI Model & Scoring", href: "/admin", icon: Sparkles },
-    { label: "Email & Notifications", href: "/admin", icon: Mail },
-    { label: "Audit Logs", href: "/admin", icon: FileText },
+    { label: "AI Model & Scoring", href: "/admin/scoring", icon: Sparkles },
     { label: "Support Tickets", href: "/help", icon: HelpCircle },
-    { label: "Backup & Restore", href: "/admin", icon: HardDrive },
+    { label: "System Settings", href: "/settings", icon: Settings },
   ];
 
   const navItems = isAdminMode ? adminNavItems : candidateNavItems;
