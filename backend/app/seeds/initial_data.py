@@ -84,6 +84,23 @@ async def seed_database():
             db.add(sachin_profile)
             await db.flush()
 
+            # Seed Support Ticket for Sachin Rawat
+            from app.models.support import SupportTicket
+            tck_stmt = select(SupportTicket).where(SupportTicket.ticket_code == "TCK-8942")
+            res_tck = await db.execute(tck_stmt)
+            if not res_tck.scalar_one_or_none():
+                tck = SupportTicket(
+                    candidate_id=sachin_profile.id,
+                    ticket_code="TCK-8942",
+                    subject="Microphone Audio Stream check error during Stage 3 WebRTC Test",
+                    category="Audio / Microphone",
+                    message="During stage 3 AWS infrastructure voice test, microphone stream experienced a 15-second latency. Please verify WebRTC logs.",
+                    priority="HIGH",
+                    status="OPEN"
+                )
+                db.add(tck)
+                await db.flush()
+
         # Purge any old extra sample candidates (Keeping ONLY admin@cloudops.internal & sachin@cloudops.internal)
         from sqlalchemy import text
         cleanup_emails = ["candidate@cloudops.internal", "priya@cloudops.internal", "amit@cloudops.internal", "sneha@cloudops.internal", "karan@cloudops.internal"]

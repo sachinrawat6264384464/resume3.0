@@ -83,3 +83,103 @@ async def assign_interview(
         message=f"Assigned interview to {len(attempt_ids)} candidates",
         data=attempt_ids
     )
+
+@router.get("/support/tickets", response_model=StandardResponse[dict])
+async def get_all_support_tickets_admin(
+    payload: dict = Depends(verify_auth_token),
+    db: AsyncSession = Depends(get_db)
+):
+    from sqlalchemy import select, desc
+    from sqlalchemy.orm import selectinload
+    from app.models import SupportTicket, Candidate, User
+
+    stmt = select(SupportTicket).options(
+        selectinload(SupportTicket.candidate).selectinload(Candidate.user)
+    ).order_by(desc(SupportTicket.created_at))
+    
+    res = await db.execute(stmt)
+    tickets = res.scalars().all()
+
+    ticket_list = []
+    total_count = len(tickets)
+    open_count = 0
+    in_progress_count = 0
+    resolved_count = 0
+
+    for t in tickets:
+        if t.status == "OPEN":
+            open_count += 1
+        elif t.status == "IN_PROGRESS":
+            in_progress_count += 1
+        elif t.status in ("RESOLVED", "CLOSED"):
+            resolved_count += 1
+
+        cand_name = "Candidate"
+        cand_email = "candidate@cloudops.internal"
+        target_role = "Senior DevOps Engineer"
+        if t.candidate:
+            target_role = t.candidate.target_role or target_role
+            if t.candidate.user:
+                cand_name = t.candidate.user.full_name or cand_name
+                cand_email = t.candidate.user.email or cand_email
+
+        ticket_list.append({
+            "id": t.id,
+            "ticket_code": t.ticket_code,
+            "candidate_id": t.candidate_id,
+            "candidate_name": cand_name,
+            "candidate_email": cand_email,
+            "target_role": target_role,
+            "subject": t.subject,
+            "category": t.category,
+            "message": t.message,
+            "status": t.status,
+            "priority": t.priority,
+            "created_at": t.created_at.strftime("%b %d, %Y %H:%M") if t.created_at else "Recently"
+        })
+
+    return StandardResponse(
+        data={
+            "metrics": {
+                "total": total_count,
+                "open": open_count,
+                "in_progress": in_progress_count,
+                "resolved": resolved_count
+            },
+            "tickets": ticket_list
+        }
+    )
+
+@router.patch("/support/tickets/{ticket_id}/status", response_model=StandardResponse[dict])
+async def update_support_ticket_status_admin(
+    ticket_id: str,
+    status_update: dict,
+    payload: dict = Depends(verify_auth_token),
+    db: AsyncSession = Depends(get_db)
+):
+    from sqlalchemy import select, or_
+    from app.models import SupportTicket
+
+    stmt = select(SupportTicket).where(
+        or_(SupportTicket.id == ticket_id, SupportTicket.ticket_code == ticket_id)
+    )
+    res = await db.execute(stmt)
+    ticket = res.scalar_one_or_none()
+    
+    if not ticket:
+        from fastapi import HTTPException
+        raise HTTPException(status_code=404, detail="Support ticket not found")
+
+    new_status = status_update.get("status", "IN_PROGRESS").upper()
+    ticket.status = new_status
+    await db.commit()
+    await db.refresh(ticket)
+
+    return StandardResponse(
+        message=f"Support ticket status updated to {new_status}",
+        data={
+            "id": ticket.id,
+            "ticket_code": ticket.ticket_code,
+            "status": ticket.status
+        }
+    )

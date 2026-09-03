@@ -1,3 +1,4 @@
+import secrets
 from fastapi import APIRouter, Depends, Query, status, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, desc, func
@@ -9,6 +10,7 @@ from app.core.security import verify_auth_token
 from app.services.auth_service import AuthService
 from app.services.candidate_service import CandidateService
 from app.schemas.candidate import CandidateCreate, CandidateUpdate, CandidateOut, CandidateWithAttemptsOut
+from app.schemas.support import SupportTicketCreate
 from app.schemas.common import StandardResponse, PaginatedResponse
 from app.models import Candidate, CandidateRoadmap, CandidateCertificate, SupportTicket, StageAttempt, InterviewStage, User, InterviewAttempt, ResumeAudit, QuestionAttempt
 
@@ -582,7 +584,47 @@ async def get_my_support_tickets(
             "id": t.ticket_code,
             "subject": t.subject,
             "category": t.category,
+            "message": t.message,
             "status": t.status,
+            "priority": t.priority,
             "created_at": t.created_at.strftime("%b %d, %Y") if t.created_at else "Recently"
         })
     return StandardResponse(data=t_list)
+
+@router.post("/me/support", response_model=StandardResponse[dict], status_code=status.HTTP_201_CREATED)
+async def create_support_ticket(
+    req: SupportTicketCreate,
+    payload: dict = Depends(verify_auth_token),
+    db: AsyncSession = Depends(get_db)
+):
+    auth_svc = AuthService(db)
+    user = await auth_svc.get_current_user_from_payload(payload)
+    cand_svc = CandidateService(db)
+    cand = await cand_svc.get_candidate_by_user_id(user.id, user.organization_id)
+
+    code = f"TCK-{secrets.randbelow(9000) + 1000}"
+    ticket = SupportTicket(
+        candidate_id=cand.id,
+        ticket_code=code,
+        subject=req.subject,
+        category=req.category or "Technical Issue",
+        message=req.message,
+        priority=req.priority or "MEDIUM",
+        status="OPEN"
+    )
+    db.add(ticket)
+    await db.commit()
+    await db.refresh(ticket)
+
+    return StandardResponse(
+        message="Support ticket submitted successfully!",
+        data={
+            "id": ticket.ticket_code,
+            "subject": ticket.subject,
+            "category": ticket.category,
+            "message": ticket.message,
+            "status": ticket.status,
+            "priority": ticket.priority,
+            "created_at": ticket.created_at.strftime("%b %d, %Y") if ticket.created_at else "Just now"
+        }
+    )
