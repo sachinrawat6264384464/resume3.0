@@ -1,77 +1,98 @@
-# 🚀 CloudOps AI Assessment & Career OS — Project Documentation
+# 🚀 CloudOps AI Assessment OS — Comprehensive Project Documentation & Architecture 🏗️📊
 
-## 📌 Project Overview & Purpose (Basis of Project)
+## 📌 Executive Summary & Project Purpose
 
-The **CloudOps AI Assessment Platform** is a production-grade, AI-powered technical interview and skill evaluation Operating System tailored specifically for **Cloud Operations, DevOps, DevSecOps, and SRE Engineers**.
+The **CloudOps AI Assessment OS** is a state-of-the-art, production-grade AI interview and skill evaluation Operating System tailored specifically for **Cloud Operations, DevOps, DevSecOps, Site Reliability Engineering (SRE), and Infrastructure Engineers**.
 
-### 🎯 Core Mission:
-Traditional hiring relies on generic questionnaires and superficial resumes. This platform bridges the gap between candidate preparation and enterprise hiring by providing:
-1. **Real-time Voice AI Technical Interviews** with 5-pillar objective scoring rubrics.
-2. **Automated 6-Factor Resume ATS Screening** with STAR-formula bullet-point rewrites.
-3. **80% Stage-Gated Progression System** (Candidates must score ≥80% to unlock successive interview rounds up to the Production Incident Final Boss).
-4. **Target Salary Tier:** ₹18–40 LPA High-CTC Engineering roles.
+Designed with a dual-microservice frontend deployment architecture, the platform bridges the gap between candidate preparation and enterprise hiring by providing:
+1. **Real-time Voice AI Technical Interviews** with 5-pillar objective scoring rubrics & WebRTC audio/video capture.
+2. **Automated 6-Factor Resume ATS Screening** with STAR-formula bullet-point metric rewrites.
+3. **80% Stage-Gated Progression System** across 5 Core Challenge Stages (Candidates must score $\ge 80\%$ to unlock successive interview rounds up to the Production Incident Final Boss).
+4. **Dedicated Administrator Suite** with real-time candidate assessment analytics, JD-to-Template blueprint generation, 90-Day Retention Purge trigger, and Support Ticket Inbox Manager.
 
 ---
 
-## 🛠️ Complete Tech Stack & Skills Used
+## 🌐 Live Production Deployments & Microservices
 
-### 1. Backend Architecture (Python & FastAPI)
+| Portal / Service | Production Live URL | System Description |
+| :--- | :--- | :--- |
+| **🎓 Candidate Portal** | [https://resume3-0.vercel.app](https://resume3-0.vercel.app) | Candidate Dashboard, 5-Stage Voice Interview UI, ATS Resume Analyzer, Career Roadmap, Leaderboard, Certificates, Help Support |
+| **🛡️ Dedicated Admin Suite** | [https://resume3-admin.vercel.app](https://resume3-admin.vercel.app) | Administrator Microservice, Candidate Assessment Analytics, AI Model Prompt Control, 90-Day Retention Purge, Support Tickets Real-Time Inbox |
+| **⚡ FastAPI Backend Engine** | [https://resume3-0.onrender.com/api/v1](https://resume3-0.onrender.com/api/v1) | FastAPI Async Microservice Gateway with CORS `allow_origin_regex` for Vercel microservices, SQLAlchemy 2.0 Async ORM |
+| **📚 Interactive Swagger Docs** | [https://resume3-0.onrender.com/docs](https://resume3-0.onrender.com/docs) | Open API Documentation & Endpoint Tester |
+
+---
+
+## 🛠️ Complete Tech Stack & Infrastructure
+
+```mermaid
+graph TD
+    CandUser["👤 Candidate"] -->|1. Candidate Web App| CandFE["🌐 Candidate Microservice (resume3-0.vercel.app)"]
+    AdminUser["🛡️ Administrator"] -->|1. Admin Web App| AdminFE["🌐 Admin Microservice (resume3-admin.vercel.app)"]
+    
+    CandFE -->|2. REST API Requests| API["⚡ FastAPI Backend Engine (resume3-0.onrender.com)"]
+    AdminFE -->|2. Admin API Requests| API
+    
+    API -->|3. Save Users, Scores & Support Tickets| NeonDB[("🐘 Neon Cloud PostgreSQL / SQLite DB")]
+    API -->|4. Upload Resumes & Camera/Audio Clips| Cloudinary["☁️ Cloudinary CDN Storage"]
+    API -->|5. Authenticate & Token Sync| Firebase["🔥 Firebase Auth"]
+    API -->|6. Evaluate Spoken Answers & ATS Resumes| AIEngine["🤖 AI Engine (GPT-4o / DeepSeek / Ollama)"]
+```
+
+### 1. Backend Microservices (FastAPI & Python 3.14)
 * **Framework:** Python 3.14 + FastAPI (Async RESTful microservices architecture).
-* **ORM & Database Client:** SQLAlchemy 2.0 (Async) + `asyncpg` driver.
+* **ORM & DB Client:** SQLAlchemy 2.0 (Async) + `asyncpg` driver for Neon PostgreSQL / SQLite.
+* **CORS Security:** Configured with `allow_origin_regex=r"https://.*\.vercel\.app"` allowing cross-origin requests across all Vercel microservices.
 * **Data Validation:** Pydantic v2 schemas + `pydantic-settings`.
-* **Security & Auth:** OAuth2 Password Bearer, JWT (JSON Web Tokens), `passlib` bcrypt password hashing, and Firebase Admin ID Token verification.
-* **Testing:** `pytest` unit test suite covering stage gating, ATS math, retention cleanup, and admin overrides.
+* **Auth & Security:** OAuth2 Bearer JWT Tokens, `passlib` Bcrypt password hashing, and Firebase Admin ID Token verification.
 
-### 2. Database & Cloud Infrastructure
-* **Database:** **Neon Cloud PostgreSQL** (Serverless cloud PostgreSQL instance with SSL mode enabled).
-* **Media & Document Storage:** **Cloudinary Cloud Storage** (Direct upload integration for PDF/DOCX resumes and recorded audio interview clips).
-* **Firebase Ecosystem:**
-  * **Firebase Admin SDK:** Server-side verification for phone OTP logins.
-  * **Firebase Web SDK:** Client-side reCAPTCHA & Phone SMS OTP authentication.
-  * **Firebase Rules:** `firestore.rules`, `storage.rules`, and `firebase.json` for security compliance.
+### 2. Multi-Cloud Storage Architecture (3-Tier Infrastructure)
+* **🔥 Firebase Auth:** Manages all user account registrations, logins, Google OAuth, and ID tokens.
+* **☁️ Cloudinary CDN Storage:** Stores candidate PDF/DOCX resumes, profile pictures, WebRTC camera snapshots, and video/audio interview recordings (`.webm`/`.wav`). Auto-cleaned after 90 days via `RetentionService`.
+* **🐘 Neon Cloud PostgreSQL Database:** Primary serverless PostgreSQL instance storing relational schemas (`users`, `candidates`, `interview_attempts`, `stage_attempts`, `question_attempts`, `resume_audits`, `support_tickets`).
 
-### 3. Artificial Intelligence & Speech Engine
-* **AI Provider:** **OpenAI GPT-4o-Mini** (Used for 5-pillar interview answer evaluation, STAR bullet rewriting, 30-day roadmap generation, and ATS scoring).
-* **Speech-to-Text (STT):** **Whisper Engine / OpenAI STT** (Transcribes candidate spoken audio into text with Words Per Minute [WPM] pacing calculation).
-
-### 4. Frontend Web Application (Next.js & Modern UI)
-* **Framework:** Next.js 14 (App Router) + React 18 + TypeScript.
-* **State Management:** Zustand (Persistent auth state & candidate progress).
-* **Styling & Design System:**
-  * **SovoHR Royal Blue Corporate SaaS Theme** (Vibrant royal blue `#1D4ED8` -> `#2563EB`, ice-blue `#F8FAFC` background, rounded glass cards).
-  * **Dual Theme Engine:** Light Mode (Default) & Dark Mode (Deep Midnight) with smooth `ThemeToggle` switcher and `localStorage` persistence.
-  * **Typography:** Google Fonts `Plus Jakarta Sans` & `Inter`.
-* **Icons:** `lucide-react` modern icon library.
+### 3. Artificial Intelligence & Speech Processing
+* **AI Provider Engine:** **OpenAI GPT-4o / DeepSeek R1** for 5-pillar spoken answer evaluation, STAR bullet rewriting, 30-day personalized roadmap generation, and JD-to-Template blueprint creation.
+* **Speech-to-Text (STT):** **Whisper Engine** (Transcribes candidate spoken audio into text with Words Per Minute [WPM] cadence analysis).
 
 ---
 
-## 🔑 Key Features & How They Work
+## 🔑 Active Platform Accounts & Credentials
+
+The system operates with **2 clean, verified active accounts** (Extra sample candidate data purged):
+
+| Role | Name | Email | Password | Microservice Portal Access |
+|---|---|---|---|---|
+| **🛡️ Administrator** | Alex Vance (Admin) | `admin@cloudops.internal` | `Admin@12345` | Dedicated Admin Portal (`resume3-admin.vercel.app`) |
+| **🎓 Candidate** | Sachin Rawat | `sachin@cloudops.internal` | `Sachin@12345` | Candidate Portal (`resume3-0.vercel.app`) |
+
+---
+
+## 🎯 Key Platform Workflows & Features
 
 ### 1. 5-Stage Gated Interview Progression System
-Candidates cannot skip directly to advanced rounds. They must clear each stage with an **80% minimum score**:
-1. **Stage 1: Profile & Career Pitch** (90-second intro, past achievements).
-2. **Stage 2: Linux Systems Warrior** (Kernel sockets, systemd, process triage, disk I/O wait).
-3. **Stage 3: Multi-Cloud Architecture** (AWS VPC subnets, NAT Gateways, IAM STS, IRSA).
-4. **Stage 4: DevOps & Containers** (Multi-stage Docker builds, Kubernetes EKS manifests, Canary releases).
-5. **Stage 5: Production Incident Boss Battle** (CrashLoopBackOff triage, 502/504 outage response).
+Candidates clear each stage with an **80% minimum score threshold** to advance:
+- **Stage 1: Profile & Career Pitch** (90-second intro, past achievements).
+- **Stage 2: Linux Systems Warrior** (Kernel sockets, systemd, process triage, disk I/O wait).
+- **Stage 3: Multi-Cloud Architecture** (AWS VPC subnets, NAT Gateways, IAM STS, IRSA).
+- **Stage 4: DevOps & Containers** (Multi-stage Docker builds, Kubernetes EKS manifests, Canary releases).
+- **Stage 5: Production Incident Boss Battle** (CrashLoopBackOff triage, 502/504 outage response).
 
-### 2. 5-Pillar Voice Interview Evaluation Rubric
-Every spoken answer is evaluated across 5 weighted pillars:
-- **Technical Accuracy (35%):** Correctness of technical concepts and commands.
-- **Depth of Knowledge (25%):** System internals and edge cases.
-- **Problem-Solving Approach (20%):** Logical troubleshooting methodology.
-- **Communication Clarity (10%):** Structuring of explanation.
-- **Speech Pacing WPM (10%):** Ideal cadence (120–160 WPM).
+### 2. 5-Pillar Voice Evaluation Rubric
+Every spoken answer is scored across:
+- **Technical Accuracy (40%)**: Correctness of technical concepts and commands.
+- **Concept Coverage (25%)**: System internals and edge cases.
+- **Reasoning Quality (20%)**: Logical troubleshooting methodology.
+- **Practical Knowledge (10%)**: Real-world hands-on command mastery.
+- **Communication Clarity (5%)**: Structuring of explanation and cadence.
 
-### 3. Resume ATS Analyzer & STAR Metric Rewriter
-- Extracts skills from uploaded PDF/DOCX or pasted text.
-- Scores resume against any target DevOps Job Description (JD).
-- Detects missing critical keywords (e.g., Terraform state locking, Trivy DevSecOps).
-- Automatically rewrites weak resume bullet points using the **STAR formula** (Situation, Task, Action, Result) with quantified metrics.
+### 3. 🎫 Real-Time Support Tickets Inbox (Candidate ➔ Admin)
+- **Candidate Submission**: Candidates submit technical queries on Candidate Portal (`/help`).
+- **Database Storage**: Saved to DB `support_tickets` table with code `TCK-XXXX`.
+- **Admin Real-Time Inbox (`resume3-admin.vercel.app/help`)**: Features 4 KPI Metric Cards (Total, Open, In Progress, Resolved), Filter Pills, Search Bar, Candidate Data Table, and interactive Ticket Status Manager (`OPEN`, `IN_PROGRESS`, `RESOLVED`, `CLOSED`).
 
-### 4. Leaderboard & Gamification OS
-- Calculates total candidate **XP (Experience Points)**, level tiers, streak days, and readiness scores.
-- Ranks candidates across global cohort leaderboards and specific tech tracks (AWS, Kubernetes, Terraform, Linux).
+### 4. 🧹 90-Day Audio & Video Retention Purge
+- Background `RetentionService` identifies audio/video recordings older than 90 days and purges them from Cloudinary CDN storage while retaining audit logs.
 
 ---
 
@@ -81,48 +102,40 @@ Every spoken answer is evaluated across 5 weighted pillars:
 d:\AI_Interview3.0\
 ├── backend/
 │   ├── app/
-│   │   ├── api/v1/         # REST API Endpoints (Auth, Resumes, Interviews, Leaderboard)
-│   │   ├── core/           # Config, Database Engine, Security
-│   │   ├── models/         # SQLAlchemy DB Models (User, Candidate, Stage, Evaluation)
-│   │   ├── schemas/        # Pydantic Request/Response Data Validation Schemas
-│   │   ├── services/       # Core Business Logic (Auth, ATS Engine, Interview OS)
+│   │   ├── api/v1/         # REST API Endpoints (Auth, Candidates, Admin, Resumes, Support)
+│   │   ├── core/           # Config, Database Engine, Security, CORS
+│   │   ├── models/         # SQLAlchemy DB Models (User, Candidate, Stage, SupportTicket)
+│   │   ├── schemas/        # Pydantic Request/Response Schemas (Support, User, Attempt)
+│   │   ├── services/       # Business Logic (Auth, ATS, Admin, Retention, Email)
 │   │   ├── speech/         # Whisper Speech-to-Text STT Integration
-│   │   └── storage/        # Cloudinary Storage Provider
-│   ├── tests/              # Pytest Unit & Integration Test Suite
-│   ├── firebase_service_account.json
-│   └── requirements.txt
+│   │   ├── storage/        # Cloudinary Storage Provider
+│   │   ├── seeds/          # Initial Data Seeding (Admin, Sachin Rawat, 5 Stages)
+│   │   └── main.py         # FastAPI Gateway Entry Point
+│   ├── cloudops_interview.db # SQLite Local Database File
+│   ├── requirements.txt
+│   └── Dockerfile
 ├── frontend/
-│   ├── app/                # Next.js App Router Pages (Landing, Login, Dashboard, Resume ATS, Leaderboard)
-│   ├── components/         # Reusable UI Components (Navbar, ThemeToggle, Cards)
-│   ├── lib/                # API Client, Firebase Web SDK, Zustand Auth Store
-│   └── globals.css         # SovoHR Royal Blue Light/Dark Design System
-├── firestore.rules
-├── storage.rules
-├── firebase.json
-└── PROJECT_OVERVIEW.md
+│   ├── app/                # Next.js App Router (Auth, Candidate Dashboard, Admin Suite, Help)
+│   ├── components/         # UI Components (Sidebar, Navbar, ThemeToggle, BrandLogos)
+│   ├── lib/                # API Client, Zustand Auth Store, Local Storage
+│   └── globals.css         # SovoHR Royal Blue Design System
+├── PROJECT_OVERVIEW.md     # Full System Architecture & Overview
+└── README.md               # GitHub Public Documentation
 ```
 
 ---
 
-## ⚡ How to Run the Platform Locally
+## ⚡ How to Run Locally
 
-### 1. Backend Server (FastAPI on Port 8000)
+### 1. Start FastAPI Backend (Port 8000)
 ```powershell
 cd d:\AI_Interview3.0\backend
 .\venv\Scripts\uvicorn app.main:app --reload --port 8000
 ```
 
-### 2. Frontend App (Next.js on Port 3001)
+### 2. Start Next.js Frontend (Port 3001)
 ```powershell
 cd d:\AI_Interview3.0\frontend
 npx next dev -p 3001
 ```
-
----
-
-## 🏆 Project Deliverable Summary
-- **Database:** Live Neon Cloud PostgreSQL (`postgresql://neondb_owner:...`).
-- **AI Model:** Real OpenAI GPT-4o-Mini connected & verified.
-- **Cloud Storage:** Cloudinary integration connected & verified.
-- **Design System:** SovoHR Royal Blue Theme with Light/Dark Mode Toggle.
-- **Test Status:** 8/8 `pytest` suites PASS, 100% Live API integration PASS.
+Open [http://localhost:3001](http://localhost:3001) in your browser. 🚀
