@@ -48,10 +48,10 @@ export default function LandingPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-[#FAFAFA] text-slate-900 font-sans selection:bg-[#FF6B00] selection:text-white overflow-x-hidden">
+    <div className="min-h-screen bg-[#FAFAFA] dark:bg-[#070b14] text-slate-900 dark:text-slate-100 font-sans selection:bg-[#FF6B00] selection:text-white overflow-x-hidden transition-colors duration-300">
       
       {/* 1. TOP NAVBAR */}
-      <header className="sticky top-0 z-50 backdrop-blur-md bg-white/90 border-b border-slate-200/80 shadow-xs">
+      <header className="sticky top-0 z-50 backdrop-blur-md bg-white/90 dark:bg-[#070b14]/90 border-b border-slate-200/80 dark:border-slate-800 shadow-xs transition-colors duration-300">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
           
           {/* Logo */}
@@ -62,7 +62,7 @@ export default function LandingPage() {
               </div>
             </div>
             <div className="flex flex-col">
-              <span className="text-xl font-black tracking-tight text-[#0B1E36] flex items-center gap-1">
+              <span className="text-xl font-black tracking-tight text-[#0B1E36] dark:text-white flex items-center gap-1">
                 CloudOps <span className="text-[#FF6B00]">AI</span>
               </span>
               <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none">
@@ -72,11 +72,11 @@ export default function LandingPage() {
           </Link>
 
           {/* Center Links */}
-          <nav className="hidden md:flex items-center gap-8 text-xs font-extrabold text-slate-700">
-            <a href="#features" className="hover:text-[#FF6B00] transition-colors">Features</a>
-            <a href="#voice-ai" className="hover:text-[#FF6B00] transition-colors">How It Works</a>
-            <a href="#ats" className="hover:text-[#FF6B00] transition-colors">ATS Analyzer</a>
-            <a href="#faq" className="hover:text-[#FF6B00] transition-colors">FAQ</a>
+          <nav className="hidden md:flex items-center gap-8 text-xs font-extrabold text-slate-700 dark:text-slate-300">
+            <a href="#features" className="hover:text-[#FF6B00] dark:hover:text-[#FF6B00] transition-colors">Features</a>
+            <a href="#voice-ai" className="hover:text-[#FF6B00] dark:hover:text-[#FF6B00] transition-colors">How It Works</a>
+            <a href="#ats" className="hover:text-[#FF6B00] dark:hover:text-[#FF6B00] transition-colors">ATS Analyzer</a>
+            <a href="#faq" className="hover:text-[#FF6B00] dark:hover:text-[#FF6B00] transition-colors">FAQ</a>
           </nav>
 
           {/* Right Action Buttons */}
@@ -102,21 +102,28 @@ export default function LandingPage() {
         </div>
       </header>
 
-      {/* 2. HERO SECTION (Screenshot 1) */}
-      <section className="relative z-10 pt-10 pb-16 lg:pt-16 lg:pb-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      {/* 2. HERO SECTION */}
+      <section className="relative z-10 pt-10 pb-16 lg:pt-16 lg:pb-20 overflow-hidden">
+        {/* High-Tech Ambient Cloud Network Background Image Overlay */}
+        <div 
+          className="absolute inset-0 z-0 bg-cover bg-center bg-no-repeat opacity-25 dark:opacity-40 pointer-events-none transition-opacity duration-500"
+          style={{ backgroundImage: `url('/images/hero_bg_cloud_network.png')` }}
+        />
+        <div className="absolute inset-0 z-0 bg-gradient-to-b from-transparent via-[#FAFAFA]/70 to-[#FAFAFA] dark:via-[#070b14]/70 dark:to-[#070b14] pointer-events-none" />
+
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
             
             {/* Hero Left Column */}
             <div className="lg:col-span-5 flex flex-col gap-6">
               
-              <h1 className="text-4xl sm:text-5xl lg:text-[56px] font-black text-[#0B1E36] tracking-tight leading-[1.08] font-sans uppercase">
+              <h1 className="text-4xl sm:text-5xl lg:text-[56px] font-black text-[#0B1E36] dark:text-white tracking-tight leading-[1.08] font-sans uppercase">
                 LAND YOUR NEXT<br />
                 <span className="text-[#FF6B00]">CLOUD ENGINEERING</span><br />
                 ROLE.
               </h1>
 
-              <p className="text-sm text-slate-600 leading-relaxed font-medium max-w-lg">
+              <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed font-medium max-w-lg">
                 Practice real AWS incidents, improve your interview skills, and see exactly what to fix.
               </p>
 
@@ -132,45 +139,45 @@ export default function LandingPage() {
 
                 <a
                   href="#ats"
-                  className="py-3.5 px-6 rounded-full font-extrabold text-xs text-[#0B1E36] bg-white border border-slate-300 hover:border-[#FF6B00] flex items-center justify-center gap-2 shadow-xs transition-all"
+                  className="py-3.5 px-6 rounded-full font-extrabold text-xs text-[#0B1E36] dark:text-white bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 hover:border-[#FF6B00] dark:hover:border-[#FF6B00] flex items-center justify-center gap-2 shadow-xs transition-all"
                 >
-                  <FileText className="w-4 h-4 text-slate-700" />
+                  <FileText className="w-4 h-4 text-slate-700 dark:text-slate-300" />
                   <span>Analyze My Resume</span>
                 </a>
               </div>
 
               {/* 4 Feature Thumbnails below CTAs */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-6 border-t border-slate-200/80 mt-2">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-6 border-t border-slate-200/80 dark:border-slate-800 mt-2">
                 <div className="flex flex-col gap-1">
-                  <div className="w-10 h-10 rounded-xl bg-orange-100/80 text-[#FF6B00] flex items-center justify-center mb-1">
+                  <div className="w-10 h-10 rounded-xl bg-orange-100/80 dark:bg-orange-950/60 text-[#FF6B00] flex items-center justify-center mb-1">
                     <Mic className="w-5 h-5" />
                   </div>
-                  <span className="text-xs font-black text-[#0B1E36]">AI Voice Interview</span>
-                  <span className="text-[10px] text-slate-500 font-medium leading-tight">Real-world AWS incident practice</span>
+                  <span className="text-xs font-black text-[#0B1E36] dark:text-white">AI Voice Interview</span>
+                  <span className="text-[10px] text-slate-500 dark:text-slate-400 font-medium leading-tight">Real-world AWS incident practice</span>
                 </div>
 
                 <div className="flex flex-col gap-1">
-                  <div className="w-10 h-10 rounded-xl bg-amber-100/80 text-amber-600 flex items-center justify-center mb-1">
+                  <div className="w-10 h-10 rounded-xl bg-amber-100/80 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 flex items-center justify-center mb-1">
                     <BarChart3 className="w-5 h-5" />
                   </div>
-                  <span className="text-xs font-black text-[#0B1E36]">ATS Resume Score</span>
-                  <span className="text-[10px] text-slate-500 font-medium leading-tight">See your match score instantly</span>
+                  <span className="text-xs font-black text-[#0B1E36] dark:text-white">ATS Resume Score</span>
+                  <span className="text-[10px] text-slate-500 dark:text-slate-400 font-medium leading-tight">See your match score instantly</span>
                 </div>
 
                 <div className="flex flex-col gap-1">
-                  <div className="w-10 h-10 rounded-xl bg-blue-100/80 text-blue-600 flex items-center justify-center mb-1">
+                  <div className="w-10 h-10 rounded-xl bg-blue-100/80 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 flex items-center justify-center mb-1">
                     <Layers className="w-5 h-5" />
                   </div>
-                  <span className="text-xs font-black text-[#0B1E36]">5-Stage System</span>
-                  <span className="text-[10px] text-slate-500 font-medium leading-tight">80%+ score to unlock next stage</span>
+                  <span className="text-xs font-black text-[#0B1E36] dark:text-white">5-Stage System</span>
+                  <span className="text-[10px] text-slate-500 dark:text-slate-400 font-medium leading-tight">80%+ score to unlock next stage</span>
                 </div>
 
                 <div className="flex flex-col gap-1">
-                  <div className="w-10 h-10 rounded-xl bg-emerald-100/80 text-emerald-600 flex items-center justify-center mb-1">
+                  <div className="w-10 h-10 rounded-xl bg-emerald-100/80 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mb-1">
                     <Map className="w-5 h-5" />
                   </div>
-                  <span className="text-xs font-black text-[#0B1E36]">30-Day Roadmap</span>
-                  <span className="text-[10px] text-slate-500 font-medium leading-tight">Personalized plan to land offers</span>
+                  <span className="text-xs font-black text-[#0B1E36] dark:text-white">30-Day Roadmap</span>
+                  <span className="text-[10px] text-slate-500 dark:text-slate-400 font-medium leading-tight">Personalized plan to land offers</span>
                 </div>
               </div>
 
@@ -182,7 +189,7 @@ export default function LandingPage() {
               {/* Background Engineer Photo Overlay matching Screenshot 3 */}
               <div className="absolute -inset-4 rounded-3xl bg-gradient-to-r from-orange-400/20 via-blue-500/10 to-transparent blur-2xl pointer-events-none -z-10" />
 
-              <div className="w-full rounded-3xl bg-white border border-slate-200/90 shadow-2xl shadow-slate-300/60 overflow-hidden flex flex-col md:flex-row min-h-[460px] relative">
+              <div className="w-full rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-2xl shadow-slate-300/60 dark:shadow-black/60 overflow-hidden flex flex-col md:flex-row min-h-[460px] relative transition-colors duration-300">
                 
                 {/* Dark Blue Sidebar */}
                 <div className="w-full md:w-48 bg-[#0B1E36] p-5 text-white flex flex-col gap-5 shrink-0">
@@ -270,7 +277,7 @@ export default function LandingPage() {
                 </div>
 
                 {/* Dynamic Right Content Panel */}
-                <div className="flex-1 p-6 bg-slate-50/60 flex flex-col justify-between gap-6">
+                <div className="flex-1 p-6 bg-slate-50/60 dark:bg-slate-900/60 flex flex-col justify-between gap-6">
                   
                   {activeHeroTab === "overview" && (
                     <>
