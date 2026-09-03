@@ -11,6 +11,7 @@ frontend/.env.local
 backend/firebase_service_account.json
 *.env
 !*.env.example
+scratch/
 
 # Python
 __pycache__/

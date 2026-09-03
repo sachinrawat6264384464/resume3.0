@@ -43,7 +43,7 @@ export default function HelpPage() {
     setIsAdmin(!!checkAdmin);
   }, [user]);
 
-  // Fetch Candidate Tickets
+  // Fetch Candidate Tickets from DB
   const fetchCandidateTickets = async () => {
     try {
       const res = await apiFetch("/candidates/me/support");
@@ -52,10 +52,11 @@ export default function HelpPage() {
       }
     } catch (e) {
       console.warn("Candidate tickets fetch error:", e);
+      setCandidateTickets([]);
     }
   };
 
-  // Fetch Admin Tickets
+  // Fetch Admin Tickets from DB
   const fetchAdminTickets = async () => {
     setAdminLoading(true);
     try {
@@ -68,24 +69,8 @@ export default function HelpPage() {
       }
     } catch (e) {
       console.warn("Admin support tickets fetch error:", e);
-      // Mock fallback data if sleeping backend instance
-      const mockTickets = [
-        {
-          id: "tck-001",
-          ticket_code: "TCK-8942",
-          candidate_name: "Sachin Rawat",
-          candidate_email: "sachin@cloudops.internal",
-          target_role: "Senior DevOps Engineer",
-          subject: "Microphone Audio Stream check error during Stage 3 WebRTC Test",
-          category: "Audio / Microphone",
-          message: "During stage 3 AWS infrastructure voice test, microphone stream experienced a 15-second latency. Please verify WebRTC logs.",
-          status: "OPEN",
-          priority: "HIGH",
-          created_at: "Today, 09:45 AM"
-        }
-      ];
-      setAdminTickets(mockTickets);
-      setMetrics({ total: 1, open: 1, in_progress: 0, resolved: 0 });
+      setAdminTickets([]);
+      setMetrics({ total: 0, open: 0, in_progress: 0, resolved: 0 });
     } finally {
       setAdminLoading(false);
     }
@@ -100,7 +85,7 @@ export default function HelpPage() {
     }
   }, [isAdmin, mounted]);
 
-  // Handle Candidate Form Submit
+  // Handle Candidate Form Submit (100% Real DB Only)
   const handleCandidateSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!subject || !message) return;
@@ -119,37 +104,15 @@ export default function HelpPage() {
       });
 
       if (res?.data) {
-        setCandidateTickets([res.data, ...candidateTickets]);
-        setSubmitMsg(`Support ticket ${res.data.id} submitted to engineering team!`);
+        setSubmitMsg(`Support ticket ${res.data.id || res.data.ticket_code} saved to database & sent to engineering team!`);
+        await fetchCandidateTickets();
+        setSubject("");
+        setMessage("");
       } else {
-        const newLocal = {
-          id: `TCK-${Math.floor(1000 + Math.random() * 9000)}`,
-          subject,
-          category,
-          message,
-          status: "OPEN",
-          priority,
-          created_at: "Just now"
-        };
-        setCandidateTickets([newLocal, ...candidateTickets]);
-        setSubmitMsg("Support ticket submitted successfully! Our DevOps team will inspect this shortly.");
+        setSubmitMsg("Ticket submission returned invalid response. Please try again.");
       }
-      setSubject("");
-      setMessage("");
     } catch (err: any) {
-      const newLocal = {
-        id: `TCK-${Math.floor(1000 + Math.random() * 9000)}`,
-        subject,
-        category,
-        message,
-        status: "OPEN",
-        priority,
-        created_at: "Just now"
-      };
-      setCandidateTickets([newLocal, ...candidateTickets]);
-      setSubmitMsg("Support ticket created in database! Our team will respond shortly.");
-      setSubject("");
-      setMessage("");
+      setSubmitMsg(`Submission failed: ${err.message || "Unauthorized session. Please log in again."}`);
     } finally {
       setSubmitLoading(false);
     }

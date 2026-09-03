@@ -10,7 +10,7 @@ class SupportTicket(TimeStampedModel):
     subject = Column(String(255), nullable=False)
     category = Column(String(100), default="Technical Issue", nullable=False)
     message = Column(Text, nullable=False)
-    status = Column(String(50), default="OPEN", nullable=False)  # OPEN, IN_PROGRESS, RESOLVED
+    status = Column(String(50), default="OPEN", nullable=False, index=True)  # OPEN, IN_PROGRESS, RESOLVED
     priority = Column(String(50), default="MEDIUM", nullable=False)
 
     candidate = relationship("Candidate", backref="support_tickets")

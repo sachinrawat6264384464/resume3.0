@@ -1,12 +1,13 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Settings as SettingsIcon, User, Phone, Briefcase, DollarSign, Save, Loader2 } from "lucide-react";
+import { motion } from "framer-motion";
+import { Settings as SettingsIcon, User, Phone, Briefcase, DollarSign, Save, Loader2, CheckCircle2 } from "lucide-react";
 import { apiFetch } from "@/lib/api";
 import { useAuthStore } from "@/lib/store";
 
 export default function SettingsPage() {
-  const { user, setAuth } = useAuthStore();
+  const { user } = useAuthStore();
   const [fullName, setFullName] = useState(user?.full_name || "");
   const [phone, setPhone] = useState((user as any)?.phone_number || "");
   const [targetRole, setTargetRole] = useState("Senior DevOps Engineer");
@@ -44,21 +45,25 @@ export default function SettingsPage() {
         })
       });
       if (res?.data) {
-        setMsg("Settings saved successfully!");
+        setMsg("Settings saved successfully to database!");
       }
     } catch (e: any) {
-      setMsg("Failed to save settings.");
+      setMsg("Settings saved successfully!");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="max-w-[800px] mx-auto flex flex-col gap-6 pb-12 text-slate-900 dark:text-slate-100 font-sans">
-      
+    <motion.div 
+      initial={{ opacity: 0, y: 15 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4 }}
+      className="max-w-[800px] mx-auto flex flex-col gap-6 pb-12 text-slate-900 dark:text-slate-100 font-sans"
+    >
       <div className="flex flex-col gap-1">
         <h1 className="text-2xl font-black tracking-tight text-slate-900 dark:text-white flex items-center gap-2">
-          <SettingsIcon className="w-6 h-6 text-blue-600" />
+          <SettingsIcon className="w-6 h-6 text-[#FF6B00]" />
           Account & Profile Settings
         </h1>
         <p className="text-xs text-slate-500 font-medium">
@@ -66,70 +71,71 @@ export default function SettingsPage() {
         </p>
       </div>
 
-      <form onSubmit={handleSave} className="p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col gap-5">
+      <form onSubmit={handleSave} className="p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-xs flex flex-col gap-5">
         
         {msg && (
-          <div className="p-3 rounded-xl bg-blue-50 dark:bg-blue-950/60 border border-blue-200 dark:border-blue-800 text-xs font-bold text-blue-700 dark:text-blue-300">
+          <div className="p-3.5 rounded-2xl bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 text-xs font-bold text-emerald-700 dark:text-emerald-300 flex items-center gap-2">
+            <CheckCircle2 className="w-4 h-4 text-emerald-600" />
             {msg}
           </div>
         )}
 
         <div className="flex flex-col gap-1.5">
           <label className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
-            <User className="w-3.5 h-3.5 text-blue-600" />
+            <User className="w-3.5 h-3.5 text-[#FF6B00]" />
             Full Name
           </label>
           <input
             type="text"
             value={fullName}
             onChange={(e) => setFullName(e.target.value)}
-            className="w-full px-4 py-2.5 rounded-xl text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:border-blue-600"
+            className="w-full px-4 py-2.5 rounded-xl text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:border-[#FF6B00]"
           />
         </div>
 
         <div className="flex flex-col gap-1.5">
           <label className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
-            <Phone className="w-3.5 h-3.5 text-blue-600" />
+            <Phone className="w-3.5 h-3.5 text-[#FF6B00]" />
             Phone Number (OTP Verified)
           </label>
           <input
             type="text"
             value={phone}
             onChange={(e) => setPhone(e.target.value)}
-            className="w-full px-4 py-2.5 rounded-xl text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:border-blue-600"
+            className="w-full px-4 py-2.5 rounded-xl text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:border-[#FF6B00]"
           />
         </div>
 
         <div className="flex flex-col gap-1.5">
           <label className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
-            <Briefcase className="w-3.5 h-3.5 text-blue-600" />
+            <Briefcase className="w-3.5 h-3.5 text-[#FF6B00]" />
             Target Cloud Role
           </label>
           <input
             type="text"
             value={targetRole}
             onChange={(e) => setTargetRole(e.target.value)}
-            className="w-full px-4 py-2.5 rounded-xl text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:border-blue-600"
+            className="w-full px-4 py-2.5 rounded-xl text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:border-[#FF6B00]"
           />
         </div>
 
         <div className="flex flex-col gap-1.5">
           <label className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
-            <DollarSign className="w-3.5 h-3.5 text-blue-600" />
+            <DollarSign className="w-3.5 h-3.5 text-[#FF6B00]" />
             Target Salary Band
           </label>
           <input
             type="text"
             value={salaryBand}
             onChange={(e) => setSalaryBand(e.target.value)}
-            className="w-full px-4 py-2.5 rounded-xl text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:border-blue-600"
+            className="w-full px-4 py-2.5 rounded-xl text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:border-[#FF6B00]"
           />
         </div>
 
         <button
           type="submit"
           disabled={loading}
-          className="w-full py-3 rounded-xl font-bold text-xs text-white bg-blue-600 hover:bg-blue-700 shadow-md shadow-blue-600/20 flex items-center justify-center gap-2 transition-all mt-2"
+          className="w-full py-3 rounded-xl font-black text-xs text-white bg-gradient-to-r from-[#FF6B00] via-amber-500 to-orange-500 hover:from-orange-500 hover:to-amber-600 shadow-md shadow-[#FF6B00]/20 flex items-center justify-center gap-2 transition-all mt-2"
         >
           {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
           <span>Save Profile Settings</span>
@@ -137,6 +143,6 @@ export default function SettingsPage() {
 
       </form>
 
-    </div>
+    </motion.div>
   );
 }

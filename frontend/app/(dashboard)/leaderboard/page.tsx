@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { motion } from "framer-motion";
 import { 
   Trophy, Flame, Star, Award, ShieldCheck, 
   TrendingUp, Users, ArrowUpRight, Loader2, Sparkles
@@ -34,7 +35,7 @@ export default function LeaderboardPage() {
   if (isLoading) {
     return (
       <div className="flex-1 flex items-center justify-center min-h-[50vh]">
-        <Loader2 className="w-8 h-8 text-indigo-500 animate-spin" />
+        <Loader2 className="w-8 h-8 text-[#FF6B00] animate-spin" />
       </div>
     );
   }
@@ -49,30 +50,35 @@ export default function LeaderboardPage() {
   })();
 
   return (
-    <div className="flex flex-col gap-8 w-full pb-16">
-      {/* Header */}
-      <div className="p-8 sm:p-10 rounded-3xl bg-gradient-to-br from-blue-700 via-blue-600 to-indigo-700 dark:from-slate-800 dark:via-slate-800 dark:to-slate-900 relative overflow-hidden flex flex-col sm:flex-row sm:items-center justify-between gap-6 shadow-2xl">
+    <motion.div 
+      initial={{ opacity: 0, y: 15 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4 }}
+      className="flex flex-col gap-8 w-full pb-16 font-sans text-slate-900 dark:text-slate-100"
+    >
+      {/* Header Banner - AWS Orange & Midnight Navy Theme */}
+      <div className="p-8 sm:p-10 rounded-3xl bg-gradient-to-r from-[#0B1E36] via-[#102A4C] to-[#0B1E36] text-white relative overflow-hidden flex flex-col sm:flex-row sm:items-center justify-between gap-6 shadow-2xl border border-slate-800">
         <div className="flex flex-col gap-3 z-10">
           <div className="flex items-center gap-2">
-            <span className="px-3 py-1 rounded-full text-[11px] font-mono font-bold bg-amber-400/20 text-amber-100 border border-amber-400/30 flex items-center gap-1.5 shadow-sm">
-              <Trophy className="w-3.5 h-3.5 text-amber-300" />
+            <span className="px-3 py-1 rounded-full text-[11px] font-mono font-bold bg-[#FF6B00]/20 text-[#FF6B00] border border-[#FF6B00]/30 flex items-center gap-1.5 shadow-sm">
+              <Trophy className="w-3.5 h-3.5 text-[#FF6B00]" />
               Cohort Leaderboards
             </span>
-            <span className="text-xs text-blue-100 dark:text-slate-400 font-mono font-medium">Real-Time XP & Readiness Ranking</span>
+            <span className="text-xs text-slate-300 font-mono font-medium">Real-Time XP & Readiness Ranking</span>
           </div>
-          <h1 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">
+          <h1 className="text-3xl sm:text-4xl font-black text-white tracking-tight">
             Top Engineering Learners
           </h1>
-          <p className="text-sm text-blue-100/90 dark:text-slate-300 max-w-xl leading-relaxed font-medium">
+          <p className="text-sm text-slate-300 max-w-xl leading-relaxed font-medium">
             Gamified rankings celebrating regular practice, technical mastery, and continuous score velocity across Cloud & DevOps tracks.
           </p>
         </div>
 
-        <div className="absolute right-0 bottom-0 w-96 h-96 bg-cyan-400/20 dark:bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute right-0 bottom-0 w-96 h-96 bg-[#FF6B00]/10 rounded-full blur-3xl pointer-events-none" />
       </div>
 
       {/* Tabs */}
-      <div className="flex flex-wrap items-center gap-2 p-1.5 rounded-2xl bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-white/10 w-fit shadow-sm">
+      <div className="flex flex-wrap items-center gap-2 p-1.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 w-fit shadow-xs">
         {[
           { id: "global", label: "Global Ranking", icon: Trophy },
           { id: "weekly", label: "Weekly Sprint", icon: Flame },
@@ -82,10 +88,10 @@ export default function LeaderboardPage() {
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id as any)}
-            className={`px-4 py-2.5 rounded-xl text-xs font-bold flex items-center gap-2 transition-all ${
+            className={`px-4 py-2.5 rounded-xl text-xs font-black flex items-center gap-2 transition-all ${
               activeTab === tab.id
-                ? "bg-blue-50 text-blue-700 dark:bg-indigo-500/20 dark:text-indigo-300 shadow-sm border border-blue-100 dark:border-indigo-500/30"
-                : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-50 dark:hover:bg-white/5"
+                ? "bg-gradient-to-r from-[#FF6B00] to-amber-500 text-white shadow-md shadow-[#FF6B00]/20"
+                : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/60"
             }`}
           >
             <tab.icon className="w-4 h-4" />
@@ -103,7 +109,7 @@ export default function LeaderboardPage() {
               onClick={() => setSelectedTech(tech)}
               className={`px-4 py-2 rounded-xl text-xs font-mono font-bold transition-all shadow-xs ${
                 selectedTech === tech
-                  ? "bg-[#232F3E] text-white border border-[#FF9900] shadow-md scale-[1.02]"
+                  ? "bg-[#0B1E36] text-white border border-[#FF6B00] shadow-md scale-[1.02]"
                   : "bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 hover:bg-slate-100"
               }`}
             >
@@ -114,8 +120,8 @@ export default function LeaderboardPage() {
       )}
 
       {/* Leaderboard Table / Cards */}
-      <div className="p-4 sm:p-6 rounded-3xl bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-white/10 flex flex-col gap-4 shadow-sm">
-        <div className="grid grid-cols-12 text-[11px] uppercase tracking-wider font-bold text-slate-500 dark:text-slate-400 pb-3 border-b border-slate-100 dark:border-white/5 px-4">
+      <div className="p-4 sm:p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex flex-col gap-4 shadow-xs">
+        <div className="grid grid-cols-12 text-[11px] uppercase tracking-wider font-black text-slate-400 pb-3 border-b border-slate-100 dark:border-slate-800 px-4">
           <div className="col-span-1">Rank</div>
           <div className="col-span-4 sm:col-span-5">Candidate</div>
           <div className="col-span-3 sm:col-span-2 text-center">XP & Level</div>
@@ -131,17 +137,18 @@ export default function LeaderboardPage() {
               user.full_name?.toLowerCase().trim() === entry.candidate_name.toLowerCase().trim() ||
               (user.email && entry.candidate_name.toLowerCase().includes(user.email.split("@")[0].toLowerCase()))
             );
-            const rankBadgeColor = rank === 1 ? "text-amber-600 bg-amber-50 border-amber-200 shadow-sm dark:bg-amber-500/20 dark:border-amber-500/40 dark:text-amber-400" : rank === 2 ? "text-slate-600 bg-slate-100 border-slate-300 shadow-sm dark:bg-slate-400/20 dark:border-slate-400/40 dark:text-slate-300" : rank === 3 ? "text-orange-600 bg-orange-50 border-orange-200 shadow-sm dark:bg-amber-700/20 dark:border-amber-700/40 dark:text-amber-600" : "text-slate-500 bg-slate-50 border-slate-200 dark:bg-slate-800 dark:border-white/5";
+            const rankBadgeColor = rank === 1 ? "text-amber-600 bg-amber-50 border-amber-200 shadow-xs dark:bg-amber-500/20 dark:border-amber-500/40 dark:text-amber-400" : rank === 2 ? "text-slate-600 bg-slate-100 border-slate-300 shadow-xs dark:bg-slate-400/20 dark:border-slate-400/40 dark:text-slate-300" : rank === 3 ? "text-orange-600 bg-orange-50 border-orange-200 shadow-xs dark:bg-amber-700/20 dark:border-amber-700/40 dark:text-amber-600" : "text-slate-500 bg-slate-50 border-slate-200 dark:bg-slate-800 dark:border-slate-700";
 
             return (
-              <div
+              <motion.div
                 key={entry.candidate_id || idx}
-                className={`grid grid-cols-12 items-center p-4 rounded-2xl border transition-all duration-300 hover:shadow-md hover:-translate-y-0.5 ${
+                whileHover={{ scale: 1.01 }}
+                className={`grid grid-cols-12 items-center p-4 rounded-2xl border transition-all ${
                   isMe
-                    ? "bg-blue-50/80 border-blue-400 dark:bg-blue-950/40 dark:border-blue-500/60 shadow-md ring-2 ring-blue-500/20"
+                    ? "bg-orange-50/80 border-[#FF6B00] dark:bg-orange-950/40 dark:border-[#FF6B00]/60 shadow-md ring-2 ring-[#FF6B00]/20"
                     : isTop3
-                    ? "bg-slate-50 border-slate-200 hover:border-blue-300 dark:bg-slate-950/80 dark:border-white/10 dark:hover:border-amber-500/30"
-                    : "bg-white border-slate-100 hover:bg-slate-50 hover:border-blue-200 dark:bg-slate-950/40 dark:border-white/5 dark:hover:bg-slate-950/70"
+                    ? "bg-slate-50 border-slate-200 hover:border-[#FF6B00] dark:bg-slate-900/80 dark:border-slate-800"
+                    : "bg-white border-slate-100 hover:bg-slate-50 dark:bg-slate-900/40 dark:border-slate-800"
                 }`}
               >
                 {/* Rank */}
@@ -153,16 +160,16 @@ export default function LeaderboardPage() {
 
                 {/* Candidate Name & Role */}
                 <div className="col-span-4 sm:col-span-5 flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-full bg-gradient-to-br from-blue-600 to-indigo-500 p-[1px] hidden sm:block shadow-sm">
-                    <div className="w-full h-full rounded-full bg-white dark:bg-slate-900 flex items-center justify-center text-xs font-extrabold text-blue-700 dark:text-white">
+                  <div className="w-9 h-9 rounded-full bg-[#0B1E36] p-[1px] hidden sm:block shadow-xs">
+                    <div className="w-full h-full rounded-full bg-white dark:bg-slate-900 flex items-center justify-center text-xs font-black text-[#FF6B00]">
                       {entry.candidate_name.charAt(0)}
                     </div>
                   </div>
                   <div className="flex flex-col">
                     <div className="flex items-center gap-2">
-                      <h4 className="font-bold text-slate-900 dark:text-white text-sm">{entry.candidate_name}</h4>
+                      <h4 className="font-extrabold text-slate-900 dark:text-white text-sm">{entry.candidate_name}</h4>
                       {isMe && (
-                        <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-blue-600 text-white shadow-xs">
+                        <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-[#FF6B00] text-white shadow-xs">
                           YOU
                         </span>
                       )}
@@ -173,31 +180,31 @@ export default function LeaderboardPage() {
 
                 {/* XP & Level */}
                 <div className="col-span-3 sm:col-span-2 text-center flex flex-col items-center gap-0.5">
-                  <span className="text-xs font-bold text-amber-600 dark:text-amber-300 font-mono flex items-center gap-1">
-                    <Star className="w-3 h-3 text-amber-500 dark:text-amber-400 fill-amber-500 dark:fill-amber-400" />
+                  <span className="text-xs font-bold text-amber-600 dark:text-amber-400 font-mono flex items-center gap-1">
+                    <Star className="w-3 h-3 text-amber-500 fill-amber-500" />
                     {entry.xp.toLocaleString()} XP
                   </span>
-                  <span className="text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider">Level {entry.level}</span>
+                  <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Level {entry.level}</span>
                 </div>
 
                 {/* Streak */}
                 <div className="col-span-2 text-center hidden sm:flex flex-col items-center">
-                  <span className="text-xs font-bold text-amber-500 dark:text-amber-400 font-mono flex items-center gap-1">
-                    <Flame className="w-3.5 h-3.5 fill-amber-500 dark:fill-amber-400 text-amber-500 dark:text-amber-400" />
+                  <span className="text-xs font-bold text-amber-500 font-mono flex items-center gap-1">
+                    <Flame className="w-3.5 h-3.5 fill-amber-500 text-amber-500" />
                     {entry.streak_days} Days
                   </span>
                 </div>
 
                 {/* Readiness Target */}
                 <div className="col-span-4 sm:col-span-2 text-right flex flex-col items-end gap-0.5">
-                  <span className="text-sm font-black text-blue-600 dark:text-cyan-400 font-mono">{entry.readiness_score}%</span>
-                  <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-white/5 px-2 py-0.5 rounded-md">{entry.target_salary_band}</span>
+                  <span className="text-sm font-black text-[#FF6B00] font-mono">{entry.readiness_score}%</span>
+                  <span className="text-[10px] font-bold text-slate-500 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-md">{entry.target_salary_band}</span>
                 </div>
-              </div>
+              </motion.div>
             );
           })}
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 }

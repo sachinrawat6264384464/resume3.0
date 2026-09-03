@@ -573,6 +573,20 @@ async def get_my_support_tickets(
     user = await auth_svc.get_current_user_from_payload(payload)
     cand_svc = CandidateService(db)
     cand = await cand_svc.get_candidate_by_user_id(user.id, user.organization_id)
+    if not cand:
+        cand = Candidate(
+            user_id=user.id,
+            organization_id=user.organization_id,
+            experience_level="MID",
+            target_role="Senior DevOps Engineer",
+            xp=0,
+            level=1,
+            streak_days=1,
+            readiness_score=0.0
+        )
+        db.add(cand)
+        await db.commit()
+        await db.refresh(cand)
 
     stmt = select(SupportTicket).where(SupportTicket.candidate_id == cand.id).order_by(desc(SupportTicket.created_at))
     res = await db.execute(stmt)
@@ -601,6 +615,20 @@ async def create_support_ticket(
     user = await auth_svc.get_current_user_from_payload(payload)
     cand_svc = CandidateService(db)
     cand = await cand_svc.get_candidate_by_user_id(user.id, user.organization_id)
+    if not cand:
+        cand = Candidate(
+            user_id=user.id,
+            organization_id=user.organization_id,
+            experience_level="MID",
+            target_role="Senior DevOps Engineer",
+            xp=0,
+            level=1,
+            streak_days=1,
+            readiness_score=0.0
+        )
+        db.add(cand)
+        await db.commit()
+        await db.refresh(cand)
 
     code = f"TCK-{secrets.randbelow(9000) + 1000}"
     ticket = SupportTicket(

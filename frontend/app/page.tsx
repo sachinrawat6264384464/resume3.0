@@ -8,8 +8,8 @@ import {
   Terminal, Server, Cpu, Layers, FileCheck, Map, Star, Users, 
   ChevronRight, Play, Zap, Flame, Award, BarChart3, HelpCircle,
   ExternalLink, Code2, AlertTriangle, ArrowUpRight, Check,
-  Home, Flag, Monitor, Globe, Database, Archive, Briefcase, FolderCheck, FileText,
-  ChevronDown, ChevronUp, Lock, RefreshCw, Layers3, Activity, CheckSquare
+  Home, Flag, Monitor, Globe, Database, Archive, Briefcase, FolderCheck, FileText, User,
+  ChevronDown, ChevronUp, Lock, RefreshCw, Layers3, Activity, Target, AlignLeft, Scale, LayoutGrid, Search, ShieldCheck, TrendingUp, Calendar
 } from "lucide-react";
 
 export default function LandingPage() {
@@ -49,7 +49,7 @@ export default function LandingPage() {
   return (
     <div className="min-h-screen bg-[#FAFAFA] text-slate-900 font-sans selection:bg-[#FF6B00] selection:text-white overflow-x-hidden">
       
-      {/* Header Navigation */}
+      {/* 1. TOP NAVBAR */}
       <header className="sticky top-0 z-50 backdrop-blur-md bg-white/90 border-b border-slate-200/80 shadow-xs">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
           
@@ -72,21 +72,19 @@ export default function LandingPage() {
 
           {/* Center Links */}
           <nav className="hidden md:flex items-center gap-8 text-xs font-extrabold text-slate-700">
-            <a href="#features" className="hover:text-[#FF6B00] transition-colors">5-Stage System</a>
-            <a href="#voice-ai" className="hover:text-[#FF6B00] transition-colors">Voice AI Chamber</a>
+            <a href="#features" className="hover:text-[#FF6B00] transition-colors">Features</a>
+            <a href="#voice-ai" className="hover:text-[#FF6B00] transition-colors">How It Works</a>
             <a href="#ats" className="hover:text-[#FF6B00] transition-colors">ATS Analyzer</a>
-            <a href="#leaderboard" className="hover:text-[#FF6B00] transition-colors">Leaderboard</a>
-            <a href="#roadmap" className="hover:text-[#FF6B00] transition-colors">Roadmap</a>
             <a href="#faq" className="hover:text-[#FF6B00] transition-colors">FAQ</a>
           </nav>
 
           {/* Right Action Buttons */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-4">
             <ThemeToggle />
 
             <Link 
               href="/login" 
-              className="text-xs font-extrabold text-slate-700 dark:text-slate-300 hover:text-[#0B1E36] dark:hover:text-white px-3 py-2 transition-colors"
+              className="text-xs font-extrabold text-slate-700 dark:text-slate-300 hover:text-[#0B1E36] dark:hover:text-white px-2 py-2 transition-colors"
             >
               Sign In
             </Link>
@@ -103,28 +101,29 @@ export default function LandingPage() {
         </div>
       </header>
 
-      {/* HERO SECTION */}
-      <section className="relative z-10 pt-12 pb-16 lg:pt-20 lg:pb-24">
+      {/* 2. HERO SECTION (Screenshot 1) */}
+      <section className="relative z-10 pt-10 pb-16 lg:pt-16 lg:pb-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
             
-            {/* Left Column */}
+            {/* Hero Left Column */}
             <div className="lg:col-span-5 flex flex-col gap-6">
               
-              <h1 className="text-5xl sm:text-6xl lg:text-[62px] font-black text-[#0B1E36] tracking-tight leading-[1.06] font-sans uppercase">
+              <h1 className="text-4xl sm:text-5xl lg:text-[56px] font-black text-[#0B1E36] tracking-tight leading-[1.08] font-sans uppercase">
                 LAND YOUR NEXT<br />
-                <span className="text-[#FF6B00]">CLOUD ENGINEERING</span> ROLE.
+                <span className="text-[#FF6B00]">CLOUD ENGINEERING</span><br />
+                ROLE.
               </h1>
 
-              <p className="text-base text-slate-600 leading-relaxed font-medium max-w-lg">
+              <p className="text-sm text-slate-600 leading-relaxed font-medium max-w-lg">
                 Practice real AWS incidents, improve your interview skills, and see exactly what to fix.
               </p>
 
-              {/* Action Buttons */}
-              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 pt-2">
+              {/* Action Pill CTAs */}
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3.5 pt-1">
                 <Link
                   href="/register"
-                  className="py-3.5 px-7 rounded-full font-black text-xs text-white bg-gradient-to-r from-[#FF6B00] via-amber-500 to-orange-500 hover:from-orange-500 hover:to-amber-600 shadow-xl shadow-[#FF6B00]/30 flex items-center justify-center gap-2.5 hover:scale-[1.02] transition-all"
+                  className="py-3.5 px-6 rounded-full font-black text-xs text-white bg-gradient-to-r from-[#FF6B00] via-amber-500 to-orange-500 hover:from-orange-500 hover:to-amber-600 shadow-xl shadow-[#FF6B00]/30 flex items-center justify-center gap-2 hover:scale-[1.02] transition-all"
                 >
                   <Mic className="w-4 h-4" />
                   <span>Start Free AI Interview</span>
@@ -132,63 +131,65 @@ export default function LandingPage() {
 
                 <a
                   href="#ats"
-                  className="py-3.5 px-6 rounded-2xl font-extrabold text-xs text-[#0B1E36] bg-white border border-slate-300 hover:border-[#FF6B00] flex items-center justify-center gap-2 shadow-xs transition-all"
+                  className="py-3.5 px-6 rounded-full font-extrabold text-xs text-[#0B1E36] bg-white border border-slate-300 hover:border-[#FF6B00] flex items-center justify-center gap-2 shadow-xs transition-all"
                 >
                   <FileText className="w-4 h-4 text-slate-700" />
                   <span>Analyze My Resume</span>
                 </a>
               </div>
 
-              {/* 3 Feature Badges */}
-              <div className="grid grid-cols-3 gap-3 pt-8 border-t border-slate-200/80 mt-2">
-                <div className="flex items-start gap-2.5">
-                  <div className="w-8 h-8 rounded-full bg-orange-100 text-[#FF6B00] flex items-center justify-center shrink-0 mt-0.5">
-                    <Mic className="w-4 h-4" />
+              {/* 4 Feature Thumbnails below CTAs */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-6 border-t border-slate-200/80 mt-2">
+                <div className="flex flex-col gap-1">
+                  <div className="w-10 h-10 rounded-xl bg-orange-100/80 text-[#FF6B00] flex items-center justify-center mb-1">
+                    <Mic className="w-5 h-5" />
                   </div>
-                  <div className="flex flex-col">
-                    <span className="text-xs font-black text-[#0B1E36]">AI Voice Interview</span>
-                    <span className="text-[11px] text-slate-500 font-medium">Real AWS incident practice</span>
-                  </div>
+                  <span className="text-xs font-black text-[#0B1E36]">AI Voice Interview</span>
+                  <span className="text-[10px] text-slate-500 font-medium leading-tight">Real-world AWS incident practice</span>
                 </div>
 
-                <div className="flex items-start gap-2.5">
-                  <div className="w-8 h-8 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center shrink-0 mt-0.5">
-                    <BarChart3 className="w-4 h-4" />
+                <div className="flex flex-col gap-1">
+                  <div className="w-10 h-10 rounded-xl bg-amber-100/80 text-amber-600 flex items-center justify-center mb-1">
+                    <BarChart3 className="w-5 h-5" />
                   </div>
-                  <div className="flex flex-col">
-                    <span className="text-xs font-black text-[#0B1E36]">ATS Resume Score</span>
-                    <span className="text-[11px] text-slate-500 font-medium">See your match score</span>
-                  </div>
+                  <span className="text-xs font-black text-[#0B1E36]">ATS Resume Score</span>
+                  <span className="text-[10px] text-slate-500 font-medium leading-tight">See your match score instantly</span>
                 </div>
 
-                <div className="flex items-start gap-2.5">
-                  <div className="w-8 h-8 rounded-full bg-orange-100 text-[#FF6B00] flex items-center justify-center shrink-0 mt-0.5">
-                    <Map className="w-4 h-4" />
+                <div className="flex flex-col gap-1">
+                  <div className="w-10 h-10 rounded-xl bg-blue-100/80 text-blue-600 flex items-center justify-center mb-1">
+                    <Layers className="w-5 h-5" />
                   </div>
-                  <div className="flex flex-col">
-                    <span className="text-xs font-black text-[#0B1E36]">30-Day Roadmap</span>
-                    <span className="text-[11px] text-slate-500 font-medium">Personalized plan to land offers</span>
+                  <span className="text-xs font-black text-[#0B1E36]">5-Stage System</span>
+                  <span className="text-[10px] text-slate-500 font-medium leading-tight">80%+ score to unlock next stage</span>
+                </div>
+
+                <div className="flex flex-col gap-1">
+                  <div className="w-10 h-10 rounded-xl bg-emerald-100/80 text-emerald-600 flex items-center justify-center mb-1">
+                    <Map className="w-5 h-5" />
                   </div>
+                  <span className="text-xs font-black text-[#0B1E36]">30-Day Roadmap</span>
+                  <span className="text-[10px] text-slate-500 font-medium leading-tight">Personalized plan to land offers</span>
                 </div>
               </div>
 
             </div>
 
-            {/* Right Column: 3D Visual Mock */}
+            {/* Hero Right Column: AWS Architecture Mock Visual */}
             <div className="lg:col-span-7 relative">
-              <div className="w-full rounded-3xl bg-white border border-slate-200/90 shadow-2xl shadow-slate-300/60 overflow-hidden flex flex-col md:flex-row min-h-[440px]">
+              <div className="w-full rounded-3xl bg-white border border-slate-200/90 shadow-2xl shadow-slate-300/60 overflow-hidden flex flex-col md:flex-row min-h-[460px]">
                 
                 {/* Dark Blue Sidebar */}
-                <div className="w-full md:w-52 bg-[#0B1E36] p-5 text-white flex flex-col gap-6 shrink-0">
+                <div className="w-full md:w-48 bg-[#0B1E36] p-5 text-white flex flex-col gap-5 shrink-0">
                   <div className="flex items-center gap-2">
                     <div className="w-6 h-6 rounded-lg bg-[#FF6B00] flex items-center justify-center text-white">
                       <Cloud className="w-3.5 h-3.5" />
                     </div>
-                    <span className="text-sm font-black tracking-tight">CloudOps AI</span>
+                    <span className="text-xs font-black tracking-tight">CloudOps AI</span>
                   </div>
 
                   <div className="flex flex-col items-center text-center p-3 rounded-2xl bg-white/5 border border-white/10">
-                    <div className="w-14 h-14 rounded-full overflow-hidden border-2 border-[#FF6B00] mb-2 shadow-md">
+                    <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-[#FF6B00] mb-1.5 shadow-md">
                       <img 
                         src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=200" 
                         alt="Rahul Rawat Profile" 
@@ -199,32 +200,36 @@ export default function LandingPage() {
                     <span className="text-[10px] text-slate-400 font-medium">Cloud Engineer</span>
                   </div>
 
-                  <div className="flex flex-col gap-1.5 text-xs font-semibold">
-                    <div className="flex items-center gap-2.5 px-3 py-2 rounded-xl bg-white/10 text-white font-bold">
+                  <div className="flex flex-col gap-1 text-[11px] font-semibold">
+                    <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white/10 text-white font-bold">
                       <Home className="w-3.5 h-3.5 text-[#FF6B00]" />
                       <span>Overview</span>
                     </div>
-                    <div className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-slate-400 hover:text-white transition-colors">
+                    <div className="flex items-center gap-2 px-3 py-2 rounded-xl text-slate-400 hover:text-white transition-colors">
                       <Mic className="w-3.5 h-3.5" />
                       <span>Interview Practice</span>
                     </div>
-                    <div className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-slate-400 hover:text-white transition-colors">
+                    <div className="flex items-center gap-2 px-3 py-2 rounded-xl text-slate-400 hover:text-white transition-colors">
                       <FileText className="w-3.5 h-3.5" />
                       <span>ATS Analyzer</span>
                     </div>
-                    <div className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-slate-400 hover:text-white transition-colors">
+                    <div className="flex items-center gap-2 px-3 py-2 rounded-xl text-slate-400 hover:text-white transition-colors">
                       <Flag className="w-3.5 h-3.5" />
                       <span>Roadmap</span>
+                    </div>
+                    <div className="flex items-center gap-2 px-3 py-2 rounded-xl text-slate-400 hover:text-white transition-colors">
+                      <User className="w-3.5 h-3.5" />
+                      <span>Profile</span>
                     </div>
                   </div>
                 </div>
 
-                {/* Right Panel */}
+                {/* Right Content Panel */}
                 <div className="flex-1 p-6 bg-slate-50/60 flex flex-col justify-between gap-6">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <span className="text-xs font-black text-[#FF6B00]">aws</span>
-                      <span className="text-sm font-black text-slate-900">AWS Incident Simulation</span>
+                      <span className="text-xs font-black text-slate-900">AWS Incident Simulation</span>
                     </div>
                     <span className="text-xs font-extrabold px-3 py-1 rounded-full bg-emerald-100 text-emerald-700 border border-emerald-200 flex items-center gap-1">
                       <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
@@ -232,62 +237,64 @@ export default function LandingPage() {
                     </span>
                   </div>
 
-                  <div className="p-4 rounded-2xl bg-white border border-slate-200/80 shadow-xs flex items-center justify-between relative overflow-x-auto gap-2">
+                  {/* AWS Connected Architecture Flow */}
+                  <div className="p-3.5 rounded-2xl bg-white border border-slate-200/80 shadow-xs flex items-center justify-between overflow-x-auto gap-2">
                     <div className="flex flex-col items-center gap-1 shrink-0">
-                      <div className="w-10 h-10 rounded-xl bg-slate-800 text-white flex items-center justify-center shadow-md">
-                        <Monitor className="w-5 h-5" />
+                      <div className="w-9 h-9 rounded-xl bg-slate-800 text-white flex items-center justify-center shadow-md">
+                        <Monitor className="w-4 h-4" />
                       </div>
-                      <span className="text-[10px] font-bold text-slate-600">Client</span>
+                      <span className="text-[9px] font-bold text-slate-600">Client</span>
                     </div>
-                    <span className="text-slate-300 font-bold">➔</span>
+                    <span className="text-slate-300 font-bold text-xs">➔</span>
 
                     <div className="flex flex-col items-center gap-1 shrink-0">
-                      <div className="w-10 h-10 rounded-xl bg-purple-600 text-white flex items-center justify-center shadow-md">
-                        <Globe className="w-5 h-5" />
+                      <div className="w-9 h-9 rounded-xl bg-purple-600 text-white flex items-center justify-center shadow-md">
+                        <Globe className="w-4 h-4" />
                       </div>
-                      <span className="text-[10px] font-bold text-slate-600">Route 53</span>
+                      <span className="text-[9px] font-bold text-slate-600">Route 53</span>
                     </div>
-                    <span className="text-slate-300 font-bold">➔</span>
+                    <span className="text-slate-300 font-bold text-xs">➔</span>
 
                     <div className="flex flex-col items-center gap-1 shrink-0">
-                      <div className="w-10 h-10 rounded-xl bg-indigo-600 text-white flex items-center justify-center shadow-md">
-                        <Layers className="w-5 h-5" />
+                      <div className="w-9 h-9 rounded-xl bg-indigo-600 text-white flex items-center justify-center shadow-md">
+                        <Layers className="w-4 h-4" />
                       </div>
-                      <span className="text-[10px] font-bold text-slate-600">ALB</span>
+                      <span className="text-[9px] font-bold text-slate-600">ALB</span>
                     </div>
-                    <span className="text-slate-300 font-bold">➔</span>
+                    <span className="text-slate-300 font-bold text-xs">➔</span>
 
                     <div className="flex flex-col items-center gap-1 shrink-0">
-                      <div className="w-10 h-10 rounded-xl bg-[#FF6B00] text-white flex items-center justify-center shadow-md">
-                        <Cpu className="w-5 h-5" />
+                      <div className="w-9 h-9 rounded-xl bg-[#FF6B00] text-white flex items-center justify-center shadow-md">
+                        <Cpu className="w-4 h-4" />
                       </div>
-                      <span className="text-[10px] font-bold text-slate-600">EC2</span>
+                      <span className="text-[9px] font-bold text-slate-600">EC2</span>
                     </div>
-                    <span className="text-slate-300 font-bold">➔</span>
+                    <span className="text-slate-300 font-bold text-xs">➔</span>
 
                     <div className="flex flex-col items-center gap-1 shrink-0">
-                      <div className="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center shadow-md">
-                        <Database className="w-5 h-5" />
+                      <div className="w-9 h-9 rounded-xl bg-blue-600 text-white flex items-center justify-center shadow-md">
+                        <Database className="w-4 h-4" />
                       </div>
-                      <span className="text-[10px] font-bold text-slate-600">RDS</span>
+                      <span className="text-[9px] font-bold text-slate-600">RDS</span>
                     </div>
-                    <span className="text-slate-300 font-bold">➔</span>
+                    <span className="text-slate-300 font-bold text-xs">➔</span>
 
                     <div className="flex flex-col items-center gap-1 shrink-0">
-                      <div className="w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center shadow-md">
-                        <Archive className="w-5 h-5" />
+                      <div className="w-9 h-9 rounded-xl bg-emerald-600 text-white flex items-center justify-center shadow-md">
+                        <Archive className="w-4 h-4" />
                       </div>
-                      <span className="text-[10px] font-bold text-slate-600">S3</span>
+                      <span className="text-[9px] font-bold text-slate-600">S3</span>
                     </div>
                   </div>
 
+                  {/* 3 Metric Columns */}
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                    <div className="p-3.5 rounded-2xl bg-white border border-slate-200/80 shadow-xs flex flex-col gap-2">
-                      <span className="text-xs font-black text-slate-900 flex items-center gap-1">
+                    <div className="p-3 rounded-2xl bg-white border border-slate-200/80 shadow-xs flex flex-col gap-2">
+                      <span className="text-[11px] font-black text-slate-900 flex items-center gap-1">
                         <Code2 className="w-3.5 h-3.5 text-[#FF6B00]" />
                         Skills
                       </span>
-                      <div className="flex flex-col gap-1.5 text-[10px] font-bold text-slate-600">
+                      <div className="flex flex-col gap-1.5 text-[9px] font-bold text-slate-600">
                         <div>
                           <div className="flex justify-between mb-0.5"><span>AWS Services</span></div>
                           <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
@@ -300,15 +307,21 @@ export default function LandingPage() {
                             <div className="h-full bg-[#FF6B00] w-[84%]" />
                           </div>
                         </div>
+                        <div>
+                          <div className="flex justify-between mb-0.5"><span>IAM & Security</span></div>
+                          <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
+                            <div className="h-full bg-[#FF6B00] w-[78%]" />
+                          </div>
+                        </div>
                       </div>
                     </div>
 
-                    <div className="p-3.5 rounded-2xl bg-white border border-slate-200/80 shadow-xs flex flex-col gap-2">
-                      <span className="text-xs font-black text-slate-900 flex items-center gap-1">
+                    <div className="p-3 rounded-2xl bg-white border border-slate-200/80 shadow-xs flex flex-col gap-2">
+                      <span className="text-[11px] font-black text-slate-900 flex items-center gap-1">
                         <Briefcase className="w-3.5 h-3.5 text-blue-500" />
                         Experience
                       </span>
-                      <div className="flex flex-col gap-1 text-[10px]">
+                      <div className="flex flex-col gap-1.5 text-[10px]">
                         <div className="flex justify-between font-bold text-slate-700">
                           <span>Cloud Engineer</span>
                           <span className="text-slate-400">3.2 yrs</span>
@@ -317,21 +330,29 @@ export default function LandingPage() {
                           <span>DevOps Engineer</span>
                           <span className="text-slate-400">1.8 yrs</span>
                         </div>
+                        <div className="flex justify-between font-bold text-slate-700">
+                          <span>SRE Intern</span>
+                          <span className="text-slate-400">0.6 yrs</span>
+                        </div>
                       </div>
                     </div>
 
-                    <div className="p-3.5 rounded-2xl bg-white border border-slate-200/80 shadow-xs flex flex-col gap-2">
-                      <span className="text-xs font-black text-slate-900 flex items-center gap-1">
+                    <div className="p-3 rounded-2xl bg-white border border-slate-200/80 shadow-xs flex flex-col gap-2">
+                      <span className="text-[11px] font-black text-slate-900 flex items-center gap-1">
                         <FolderCheck className="w-3.5 h-3.5 text-emerald-500" />
                         Projects
                       </span>
-                      <div className="flex flex-col gap-1 text-[10px]">
+                      <div className="flex flex-col gap-1.5 text-[10px]">
                         <div className="flex items-center justify-between font-bold text-slate-700">
-                          <span className="truncate">Multi-Region App</span>
+                          <span className="truncate">Multi-Region Web App</span>
                           <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
                         </div>
                         <div className="flex items-center justify-between font-bold text-slate-700">
-                          <span className="truncate">CI/CD Pipeline</span>
+                          <span className="truncate">CI/CD with GitHub Actions</span>
+                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+                        </div>
+                        <div className="flex items-center justify-between font-bold text-slate-700">
+                          <span className="truncate">Serverless Data Pipeline</span>
                           <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
                         </div>
                       </div>
@@ -345,118 +366,106 @@ export default function LandingPage() {
 
           </div>
         </div>
-      </section>
 
-      {/* TECH MARQUEE */}
-      <section className="py-6 bg-white border-y border-slate-200/80 relative overflow-hidden">
-        <div className="max-w-7xl mx-auto px-4 text-center mb-3">
-          <span className="text-[11px] font-black text-slate-400 uppercase tracking-widest">
-            ENTERPRISE CLOUD ECOSYSTEM & INTERVIEW BLUEPRINTS
-          </span>
-        </div>
-
-        <div className="flex overflow-hidden space-x-8 select-none">
-          <div className="flex space-x-8 animate-marquee whitespace-nowrap items-center shrink-0">
-            {[
-              { name: "AWS Services", code: "EKS / IAM / VPC", color: "#FF6B00" },
-              { name: "Google Cloud", code: "GKE / BigQuery", color: "#4285F4" },
-              { name: "Azure Cloud", code: "AKS / Azure DevOps", color: "#0089D6" },
-              { name: "Docker", code: "Containers / Compose", color: "#0db7ed" },
-              { name: "Kubernetes", code: "K8s Helm & Ingress", color: "#326ce5" },
-              { name: "Terraform", code: "IaC State Locking", color: "#844FBA" },
-            ].map((tech, i) => (
-              <div key={i} className="flex items-center gap-2.5 px-4 py-2 rounded-xl bg-slate-50 border border-slate-200 shrink-0">
-                <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: tech.color }} />
-                <span className="text-xs font-black text-[#0B1E36]">{tech.name}</span>
-                <span className="text-[10px] font-mono font-bold text-slate-500 bg-white px-2 py-0.5 rounded border border-slate-200">{tech.code}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* SECTION 1: 5-STAGE ASSESSMENT SYSTEM */}
-      <section id="features" className="py-20 relative z-10 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          
-          <div className="text-center max-w-3xl mx-auto mb-16">
-            <span className="text-xs font-black text-[#FF6B00] uppercase tracking-widest">
-              5-STAGE GATED SYSTEM
+        {/* TRUST BANNER AT BOTTOM OF HERO (Screenshot 1) */}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-12">
+          <div className="p-4 rounded-3xl bg-white border border-slate-200/80 shadow-xs flex flex-col lg:flex-row items-center justify-between gap-6">
+            <span className="text-xs font-black text-[#0B1E36] tracking-wider uppercase">
+              TRUSTED BY CLOUD ENGINEERS WORLDWIDE
             </span>
-            <h2 className="text-3xl sm:text-4xl font-black text-[#0B1E36] tracking-tight mt-2">
-              Practice Real AWS Incidents & Get AI Scored
-            </h2>
-            <p className="text-sm text-slate-600 mt-3 font-medium leading-relaxed">
-              Every stage requires an 80%+ score to unlock the next challenge. Master real production troubleshooting.
-            </p>
-          </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
-            {[
-              { id: "01", name: "Profile Pitch", desc: "90-sec intro & resume walkthrough.", score: "Min 80%" },
-              { id: "02", name: "Linux Warrior", desc: "Kernel, sockets, systemd & disk triage.", score: "Min 80%" },
-              { id: "03", name: "Multi-Cloud", desc: "VPC, IAM STS, IRSA & ALB routing.", score: "Min 80%" },
-              { id: "04", name: "Containers & K8s", desc: "Docker multi-stage & EKS manifests.", score: "Min 80%" },
-              { id: "05", name: "Incident Boss", desc: "CrashLoopBackOff & 502 outage triage.", score: "Final Boss" },
-            ].map((st, idx) => (
-              <div 
-                key={idx}
-                className="p-5 rounded-3xl bg-slate-50 border border-slate-200/80 hover:border-[#FF6B00] shadow-xs hover:shadow-xl hover:shadow-[#FF6B00]/10 transition-all group flex flex-col justify-between"
-              >
-                <div>
-                  <div className="flex items-center justify-between mb-3">
-                    <span className="text-[10px] font-black text-[#FF6B00] uppercase tracking-widest">Stage {st.id}</span>
-                    <span className="text-[10px] font-mono font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
-                      {st.score}
-                    </span>
-                  </div>
-                  <h3 className="text-base font-black text-[#0B1E36] group-hover:text-[#FF6B00] transition-colors">{st.name}</h3>
-                  <p className="text-xs text-slate-600 mt-2 leading-relaxed font-medium">{st.desc}</p>
-                </div>
-
-                <Link href="/login" className="mt-4 pt-3 border-t border-slate-200 flex items-center justify-between text-xs font-bold text-[#FF6B00]">
-                  <span>Explore Stage</span>
-                  <ArrowRight className="w-3.5 h-3.5" />
-                </Link>
+            <div className="flex items-center gap-8 flex-wrap justify-center text-xs font-bold text-slate-700">
+              <div className="flex items-center gap-2">
+                <span className="text-[#FF6B00] font-black">aws</span>
+                <span>4.8/5 <span className="text-slate-400 font-medium">(1,200+ reviews)</span></span>
               </div>
-            ))}
-          </div>
+              <div className="flex items-center gap-2">
+                <span className="text-blue-500 font-black">GCP</span>
+                <span>4.7/5 <span className="text-slate-400 font-medium">(950+ reviews)</span></span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-emerald-500 font-black">★ Trustpilot</span>
+                <span>4.6/5 <span className="text-slate-400 font-medium">(800+ reviews)</span></span>
+              </div>
+            </div>
 
+            <div className="flex items-center gap-2">
+              <div className="flex -space-x-2 overflow-hidden">
+                <img className="inline-block h-7 w-7 rounded-full ring-2 ring-white" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=100" alt="" />
+                <img className="inline-block h-7 w-7 rounded-full ring-2 ring-white" src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=100" alt="" />
+                <img className="inline-block h-7 w-7 rounded-full ring-2 ring-white" src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=100" alt="" />
+              </div>
+              <span className="text-xs font-black text-slate-900">10,000+ Engineers <span className="text-slate-400 font-medium">are leveling up</span></span>
+            </div>
+          </div>
         </div>
       </section>
 
-      {/* SECTION 2: VOICE AI EVALUATION CHAMBER */}
+      {/* 3. VOICE AI & 5 PILLARS SECTION (Screenshot 2) */}
       <section id="voice-ai" className="py-20 relative z-10 bg-slate-50 border-t border-slate-200/80">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+          
+          <div className="mb-8">
+            <span className="px-3.5 py-1.5 rounded-full text-xs font-black text-[#FF6B00] bg-orange-100/80 border border-orange-200 flex items-center gap-1.5 w-fit">
+              <Mic className="w-4 h-4 text-[#FF6B00]" />
+              SPEECH & CADENCE ENGINE
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
             
-            <div className="lg:col-span-6 flex flex-col gap-5">
-              <span className="text-xs font-black text-[#FF6B00] uppercase tracking-widest">
-                SPEECH & CADENCE ENGINE
-              </span>
-              <h2 className="text-3xl sm:text-4xl font-black text-[#0B1E36] tracking-tight">
-                Spoken Technical Audio Evaluated Across 5 Objective Pillars
+            {/* Left Description & Weight Cards */}
+            <div className="lg:col-span-6 flex flex-col gap-6">
+              <h2 className="text-3xl sm:text-4xl lg:text-[40px] font-black text-[#0B1E36] tracking-tight uppercase leading-tight">
+                SPOKEN TECHNICAL AUDIO EVALUATED ACROSS<br />
+                <span className="text-[#FF6B00]">5 OBJECTIVE PILLARS</span>
               </h2>
+
               <p className="text-sm text-slate-600 leading-relaxed font-medium">
                 Our Whisper Speech-to-Text STT engine analyzes your spoken answers in real-time. Evaluate your WPM pacing, technical command accuracy, and logical reasoning under realistic interview pressure.
               </p>
 
-              <div className="grid grid-cols-2 gap-4 pt-2">
-                <div className="p-4 rounded-2xl bg-white border border-slate-200 shadow-xs flex flex-col gap-1">
-                  <span className="text-xs font-bold text-slate-400">Technical Accuracy</span>
-                  <span className="text-xl font-black text-[#0B1E36]">40% Weight</span>
-                  <span className="text-[11px] text-slate-500">Correctness of AWS & Linux commands</span>
+              {/* 2 Rubric Cards */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
+                <div className="p-5 rounded-3xl bg-white border border-slate-200/80 shadow-xs flex flex-col gap-2">
+                  <div className="flex items-center gap-2">
+                    <div className="w-8 h-8 rounded-xl bg-orange-100 text-[#FF6B00] flex items-center justify-center">
+                      <Mic className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <span className="text-xs font-black text-slate-900 block">Technical Accuracy</span>
+                      <span className="text-lg font-black text-[#0B1E36]">40% <span className="text-xs font-bold text-slate-400">Weight</span></span>
+                    </div>
+                  </div>
+                  <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden mt-1">
+                    <div className="h-full bg-[#FF6B00] w-[40%]" />
+                  </div>
+                  <span className="text-[11px] text-slate-500 font-medium">Correctness of AWS & Linux commands</span>
                 </div>
-                <div className="p-4 rounded-2xl bg-white border border-slate-200 shadow-xs flex flex-col gap-1">
-                  <span className="text-xs font-bold text-slate-400">Concept Coverage</span>
-                  <span className="text-xl font-black text-[#0B1E36]">25% Weight</span>
-                  <span className="text-[11px] text-slate-500">System internals & architectural edge cases</span>
+
+                <div className="p-5 rounded-3xl bg-white border border-slate-200/80 shadow-xs flex flex-col gap-2">
+                  <div className="flex items-center gap-2">
+                    <div className="w-8 h-8 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center">
+                      <FileText className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <span className="text-xs font-black text-slate-900 block">Concept Coverage</span>
+                      <span className="text-lg font-black text-[#0B1E36]">25% <span className="text-xs font-bold text-slate-400">Weight</span></span>
+                    </div>
+                  </div>
+                  <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden mt-1">
+                    <div className="h-full bg-blue-600 w-[25%]" />
+                  </div>
+                  <span className="text-[11px] text-slate-500 font-medium">System internals & architectural edge cases</span>
                 </div>
               </div>
+
             </div>
 
+            {/* Right Dark Audio Stream Chamber Mock */}
             <div className="lg:col-span-6">
-              <div className="p-6 rounded-3xl bg-[#0B1E36] text-white border border-slate-800 shadow-2xl flex flex-col gap-5">
+              <div className="p-6 sm:p-8 rounded-3xl bg-[#0B1E36] text-white border border-slate-800 shadow-2xl flex flex-col gap-6">
+                
                 <div className="flex items-center justify-between border-b border-slate-800 pb-4">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-2xl bg-[#FF6B00]/20 border border-[#FF6B00]/40 flex items-center justify-center text-[#FF6B00]">
@@ -467,263 +476,810 @@ export default function LandingPage() {
                       <span className="text-sm font-black text-white">Stage 3: AWS VPC Route Troubleshooting</span>
                     </div>
                   </div>
-                  <span className="text-xs font-mono font-bold text-emerald-400 bg-emerald-950/60 px-3 py-1 rounded-full border border-emerald-800">
+                  <span className="text-xs font-mono font-bold text-emerald-400 bg-emerald-950/80 px-3 py-1 rounded-full border border-emerald-800">
                     138 WPM (Ideal Cadence)
                   </span>
                 </div>
 
-                <div className="p-4 rounded-2xl bg-slate-900/80 border border-slate-800 flex items-center justify-between">
+                {/* Animated Audio Waveform Box */}
+                <div className="p-4 rounded-2xl bg-slate-900/90 border border-slate-800 flex items-center justify-between">
                   <div className="flex items-center gap-1 text-[#FF6B00]">
                     <Activity className="w-4 h-4 animate-pulse" />
-                    <span className="text-xs font-mono font-bold">||||||||||||||||||||||||||||||||||||</span>
+                    <span className="text-xs font-mono font-bold tracking-widest">|||||||||||||||||||||||||||||||||||||</span>
                   </div>
                   <span className="text-xs font-mono font-bold text-slate-400">00:42 / 02:00</span>
                 </div>
 
-                <div className="p-4 rounded-2xl bg-slate-900/50 border border-slate-800 text-xs font-mono text-slate-300 leading-relaxed">
-                  <span className="text-[#FF6B00] font-bold">"</span>To route private EC2 traffic to the internet while keeping subnet isolation, I would deploy a NAT Gateway in the public subnet and point private route tables to the NAT GW instance...<span className="text-[#FF6B00] font-bold">"</span>
+                {/* Transcribed Speech Quote Box */}
+                <div className="p-4 rounded-2xl bg-slate-900/60 border border-slate-800/80 text-xs text-slate-300 leading-relaxed font-sans relative">
+                  <span className="text-lg font-serif text-[#FF6B00] absolute top-2 left-3">&ldquo;</span>
+                  <p className="pl-4">
+                    To route private EC2 traffic to the internet while keeping subnet isolation, I would deploy a <span className="text-[#FF6B00] font-bold">NAT Gateway</span> in the public subnet and point private route tables to the <span className="text-[#FF6B00] font-bold">NAT GW</span> instance....&rdquo;
+                  </p>
                 </div>
+
+                {/* 4 Micro Feature Icons below Speech Box */}
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2">
+                  <div className="flex items-center gap-2 p-2.5 rounded-xl bg-white/5 border border-white/10">
+                    <div className="w-7 h-7 rounded-lg bg-[#FF6B00]/20 text-[#FF6B00] flex items-center justify-center shrink-0">
+                      <Mic className="w-3.5 h-3.5" />
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="text-[11px] font-bold text-white">Live STT</span>
+                      <span className="text-[9px] text-slate-400">Real-time transcription</span>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2 p-2.5 rounded-xl bg-white/5 border border-white/10">
+                    <div className="w-7 h-7 rounded-lg bg-blue-500/20 text-blue-400 flex items-center justify-center shrink-0">
+                      <Activity className="w-3.5 h-3.5" />
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="text-[11px] font-bold text-white">Cadence Check</span>
+                      <span className="text-[9px] text-slate-400">Pace & clarity analysis</span>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2 p-2.5 rounded-xl bg-white/5 border border-white/10">
+                    <div className="w-7 h-7 rounded-lg bg-purple-500/20 text-purple-400 flex items-center justify-center shrink-0">
+                      <Target className="w-3.5 h-3.5" />
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="text-[11px] font-bold text-white">Accuracy Score</span>
+                      <span className="text-[9px] text-slate-400">Contextual relevance</span>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2 p-2.5 rounded-xl bg-white/5 border border-white/10">
+                    <div className="w-7 h-7 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0">
+                      <Cpu className="w-3.5 h-3.5" />
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="text-[11px] font-bold text-white">Logic Evaluation</span>
+                      <span className="text-[9px] text-slate-400">Flow & reasoning</span>
+                    </div>
+                  </div>
+                </div>
+
               </div>
             </div>
 
           </div>
-        </div>
-      </section>
 
-      {/* SECTION 3: ATS RESUME AUDIT & STAR REWRITER */}
-      <section id="ats" className="py-20 relative z-10 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
-            
-            <div className="lg:col-span-6">
-              <div className="p-6 rounded-3xl bg-white border border-slate-200/90 shadow-xl flex flex-col gap-4">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-black text-[#0B1E36] flex items-center gap-2">
-                    <FileText className="w-4 h-4 text-[#FF6B00]" />
-                    STAR Formula Bullet Point Rewriter
-                  </span>
-                  <span className="text-xs font-extrabold px-3 py-1 rounded-full bg-orange-100 text-[#FF6B00]">
-                    +34% Interview Call Rate
-                  </span>
-                </div>
-
-                <div className="p-4 rounded-2xl bg-rose-50/60 border border-rose-200/80 flex flex-col gap-1 text-xs">
-                  <span className="font-extrabold text-rose-700 flex items-center gap-1">
-                    <AlertTriangle className="w-3.5 h-3.5" />
-                    Before Rewriting (Weak Bullet):
-                  </span>
-                  <p className="text-rose-900 font-mono">"Managed AWS EC2 instances and set up Docker containers for deployments."</p>
-                </div>
-
-                <div className="p-4 rounded-2xl bg-emerald-50/60 border border-emerald-200/80 flex flex-col gap-1 text-xs">
-                  <span className="font-extrabold text-emerald-700 flex items-center gap-1">
-                    <CheckCircle2 className="w-3.5 h-3.5" />
-                    After AI STAR Optimization (Quantified Impact):
-                  </span>
-                  <p className="text-emerald-950 font-mono font-bold">
-                    "Architected multi-stage Docker builds on AWS EKS with Terraform IaC, reducing container image size by 62% and eliminating production deployment downtime."
-                  </p>
-                </div>
+          {/* Bottom Strip (Screenshot 2) */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-12">
+            <div className="p-4 rounded-2xl bg-white border border-slate-200/80 shadow-xs flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-orange-100 text-[#FF6B00] flex items-center justify-center shrink-0">
+                <Target className="w-5 h-5" />
+              </div>
+              <div className="flex flex-col">
+                <span className="text-xs font-black text-[#0B1E36]">Real-World Simulation</span>
+                <span className="text-[11px] text-slate-500 font-medium">Interview-like audio environments</span>
               </div>
             </div>
 
-            <div className="lg:col-span-6 flex flex-col gap-5">
-              <span className="text-xs font-black text-[#FF6B00] uppercase tracking-widest">
-                6-FACTOR ATS RESUME ENGINE
-              </span>
-              <h2 className="text-3xl sm:text-4xl font-black text-[#0B1E36] tracking-tight">
-                Scan Your Resume Against Real Cloud Engineering JDs
-              </h2>
+            <div className="p-4 rounded-2xl bg-white border border-slate-200/80 shadow-xs flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-amber-100 text-amber-600 flex items-center justify-center shrink-0">
+                <BarChart3 className="w-5 h-5" />
+              </div>
+              <div className="flex flex-col">
+                <span className="text-xs font-black text-[#0B1E36]">Data-Driven Feedback</span>
+                <span className="text-[11px] text-slate-500 font-medium">Actionable insights to improve</span>
+              </div>
+            </div>
+
+            <div className="p-4 rounded-2xl bg-white border border-slate-200/80 shadow-xs flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-[#0B1E36] text-[#FF6B00] flex items-center justify-center shrink-0">
+                <Trophy className="w-5 h-5" />
+              </div>
+              <div className="flex flex-col">
+                <span className="text-xs font-black text-[#0B1E36]">Score What Matters</span>
+                <span className="text-[11px] text-slate-500 font-medium">Technical depth, clarity & logic</span>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      {/* 4. 5-STAGE SYSTEM SECTION (Screenshot 3) */}
+      <section id="features" className="py-20 relative z-10 bg-white border-t border-slate-200/80">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          
+          <div className="text-center max-w-3xl mx-auto mb-14">
+            <span className="px-3.5 py-1.5 rounded-full text-xs font-black text-[#FF6B00] bg-orange-100/80 border border-orange-200 inline-flex items-center gap-1.5 mb-3">
+              🚀 5-STAGE SYSTEM
+            </span>
+            <h2 className="text-3xl sm:text-4xl font-black text-[#0B1E36] tracking-tight uppercase">
+              PRACTICE REAL <span className="text-[#FF6B00]">AWS INCIDENTS</span> & GET AI SCORED
+            </h2>
+            <p className="text-sm text-slate-600 mt-2 font-medium">
+              Follow a proven 5-stage system to build real-world chops. Master cloud problem-solving.
+            </p>
+          </div>
+
+          {/* 5 Horizontal Stage Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
+            {[
+              { id: "01", name: "PROFILE PITCH", desc: "Tell us about yourself & your goals", color: "text-[#FF6B00] bg-orange-100/80", icon: FileText },
+              { id: "02", name: "LINUX WARRIOR", desc: "Excel in shells, scripts & tools like a pro", color: "text-blue-600 bg-blue-100/80", icon: Terminal },
+              { id: "03", name: "MULTI CLOUD", desc: "AWS, GCP & Azure basics & core services", color: "text-emerald-600 bg-emerald-100/80", icon: Cloud },
+              { id: "04", name: "CONTAINERS & K8S", desc: "Containerize & orchestrate like a SRE", color: "text-purple-600 bg-purple-100/80", icon: Layers },
+              { id: "05", name: "INCIDENT BOSS", desc: "Crack real incidents, root cause & resolve", color: "text-amber-600 bg-amber-100/80", icon: Shield },
+            ].map((st, idx) => (
+              <div 
+                key={idx}
+                className="p-5 rounded-3xl bg-white border border-slate-200/90 hover:border-[#FF6B00] shadow-xs hover:shadow-xl hover:shadow-[#FF6B00]/10 transition-all group flex flex-col justify-between"
+              >
+                <div>
+                  <div className="flex items-center justify-between mb-4">
+                    <span className="text-xs font-black text-[#FF6B00]">STAGE {st.id}</span>
+                    <span className="text-[10px] font-mono font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200 flex items-center gap-1">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                      LIVE
+                    </span>
+                  </div>
+
+                  <div className="w-14 h-14 rounded-2xl flex items-center justify-center mb-4 mx-auto" style={{ backgroundColor: idx === 0 ? "#FFF3EB" : idx === 1 ? "#EFF6FF" : idx === 2 ? "#ECFDF5" : idx === 3 ? "#F5F3FF" : "#FFFBEB" }}>
+                    <st.icon className={`w-7 h-7 ${idx === 0 ? "text-[#FF6B00]" : idx === 1 ? "text-blue-600" : idx === 2 ? "text-emerald-600" : idx === 3 ? "text-purple-600" : "text-amber-600"}`} />
+                  </div>
+
+                  <h3 className="text-sm font-black text-[#0B1E36] text-center group-hover:text-[#FF6B00] transition-colors uppercase tracking-tight">{st.name}</h3>
+                  <p className="text-[11px] text-slate-500 text-center mt-2 leading-relaxed font-medium">{st.desc}</p>
+                </div>
+
+                <Link href="/login" className="mt-5 pt-3 border-t border-slate-100 flex items-center justify-center gap-1 text-xs font-extrabold text-[#FF6B00]">
+                  <span>Explore Stage</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </Link>
+              </div>
+            ))}
+          </div>
+
+          {/* Bottom Strip (Screenshot 3) */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-12">
+            <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 shadow-xs flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0">
+                <Target className="w-5 h-5" />
+              </div>
+              <div className="flex flex-col">
+                <span className="text-xs font-black text-[#0B1E36]">Hands-on Learning</span>
+                <span className="text-[11px] text-slate-500 font-medium">Real AWS incidents & tools</span>
+              </div>
+            </div>
+
+            <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 shadow-xs flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center shrink-0">
+                <BarChart3 className="w-5 h-5" />
+              </div>
+              <div className="flex flex-col">
+                <span className="text-xs font-black text-[#0B1E36]">AI-Powered Scoring</span>
+                <span className="text-[11px] text-slate-500 font-medium">Get instant feedback & improve</span>
+              </div>
+            </div>
+
+            <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 shadow-xs flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-amber-100 text-amber-600 flex items-center justify-center shrink-0">
+                <Trophy className="w-5 h-5" />
+              </div>
+              <div className="flex flex-col">
+                <span className="text-xs font-black text-[#0B1E36]">Career-Ready Skills</span>
+                <span className="text-[11px] text-slate-500 font-medium">Build confidence. Land roles.</span>
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+      </section>
+
+      {/* 5. ATS RESUME ANALYZER & STAR REWRITER SECTION */}
+      <section id="ats" className="py-20 relative z-10 bg-gradient-to-b from-white via-orange-50/20 to-white border-t border-slate-200/80">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+            
+            {/* Left Interactive STAR Formula Rewriter Mock Card */}
+            <div className="lg:col-span-6">
+              <div className="rounded-3xl bg-white border border-slate-200/90 shadow-2xl overflow-hidden flex flex-col">
+                
+                {/* Header Bar */}
+                <div className="bg-[#0B1E36] p-4 text-white flex items-center justify-between">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-8 h-8 rounded-xl bg-[#FF6B00] text-white flex items-center justify-center font-bold">
+                      <FileText className="w-4 h-4" />
+                    </div>
+                    <span className="text-xs font-black tracking-tight">STAR Formula Bullet Point Rewriter</span>
+                  </div>
+
+                  <span className="px-3 py-1 rounded-full text-[10px] font-mono font-bold text-amber-300 border border-amber-400/40 bg-amber-400/10 flex items-center gap-1">
+                    +34% Interview Call Rate 📈
+                  </span>
+                </div>
+
+                {/* Card Body */}
+                <div className="p-6 flex flex-col gap-4">
+                  
+                  {/* BEFORE (WEAK BULLET) */}
+                  <div className="p-4 rounded-2xl bg-rose-50/80 border border-rose-200/80 flex items-start justify-between gap-3">
+                    <div className="flex flex-col gap-1.5">
+                      <div className="flex items-center gap-1.5 text-[11px] font-black text-rose-600 uppercase tracking-wider">
+                        <AlertTriangle className="w-3.5 h-3.5 text-rose-500" />
+                        <span>BEFORE REWRITING (WEAK BULLET)</span>
+                      </div>
+                      <p className="text-xs text-slate-700 font-medium italic">
+                        &ldquo;Managed AWS EC2 instances and set up Docker containers for deployments.&rdquo;
+                      </p>
+                    </div>
+
+                    <div className="w-7 h-7 rounded-full bg-rose-500 text-white flex items-center justify-center shrink-0 shadow-xs mt-0.5">
+                      <span className="text-xs font-black">✕</span>
+                    </div>
+                  </div>
+
+                  {/* AFTER AI STAR OPTIMIZATION */}
+                  <div className="p-4 rounded-2xl bg-emerald-50/80 border border-emerald-200/80 flex items-start justify-between gap-3">
+                    <div className="flex flex-col gap-1.5">
+                      <div className="flex items-center gap-1.5 text-[11px] font-black text-emerald-700 uppercase tracking-wider">
+                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                        <span>AFTER AI STAR OPTIMIZATION (QUANTIFIED IMPACT)</span>
+                      </div>
+                      <p className="text-xs text-slate-800 font-medium leading-relaxed">
+                        &ldquo;Architected multi-stage Docker builds on AWS EKS with Terraform IaC, reducing container image size by <strong className="text-emerald-600 font-black">62%</strong> and eliminating production deployment downtime.&rdquo;
+                      </p>
+                    </div>
+
+                    <div className="w-7 h-7 rounded-full bg-emerald-500 text-white flex items-center justify-center shrink-0 shadow-xs mt-0.5">
+                      <Check className="w-4 h-4" />
+                    </div>
+                  </div>
+
+                  {/* IMPACT YOU CAN SEE */}
+                  <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 flex flex-col gap-2">
+                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">IMPACT YOU CAN SEE</span>
+                    <div className="grid grid-cols-3 gap-2 pt-1">
+                      <div className="flex flex-col">
+                        <span className="text-sm font-black text-emerald-600 flex items-center gap-1 font-mono">
+                          <TrendingUp className="w-3.5 h-3.5 text-emerald-500" />
+                          +62%
+                        </span>
+                        <span className="text-[10px] text-slate-500 font-bold">Efficiency Gain</span>
+                      </div>
+
+                      <div className="flex flex-col border-l border-slate-200 pl-3">
+                        <span className="text-sm font-black text-purple-600 flex items-center gap-1 font-mono">
+                          <Zap className="w-3.5 h-3.5 text-purple-500" />
+                          0
+                        </span>
+                        <span className="text-[10px] text-slate-500 font-bold">Deployment Downtime</span>
+                      </div>
+
+                      <div className="flex flex-col border-l border-slate-200 pl-3">
+                        <span className="text-sm font-black text-[#FF6B00] flex items-center gap-1 font-mono">
+                          <ArrowUpRight className="w-3.5 h-3.5 text-[#FF6B00]" />
+                          +34%
+                        </span>
+                        <span className="text-[10px] text-slate-500 font-bold">Interview Call Rate</span>
+                      </div>
+                    </div>
+                  </div>
+
+                </div>
+
+              </div>
+            </div>
+
+            {/* Right Column: Title & 5 Features */}
+            <div className="lg:col-span-6 flex flex-col gap-6">
+              <div>
+                <span className="px-3.5 py-1.5 rounded-full text-xs font-black text-[#FF6B00] bg-orange-100/80 border border-orange-200 inline-flex items-center gap-1.5 mb-3">
+                  ⭐ 6-FACTOR ATS RESUME ENGINE
+                </span>
+                <h2 className="text-3xl sm:text-4xl font-black text-[#0B1E36] tracking-tight uppercase leading-tight">
+                  SCAN YOUR RESUME AGAINST<br />
+                  REAL <span className="text-[#FF6B00]">CLOUD ENGINEERING JDS</span>
+                </h2>
+              </div>
+
               <p className="text-sm text-slate-600 leading-relaxed font-medium">
                 Uncover missing critical keywords (IRSA, Terraform state locking, Prometheus metrics) and automatically rewrite bullet points with quantified STAR metrics.
               </p>
 
               <Link
-                href="/login"
-                className="w-fit py-3.5 px-6 rounded-full font-black text-xs text-white bg-[#0B1E36] hover:bg-slate-800 shadow-md flex items-center gap-2 transition-all mt-2"
+                href="/resume-ats"
+                className="w-fit py-3.5 px-7 rounded-2xl font-black text-xs text-white bg-[#0B1E36] hover:bg-slate-800 shadow-xl shadow-[#0B1E36]/20 flex items-center gap-2.5 transition-all"
               >
+                <FileText className="w-4 h-4 text-[#FF6B00]" />
                 <span>Audit Your Resume Now</span>
-                <ArrowRight className="w-3.5 h-3.5 text-[#FF6B00]" />
+                <ArrowRight className="w-4 h-4" />
               </Link>
+
+              {/* 5 Feature Icons at bottom right */}
+              <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 pt-6 border-t border-slate-200/80">
+                <div className="flex flex-col items-center text-center gap-1">
+                  <div className="w-9 h-9 rounded-xl bg-orange-100 text-[#FF6B00] flex items-center justify-center mb-1">
+                    <Search className="w-4 h-4" />
+                  </div>
+                  <span className="text-[10px] font-bold text-slate-700 leading-tight">Keyword Gap Detection</span>
+                </div>
+
+                <div className="flex flex-col items-center text-center gap-1">
+                  <div className="w-9 h-9 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center mb-1">
+                    <Sparkles className="w-4 h-4" />
+                  </div>
+                  <span className="text-[10px] font-bold text-slate-700 leading-tight">AI-Powered Rewriting</span>
+                </div>
+
+                <div className="flex flex-col items-center text-center gap-1">
+                  <div className="w-9 h-9 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center mb-1">
+                    <ShieldCheck className="w-4 h-4" />
+                  </div>
+                  <span className="text-[10px] font-bold text-slate-700 leading-tight">STAR Metric Scoring</span>
+                </div>
+
+                <div className="flex flex-col items-center text-center gap-1">
+                  <div className="w-9 h-9 rounded-xl bg-purple-100 text-purple-600 flex items-center justify-center mb-1">
+                    <Target className="w-4 h-4" />
+                  </div>
+                  <span className="text-[10px] font-bold text-slate-700 leading-tight">ATS Match Optimization</span>
+                </div>
+
+                <div className="flex flex-col items-center text-center gap-1">
+                  <div className="w-9 h-9 rounded-xl bg-amber-100 text-amber-600 flex items-center justify-center mb-1">
+                    <TrendingUp className="w-4 h-4" />
+                  </div>
+                  <span className="text-[10px] font-bold text-slate-700 leading-tight">Real Impact Insights</span>
+                </div>
+              </div>
+
             </div>
 
           </div>
         </div>
       </section>
 
-      {/* SECTION 4: 30-DAY PERSONALIZED LEARNING ROADMAP */}
-      <section id="roadmap" className="py-20 relative z-10 bg-slate-50 border-t border-slate-200/80">
+      {/* 6. 30-DAY GUIDED LEARNING SPRINTS ROADMAP SECTION */}
+      <section id="roadmap" className="py-20 relative z-10 bg-white border-t border-slate-200/80">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           
           <div className="text-center max-w-3xl mx-auto mb-16">
-            <span className="text-xs font-black text-[#FF6B00] uppercase tracking-widest">
+            <span className="text-xs font-black text-[#FF6B00] uppercase tracking-widest block mb-2">
               AUTOMATED AI ROADMAP
             </span>
-            <h2 className="text-3xl sm:text-4xl font-black text-[#0B1E36] tracking-tight mt-2">
-              30-Day Guided Learning Sprints to Resolve Skill Gaps
+            <h2 className="text-3xl sm:text-4xl lg:text-[42px] font-black text-[#0B1E36] tracking-tight uppercase leading-tight">
+              30-DAY GUIDED LEARNING SPRINTS<br />
+              TO RESOLVE SKILL GAPS
             </h2>
-            <p className="text-sm text-slate-600 mt-3 font-medium leading-relaxed">
+            <p className="text-sm text-slate-600 mt-3 font-medium leading-relaxed max-w-2xl mx-auto">
               Based on your interview scores, our system synthesizes a 4-week study plan with direct links to official documentation & hands-on lab challenges.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            {[
-              { week: "Week 1", title: "Linux Kernel & Networking", desc: "Triage disk wait, memory heaps, systemd units & sockets.", docs: "Official RHEL & Ubuntu Docs" },
-              { week: "Week 2", title: "AWS VPC, IAM & Security", desc: "Master subnets, NAT GW, IAM STS & IRSA policy binding.", docs: "AWS Well-Architected Guide" },
-              { week: "Week 3", title: "Docker & Kubernetes EKS", desc: "Multi-stage Docker builds, pod probes & ingress routing.", docs: "CNCF Kubernetes Docs" },
-              { week: "Week 4", title: "Terraform IaC & Incidents", desc: "Remote state locking, module design & outage post-mortems.", docs: "HashiCorp Docs & Runbooks" },
-            ].map((wk, idx) => (
-              <div key={idx} className="p-6 rounded-3xl bg-white border border-slate-200/80 shadow-xs flex flex-col justify-between gap-4">
-                <div className="flex flex-col gap-2">
-                  <span className="text-xs font-black text-[#FF6B00] uppercase tracking-wider">{wk.week}</span>
-                  <h3 className="text-base font-black text-[#0B1E36]">{wk.title}</h3>
-                  <p className="text-xs text-slate-600 leading-relaxed font-medium">{wk.desc}</p>
+          {/* Stepper Timeline Header */}
+          <div className="relative max-w-5xl mx-auto mb-10 hidden md:block">
+            <div className="absolute top-4 left-10 right-10 h-[1.5px] border-b-2 border-dashed border-slate-200 z-0" />
+            
+            <div className="grid grid-cols-4 relative z-10 text-center">
+              <div className="flex flex-col items-center gap-1.5">
+                <div className="w-8 h-8 rounded-full bg-white border-2 border-[#FF6B00] text-[#FF6B00] font-black text-xs flex items-center justify-center shadow-xs">
+                  1
                 </div>
-                <div className="pt-3 border-t border-slate-100 flex items-center justify-between text-[11px] font-bold text-slate-500">
-                  <span>{wk.docs}</span>
-                  <ExternalLink className="w-3.5 h-3.5 text-[#FF6B00]" />
+                <span className="text-[10px] font-black font-mono text-[#FF6B00] tracking-widest uppercase">WEEK 1</span>
+              </div>
+
+              <div className="flex flex-col items-center gap-1.5">
+                <div className="w-8 h-8 rounded-full bg-white border-2 border-blue-500 text-blue-600 font-black text-xs flex items-center justify-center shadow-xs">
+                  2
+                </div>
+                <span className="text-[10px] font-black font-mono text-blue-600 tracking-widest uppercase">WEEK 2</span>
+              </div>
+
+              <div className="flex flex-col items-center gap-1.5">
+                <div className="w-8 h-8 rounded-full bg-white border-2 border-purple-500 text-purple-600 font-black text-xs flex items-center justify-center shadow-xs">
+                  3
+                </div>
+                <span className="text-[10px] font-black font-mono text-purple-600 tracking-widest uppercase">WEEK 3</span>
+              </div>
+
+              <div className="flex flex-col items-center gap-1.5">
+                <div className="w-8 h-8 rounded-full bg-white border-2 border-[#FF6B00] text-[#FF6B00] font-black text-xs flex items-center justify-center shadow-xs">
+                  4
+                </div>
+                <span className="text-[10px] font-black font-mono text-[#FF6B00] tracking-widest uppercase">WEEK 4</span>
+              </div>
+            </div>
+          </div>
+
+          {/* 4 Week Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
+            
+            {/* Week 1 Card */}
+            <div className="rounded-3xl bg-[#0B1E36] text-white border border-slate-800 shadow-xl overflow-hidden flex flex-col justify-between group hover:border-[#FF6B00] transition-all">
+              <div>
+                <div className="h-44 relative bg-slate-900 overflow-hidden">
+                  <img 
+                    src="https://images.unsplash.com/photo-1629654297299-c8506221ca97?auto=format&fit=crop&q=80&w=600" 
+                    alt="Linux Kernel Code" 
+                    className="w-full h-full object-cover opacity-60 group-hover:scale-105 transition-transform duration-500" 
+                  />
+                  <span className="absolute top-3 left-3 px-3 py-1 rounded-lg text-[10px] font-mono font-bold bg-[#FF6B00] text-white shadow-md">
+                    WEEK 1
+                  </span>
+                </div>
+
+                <div className="p-5 flex flex-col gap-3">
+                  <div className="w-9 h-9 rounded-xl bg-orange-500/20 text-[#FF6B00] border border-[#FF6B00]/40 flex items-center justify-center">
+                    <Terminal className="w-4.5 h-4.5" />
+                  </div>
+                  <h3 className="text-base font-black text-white tracking-tight">LINUX KERNEL & NETWORKING</h3>
+                  <p className="text-xs text-slate-300 font-medium leading-relaxed">
+                    In-depth disk I/O, memory heaps, systemd units & sockets.
+                  </p>
                 </div>
               </div>
-            ))}
+
+              <div className="p-5 pt-0">
+                <a 
+                  href="https://access.redhat.com/documentation" 
+                  target="_blank" 
+                  rel="noreferrer"
+                  className="flex items-center justify-between text-xs font-extrabold text-[#FF6B00] hover:underline pt-3 border-t border-slate-800"
+                >
+                  <span>Official RHEL & Ubuntu Docs</span>
+                  <ArrowUpRight className="w-4 h-4" />
+                </a>
+              </div>
+            </div>
+
+            {/* Week 2 Card */}
+            <div className="rounded-3xl bg-[#0B1E36] text-white border border-slate-800 shadow-xl overflow-hidden flex flex-col justify-between group hover:border-blue-500 transition-all">
+              <div>
+                <div className="h-44 relative bg-slate-900 overflow-hidden">
+                  <img 
+                    src="https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&q=80&w=600" 
+                    alt="AWS Cloud Networking" 
+                    className="w-full h-full object-cover opacity-60 group-hover:scale-105 transition-transform duration-500" 
+                  />
+                  <span className="absolute top-3 left-3 px-3 py-1 rounded-lg text-[10px] font-mono font-bold bg-blue-600 text-white shadow-md">
+                    WEEK 2
+                  </span>
+                </div>
+
+                <div className="p-5 flex flex-col gap-3">
+                  <div className="w-9 h-9 rounded-xl bg-blue-500/20 text-blue-400 border border-blue-500/40 flex items-center justify-center">
+                    <Cloud className="w-4.5 h-4.5" />
+                  </div>
+                  <h3 className="text-base font-black text-white tracking-tight">AWS VPC, IAM & SECURITY</h3>
+                  <p className="text-xs text-slate-300 font-medium leading-relaxed">
+                    Master subnets, NAT GW, IAM STS & IRSA policy binding.
+                  </p>
+                </div>
+              </div>
+
+              <div className="p-5 pt-0">
+                <a 
+                  href="https://aws.amazon.com/architecture/well-architected/" 
+                  target="_blank" 
+                  rel="noreferrer"
+                  className="flex items-center justify-between text-xs font-extrabold text-blue-400 hover:underline pt-3 border-t border-slate-800"
+                >
+                  <span>AWS Well-Architected Guide</span>
+                  <ArrowUpRight className="w-4 h-4" />
+                </a>
+              </div>
+            </div>
+
+            {/* Week 3 Card */}
+            <div className="rounded-3xl bg-[#0B1E36] text-white border border-slate-800 shadow-xl overflow-hidden flex flex-col justify-between group hover:border-purple-500 transition-all">
+              <div>
+                <div className="h-44 relative bg-slate-900 overflow-hidden">
+                  <img 
+                    src="https://images.unsplash.com/photo-1667372393119-3d4c48d07fc9?auto=format&fit=crop&q=80&w=600" 
+                    alt="Kubernetes Containers" 
+                    className="w-full h-full object-cover opacity-60 group-hover:scale-105 transition-transform duration-500" 
+                  />
+                  <span className="absolute top-3 left-3 px-3 py-1 rounded-lg text-[10px] font-mono font-bold bg-purple-600 text-white shadow-md">
+                    WEEK 3
+                  </span>
+                </div>
+
+                <div className="p-5 flex flex-col gap-3">
+                  <div className="w-9 h-9 rounded-xl bg-purple-500/20 text-purple-400 border border-purple-500/40 flex items-center justify-center">
+                    <Layers className="w-4.5 h-4.5" />
+                  </div>
+                  <h3 className="text-base font-black text-white tracking-tight">DOCKER & KUBERNETES EKS</h3>
+                  <p className="text-xs text-slate-300 font-medium leading-relaxed">
+                    Multi-stage Docker builds, pod probes & ingress routing.
+                  </p>
+                </div>
+              </div>
+
+              <div className="p-5 pt-0">
+                <a 
+                  href="https://kubernetes.io/docs/home/" 
+                  target="_blank" 
+                  rel="noreferrer"
+                  className="flex items-center justify-between text-xs font-extrabold text-purple-400 hover:underline pt-3 border-t border-slate-800"
+                >
+                  <span>CNCF Kubernetes Docs</span>
+                  <ArrowUpRight className="w-4 h-4" />
+                </a>
+              </div>
+            </div>
+
+            {/* Week 4 Card */}
+            <div className="rounded-3xl bg-[#0B1E36] text-white border border-slate-800 shadow-xl overflow-hidden flex flex-col justify-between group hover:border-[#FF6B00] transition-all">
+              <div>
+                <div className="h-44 relative bg-slate-900 overflow-hidden">
+                  <img 
+                    src="https://images.unsplash.com/photo-1558494949-ef010cbdcc31?auto=format&fit=crop&q=80&w=600" 
+                    alt="Terraform Infrastructure" 
+                    className="w-full h-full object-cover opacity-60 group-hover:scale-105 transition-transform duration-500" 
+                  />
+                  <span className="absolute top-3 left-3 px-3 py-1 rounded-lg text-[10px] font-mono font-bold bg-[#FF6B00] text-white shadow-md">
+                    WEEK 4
+                  </span>
+                </div>
+
+                <div className="p-5 flex flex-col gap-3">
+                  <div className="w-9 h-9 rounded-xl bg-orange-500/20 text-[#FF6B00] border border-[#FF6B00]/40 flex items-center justify-center">
+                    <Code2 className="w-4.5 h-4.5" />
+                  </div>
+                  <h3 className="text-base font-black text-white tracking-tight">TERRAFORM IAC & INCIDENTS</h3>
+                  <p className="text-xs text-slate-300 font-medium leading-relaxed">
+                    Remote state locking, module design & outage post mortems.
+                  </p>
+                </div>
+              </div>
+
+              <div className="p-5 pt-0">
+                <a 
+                  href="https://developer.hashicorp.com/terraform/docs" 
+                  target="_blank" 
+                  rel="noreferrer"
+                  className="flex items-center justify-between text-xs font-extrabold text-[#FF6B00] hover:underline pt-3 border-t border-slate-800"
+                >
+                  <span>HashiCorp Docs & Runbooks</span>
+                  <ArrowUpRight className="w-4 h-4" />
+                </a>
+              </div>
+            </div>
+
+          </div>
+
+          {/* Bottom Feature Bar (Screenshot Roadmap) */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-12">
+            <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 shadow-xs flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-orange-100 text-[#FF6B00] flex items-center justify-center shrink-0">
+                <Calendar className="w-5 h-5" />
+              </div>
+              <div className="flex flex-col">
+                <span className="text-xs font-black text-[#0B1E36]">30 Days Guided Sprints</span>
+                <span className="text-[10px] text-slate-500 font-medium">Structured 4-week plan to build real-world skills.</span>
+              </div>
+            </div>
+
+            <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 shadow-xs flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center shrink-0">
+                <Target className="w-5 h-5" />
+              </div>
+              <div className="flex flex-col">
+                <span className="text-xs font-black text-[#0B1E36]">Score Based Personalization</span>
+                <span className="text-[10px] text-slate-500 font-medium">Roadmap adapts to your interview performance.</span>
+              </div>
+            </div>
+
+            <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 shadow-xs flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-purple-100 text-purple-600 flex items-center justify-center shrink-0">
+                <FileText className="w-5 h-5" />
+              </div>
+              <div className="flex flex-col">
+                <span className="text-xs font-black text-[#0B1E36]">Official Docs & Labs</span>
+                <span className="text-[10px] text-slate-500 font-medium">Direct links to trusted docs & hands-on challenges.</span>
+              </div>
+            </div>
+
+            <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 shadow-xs flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-amber-100 text-amber-600 flex items-center justify-center shrink-0">
+                <TrendingUp className="w-5 h-5" />
+              </div>
+              <div className="flex flex-col">
+                <span className="text-xs font-black text-[#0B1E36]">Track Progress & Improve</span>
+                <span className="text-[10px] text-slate-500 font-medium">Measure learning, close gaps & boost interview score.</span>
+              </div>
+            </div>
           </div>
 
         </div>
       </section>
 
-      {/* SECTION 5: FAQ ACCORDION */}
-      <section id="faq" className="py-20 relative z-10 bg-white">
+      {/* 5. FAQ SECTION */}
+      <section id="faq" className="py-20 relative z-10 bg-slate-50 border-t border-slate-200/80">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          
-          <div className="text-center mb-14">
+          <div className="text-center mb-12">
             <span className="text-xs font-black text-[#FF6B00] uppercase tracking-widest">
               FREQUENTLY ASKED QUESTIONS
             </span>
-            <h2 className="text-3xl sm:text-4xl font-black text-[#0B1E36] tracking-tight mt-2">
-              Everything You Need to Know About the Assessment OS
+            <h2 className="text-3xl font-black text-[#0B1E36] tracking-tight mt-2">
+              Got Questions? We&apos;ve Got Answers.
             </h2>
           </div>
 
           <div className="flex flex-col gap-3">
-            {faqs.map((faq, idx) => (
-              <div 
-                key={idx}
-                className="rounded-2xl bg-slate-50 border border-slate-200/80 overflow-hidden transition-all"
-              >
-                <button
-                  onClick={() => setActiveFaq(activeFaq === idx ? null : idx)}
-                  className="w-full p-5 text-left font-black text-sm text-[#0B1E36] flex items-center justify-between gap-4"
+            {faqs.map((faq, idx) => {
+              const isOpen = activeFaq === idx;
+              return (
+                <div
+                  key={idx}
+                  className="rounded-2xl bg-white border border-slate-200/80 overflow-hidden shadow-xs transition-all"
                 >
-                  <span>{faq.q}</span>
-                  {activeFaq === idx ? (
-                    <ChevronUp className="w-4 h-4 text-[#FF6B00] shrink-0" />
-                  ) : (
-                    <ChevronDown className="w-4 h-4 text-slate-400 shrink-0" />
+                  <button
+                    onClick={() => setActiveFaq(isOpen ? null : idx)}
+                    className="w-full p-5 text-left flex items-center justify-between gap-4 font-bold text-sm text-[#0B1E36] hover:text-[#FF6B00] transition-colors"
+                  >
+                    <span>{faq.q}</span>
+                    {isOpen ? <ChevronUp className="w-5 h-5 text-[#FF6B00] shrink-0" /> : <ChevronDown className="w-5 h-5 text-slate-400 shrink-0" />}
+                  </button>
+                  {isOpen && (
+                    <div className="px-5 pb-5 text-xs text-slate-600 font-medium leading-relaxed border-t border-slate-100 pt-3">
+                      {faq.a}
+                    </div>
                   )}
-                </button>
-
-                {activeFaq === idx && (
-                  <div className="px-5 pb-5 text-xs text-slate-600 font-medium leading-relaxed border-t border-slate-200/60 pt-3">
-                    {faq.a}
-                  </div>
-                )}
-              </div>
-            ))}
+                </div>
+              );
+            })}
           </div>
-
         </div>
       </section>
 
-      {/* SECTION 6: HIGH-IMPACT CTA BANNER */}
-      <section className="py-16 relative z-10 bg-slate-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="p-10 lg:p-14 rounded-3xl bg-gradient-to-r from-[#0B1E36] via-[#102A4C] to-[#0B1E36] text-white shadow-2xl flex flex-col lg:flex-row items-center justify-between gap-8 border border-slate-800">
-            <div className="flex flex-col gap-3 text-center lg:text-left">
-              <span className="text-xs font-black text-[#FF6B00] uppercase tracking-widest">
-                READY TO BECOME PRODUCTION READY?
+      {/* 6. HIGH-IMPACT PRE-FOOTER CTA BANNER */}
+      <section className="py-16 relative z-10 bg-[#0B1E36] text-white border-t border-slate-800 overflow-hidden">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+          <div className="p-8 sm:p-12 rounded-3xl bg-gradient-to-r from-[#102A4C] via-[#0B1E36] to-[#102A4C] border border-slate-700 shadow-2xl flex flex-col md:flex-row items-center justify-between gap-8 relative overflow-hidden">
+            
+            <div className="flex flex-col gap-3 max-w-2xl">
+              <span className="px-3.5 py-1 rounded-full text-xs font-black text-[#FF6B00] bg-[#FF6B00]/20 border border-[#FF6B00]/30 w-fit">
+                ⚡ READY TO LAND YOUR NEXT CLOUD ROLE?
               </span>
-              <h2 className="text-3xl sm:text-4xl font-black tracking-tight">
-                Start Your Free Voice AI Assessment Today
+              <h2 className="text-3xl sm:text-4xl font-black text-white tracking-tight uppercase leading-tight">
+                PRACTICE REAL AWS INCIDENTS & GET HIRED FASTER
               </h2>
-              <p className="text-xs text-slate-300 font-medium max-w-xl">
-                Test your skills across AWS, Kubernetes, Terraform & Linux. Instant AI scoring & 30-day learning roadmap.
+              <p className="text-sm text-slate-300 font-medium leading-relaxed">
+                Join 10,000+ DevOps & SRE engineers mastering technical voice interviews, ATS resume optimization, and 30-day skill roadmaps.
               </p>
             </div>
 
-            <Link
-              href="/register"
-              className="py-4 px-8 rounded-full font-black text-sm text-slate-950 bg-gradient-to-r from-[#FF6B00] via-amber-400 to-orange-400 hover:from-amber-400 hover:to-orange-500 shadow-xl shadow-[#FF6B00]/30 flex items-center gap-3 shrink-0 hover:scale-105 transition-all"
-            >
-              <span>Get Started Free</span>
-              <ArrowRight className="w-4 h-4" />
-            </Link>
+            <div className="flex flex-col sm:flex-row items-center gap-3 shrink-0">
+              <Link
+                href="/register"
+                className="py-3.5 px-7 rounded-full font-black text-xs text-white bg-gradient-to-r from-[#FF6B00] via-amber-500 to-orange-500 hover:from-orange-500 hover:to-amber-600 shadow-xl shadow-[#FF6B00]/30 flex items-center justify-center gap-2 hover:scale-[1.02] transition-all"
+              >
+                <Mic className="w-4 h-4" />
+                <span>Start Free AI Interview</span>
+                <ArrowRight className="w-4 h-4" />
+              </Link>
+
+              <a
+                href="#ats"
+                className="py-3.5 px-6 rounded-full font-extrabold text-xs text-white bg-white/10 border border-white/20 hover:bg-white/20 flex items-center justify-center gap-2 transition-all"
+              >
+                <FileText className="w-4 h-4 text-[#FF6B00]" />
+                <span>Audit My Resume (ATS)</span>
+              </a>
+            </div>
+
+            <div className="absolute -right-20 -bottom-20 w-80 h-80 bg-[#FF6B00]/10 rounded-full blur-3xl pointer-events-none" />
           </div>
         </div>
       </section>
 
-      {/* SECTION 7: FULL CORPORATE MULTI-COLUMN SAAS FOOTER */}
-      <footer className="bg-[#0B1E36] text-white pt-16 pb-12 border-t border-slate-800">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      {/* 7. REDESIGNED CORPORATE SAAS FOOTER */}
+      <footer className="bg-[#0B1E36] text-white pt-16 pb-10 border-t border-slate-800 font-sans">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col gap-12">
           
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-10 pb-12 border-b border-slate-800/80">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-10">
             
-            {/* Column 1: Brand */}
-            <div className="lg:col-span-2 flex flex-col gap-4">
-              <div className="flex items-center gap-2.5">
-                <div className="w-9 h-9 rounded-xl bg-[#FF6B00] flex items-center justify-center text-white font-bold shadow-md">
-                  <Cloud className="w-5 h-5" />
+            {/* Column 1: Brand & Status */}
+            <div className="lg:col-span-[1.4] flex flex-col gap-4">
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-2xl bg-gradient-to-tr from-[#FF6B00] to-amber-500 p-[1.5px] shadow-md">
+                  <div className="w-full h-full bg-[#0B1E36] rounded-[13px] flex items-center justify-center text-white">
+                    <Cloud className="w-4.5 h-4.5 text-[#FF6B00]" />
+                  </div>
                 </div>
-                <span className="text-lg font-black tracking-tight">CloudOps AI Assessment OS</span>
-              </div>
-              <p className="text-xs text-slate-400 font-medium leading-relaxed max-w-sm">
-                The premier AI-powered voice interview, skill evaluation, and ATS resume operating system engineered for Cloud Operations, SRE & DevOps professionals.
-              </p>
-              <div className="flex items-center gap-3 text-xs font-mono font-bold text-slate-400 pt-2">
-                <span className="px-2.5 py-1 rounded-md bg-white/5 border border-white/10 text-emerald-400 flex items-center gap-1.5">
-                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                  All Systems Operational
+                <span className="text-lg font-black text-white tracking-tight">
+                  CloudOps <span className="text-[#FF6B00]">AI</span> Assessment OS
                 </span>
               </div>
+
+              <p className="text-xs text-slate-400 leading-relaxed font-medium">
+                The premier AI-powered voice interview, skill evaluation, and ATS resume operating system engineered for Cloud Operations, SRE & DevOps professionals.
+              </p>
+
+              <div className="flex flex-col gap-2 pt-2">
+                <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold text-emerald-400 bg-emerald-950/60 border border-emerald-800/80 w-fit">
+                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                  <span>All Systems Operational</span>
+                </div>
+
+                <div className="flex items-center gap-3 text-[10px] font-mono text-slate-400 pt-1">
+                  <span>🔒 SOC2 Type II Certified</span>
+                  <span>•</span>
+                  <span>🛡️ 256-Bit SSL Encryption</span>
+                </div>
+              </div>
             </div>
 
-            {/* Column 2: Product Modules */}
+            {/* Column 2: PRODUCT SUITE */}
             <div className="flex flex-col gap-3 text-xs">
-              <span className="font-black text-slate-200 uppercase tracking-wider text-[11px]">Product Suite</span>
-              <a href="#features" className="text-slate-400 hover:text-[#FF6B00] transition-colors">5-Stage Gated System</a>
-              <a href="#voice-ai" className="text-slate-400 hover:text-[#FF6B00] transition-colors">Voice AI Chamber</a>
-              <a href="#ats" className="text-slate-400 hover:text-[#FF6B00] transition-colors">6-Factor ATS Analyzer</a>
-              <a href="#roadmap" className="text-slate-400 hover:text-[#FF6B00] transition-colors">30-Day AI Roadmap</a>
-              <Link href="/login" className="text-slate-400 hover:text-[#FF6B00] transition-colors">Leaderboard & XP</Link>
+              <span className="font-black text-white uppercase tracking-wider text-[11px]">PRODUCT SUITE</span>
+              <a href="#features" className="text-slate-400 hover:text-[#FF6B00] transition-colors font-medium">5-Stage Gated System</a>
+              <a href="#voice-ai" className="text-slate-400 hover:text-[#FF6B00] transition-colors font-medium">Voice AI Chamber</a>
+              <a href="#ats" className="text-slate-400 hover:text-[#FF6B00] transition-colors font-medium">6-Factor ATS Analyzer</a>
+              <a href="#roadmap" className="text-slate-400 hover:text-[#FF6B00] transition-colors font-medium">30-Day AI Roadmap</a>
+              <Link href="/leaderboard" className="text-slate-400 hover:text-[#FF6B00] transition-colors font-medium">Leaderboard & XP</Link>
             </div>
 
-            {/* Column 3: Tech Stacks */}
+            {/* Column 3: TECH STACKS */}
             <div className="flex flex-col gap-3 text-xs">
-              <span className="font-black text-slate-200 uppercase tracking-wider text-[11px]">Tech Stacks</span>
-              <span className="text-slate-400">AWS EKS & VPC Subnets</span>
-              <span className="text-slate-400">Kubernetes & Helm</span>
-              <span className="text-slate-400">HashiCorp Terraform IaC</span>
-              <span className="text-slate-400">Docker Multi-Stage</span>
-              <span className="text-slate-400">Prometheus & Grafana</span>
+              <span className="font-black text-white uppercase tracking-wider text-[11px]">TECH STACKS</span>
+              <span className="text-slate-400 font-medium">AWS EKS & VPC Subnets</span>
+              <span className="text-slate-400 font-medium">Kubernetes & Helm</span>
+              <span className="text-slate-400 font-medium">HashiCorp Terraform IaC</span>
+              <span className="text-slate-400 font-medium">Docker Multi-Stage</span>
+              <span className="text-slate-400 font-medium">Prometheus & Grafana</span>
             </div>
 
-            {/* Column 4: Support & Admin */}
+            {/* Column 4: RESOURCES & HELP */}
             <div className="flex flex-col gap-3 text-xs">
-              <span className="font-black text-slate-200 uppercase tracking-wider text-[11px]">Resources & Help</span>
-              <Link href="/help" className="text-slate-400 hover:text-[#FF6B00] transition-colors">Engineering Help Desk</Link>
-              <a href="#faq" className="text-slate-400 hover:text-[#FF6B00] transition-colors">FAQ & Documentation</a>
-              <Link href="/login" className="text-slate-400 hover:text-[#FF6B00] transition-colors">Candidate Login</Link>
-              <Link href="/login?admin=true" className="text-slate-400 hover:text-[#FF6B00] transition-colors">Admin Portal</Link>
+              <span className="font-black text-white uppercase tracking-wider text-[11px]">RESOURCES & HELP</span>
+              <Link href="/help" className="text-slate-400 hover:text-[#FF6B00] transition-colors font-medium">Engineering Help Desk</Link>
+              <a href="#faq" className="text-slate-400 hover:text-[#FF6B00] transition-colors font-medium">FAQ & Documentation</a>
+              <Link href="/login" className="text-slate-400 hover:text-[#FF6B00] transition-colors font-medium">Candidate Login</Link>
+              <a href="https://resume3-admin.vercel.app" target="_blank" rel="noreferrer" className="text-slate-400 hover:text-[#FF6B00] transition-colors font-medium">Admin Portal</a>
+            </div>
+
+            {/* Column 5: NEWSLETTER & COMMUNITY */}
+            <div className="flex flex-col gap-3 text-xs">
+              <span className="font-black text-white uppercase tracking-wider text-[11px]">DEVOPS COMMUNITY</span>
+              <p className="text-[11px] text-slate-400 font-medium leading-relaxed">
+                Get weekly AWS incident post-mortems & interview questions.
+              </p>
+              
+              <form onSubmit={(e) => { e.preventDefault(); alert("Subscribed to DevOps Community Newsletter!"); }} className="flex items-center gap-1.5 mt-1">
+                <input
+                  type="email"
+                  placeholder="Enter work email..."
+                  required
+                  className="w-full px-3 py-2 rounded-xl text-xs bg-slate-900 border border-slate-700 text-white placeholder-slate-500 focus:outline-none focus:border-[#FF6B00]"
+                />
+                <button
+                  type="submit"
+                  className="px-3 py-2 rounded-xl bg-[#FF6B00] hover:bg-orange-500 text-white font-bold transition-all shrink-0"
+                >
+                  ➔
+                </button>
+              </form>
+
+              <div className="flex flex-wrap gap-1 pt-2">
+                {["AWS", "K8s", "Terraform", "Linux", "Python", "Go"].map((tech) => (
+                  <span key={tech} className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-white/5 text-slate-400 border border-white/10">
+                    {tech}
+                  </span>
+                ))}
+              </div>
             </div>
 
           </div>
 
-          {/* Bottom Copyright */}
-          <div className="pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-[11px] text-slate-500 font-medium">
+          {/* Bottom Legal & Copyright Bar */}
+          <div className="pt-8 border-t border-slate-800/80 flex flex-col md:flex-row items-center justify-between text-xs text-slate-400 gap-4">
             <span>© 2026 CloudOps AI Assessment OS. Built for Cloud Engineers worldwide.</span>
-            <div className="flex items-center gap-6">
-              <span>Privacy Policy</span>
-              <span>Terms of Service</span>
-              <span>Security Compliance</span>
+            
+            <div className="flex items-center gap-6 text-[11px] font-medium flex-wrap">
+              <span className="hover:text-white cursor-pointer transition-colors">Privacy Policy</span>
+              <span className="hover:text-white cursor-pointer transition-colors">Terms of Service</span>
+              <span className="hover:text-white cursor-pointer transition-colors">Security Compliance</span>
+              <span className="hover:text-white cursor-pointer transition-colors">90-Day Data Retention Policy</span>
             </div>
           </div>
 
