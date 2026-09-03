@@ -15,15 +15,21 @@ export default function LeaderboardPage() {
   const [data, setData] = useState<LeaderboardResponse | null>(null);
   const [activeTab, setActiveTab] = useState<"global" | "weekly" | "improved" | "tech">("global");
   const [selectedTech, setSelectedTech] = useState<string>("AWS");
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     async function loadLeaderboard() {
       try {
-        const res = await apiFetch("/leaderboard");
-        setData(res.data);
+        const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout")), 1500));
+        const res: any = await Promise.race([
+          apiFetch("/leaderboard"),
+          timeoutPromise
+        ]);
+        if (res?.data) {
+          setData(res.data);
+        }
       } catch (e) {
-        console.warn("Failed to load leaderboard:", e);
+        console.warn("Leaderboard load notice:", e);
       } finally {
         setIsLoading(false);
       }

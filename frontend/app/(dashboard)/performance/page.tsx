@@ -11,17 +11,21 @@ import { apiFetch } from "@/lib/api";
 
 export default function CandidatePerformancePage() {
   const [perfData, setPerfData] = useState<any>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     async function loadData() {
       try {
-        const res = await apiFetch("/candidates/me/performance");
+        const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout")), 1500));
+        const res: any = await Promise.race([
+          apiFetch("/candidates/me/performance"),
+          timeoutPromise
+        ]);
         if (res?.data) {
           setPerfData(res.data);
         }
       } catch (e) {
-        console.warn("Failed to load candidate performance:", e);
+        console.warn("Candidate performance load notice:", e);
       } finally {
         setIsLoading(false);
       }
