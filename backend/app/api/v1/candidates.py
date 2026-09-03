@@ -361,6 +361,92 @@ async def get_dashboard_metrics(
 
     return StandardResponse(data=metrics)
 
+@router.get("/me/roadmap", response_model=StandardResponse[List[dict]])
+async def get_my_roadmap(
+    payload: dict = Depends(verify_auth_token),
+    db: AsyncSession = Depends(get_db)
+):
+    auth_svc = AuthService(db)
+    user = await auth_svc.get_current_user_from_payload(payload)
+    cand_svc = CandidateService(db)
+    cand = await cand_svc.get_candidate_by_user_id(user.id, user.organization_id)
+    
+    if not cand:
+        return StandardResponse(data=[])
+
+    stmt = select(CandidateRoadmap).where(CandidateRoadmap.candidate_id == cand.id).order_by(CandidateRoadmap.week_number)
+    res = await db.execute(stmt)
+    items = res.scalars().all()
+    
+    if not items:
+        default_weeks = [
+            (1, "Linux Kernel & Networking", "In-depth disk I/O, memory heaps, systemd units & sockets.", "Linux", 50),
+            (2, "AWS VPC, IAM & Security", "Master subnets, NAT GW, IAM STS & IRSA policy binding.", "AWS", 100),
+            (3, "Docker & Kubernetes EKS", "Multi-stage Docker builds, pod probes & ingress routing.", "Containers", 150),
+            (4, "Terraform IaC & Incidents", "Remote state locking, module design & outage post mortems.", "IaC", 200)
+        ]
+        items = []
+        for week_num, title, desc, cat, xp in default_weeks:
+            rm = CandidateRoadmap(
+                candidate_id=cand.id,
+                week_number=week_num,
+                day_number=1,
+                title=title,
+                description=desc,
+                category=cat,
+                xp_reward=xp,
+                is_completed=False
+            )
+            db.add(rm)
+            items.append(rm)
+        await db.commit()
+
+    data = [
+        {
+            "id": rm.id,
+            "week_number": rm.week_number,
+            "title": rm.title,
+            "description": rm.description,
+            "category": rm.category,
+            "is_completed": rm.is_completed,
+            "xp_reward": rm.xp_reward,
+            "completed_at": rm.completed_at.isoformat() if rm.completed_at else None
+        }
+        for rm in items
+    ]
+    return StandardResponse(data=data)
+
+@router.get("/me/certificates", response_model=StandardResponse[List[dict]])
+async def get_my_certificates(
+    payload: dict = Depends(verify_auth_token),
+    db: AsyncSession = Depends(get_db)
+):
+    auth_svc = AuthService(db)
+    user = await auth_svc.get_current_user_from_payload(payload)
+    cand_svc = CandidateService(db)
+    cand = await cand_svc.get_candidate_by_user_id(user.id, user.organization_id)
+    
+    if not cand:
+        return StandardResponse(data=[])
+
+    stmt = select(CandidateCertificate).where(CandidateCertificate.candidate_id == cand.id).order_by(desc(CandidateCertificate.issued_at))
+    res = await db.execute(stmt)
+    certs = res.scalars().all()
+
+    data = [
+        {
+            "id": c.id,
+            "title": c.title,
+            "certificate_code": c.certificate_code,
+            "stage_name": c.stage_name,
+            "score_percentage": c.score_percentage,
+            "issued_at": c.issued_at.isoformat() if c.issued_at else None,
+            "pdf_url": c.pdf_url
+        }
+        for c in certs
+    ]
+    return StandardResponse(data=data)
+
 @router.post("/me/roadmap/{week_number}/toggle", response_model=StandardResponse[dict])
 async def toggle_roadmap_week(
     week_number: int,

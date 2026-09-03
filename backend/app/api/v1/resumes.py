@@ -175,11 +175,14 @@ async def get_latest_resume_audit(
 
     resp = ResumeATSResponse(
         ats_score=latest_audit.ats_score,
-        ats_breakdown=latest_audit.breakdown_json or {},
+        breakdown=latest_audit.breakdown_json or {},
         matching_skills=latest_audit.matching_skills_json or [],
         missing_skills=latest_audit.missing_skills_json or [],
+        weak_areas=latest_audit.missing_skills_json or [],
+        strong_areas=latest_audit.matching_skills_json or [],
+        recommended_interview_stages=[],
         candidate_profile=latest_audit.profile_data_json or {},
-        sample_bullet_rewrites=latest_audit.bullet_rewrites_json or [],
+        bullet_suggestions=latest_audit.bullet_rewrites_json or [],
         cloudinary_url=latest_audit.cloudinary_url
     )
     return StandardResponse(data=resp)

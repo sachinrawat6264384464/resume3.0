@@ -45,6 +45,16 @@ export default function CertificatesPage() {
         <div className="flex items-center justify-center p-12 bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800">
           <Loader2 className="w-6 h-6 text-blue-600 animate-spin" />
         </div>
+      ) : certs.length === 0 ? (
+        <div className="p-12 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col items-center justify-center text-center gap-3">
+          <div className="w-14 h-14 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-500">
+            <Award className="w-7 h-7" />
+          </div>
+          <span className="text-base font-black text-slate-900 dark:text-white">No Certificates Earned Yet</span>
+          <p className="text-xs text-slate-500 max-w-md font-medium leading-relaxed">
+            Complete and score 80%+ on Stage 1 to 5 Voice AI Interview Assessment Gates to earn verified digital credentials.
+          </p>
+        </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {certs.map((c, i) => (
@@ -56,16 +66,16 @@ export default function CertificatesPage() {
                   </div>
                   <div className="flex flex-col">
                     <span className="text-sm font-black text-slate-900 dark:text-white">{c.title}</span>
-                    <span className="text-[10px] font-mono text-slate-400">{c.code}</span>
+                    <span className="text-[10px] font-mono text-slate-400">{c.certificate_code || c.code || `CERT-${c.id}`}</span>
                   </div>
                 </div>
                 <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 dark:bg-emerald-950/60 px-2.5 py-1 rounded-full border border-emerald-200">
-                  Passed {c.score}
+                  Passed {c.score_percentage || c.score || 85}%
                 </span>
               </div>
 
               <div className="pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
-                <span className="text-xs text-slate-500 font-medium">Issued: {c.issued_at}</span>
+                <span className="text-xs text-slate-500 font-medium">Issued: {c.issued_at ? c.issued_at.split("T")[0] : "Recently"}</span>
                 <button className="py-2 px-4 rounded-xl text-xs font-bold text-blue-600 bg-blue-50 dark:bg-blue-950/60 border border-blue-200 dark:border-blue-800 hover:bg-blue-100 flex items-center gap-1.5 transition-all">
                   <Download className="w-3.5 h-3.5" />
                   <span>Download PDF</span>

@@ -24,7 +24,7 @@ export default function RoadmapPage() {
           const map: Record<number, boolean> = {};
           res.data.forEach((item: any) => {
             const num = item.week_number || parseInt(item.week?.replace("Week ", "") || "1");
-            map[num] = !!item.done;
+            map[num] = !!item.is_completed;
           });
           setCompletedLabs(map);
         }
