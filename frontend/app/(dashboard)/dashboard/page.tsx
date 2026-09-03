@@ -178,7 +178,7 @@ export default function CandidateDashboardPage() {
 
           {/* 3D Visual Illustration */}
           <div className="w-full sm:w-[240px] shrink-0 z-10 flex justify-center">
-            <img loading="lazy" decoding="async" 
+            <img loading="eager" fetchPriority="high" decoding="async" width={220} height={170}
               src="/images/hero_cloud_ai_3d.webp" 
               alt="3D DevOps Cloud Graphic" 
               className="w-full max-w-[220px] max-h-[170px] object-contain drop-shadow-xl hover:scale-105 transition-transform duration-500" 

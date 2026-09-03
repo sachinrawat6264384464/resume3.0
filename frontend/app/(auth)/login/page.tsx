@@ -200,7 +200,7 @@ export default function LoginPage() {
 
           {/* 3D Robot Artwork */}
           <div className="md:col-span-7 flex items-center justify-center">
-            <img loading="lazy" decoding="async" 
+            <img loading="eager" fetchPriority="high" decoding="async" width={560} height={480}
               src="/images/roadmap_aws_light_3d-removebg-preview.webp" 
               alt="CloudOps AI AWS 3D Badge" 
               className="w-full max-w-[560px] sm:max-w-[680px] max-h-[480px] sm:max-h-[550px] object-contain drop-shadow-2xl transition-transform duration-500 hover:scale-[1.05] scale-110 sm:scale-125 my-auto" 
