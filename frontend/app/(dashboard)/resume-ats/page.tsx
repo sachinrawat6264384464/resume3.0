@@ -39,6 +39,7 @@ export default function ResumeATSPage() {
   const [customRoleInput, setCustomRoleInput] = useState("");
   
   const [isLoading, setIsLoading] = useState(false);
+  const [analysisError, setAnalysisError] = useState<string | null>(null);
   const [atsResult, setAtsResult] = useState<ResumeATSResponse | null>(null);
   const [acceptedBullets, setAcceptedBullets] = useState<Record<number, boolean>>({});
 
@@ -57,8 +58,8 @@ export default function ResumeATSPage() {
     loadLatestAuditFromDB();
   }, []);
 
-  const sampleResumeContent = `${user?.full_name || "Sachin Rawat"}
-${user?.email || "sachin@example.com"} | +91 98765 43210 | Bengaluru, India
+  const sampleResumeContent = `${user?.full_name || "Candidate User"}
+${user?.email || "candidate@cloudops.internal"} | +91 98765 43210 | Bengaluru, India
 Target Role: Senior Cloud & DevOps Engineer
 
 SUMMARY
@@ -88,6 +89,7 @@ CERTIFICATIONS
 
   const handleAnalyze = async () => {
     setIsLoading(true);
+    setAnalysisError(null);
     try {
       let res;
       if (selectedFile) {
@@ -116,7 +118,14 @@ CERTIFICATIONS
         setAtsResult(res.data);
       }
     } catch (err: any) {
-      alert(err.message || "Failed to analyze resume ATS match");
+      const msg = err.message || "";
+      if (msg.includes("Failed to fetch") || msg.includes("NetworkError") || msg.includes("timeout")) {
+        setAnalysisError("⚠️ Server is waking up (Render cold-start). Please wait 30 seconds and try again — the analysis will work on retry.");
+      } else if (msg.includes("401") || msg.includes("Unauthorized")) {
+        setAnalysisError("⚠️ Session expired. Please sign out and sign back in, then retry the analysis.");
+      } else {
+        setAnalysisError(msg || "Analysis failed. Please try again.");
+      }
     } finally {
       setIsLoading(false);
     }
@@ -343,6 +352,23 @@ CERTIFICATIONS
 
           </div>
 
+          {/* Inline Error Banner for Failed Analysis */}
+          {analysisError && (
+            <div className="flex items-start gap-2.5 p-4 rounded-2xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 text-amber-800 dark:text-amber-300 text-xs font-semibold mt-1">
+              <span className="text-base shrink-0">⚠️</span>
+              <div className="flex flex-col gap-1">
+                <span className="font-black">Analysis Failed</span>
+                <span className="font-medium leading-relaxed">{analysisError}</span>
+                <button
+                  onClick={() => { setAnalysisError(null); handleAnalyze(); }}
+                  className="mt-1.5 w-fit px-3 py-1.5 rounded-xl bg-amber-200 dark:bg-amber-900 text-amber-900 dark:text-amber-200 font-black text-[11px] hover:bg-amber-300 dark:hover:bg-amber-800 transition-colors"
+                >
+                  🔄 Retry Analysis
+                </button>
+              </div>
+            </div>
+          )}
+
           {/* Primary Action Button */}
           <button
             onClick={handleAnalyze}
@@ -352,7 +378,7 @@ CERTIFICATIONS
             {isLoading ? (
               <>
                 <Loader2 className="w-4 h-4 animate-spin" />
-                <span>Running AI OCR & ATS Benchmark Analysis...</span>
+                <span>Running AI OCR & ATS Benchmark Analysis... (Server may be waking up)</span>
               </>
             ) : (
               <>
@@ -365,6 +391,7 @@ CERTIFICATIONS
         </div>
 
       </div>
+
 
       {/* STEP 3: ATS AUDIT REPORT DISPLAY (Rendered when atsResult is present) */}
       {atsResult && (
