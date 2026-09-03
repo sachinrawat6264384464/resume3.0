@@ -17,8 +17,8 @@ export default function LoginPage() {
   const setAuth = useAuthStore((state) => state.setAuth);
 
   const [role, setRole] = useState<"CANDIDATE" | "ADMIN">("CANDIDATE");
-  const [email, setEmail] = useState("candidate@cloudops.internal");
-  const [password, setPassword] = useState("Candidate@12345");
+  const [email, setEmail] = useState("sachin@cloudops.internal");
+  const [password, setPassword] = useState("Sachin@12345");
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -29,8 +29,8 @@ export default function LoginPage() {
       setEmail("admin@cloudops.internal");
       setPassword("Admin@12345");
     } else {
-      setEmail("candidate@cloudops.internal");
-      setPassword("Candidate@12345");
+      setEmail("sachin@cloudops.internal");
+      setPassword("Sachin@12345");
     }
   };
 
@@ -317,7 +317,7 @@ export default function LoginPage() {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     className="w-full pl-10 pr-4 py-3 rounded-xl text-xs border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 focus:outline-none focus:border-[#FF9900] font-medium text-slate-900 dark:text-white transition-all shadow-sm"
-                    placeholder="candidate@cloudops.internal"
+                    placeholder="sachin@cloudops.internal"
                   />
                   <Mail className="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5" />
                 </div>

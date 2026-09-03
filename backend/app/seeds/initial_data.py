@@ -92,6 +92,43 @@ async def seed_database():
             db.add(cand_profile)
             await db.flush()
 
+        # 3b. Sachin Rawat Candidate User
+        sachin_user_stmt = select(User).where(User.email == "sachin@cloudops.internal")
+        res = await db.execute(sachin_user_stmt)
+        sachin_user = res.scalar_one_or_none()
+        if not sachin_user:
+            sachin_user = User(
+                organization_id=org.id,
+                email="sachin@cloudops.internal",
+                full_name="Sachin Rawat",
+                hashed_password=get_password_hash("Sachin@12345"),
+                role=UserRole.CANDIDATE.value,
+                is_active=True
+            )
+            db.add(sachin_user)
+            await db.flush()
+
+            sachin_profile = Candidate(
+                user_id=sachin_user.id,
+                organization_id=org.id,
+                student_id="STU-2026-099",
+                phone="+91 99999 88888",
+                course="Multi-Cloud & DevOps Mastery",
+                batch="Cohort 2026-A",
+                experience_level="MID",
+                target_role="Senior DevOps Engineer",
+                notes="Sachin Rawat Candidate Profile.",
+                xp=4200,
+                level=5,
+                streak_days=15,
+                readiness_score=88.0,
+                target_salary_band="₹18–25 LPA",
+                skills_matrix_json={"Linux": 90, "AWS": 86, "Docker": 82, "Kubernetes": 80, "Terraform": 78},
+                badges_json=["Linux Warrior", "Cloud Explorer", "AWS Ninja", "DevOps Master"]
+            )
+            db.add(sachin_profile)
+            await db.flush()
+
         # Additional Sample Candidates for Leaderboard
         sample_candidates = [
             ("Priya Patel", "priya@cloudops.internal", "Cloud Architect", 2850, 3, 9, 81.0, "₹18–25 LPA", ["Linux Warrior", "Cloud Explorer", "Terraform Expert"]),
