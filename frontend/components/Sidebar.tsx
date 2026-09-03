@@ -38,26 +38,38 @@ export function Sidebar() {
     router.push("/login");
   };
 
-  const navItems = [
-    { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
+  const isAdminMode = pathname.startsWith("/admin") || user?.role === "ADMIN" || user?.role === "SUPER_ADMIN";
+
+  const candidateNavItems = [
+    { label: "Candidate Dashboard", href: "/dashboard", icon: LayoutDashboard },
     { label: "Interview Stages", href: "/interviews", icon: CheckSquare },
-    { label: "Resume ATS", href: "/resume-ats", icon: FileText },
-    { label: "My Progress", href: "/performance", icon: BarChart3 },
+    { label: "Resume ATS Audit", href: "/resume-ats", icon: FileText },
+    { label: "My Progress & Matrix", href: "/performance", icon: BarChart3 },
     { label: "Leaderboard", href: "/leaderboard", icon: Trophy },
-    { label: "Roadmap", href: "/roadmap", icon: Map },
+    { label: "Career Roadmap", href: "/roadmap", icon: Map },
     { label: "Certificates", href: "/certificates", icon: Award },
     { label: "Settings", href: "/settings", icon: Settings },
     { label: "Help & Support", href: "/help", icon: HelpCircle },
   ];
+
+  const adminNavItems = [
+    { label: "Admin Analytics", href: "/admin", icon: LayoutDashboard },
+    { label: "JD & Blueprints", href: "/admin/templates", icon: FileText },
+    { label: "Leaderboard Review", href: "/leaderboard", icon: Trophy },
+    { label: "Platform Settings", href: "/settings", icon: Settings },
+    { label: "Switch to Candidate View", href: "/dashboard", icon: LayoutDashboard },
+  ];
+
+  const navItems = isAdminMode ? adminNavItems : candidateNavItems;
 
   // REAL DYNAMIC USER XP & LEVEL (Zero hardcoded numbers)
   const userXp = (user as any)?.xp ?? dbUser?.xp ?? 0;
   const userLevel = (user as any)?.level ?? dbUser?.level ?? 1;
 
   return (
-    <aside className="w-[260px] h-screen border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-[#080d1a] flex flex-col sticky top-0 left-0 overflow-y-auto shrink-0 z-30">
+    <aside className="w-[260px] h-screen border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-[#080d1a] flex flex-col sticky top-0 left-0 overflow-y-auto shrink-0 z-30 font-sans">
       
-      {/* Brand Header */}
+      {/* Brand Header & Portal Mode Indicator */}
       <div className="p-5 pb-3">
         <Link href="/" className="flex items-center gap-3 group">
           <div className="w-9 h-9 rounded-xl bg-[#FF9900] flex items-center justify-center text-white shadow-md shadow-[#FF9900]/25 group-hover:scale-105 transition-transform">
@@ -67,8 +79,12 @@ export function Sidebar() {
             <span className="text-base font-black tracking-tight text-slate-900 dark:text-white leading-none">
               CloudOps <span className="text-[#FF9900]">AI</span>
             </span>
-            <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">
-              Assessment OS
+            <span className={`text-[9px] font-black uppercase tracking-widest mt-1 px-1.5 py-0.5 rounded w-max ${
+              isAdminMode 
+                ? 'bg-purple-100 dark:bg-purple-950 text-purple-600 dark:text-purple-400 border border-purple-300 dark:border-purple-800'
+                : 'bg-amber-100 dark:bg-amber-950 text-[#FF9900] border border-[#FF9900]/30'
+            }`}>
+              {isAdminMode ? "ADMIN PANEL PORTAL" : "CANDIDATE PORTAL"}
             </span>
           </div>
         </Link>
