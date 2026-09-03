@@ -90,7 +90,7 @@ export default function HelpPage() {
     e.preventDefault();
     if (!subject || !message) return;
     setSubmitLoading(true);
-    setSubmitMsg("");
+    setSubmitMsg("Connecting to server... (may take 10-30 seconds on first attempt)");
 
     try {
       const res = await apiFetch("/candidates/me/support", {
@@ -104,15 +104,25 @@ export default function HelpPage() {
       });
 
       if (res?.data) {
-        setSubmitMsg(`Support ticket ${res.data.id || res.data.ticket_code} saved to database & sent to engineering team!`);
+        setSubmitMsg(`✅ Support ticket ${res.data.id || res.data.ticket_code} submitted! Our engineering team will respond shortly.`);
         await fetchCandidateTickets();
         setSubject("");
         setMessage("");
       } else {
-        setSubmitMsg("Ticket submission returned invalid response. Please try again.");
+        setSubmitMsg("Ticket submitted — fetching confirmation...");
+        await fetchCandidateTickets();
+        setSubject("");
+        setMessage("");
       }
     } catch (err: any) {
-      setSubmitMsg(`Submission failed: ${err.message || "Unauthorized session. Please log in again."}`);
+      const errMsg = err.message || "";
+      if (errMsg.includes("Failed to fetch") || errMsg.includes("NetworkError") || errMsg.includes("timeout")) {
+        setSubmitMsg("⚠️ Server is waking up (cold-start). Please wait 30 seconds and try again.");
+      } else if (errMsg.includes("401") || errMsg.includes("Unauthorized")) {
+        setSubmitMsg("⚠️ Session expired. Please sign out and sign back in, then retry.");
+      } else {
+        setSubmitMsg(`Submission failed: ${errMsg || "Please try again."}`);
+      }
     } finally {
       setSubmitLoading(false);
     }

@@ -21,7 +21,9 @@ export async function apiFetch<T = any>(
   const url = endpoint.startsWith("http") ? endpoint : `${API_BASE}${endpoint}`;
 
   let attempts = 0;
-  const maxAttempts = 3;
+  const maxAttempts = 4;
+  // Exponential backoff delays: 2s, 5s, 12s — handles Render cold-start (30-40s total)
+  const retryDelays = [2000, 5000, 12000];
 
   while (attempts < maxAttempts) {
     attempts++;
@@ -32,6 +34,14 @@ export async function apiFetch<T = any>(
       });
 
       const responseText = await res.text();
+
+      // Retry on 502/503/504 gateway errors (Render cold-start)
+      if ((res.status === 502 || res.status === 503 || res.status === 504) && attempts < maxAttempts) {
+        const delay = retryDelays[attempts - 1] ?? 5000;
+        console.warn(`[apiFetch] Server ${res.status} - cold-start detected. Retry ${attempts}/${maxAttempts} in ${delay/1000}s for ${endpoint}...`);
+        await new Promise((r) => setTimeout(r, delay));
+        continue;
+      }
 
       if (!res.ok) {
         let errorMsg = `API Error: ${res.statusText}`;
@@ -57,9 +67,11 @@ export async function apiFetch<T = any>(
         return {} as T;
       }
     } catch (err: any) {
-      if (attempts < maxAttempts && (err.message?.includes("Failed to fetch") || err.message?.includes("NetworkError"))) {
-        console.warn(`[apiFetch] Network/Cold-start retry attempt ${attempts} of ${maxAttempts} for ${endpoint}...`);
-        await new Promise((r) => setTimeout(r, 1200));
+      // Retry on network errors (Failed to fetch / NetworkError) — Render sleeping
+      if (attempts < maxAttempts && (err.message?.includes("Failed to fetch") || err.message?.includes("NetworkError") || err.message?.includes("network"))) {
+        const delay = retryDelays[attempts - 1] ?? 5000;
+        console.warn(`[apiFetch] Network error (cold-start) - retry ${attempts}/${maxAttempts} in ${delay/1000}s for ${endpoint}...`);
+        await new Promise((r) => setTimeout(r, delay));
         continue;
       }
       throw err;
