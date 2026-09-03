@@ -31,6 +31,8 @@ export async function apiFetch<T = any>(
   // Exponential backoff delays: 2s, 5s, 12s — handles Render cold-start (30-40s total)
   const retryDelays = [2000, 5000, 12000];
 
+  const startTime = typeof performance !== "undefined" ? performance.now() : Date.now();
+
   while (attempts < maxAttempts) {
     attempts++;
     try {
@@ -38,6 +40,12 @@ export async function apiFetch<T = any>(
         ...options,
         headers,
       });
+
+      const duration = Math.round((typeof performance !== "undefined" ? performance.now() : Date.now()) - startTime);
+      const serverTime = res.headers.get("X-Process-Time");
+      if (process.env.NODE_ENV !== "production") {
+        console.log(`⚡ [apiFetch] ${options.method || "GET"} ${endpoint} | ${duration}ms${serverTime ? ` (Server: ${serverTime})` : ""}`);
+      }
 
       const responseText = await res.text();
 

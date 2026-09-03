@@ -74,6 +74,23 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# API Performance & Timing Telemetry Middleware
+import time
+
+@app.middleware("http")
+async def add_performance_telemetry_middleware(request: Request, call_next):
+    start_time = time.perf_counter()
+    response = await call_next(request)
+    process_time_ms = round((time.perf_counter() - start_time) * 1000, 2)
+    response.headers["X-Process-Time"] = f"{process_time_ms}ms"
+
+    if process_time_ms > 300:
+        print(f"⚠️ [SLOW API WARNING] {request.method} {request.url.path} | Status: {response.status_code} | Time: {process_time_ms}ms")
+    else:
+        print(f"⚡ [API PERFORMANCE] {request.method} {request.url.path} | Status: {response.status_code} | Time: {process_time_ms}ms")
+
+    return response
+
 # Global exception handler
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception):
