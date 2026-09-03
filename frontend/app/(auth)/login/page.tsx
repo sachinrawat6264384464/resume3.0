@@ -97,7 +97,7 @@ export default function LoginPage() {
           body: JSON.stringify({
             role: isAdminPortal ? "ADMIN" : role,
             email,
-            name: (role === "ADMIN" || isAdminPortal) ? "Alex Vance (Admin)" : "Sachin Rawat"
+            name: (role === "ADMIN" || isAdminPortal) ? "Alex Vance (Admin)" : (email?.split("@")[0] || "Candidate User")
           }),
         });
         setAuth(res.user, res.access_token);
@@ -109,11 +109,12 @@ export default function LoginPage() {
       } catch (mockErr: any) {
         // Fallback for seamless login if Render backend is sleeping or network fetch fails
         const isTargetAdmin = role === "ADMIN" || isAdminPortal || (typeof window !== "undefined" && window.location.hostname.includes("admin"));
+        const derivedName = isTargetAdmin ? "Alex Vance (Admin)" : (email?.split("@")[0] || "Candidate User");
         setAuth({
-          id: isTargetAdmin ? "admin-001" : "cand-001",
+          id: isTargetAdmin ? "admin-001" : `cand-${Date.now()}`,
           organization_id: "org-001",
-          email: email || (isTargetAdmin ? "admin@cloudops.internal" : "sachin@cloudops.internal"),
-          full_name: isTargetAdmin ? "Alex Vance (Admin)" : "Sachin Rawat",
+          email: email || (isTargetAdmin ? "admin@cloudops.internal" : "candidate@cloudops.internal"),
+          full_name: derivedName,
           role: isTargetAdmin ? "ADMIN" : "CANDIDATE",
           is_active: true,
           created_at: new Date().toISOString()

@@ -60,12 +60,25 @@ export function Header() {
     }
   ]);
 
+  const [candProfile, setCandProfile] = useState<any>(null);
+
   useEffect(() => {
     setMounted(true);
     if (typeof window !== "undefined") {
       const isDark = document.documentElement.classList.contains("dark");
       setTheme(isDark ? "dark" : "light");
     }
+
+    // Fetch candidate profile to always show the correct logged-in user's name
+    const fetchProfile = async () => {
+      try {
+        const res = await apiFetch("/candidates/me/profile");
+        if (res?.data) setCandProfile(res.data);
+      } catch (e) {
+        // Render cold-start — ignore, auth store name will be used
+      }
+    };
+    if (isAuthenticated) fetchProfile();
 
     // Close dropdowns when clicking outside
     function handleClickOutside(event: MouseEvent) {
@@ -79,7 +92,7 @@ export function Header() {
 
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
+  }, [isAuthenticated]);
 
   const toggleTheme = () => {
     const nextTheme = theme === "light" ? "dark" : "light";
@@ -108,9 +121,10 @@ export function Header() {
     router.push("/login");
   };
 
-  const candidateName = user?.full_name || "sachin rawat";
+  // Always use candidate profile name first, then auth store name, then email prefix
+  const candidateName = candProfile?.user?.full_name || user?.full_name || user?.email?.split("@")[0] || "Candidate User";
   const candidateEmail = user?.email || "candidate@example.com";
-  const candidateRole = user?.role === "ADMIN" ? "Administrator" : "Cloud Engineer";
+  const candidateRole = (user?.role === "ADMIN") ? "Administrator" : (candProfile?.target_role || "Cloud Engineer");
 
   return (
     <header className="flex items-center justify-between gap-4 pb-6 border-b border-slate-200 dark:border-slate-800/80 mb-6 font-sans">

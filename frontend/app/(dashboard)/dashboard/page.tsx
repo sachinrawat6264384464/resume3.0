@@ -19,6 +19,7 @@ export default function CandidateDashboardPage() {
   const [theme, setTheme] = useState<"light" | "dark">("light");
   const [mounted, setMounted] = useState(false);
   const [dbMetrics, setDbMetrics] = useState<any>(null);
+  const [candProfile, setCandProfile] = useState<any>(null);
 
   const [loading, setLoading] = useState(true);
 
@@ -26,7 +27,6 @@ export default function CandidateDashboardPage() {
   useEffect(() => {
     setMounted(true);
 
-    // Clear any old stale cache so it never shows up as fallback
     if (typeof window !== "undefined") {
       localStorage.removeItem("cached_dash_metrics");
     }
@@ -34,14 +34,18 @@ export default function CandidateDashboardPage() {
     // Fetch Real DB Data directly from backend
     const fetchUserData = async () => {
       try {
-        const [userRes, metricsRes] = await Promise.all([
+        const [userRes, profileRes, metricsRes] = await Promise.all([
           apiFetch("/auth/me").catch(() => null),
+          apiFetch("/candidates/me/profile").catch(() => null),
           apiFetch("/candidates/me/dashboard-metrics").catch(() => null)
         ]);
 
         if (userRes?.data) {
           const token = localStorage.getItem("auth_token") || "";
           setAuth(userRes.data, token);
+        }
+        if (profileRes?.data) {
+          setCandProfile(profileRes.data);
         }
         if (metricsRes?.data) {
           setDbMetrics(metricsRes.data);
@@ -69,9 +73,10 @@ export default function CandidateDashboardPage() {
 
   // Default initial candidate metrics for clean un-attempted state
   const defaultCandidateMetrics = {
-    readiness_score: (user as any)?.readiness_score || 0.0,
-    xp: (user as any)?.xp || 0,
-    streak_days: (user as any)?.streak_days || 1,
+    readiness_score: candProfile?.readiness_score || (user as any)?.readiness_score || 0.0,
+    xp: candProfile?.xp || (user as any)?.xp || 0,
+    level: candProfile?.level || (user as any)?.level || 1,
+    streak_days: candProfile?.streak_days || (user as any)?.streak_days || 1,
     readiness_breakdown: {
       technical: 0,
       problem_solving: 0,
@@ -88,7 +93,7 @@ export default function CandidateDashboardPage() {
     ],
     resume_ats: {
       score: 0,
-      matched_jd: (user as any)?.target_role || "Senior DevOps Engineer",
+      matched_jd: candProfile?.target_role || (user as any)?.target_role || "Senior DevOps Engineer",
       skills_matched: "0 / 24",
       keywords_found: "0%",
       ats_score: "0 / 100"
@@ -99,10 +104,12 @@ export default function CandidateDashboardPage() {
   const activeMetrics = dbMetrics || defaultCandidateMetrics;
 
   // Real Candidate Data from DB
-  const candidateName = user?.full_name || "Sachin Rawat";
-  const userXp = user?.xp ?? activeMetrics?.xp ?? 0;
-  const userStreak = user?.streak_days ?? activeMetrics?.streak_days ?? 1;
-  const readiness = Math.round(activeMetrics?.readiness_score ?? 0);
+  const candidateName = candProfile?.user?.full_name || user?.full_name || (user?.email ? user.email.split('@')[0] : "Candidate User");
+  const userXp = candProfile?.xp ?? activeMetrics?.xp ?? (user as any)?.xp ?? 0;
+  const userLevel = candProfile?.level ?? activeMetrics?.level ?? (user as any)?.level ?? 1;
+  const userStreak = candProfile?.streak_days ?? activeMetrics?.streak_days ?? (user as any)?.streak_days ?? 1;
+  const readiness = Math.round(candProfile?.readiness_score ?? activeMetrics?.readiness_score ?? 0);
+  const targetSalaryBand = candProfile?.target_salary_band || dbMetrics?.target_salary_band || "₹18 – ₹40 LPA";
   const readinessBreakdown = activeMetrics?.readiness_breakdown || defaultCandidateMetrics.readiness_breakdown;
   const stagesProgress = activeMetrics?.stages_progress || defaultCandidateMetrics.stages_progress;
   const resumeAts = activeMetrics?.resume_ats || defaultCandidateMetrics.resume_ats;

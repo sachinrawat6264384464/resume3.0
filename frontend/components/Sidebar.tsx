@@ -20,17 +20,18 @@ export function Sidebar() {
 
   useEffect(() => {
     if (isAuthenticated) {
-      const fetchMetrics = async () => {
+      const fetchProfile = async () => {
         try {
-          const res = await apiFetch("/candidates/me/dashboard-metrics");
+          // Fetch candidate profile for XP, level and name specific to logged-in user
+          const res = await apiFetch("/candidates/me/profile");
           if (res?.data) {
             setDbUser(res.data);
           }
         } catch (e) {
-          console.warn("Sidebar metrics fetch notice:", e);
+          console.warn("Sidebar profile fetch notice:", e);
         }
       };
-      fetchMetrics();
+      fetchProfile();
     }
   }, [isAuthenticated]);
 
@@ -70,8 +71,10 @@ export function Sidebar() {
 
   const navItems = isAdminMode ? adminNavItems : candidateNavItems;
 
-  const userXp = (user as any)?.xp ?? dbUser?.xp ?? 0;
-  const userLevel = (user as any)?.level ?? dbUser?.level ?? 1;
+  const userXp = dbUser?.xp ?? (user as any)?.xp ?? 0;
+  const userLevel = dbUser?.level ?? (user as any)?.level ?? 1;
+  // Show the real logged-in candidate name from profile, fallback to auth store
+  const displayName = dbUser?.user?.full_name || user?.full_name || user?.email?.split("@")[0] || "Candidate";
 
   return (
     <aside className="w-[260px] h-screen border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-[#080d1a] flex flex-col sticky top-0 left-0 overflow-y-auto shrink-0 z-30 font-sans">
@@ -156,15 +159,15 @@ export function Sidebar() {
                 {user.avatar_url ? (
                   <img src={user.avatar_url} alt="Avatar" className="w-full h-full object-cover" />
                 ) : (
-                  <span>{user.full_name?.charAt(0) || "A"}</span>
+                  <span>{displayName?.charAt(0)?.toUpperCase() || "C"}</span>
                 )}
               </div>
               <div className="flex flex-col min-w-0 flex-1">
                 <span className="text-xs font-bold text-slate-900 dark:text-white truncate">
-                  {user.full_name}
+                  {displayName}
                 </span>
                 <span className="text-[10px] font-medium text-slate-500 truncate">
-                  {(user.role === "ADMIN" || isAdminMode) ? "Administrator" : "Cloud Engineer"}
+                  {(user.role === "ADMIN" || isAdminMode) ? "Administrator" : (dbUser?.target_role || "Cloud Engineer")}
                 </span>
               </div>
             </div>
