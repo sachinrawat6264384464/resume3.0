@@ -9,7 +9,7 @@ import {
   Scan, Layers, Cpu, FileCheck, HelpCircle
 } from "lucide-react";
 import { apiFetch } from "@/lib/api";
-import { useAuthStore } from "@/lib/store";
+import { useAuthStore, useATSStore } from "@/lib/store";
 import { ResumeATSResponse, BulletImprovementItem } from "@/types";
 
 const PRESET_JDS = [
@@ -31,21 +31,28 @@ export default function ResumeATSPage() {
   const router = useRouter();
   const user = useAuthStore((state) => state.user);
 
+  const {
+    isAnalyzing: isLoading,
+    atsResult,
+    analysisError,
+    setIsAnalyzing,
+    setAtsResult,
+    setAnalysisError,
+    resetATS
+  } = useATSStore();
+
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [resumeText, setResumeText] = useState("");
   const [jobTitle, setJobTitle] = useState(PRESET_JDS[0].title);
   const [jobDescription, setJobDescription] = useState(PRESET_JDS[0].desc);
   const [isCustomRole, setIsCustomRole] = useState(false);
   const [customRoleInput, setCustomRoleInput] = useState("");
-  
-  const [isLoading, setIsLoading] = useState(false);
-  const [analysisError, setAnalysisError] = useState<string | null>(null);
-  const [atsResult, setAtsResult] = useState<ResumeATSResponse | null>(null);
   const [acceptedBullets, setAcceptedBullets] = useState<Record<number, boolean>>({});
 
-  // 1. Fetch Latest Saved Resume ATS Audit from Database on Mount
+  // 1. Fetch Latest Saved Resume ATS Audit from Database on Mount if not loaded
   useEffect(() => {
     async function loadLatestAuditFromDB() {
+      if (atsResult) return;
       try {
         const res = await apiFetch("/resumes/latest");
         if (res?.data) {
@@ -56,7 +63,7 @@ export default function ResumeATSPage() {
       }
     }
     loadLatestAuditFromDB();
-  }, []);
+  }, [atsResult]);
 
   const sampleResumeContent = `${user?.full_name || "Candidate User"}
 ${user?.email || "candidate@cloudops.internal"} | +91 98765 43210 | Bengaluru, India
@@ -88,7 +95,7 @@ CERTIFICATIONS
 - Certified Kubernetes Administrator (CKA)`;
 
   const handleAnalyze = async () => {
-    setIsLoading(true);
+    setIsAnalyzing(true);
     setAnalysisError(null);
     try {
       let res;
@@ -116,6 +123,8 @@ CERTIFICATIONS
 
       if (res?.data) {
         setAtsResult(res.data);
+      } else {
+        setIsAnalyzing(false);
       }
     } catch (err: any) {
       const msg = err.message || "";
@@ -126,8 +135,6 @@ CERTIFICATIONS
       } else {
         setAnalysisError(msg || "Analysis failed. Please try again.");
       }
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -448,7 +455,7 @@ CERTIFICATIONS
                 Matching Skills Found ({atsResult.matching_skills.length})
               </h3>
               <div className="flex flex-wrap gap-2">
-                {atsResult.matching_skills.map((sk, idx) => (
+                {atsResult.matching_skills.map((sk: any, idx: number) => (
                   <span key={idx} className="px-3 py-1 rounded-xl text-xs font-bold bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
                     {sk}
                   </span>
@@ -463,7 +470,7 @@ CERTIFICATIONS
                 Missing Critical JD Skills ({atsResult.missing_skills.length})
               </h3>
               <div className="flex flex-wrap gap-2">
-                {atsResult.missing_skills.map((sk, idx) => (
+                {atsResult.missing_skills.map((sk: any, idx: number) => (
                   <span key={idx} className="px-3 py-1 rounded-xl text-xs font-bold bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800">
                     {sk}
                   </span>
@@ -491,7 +498,7 @@ CERTIFICATIONS
               </div>
 
               <div className="flex flex-col gap-4">
-                {atsResult.bullet_suggestions.map((item, idx) => (
+                {atsResult.bullet_suggestions.map((item: any, idx: number) => (
                   <div key={idx} className="p-5 rounded-2xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700 flex flex-col gap-3">
                     
                     {/* Before */}

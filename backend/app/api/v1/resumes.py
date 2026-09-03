@@ -33,19 +33,23 @@ async def parse_and_match_resume(
         text = ResumeService.extract_text_from_file_bytes(file_bytes, file.filename or "resume.pdf")
         
         try:
+            import asyncio
             from app.storage import get_storage_provider
             storage = get_storage_provider()
-            upload_res = await storage.upload_file(
-                file_bytes=file_bytes,
-                file_name=file.filename or "resume.pdf",
-                org_id="default",
-                candidate_id="resumes",
-                attempt_id="ats_analysis",
-                mime_type=file.content_type or "application/pdf"
+            upload_res = await asyncio.wait_for(
+                storage.upload_file(
+                    file_bytes=file_bytes,
+                    file_name=file.filename or "resume.pdf",
+                    org_id="default",
+                    candidate_id="resumes",
+                    attempt_id="ats_analysis",
+                    mime_type=file.content_type or "application/pdf"
+                ),
+                timeout=4.0
             )
             cloud_url = upload_res.get("view_url")
         except Exception as e:
-            print(f"Failed to upload resume to Cloudinary: {e}")
+            print(f"Cloudinary storage notice ({e}), proceeding with analysis.")
 
     elif resume_text:
         text = resume_text.strip()

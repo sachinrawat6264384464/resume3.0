@@ -94,3 +94,42 @@ export const useInterviewStore = create<LiveInterviewState>((set) => ({
   setIsSpeakingQuestion: (isSpeakingQuestion) => set({ isSpeakingQuestion }),
   setElapsedSeconds: (elapsedSeconds) => set({ elapsedSeconds }),
 }));
+
+interface ATSAnalysisState {
+  isAnalyzing: boolean;
+  atsResult: any | null;
+  analysisError: string | null;
+  activeFileName: string | null;
+  setIsAnalyzing: (v: boolean) => void;
+  setAtsResult: (res: any | null) => void;
+  setAnalysisError: (err: string | null) => void;
+  setActiveFileName: (name: string | null) => void;
+  resetATS: () => void;
+}
+
+export const useATSStore = create<ATSAnalysisState>((set) => ({
+  isAnalyzing: false,
+  atsResult: typeof window !== "undefined" && localStorage.getItem("ats_result")
+    ? (() => {
+        try { return JSON.parse(localStorage.getItem("ats_result")!); }
+        catch { return null; }
+      })()
+    : null,
+  analysisError: null,
+  activeFileName: null,
+  setIsAnalyzing: (isAnalyzing) => set({ isAnalyzing }),
+  setAtsResult: (atsResult) => {
+    if (typeof window !== "undefined" && atsResult) {
+      localStorage.setItem("ats_result", JSON.stringify(atsResult));
+    }
+    set({ atsResult, isAnalyzing: false, analysisError: null });
+  },
+  setAnalysisError: (analysisError) => set({ analysisError, isAnalyzing: false }),
+  setActiveFileName: (activeFileName) => set({ activeFileName }),
+  resetATS: () => {
+    if (typeof window !== "undefined") {
+      localStorage.removeItem("ats_result");
+    }
+    set({ atsResult: null, isAnalyzing: false, analysisError: null, activeFileName: null });
+  }
+}));

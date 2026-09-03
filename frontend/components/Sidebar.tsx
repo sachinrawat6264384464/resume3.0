@@ -6,15 +6,16 @@ import { usePathname, useRouter } from "next/navigation";
 import { 
   LayoutDashboard, CheckSquare, FileText, BarChart3, Trophy, 
   Map, Award, Settings, HelpCircle, LogOut, Cloud, Sparkles,
-  Users, CreditCard, Mail, HardDrive, Shield
+  Users, CreditCard, Mail, HardDrive, Shield, Loader2
 } from "lucide-react";
-import { useAuthStore } from "@/lib/store";
+import { useAuthStore, useATSStore } from "@/lib/store";
 import { apiFetch } from "@/lib/api";
 
 export function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
   const { user, isAuthenticated, logout } = useAuthStore();
+  const isAnalyzing = useATSStore((s) => s.isAnalyzing);
 
   const [dbUser, setDbUser] = useState<any>(null);
 
@@ -125,6 +126,19 @@ export function Sidebar() {
       {/* Bottom Section */}
       <div className="p-3.5 border-t border-slate-200 dark:border-slate-800 flex flex-col gap-3">
         
+        {isAnalyzing && (
+          <Link
+            href="/resume-ats"
+            className="p-3 rounded-2xl bg-amber-50 dark:bg-amber-950/70 border border-[#FF9900] shadow-md flex items-center gap-2.5 animate-pulse text-xs font-bold text-amber-900 dark:text-amber-200 hover:scale-[1.02] transition-all"
+          >
+            <Loader2 className="w-4 h-4 text-[#FF9900] animate-spin shrink-0" />
+            <div className="flex flex-col">
+              <span className="text-[11px] font-black leading-tight text-[#FF9900]">AI Analysis Active</span>
+              <span className="text-[9px] text-slate-500 dark:text-slate-400 font-medium">Running in background...</span>
+            </div>
+          </Link>
+        )}
+
         {isAdminMode ? (
           <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 flex flex-col gap-1.5 shadow-xs">
             <div className="w-7 h-7 rounded-xl bg-[#0B1E36] text-[#FF6B00] flex items-center justify-center shadow-xs">

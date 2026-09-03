@@ -168,9 +168,19 @@ class ResumeService:
                 "Handled server troubleshooting and infrastructure monitoring."
             ]
 
+        # 3. Parallel Async AI Bullet Point Improvement (3x Faster Response)
+        import asyncio
+        tasks = [
+            self.ai.improve_resume_bullet(role=job_title, current_bullet=b)
+            for b in sample_bullets[:3]
+        ]
+        bullet_results = await asyncio.gather(*tasks, return_exceptions=True)
+
         bullet_suggestions = []
-        for b in sample_bullets[:3]:
-            res = await self.ai.improve_resume_bullet(role=job_title, current_bullet=b)
+        for idx, b in enumerate(sample_bullets[:3]):
+            res = bullet_results[idx]
+            if isinstance(res, Exception) or not isinstance(res, dict):
+                res = {}
             bullet_suggestions.append(
                 BulletImprovementItem(
                     current=res.get("current", b),
