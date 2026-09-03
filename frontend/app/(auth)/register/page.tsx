@@ -440,10 +440,16 @@ export default function RegisterPage() {
                     <Lock className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
                     <button
                       type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3.5 top-3 text-slate-400 hover:text-slate-600"
+                      tabIndex={-1}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        setShowPassword((prev) => !prev);
+                      }}
+                      className="absolute right-2.5 top-1.5 z-10 p-1.5 rounded-lg text-slate-400 hover:text-[#FF9900] hover:bg-slate-200/60 dark:hover:bg-slate-800/80 transition-all cursor-pointer flex items-center justify-center"
+                      title={showPassword ? "Hide Password" : "Show Password"}
                     >
-                      {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      {showPassword ? <EyeOff className="w-4 h-4 text-[#FF9900]" /> : <Eye className="w-4 h-4" />}
                     </button>
                   </div>
                 </div>
