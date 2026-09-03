@@ -33,13 +33,13 @@ export function Navbar() {
       <div className="w-full px-4 sm:px-6 lg:px-8 xl:px-12 h-16 flex items-center justify-between">
         {/* Brand Logo */}
         <Link href="/" className="flex items-center gap-2.5 group">
-          <div className="relative flex items-center justify-center w-9 h-9 rounded-xl bg-red-500 text-white shadow-lg shadow-red-500/20 group-hover:scale-105 transition-transform duration-300">
+          <div className="relative flex items-center justify-center w-9 h-9 rounded-xl bg-[#FF9900] text-white shadow-lg shadow-[#FF9900]/25 group-hover:scale-105 transition-transform duration-300">
             <Cloud className="w-5 h-5 fill-white/20" />
           </div>
           <div className="flex flex-col justify-center">
             <div className="flex items-center gap-1 font-black text-lg tracking-tight text-slate-900 dark:text-white leading-none">
               CloudOps
-              <span className="text-red-500 font-extrabold ml-0.5">AI</span>
+              <span className="text-[#FF9900] font-extrabold ml-0.5">AI</span>
             </div>
           </div>
         </Link>
@@ -181,13 +181,13 @@ export function Navbar() {
             <div className="flex items-center gap-2">
               <Link
                 href="/login"
-                className="px-3 sm:px-4 py-2 text-xs font-bold text-blue-700 dark:text-slate-200 bg-white dark:bg-slate-800 hover:bg-slate-50 border border-blue-200 dark:border-slate-700 rounded-xl shadow-sm transition-all"
+                className="px-3 sm:px-4 py-2 text-xs font-bold text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 hover:bg-slate-50 border border-slate-200 dark:border-slate-700 rounded-xl shadow-sm transition-all"
               >
                 Login
               </Link>
               <Link
-                href="/login"
-                className="px-4 py-2 text-xs font-bold text-white bg-red-500 hover:bg-red-600 rounded-xl transition-all shadow-md shadow-red-500/20 flex items-center gap-1.5 whitespace-nowrap shrink-0"
+                href="/register"
+                className="px-4 py-2 text-xs font-black text-slate-950 bg-gradient-to-r from-[#FF9900] via-amber-400 to-orange-400 hover:from-amber-400 hover:to-orange-500 rounded-xl transition-all shadow-md shadow-[#FF9900]/25 flex items-center gap-1.5 whitespace-nowrap shrink-0"
               >
                 <span>Get Started <span className="hidden sm:inline">Free</span></span>
               </Link>

@@ -150,8 +150,8 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="h-[calc(100vh-4rem)] max-h-[calc(100vh-4rem)] overflow-hidden flex items-center justify-center p-2 sm:p-4 lg:px-6 bg-[#f8fafc] dark:bg-[#050810]">
-      <div className="w-full max-w-[1300px] grid grid-cols-1 lg:grid-cols-12 gap-5 items-center h-full max-h-full py-1">
+    <div className="min-h-screen py-6 flex items-center justify-center p-4 lg:px-8 bg-[#f8fafc] dark:bg-[#050810] selection:bg-[#FF9900] selection:text-white">
+      <div className="w-full max-w-[1300px] grid grid-cols-1 lg:grid-cols-12 gap-8 items-center py-4">
         
         {/* Left Column: Branding & 3D Hero */}
         <div className="lg:col-span-7 flex flex-col justify-between h-full py-1 min-h-0">
