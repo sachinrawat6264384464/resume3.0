@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { motion } from "framer-motion";
 import Link from "next/link";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { 
@@ -756,9 +757,14 @@ export default function LandingPage() {
               { id: "04", name: "CONTAINERS & K8S", desc: "Containerize & orchestrate like a SRE", color: "text-purple-600 bg-purple-100/80", icon: Layers },
               { id: "05", name: "INCIDENT BOSS", desc: "Crack real incidents, root cause & resolve", color: "text-amber-600 bg-amber-100/80", icon: Shield },
             ].map((st, idx) => (
-              <div 
+              <motion.div 
                 key={idx}
-                className="p-5 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 hover:border-[#FF6B00] dark:hover:border-[#FF6B00] shadow-xs hover:shadow-xl hover:shadow-[#FF6B00]/10 transition-all group flex flex-col justify-between"
+                initial={{ opacity: 0, y: 40, x: idx % 2 === 0 ? -40 : 40 }}
+                whileInView={{ opacity: 1, y: 0, x: 0 }}
+                viewport={{ once: true, margin: "-40px" }}
+                transition={{ duration: 0.5, delay: idx * 0.1, ease: "easeOut" }}
+                whileHover={{ y: -8, scale: 1.03, transition: { duration: 0.25 } }}
+                className="p-5 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 hover:border-[#FF6B00] dark:hover:border-[#FF6B00] shadow-xs hover:shadow-xl hover:shadow-[#FF6B00]/10 transition-all group flex flex-col justify-between cursor-pointer"
               >
                 <div>
                   <div className="flex items-center justify-between mb-4">
@@ -781,7 +787,7 @@ export default function LandingPage() {
                   <span>Explore Stage</span>
                   <ArrowRight className="w-3.5 h-3.5" />
                 </Link>
-              </div>
+              </motion.div>
             ))}
           </div>
 
@@ -1042,7 +1048,14 @@ export default function LandingPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
             
             {/* Week 1 Card */}
-            <div className="rounded-3xl bg-[#0B1E36] text-white border border-slate-800 shadow-xl overflow-hidden flex flex-col justify-between group hover:border-[#FF6B00] transition-all">
+            <motion.div 
+              initial={{ opacity: 0, x: -60, y: 30 }}
+              whileInView={{ opacity: 1, x: 0, y: 0 }}
+              viewport={{ once: true, margin: "-40px" }}
+              transition={{ duration: 0.6, delay: 0.1, ease: "easeOut" }}
+              whileHover={{ y: -8, scale: 1.02, transition: { duration: 0.2 } }}
+              className="rounded-3xl bg-[#0B1E36] text-white border border-slate-800 shadow-xl overflow-hidden flex flex-col justify-between group hover:border-[#FF6B00] transition-all cursor-pointer"
+            >
               <div>
                 <div className="h-44 relative bg-slate-900 overflow-hidden">
                   <img 
@@ -1077,10 +1090,17 @@ export default function LandingPage() {
                   <ArrowUpRight className="w-4 h-4" />
                 </a>
               </div>
-            </div>
+            </motion.div>
 
             {/* Week 2 Card */}
-            <div className="rounded-3xl bg-[#0B1E36] text-white border border-slate-800 shadow-xl overflow-hidden flex flex-col justify-between group hover:border-blue-500 transition-all">
+            <motion.div 
+              initial={{ opacity: 0, y: 50 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: "-40px" }}
+              transition={{ duration: 0.6, delay: 0.2, ease: "easeOut" }}
+              whileHover={{ y: -8, scale: 1.02, transition: { duration: 0.2 } }}
+              className="rounded-3xl bg-[#0B1E36] text-white border border-slate-800 shadow-xl overflow-hidden flex flex-col justify-between group hover:border-blue-500 transition-all cursor-pointer"
+            >
               <div>
                 <div className="h-44 relative bg-slate-900 overflow-hidden">
                   <img 
@@ -1115,10 +1135,17 @@ export default function LandingPage() {
                   <ArrowUpRight className="w-4 h-4" />
                 </a>
               </div>
-            </div>
+            </motion.div>
 
             {/* Week 3 Card */}
-            <div className="rounded-3xl bg-[#0B1E36] text-white border border-slate-800 shadow-xl overflow-hidden flex flex-col justify-between group hover:border-purple-500 transition-all">
+            <motion.div 
+              initial={{ opacity: 0, y: 50 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: "-40px" }}
+              transition={{ duration: 0.6, delay: 0.3, ease: "easeOut" }}
+              whileHover={{ y: -8, scale: 1.02, transition: { duration: 0.2 } }}
+              className="rounded-3xl bg-[#0B1E36] text-white border border-slate-800 shadow-xl overflow-hidden flex flex-col justify-between group hover:border-purple-500 transition-all cursor-pointer"
+            >
               <div>
                 <div className="h-44 relative bg-slate-900 overflow-hidden">
                   <img 
@@ -1153,10 +1180,17 @@ export default function LandingPage() {
                   <ArrowUpRight className="w-4 h-4" />
                 </a>
               </div>
-            </div>
+            </motion.div>
 
             {/* Week 4 Card */}
-            <div className="rounded-3xl bg-[#0B1E36] text-white border border-slate-800 shadow-xl overflow-hidden flex flex-col justify-between group hover:border-[#FF6B00] transition-all">
+            <motion.div 
+              initial={{ opacity: 0, x: 60, y: 30 }}
+              whileInView={{ opacity: 1, x: 0, y: 0 }}
+              viewport={{ once: true, margin: "-40px" }}
+              transition={{ duration: 0.6, delay: 0.4, ease: "easeOut" }}
+              whileHover={{ y: -8, scale: 1.02, transition: { duration: 0.2 } }}
+              className="rounded-3xl bg-[#0B1E36] text-white border border-slate-800 shadow-xl overflow-hidden flex flex-col justify-between group hover:border-[#FF6B00] transition-all cursor-pointer"
+            >
               <div>
                 <div className="h-44 relative bg-slate-900 overflow-hidden">
                   <img 
@@ -1191,7 +1225,7 @@ export default function LandingPage() {
                   <ArrowUpRight className="w-4 h-4" />
                 </a>
               </div>
-            </div>
+            </motion.div>
 
           </div>
 
