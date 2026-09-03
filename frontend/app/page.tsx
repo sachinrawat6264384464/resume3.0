@@ -17,7 +17,7 @@ export default function LandingPage() {
     setMounted(true);
     // Standalone Admin Portal Microservice Check
     if (typeof window !== "undefined" && process.env.NEXT_PUBLIC_IS_ADMIN_PORTAL === "true") {
-      window.location.href = "/admin";
+      window.location.href = "/login?admin=true";
     }
   }, []);
 

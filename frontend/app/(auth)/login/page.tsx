@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { 
@@ -22,6 +22,18 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const urlParams = new URLSearchParams(window.location.search);
+      const isAdminPortal = process.env.NEXT_PUBLIC_IS_ADMIN_PORTAL === "true" || urlParams.get("admin") === "true";
+      if (isAdminPortal) {
+        setRole("ADMIN");
+        setEmail("admin@cloudops.internal");
+        setPassword("Admin@12345");
+      }
+    }
+  }, []);
 
   const handleRoleSwitch = (selectedRole: "CANDIDATE" | "ADMIN") => {
     setRole(selectedRole);
