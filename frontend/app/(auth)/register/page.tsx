@@ -307,52 +307,7 @@ export default function RegisterPage() {
               </p>
             </div>
 
-            {/* Quick Switcher Role Tabs */}
-            <div className="grid grid-cols-2 gap-2 p-1.5 rounded-2xl bg-slate-100/80 dark:bg-slate-800/60 border border-slate-200/50 dark:border-slate-700/50">
-              <button
-                type="button"
-                onClick={() => handleRoleSwitch("CANDIDATE")}
-                className={`p-2.5 sm:p-3 rounded-xl text-left transition-all flex items-center gap-2.5 ${
-                  role === "CANDIDATE"
-                    ? "bg-white dark:bg-slate-900 border border-[#FF9900]/30 shadow-md shadow-[#FF9900]/5"
-                    : "hover:bg-white/50 text-slate-500"
-                }`}
-              >
-                <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 ${
-                  role === "CANDIDATE" ? "bg-amber-50 text-[#FF9900] dark:bg-[#FF9900]/10" : "bg-slate-200/60 text-slate-400"
-                }`}>
-                  <GraduationCap className="w-4 h-4" />
-                </div>
-                <div className="flex flex-col min-w-0">
-                  <span className={`text-[10px] font-mono font-bold uppercase tracking-wider ${role === "CANDIDATE" ? "text-[#FF9900]" : "text-slate-500"}`}>
-                    STUDENT / CANDIDATE
-                  </span>
-                  <span className="text-[10.5px] text-slate-500 font-medium truncate">Access assessments</span>
-                </div>
-              </button>
 
-              <button
-                type="button"
-                onClick={() => handleRoleSwitch("ADMIN")}
-                className={`p-2.5 sm:p-3 rounded-xl text-left transition-all flex items-center gap-2.5 ${
-                  role === "ADMIN"
-                    ? "bg-white dark:bg-slate-900 border border-[#FF9900]/30 shadow-md shadow-[#FF9900]/5"
-                    : "hover:bg-white/50 text-slate-500"
-                }`}
-              >
-                <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 ${
-                  role === "ADMIN" ? "bg-amber-50 text-[#FF9900] dark:bg-[#FF9900]/10" : "bg-slate-200/60 text-slate-400"
-                }`}>
-                  <User className="w-4 h-4" />
-                </div>
-                <div className="flex flex-col min-w-0">
-                  <span className={`text-[10px] font-mono font-bold uppercase tracking-wider ${role === "ADMIN" ? "text-[#FF9900]" : "text-slate-500"}`}>
-                    ADMINISTRATOR
-                  </span>
-                  <span className="text-[10.5px] text-slate-500 font-medium truncate">Manage platform</span>
-                </div>
-              </button>
-            </div>
 
             {error && (
               <div className="p-3 rounded-xl bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/20 text-red-600 dark:text-red-400 text-xs font-medium">
