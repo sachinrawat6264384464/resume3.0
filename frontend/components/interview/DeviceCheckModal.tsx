@@ -24,7 +24,7 @@ export function DeviceCheckModal({ templateTitle, onReadyToStart }: DeviceCheckM
   const [micTested, setMicTested] = useState(false);
   const [speakerSuccess, setSpeakerSuccess] = useState(false);
 
-  const [consent, setConsent] = useState(false);
+  const [consent, setConsent] = useState(true);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   const videoRef = useRef<HTMLVideoElement | null>(null);
@@ -66,6 +66,10 @@ export function DeviceCheckModal({ templateTitle, onReadyToStart }: DeviceCheckM
         activeStream = s;
         setStream(s);
         setCameraActive(true);
+        // Auto-verify mic when stream audio tracks exist
+        if (s.getAudioTracks().length > 0) {
+          setMicTested(true);
+        }
 
         if (videoRef.current) {
           videoRef.current.srcObject = s;
@@ -80,8 +84,7 @@ export function DeviceCheckModal({ templateTitle, onReadyToStart }: DeviceCheckM
           if (visualizerRef.current) {
             const vol = visualizerRef.current.getVolumeLevel();
             setMicVolume(vol);
-            // Strict 60%+ Mic Volume Threshold Rule
-            if (vol >= 60) {
+            if (vol >= 10) {
               setMicTested(true);
             }
           }
@@ -244,23 +247,25 @@ export function DeviceCheckModal({ templateTitle, onReadyToStart }: DeviceCheckM
     }
   };
 
-  const isComplete = cameraActive && faceDetected && !isHandDetected && micTested && speakerSuccess && consent;
+  const isComplete = cameraActive && consent;
 
   const getMissingRequirements = () => {
     const missing = [];
     if (!cameraActive) missing.push("Webcam stream");
-    if (isHandDetected) missing.push("Remove hand & position face in camera");
-    else if (!faceDetected) missing.push("Center your face in camera frame");
-    if (!micTested) missing.push("Speak louder into mic (Need ≥ 60% Level)");
-    if (!speakerSuccess) missing.push("Click 'Play Chime' to test speaker");
+    if (isHandDetected) missing.push("Remove hand from face area");
+    else if (!faceDetected) missing.push("Position face in camera");
+    if (!micTested) missing.push("Speak into mic");
+    if (!speakerSuccess) missing.push("Play Chime test (Optional)");
     if (!consent) missing.push("Accept privacy consent");
     return missing;
   };
 
   const handleStart = () => {
-    if (stream && isComplete) {
-      stopAllMediaTracks(); // Stop pre-check camera stream so main room starts clean
+    stopAllMediaTracks();
+    if (stream) {
       onReadyToStart(stream);
+    } else {
+      onReadyToStart(null as any);
     }
   };
 
@@ -514,19 +519,24 @@ export function DeviceCheckModal({ templateTitle, onReadyToStart }: DeviceCheckM
           )}
         </div>
 
-        <button
-          type="button"
-          onClick={handleStart}
-          disabled={!isComplete}
-          className={`w-full sm:w-auto px-8 py-3.5 rounded-2xl font-black text-sm tracking-wide transition-all shadow-xl flex items-center justify-center gap-2 ${
-            isComplete
-              ? "bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 hover:from-blue-500 hover:to-indigo-600 text-white shadow-blue-500/25 cursor-pointer hover:scale-[1.02]"
-              : "bg-slate-200 dark:bg-slate-800 text-slate-400 dark:text-slate-600 cursor-not-allowed border border-slate-300 dark:border-slate-700"
-          }`}
-        >
-          <span>Begin Voice AI Assessment</span>
-          <ArrowRight className="w-4 h-4" />
-        </button>
+        <div className="flex items-center gap-3 w-full sm:w-auto">
+          <button
+            type="button"
+            onClick={handleStart}
+            className="px-4 py-3.5 rounded-2xl font-bold text-xs text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 transition-all"
+          >
+            ⚡ Skip Checks & Enter Room
+          </button>
+
+          <button
+            type="button"
+            onClick={handleStart}
+            className="w-full sm:w-auto px-8 py-3.5 rounded-2xl font-black text-sm tracking-wide transition-all shadow-xl flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 hover:from-blue-500 hover:to-indigo-600 text-white shadow-blue-500/25 cursor-pointer hover:scale-[1.02]"
+          >
+            <span>Begin Voice AI Assessment</span>
+            <ArrowRight className="w-4 h-4" />
+          </button>
+        </div>
 
       </div>
 

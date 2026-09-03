@@ -51,10 +51,10 @@ export default function InterviewsPage() {
       if (res?.data?.id) {
         router.push(`/interviews/${res.data.id}/pre-check`);
       } else {
-        router.push(`/interviews/stage-${stageId}/room`);
+        router.push(`/interviews/stage-${stageId}/pre-check`);
       }
     } catch (e) {
-      router.push(`/interviews/stage-${stageId}/room`);
+      router.push(`/interviews/stage-${stageId}/pre-check`);
     } finally {
       setIsStarting(false);
     }

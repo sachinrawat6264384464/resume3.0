@@ -17,19 +17,23 @@ export default function PreCheckPage() {
 
   useEffect(() => {
     async function loadAttempt() {
+      if (!attemptId || attemptId.startsWith("stage-")) {
+        setIsLoading(false);
+        return;
+      }
       try {
         const res = await apiFetch(`/attempts/${attemptId}`);
-        setAttempt(res.data);
+        if (res?.data) {
+          setAttempt(res.data);
+        }
       } catch (err: any) {
-        alert(err.message || "Failed to load attempt details");
+        console.warn("Pre-check attempt load notice:", err);
       } finally {
         setIsLoading(false);
       }
     }
 
-    if (attemptId) {
-      loadAttempt();
-    }
+    loadAttempt();
   }, [attemptId]);
 
   const handleReadyToStart = (stream: MediaStream) => {

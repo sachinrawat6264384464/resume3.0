@@ -290,7 +290,8 @@ export default function InterviewRoomPage() {
   const handleStartRecording = () => {
     if (!stream) {
       enableCameraStream();
-      alert("Requesting Camera & Microphone permissions. Please allow access and click Start Verbal Answer again.");
+      // Show camera permission info in transcript area instead of blocking alert
+      setSpokenTranscript("[Camera/Mic required] Please allow camera & microphone access, then click Start Verbal Answer again.");
       return;
     }
     if (cancelSpeechRef.current) {
