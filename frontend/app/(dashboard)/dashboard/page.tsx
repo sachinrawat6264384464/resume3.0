@@ -11,7 +11,6 @@ import {
 } from "lucide-react";
 import { useAuthStore } from "@/lib/store";
 import { apiFetch } from "@/lib/api";
-import { Header } from "@/components/Header";
 
 export default function CandidateDashboardPage() {
   const router = useRouter();
@@ -106,9 +105,6 @@ export default function CandidateDashboardPage() {
   return (
     <div className="flex flex-col gap-6 max-w-[1400px] mx-auto pb-12 text-slate-900 dark:text-slate-100 font-sans">
       
-      {/* Interactive Global Header (Notifications & Profile Menu with Logout) */}
-      <Header />
-
       {/* TOP WELCOME TITLE */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
