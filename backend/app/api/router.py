@@ -10,6 +10,8 @@ from app.api.v1.admin import router as admin_router
 from app.api.v1.recordings import router as recordings_router
 from app.api.v1.resumes import router as resumes_router
 from app.api.v1.leaderboard import router as leaderboard_router
+from app.api.v1.study_planner import router as study_planner_router
+from app.api.v1.reminders import router as reminders_router
 
 api_router = APIRouter()
 
@@ -17,6 +19,8 @@ api_router.include_router(auth_router)
 api_router.include_router(candidates_router)
 api_router.include_router(resumes_router)
 api_router.include_router(leaderboard_router)
+api_router.include_router(study_planner_router)
+api_router.include_router(reminders_router)
 api_router.include_router(jd_router)
 api_router.include_router(interviews_router)
 api_router.include_router(questions_router)

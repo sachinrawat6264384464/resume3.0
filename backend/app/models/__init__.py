@@ -15,6 +15,10 @@ from app.models.roadmap import CandidateRoadmap
 from app.models.certificate import CandidateCertificate
 from app.models.support import SupportTicket
 from app.models.resume_audit import ResumeAudit
+from app.models.study_plan import StudyPlan
+from app.models.study_task import StudyTask
+from app.models.study_goal import StudyGoal
+from app.models.reminder import Reminder
 
 __all__ = [
     "Base",
@@ -35,5 +39,9 @@ __all__ = [
     "CandidateRoadmap",
     "CandidateCertificate",
     "SupportTicket",
-    "ResumeAudit"
+    "ResumeAudit",
+    "StudyPlan",
+    "StudyTask",
+    "StudyGoal",
+    "Reminder"
 ]

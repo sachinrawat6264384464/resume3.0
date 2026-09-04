@@ -6,7 +6,8 @@ import { usePathname, useRouter } from "next/navigation";
 import { 
   LayoutDashboard, CheckSquare, FileText, BarChart3, Trophy, 
   Map, Award, Settings, HelpCircle, LogOut, Cloud, Sparkles,
-  Users, CreditCard, Mail, HardDrive, Shield, Loader2, X
+  Users, CreditCard, Mail, HardDrive, Shield, Loader2, X,
+  Calendar, Bell
 } from "lucide-react";
 import { useAuthStore, useATSStore } from "@/lib/store";
 import { apiFetch } from "@/lib/api";
@@ -84,6 +85,8 @@ export function Sidebar({ isOpenMobile = false, onCloseMobile }: SidebarProps) {
     { label: "Candidate Dashboard", href: "/dashboard", icon: LayoutDashboard },
     { label: "Interview Stages", href: "/interviews", icon: CheckSquare },
     { label: "Resume ATS Audit", href: "/resume-ats", icon: FileText },
+    { label: "Study Planner", href: "/study-planner", icon: Calendar },
+    { label: "Smart Reminders", href: "/reminders", icon: Bell },
     { label: "My Progress & Matrix", href: "/performance", icon: BarChart3 },
     { label: "Leaderboard", href: "/leaderboard", icon: Trophy },
     { label: "Career Roadmap", href: "/roadmap", icon: Map },

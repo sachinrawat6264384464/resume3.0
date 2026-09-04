@@ -389,6 +389,29 @@ async def get_dashboard_metrics(
         for r in roadmap_items
     ]
 
+    # 7. Real Today Study Tasks & Unread Reminders Count from Database
+    now_utc = datetime.now(timezone.utc)
+    today_start = datetime(now_utc.year, now_utc.month, now_utc.day, tzinfo=timezone.utc)
+    today_end = today_start + timedelta(days=1)
+
+    stmt_st = select(func.count(StudyTask.id)).where(
+        and_(
+            StudyTask.candidate_id == cand.id,
+            StudyTask.scheduled_date >= today_start,
+            StudyTask.scheduled_date < today_end,
+            StudyTask.status == "TODO"
+        )
+    )
+    today_study_tasks_count = (await db.execute(stmt_st)).scalar() or 0
+
+    stmt_rem = select(func.count(Reminder.id)).where(
+        and_(
+            Reminder.candidate_id == cand.id,
+            Reminder.status == "ACTIVE"
+        )
+    )
+    unread_reminders_count = (await db.execute(stmt_rem)).scalar() or 0
+
     # Return 100% DB-driven metrics
     metrics = {
         "readiness_score": computed_readiness,
@@ -407,7 +430,9 @@ async def get_dashboard_metrics(
             "time": "10:00 AM"
         },
         "leaderboard": leaderboard_data,
-        "roadmap": roadmap_data
+        "roadmap": roadmap_data,
+        "today_study_tasks_count": today_study_tasks_count,
+        "unread_reminders_count": unread_reminders_count
     }
 
     return StandardResponse(data=metrics)

@@ -166,7 +166,9 @@ export default function CandidateDashboardPage() {
   const servicesList = [
     { name: "Interview Stages", href: "/interviews", icon: Layers, badge: "5 Stages Active", color: "text-[#FF9900]" },
     { name: "Resume ATS Audit", href: "/resume-ats", icon: FileText, badge: `${Math.round(resumeAts.score)}% ATS Score`, color: "text-amber-500" },
-    { name: "My Progress & Matrix", href: "/performance", icon: BarChart2, badge: `${readiness}% Readiness`, color: "text-emerald-500" },
+    { name: "Study Planner", href: "/study-planner", icon: Calendar, badge: `${activeMetrics?.today_study_tasks_count ?? 0} Today Tasks`, color: "text-orange-500" },
+    { name: "Smart Reminders", href: "/reminders", icon: Bell, badge: `${activeMetrics?.unread_reminders_count ?? 0} Active Alerts`, color: "text-red-500" },
+    { name: "My Progress", href: "/performance", icon: BarChart2, badge: `${readiness}% Readiness`, color: "text-emerald-500" },
     { name: "Leaderboard", href: "/leaderboard", icon: Trophy, badge: `${userXp} XP Rank`, color: "text-amber-400" },
     { name: "Career Roadmap", href: "/roadmap", icon: Compass, badge: "30-Day Plan", color: "text-purple-500" },
     { name: "Settings", href: "/settings", icon: Settings, badge: "Configured", color: "text-blue-500" },
@@ -179,7 +181,7 @@ export default function CandidateDashboardPage() {
       {/* TOP WELCOME TITLE */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-black tracking-tight text-slate-900 dark:text-white flex items-center gap-2">
+          <h1 className="text-2xl font-black tracking-tight text-slate-900 dark:text-[#FF9900] flex items-center gap-2">
             Welcome back, {candidateName.split(' ')[0]} 👋
           </h1>
           <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mt-0.5">
@@ -199,7 +201,7 @@ export default function CandidateDashboardPage() {
         </div>
       </div>
 
-      {/* 7 CANDIDATE SERVICES QUICK COMMAND CENTER HUB */}
+      {/* CANDIDATE SERVICES QUICK COMMAND CENTER HUB */}
       <div className="bg-white dark:bg-slate-900 rounded-[24px] border border-slate-200 dark:border-slate-800 p-4 shadow-sm">
         <div className="flex items-center justify-between mb-3 px-1">
           <span className="text-xs font-black text-slate-900 dark:text-white tracking-wide uppercase flex items-center gap-2">
@@ -207,11 +209,11 @@ export default function CandidateDashboardPage() {
             Candidate Services & Command Center
           </span>
           <span className="text-[11px] font-bold text-slate-400">
-            All 7 Services Connected Live
+            All 9 Services Connected Live to PostgreSQL
           </span>
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2.5">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-9 gap-2">
           {servicesList.map((svc, idx) => {
             const IconComp = svc.icon;
             return (
@@ -219,15 +221,15 @@ export default function CandidateDashboardPage() {
                 key={idx} 
                 prefetch={false}
                 href={svc.href}
-                className="flex flex-col items-center justify-between p-3 rounded-2xl bg-slate-50/70 dark:bg-slate-800/40 border border-slate-200/60 dark:border-slate-800 hover:border-[#FF9900]/60 hover:bg-amber-50/40 dark:hover:bg-amber-950/20 transition-all text-center group"
+                className="flex flex-col items-center justify-between p-2.5 rounded-2xl bg-slate-50/70 dark:bg-slate-800/40 border border-slate-200/60 dark:border-slate-800 hover:border-[#FF9900]/60 hover:bg-amber-50/40 dark:hover:bg-amber-950/20 transition-all text-center group"
               >
-                <div className="p-2 rounded-xl bg-white dark:bg-slate-900 shadow-xs mb-2 group-hover:scale-110 transition-transform">
+                <div className="p-2 rounded-xl bg-white dark:bg-slate-900 shadow-xs mb-1.5 group-hover:scale-110 transition-transform">
                   <IconComp className={`w-4 h-4 ${svc.color}`} />
                 </div>
-                <span className="text-[11px] font-black text-slate-900 dark:text-white leading-tight mb-1">
+                <span className="text-[10.5px] font-black text-slate-900 dark:text-white leading-tight mb-1 truncate max-w-[100px]" title={svc.name}>
                   {svc.name}
                 </span>
-                <span className="text-[9.5px] font-extrabold px-1.5 py-0.5 rounded-md bg-white/80 dark:bg-slate-900/80 text-slate-500 dark:text-slate-400 border border-slate-200/50 dark:border-slate-800 shrink-0">
+                <span className="text-[9px] font-extrabold px-1.5 py-0.5 rounded-md bg-white/80 dark:bg-slate-900/80 text-slate-500 dark:text-slate-400 border border-slate-200/50 dark:border-slate-800 shrink-0 truncate max-w-[100px]">
                   {svc.badge}
                 </span>
               </Link>
