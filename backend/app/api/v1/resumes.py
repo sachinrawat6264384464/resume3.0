@@ -28,28 +28,35 @@ async def parse_and_match_resume(
 ):
     text = ""
     cloud_url = None
+    upload_task = None
+
     if file:
         file_bytes = await file.read()
         text = ResumeService.extract_text_from_file_bytes(file_bytes, file.filename or "resume.pdf")
         
-        try:
-            import asyncio
-            from app.storage import get_storage_provider
-            storage = get_storage_provider()
-            upload_res = await asyncio.wait_for(
-                storage.upload_file(
-                    file_bytes=file_bytes,
-                    file_name=file.filename or "resume.pdf",
-                    org_id="default",
-                    candidate_id="resumes",
-                    attempt_id="ats_analysis",
-                    mime_type=file.content_type or "application/pdf"
-                ),
-                timeout=4.0
-            )
-            cloud_url = upload_res.get("view_url")
-        except Exception as e:
-            print(f"Cloudinary storage notice ({e}), proceeding with analysis.")
+        async def _do_upload():
+            try:
+                import asyncio
+                from app.storage import get_storage_provider
+                storage = get_storage_provider()
+                upload_res = await asyncio.wait_for(
+                    storage.upload_file(
+                        file_bytes=file_bytes,
+                        file_name=file.filename or "resume.pdf",
+                        org_id="default",
+                        candidate_id="resumes",
+                        attempt_id="ats_analysis",
+                        mime_type=file.content_type or "application/pdf"
+                    ),
+                    timeout=2.5
+                )
+                return upload_res.get("view_url")
+            except Exception as e:
+                print(f"Cloudinary storage notice ({e}), proceeding with analysis.")
+                return None
+
+        import asyncio
+        upload_task = asyncio.create_task(_do_upload())
 
     elif resume_text:
         text = resume_text.strip()
@@ -60,11 +67,20 @@ async def parse_and_match_resume(
         )
 
     resume_svc = ResumeService(db)
-    result = await resume_svc.analyze_and_match(
-        resume_text=text,
-        job_title=job_title or "CloudOps / DevOps Engineer",
-        job_description=job_description
+    import asyncio
+    analysis_task = asyncio.create_task(
+        resume_svc.analyze_and_match(
+            resume_text=text,
+            job_title=job_title or "CloudOps / DevOps Engineer",
+            job_description=job_description
+        )
     )
+
+    if upload_task:
+        cloud_url, result = await asyncio.gather(upload_task, analysis_task)
+    else:
+        result = await analysis_task
+
     result.cloudinary_url = cloud_url
 
     # Persist ResumeAudit into Database
