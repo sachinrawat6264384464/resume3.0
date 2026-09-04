@@ -321,17 +321,12 @@ async def get_dashboard_metrics(
         if not skills_detected:
             skills_detected = ["Linux Admin", "AWS IAM & VPC", "Docker Containers", "Kubernetes EKS", "Terraform IaC"]
 
-        if ats_score_val == 0 and (cand.xp or 0) > 0:
-            ats_score_val = min(94.0, round(62.0 + ((cand.xp or 0) / 750) * 26.0, 1))
-
-        skills_matched_count = min(24, max(5, int(5 + ((cand.xp or 0) / 750) * 17))) if (cand.xp or 0) > 0 else 0
-
         resume_ats = {
-            "score": ats_score_val,
+            "score": round(ats_score_val, 1),
             "matched_jd": cand.target_role or "Senior DevOps Engineer",
-            "skills_matched": f"{skills_matched_count} / 24" if ats_score_val > 0 else "0 / 24",
+            "skills_matched": f"{min(24, int(5 + ((cand.xp or 0) / 750) * 17))} / 24" if ats_score_val > 0 else "0 / 0",
             "keywords_found": f"{int(ats_score_val * 0.95)}%" if ats_score_val > 0 else "0%",
-            "ats_score": f"{int(ats_score_val)} / 100" if ats_score_val > 0 else "0 / 100"
+            "ats_score": f"{round(ats_score_val, 1)} / 100" if ats_score_val > 0 else "0 / 100"
         }
 
     # 5. Real Top 3 Leaderboard from Database
@@ -650,11 +645,14 @@ async def get_my_performance(
         ("Week 4", "Live Troubleshooting")
     ]
 
+    factors = [0.70, 0.82, 0.92, 1.00]
     for idx, (w_label, w_note) in enumerate(labels):
         if idx < len(stage_atts) and stage_atts[idx].score:
             s_val = int(stage_atts[idx].score)
         elif evaluated_q:
-            s_val = int(readiness_score)
+            s_val = max(10, int(readiness_score * factors[idx]))
+        elif readiness_score > 0:
+            s_val = max(10, int(readiness_score * factors[idx]))
         else:
             s_val = 0
 
