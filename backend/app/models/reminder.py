@@ -1,9 +1,13 @@
-from sqlalchemy import Column, String, ForeignKey, Text, DateTime
+from sqlalchemy import Column, String, ForeignKey, Text, DateTime, Index
 from sqlalchemy.orm import relationship
 from app.models.base import TimeStampedModel
 
 class Reminder(TimeStampedModel):
     __tablename__ = "reminders"
+    __table_args__ = (
+        Index("idx_reminders_cand_status", "candidate_id", "status"),
+        Index("idx_reminders_cand_due", "candidate_id", "due_at"),
+    )
 
     candidate_id = Column(String(36), ForeignKey("candidates.id", ondelete="CASCADE"), nullable=False, index=True)
     type = Column(String(50), default="STUDY", nullable=False, index=True) # INTERVIEW, STUDY, ROADMAP, GOAL, RESUME, STREAK, SYSTEM, AI_RECOMMENDATION

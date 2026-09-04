@@ -12,6 +12,18 @@ from app.ai.prompts import (
 from app.schemas.evaluation import QuestionEvaluationResult
 from app.core.config import settings
 
+# Shared persistent HTTP client with keepalive pooling for low latency
+_persistent_client: Optional[httpx.AsyncClient] = None
+
+def get_ai_http_client() -> httpx.AsyncClient:
+    global _persistent_client
+    if _persistent_client is None or _persistent_client.is_closed:
+        _persistent_client = httpx.AsyncClient(
+            timeout=60.0,
+            limits=httpx.Limits(max_keepalive_connections=20, max_connections=50)
+        )
+    return _persistent_client
+
 class OpenAIProvider(AIProvider):
     """
     Provider for OpenAI API and OpenAI-compatible API servers (vLLM, LiteLLM, DeepSeek, LocalAI).
@@ -30,24 +42,24 @@ class OpenAIProvider(AIProvider):
                 "Authorization": f"Bearer {self.api_key}",
                 "Content-Type": "application/json"
             }
-            async with httpx.AsyncClient(timeout=60.0) as client:
-                res = await client.post(
-                    f"{self.base_url}/chat/completions",
-                    headers=headers,
-                    json={
-                        "model": self.model,
-                        "messages": [
-                            {"role": "system", "content": "You are a CloudOps assessment AI engine. Respond ONLY with valid JSON."},
-                            {"role": "user", "content": prompt}
-                        ],
-                        "response_format": {"type": "json_object"},
-                        "temperature": 0.3
-                    }
-                )
-                if res.status_code == 200:
-                    data = res.json()
-                    content = data["choices"][0]["message"]["content"]
-                    return json.loads(content)
+            client = get_ai_http_client()
+            res = await client.post(
+                f"{self.base_url}/chat/completions",
+                headers=headers,
+                json={
+                    "model": self.model,
+                    "messages": [
+                        {"role": "system", "content": "You are a CloudOps assessment AI engine. Respond ONLY with valid JSON."},
+                        {"role": "user", "content": prompt}
+                    ],
+                    "response_format": {"type": "json_object"},
+                    "temperature": 0.3
+                }
+            )
+            if res.status_code == 200:
+                data = res.json()
+                content = data["choices"][0]["message"]["content"]
+                return json.loads(content)
         except Exception as e:
             print(f"OpenAI completion failed ({e}), falling back to mock provider.")
         return {}

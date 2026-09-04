@@ -1,3 +1,4 @@
+import asyncio
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func, and_, or_, desc
 from datetime import datetime, timedelta, timezone
@@ -67,8 +68,6 @@ class ReminderService:
         stmt_active = select(func.count(Reminder.id)).where(
             and_(Reminder.candidate_id == candidate_id, Reminder.status == "ACTIVE")
         )
-        active_count = (await self.db.execute(stmt_active)).scalar() or 0
-
         stmt_due_today = select(func.count(Reminder.id)).where(
             and_(
                 Reminder.candidate_id == candidate_id,
@@ -77,8 +76,6 @@ class ReminderService:
                 Reminder.due_at < today_end
             )
         )
-        due_today_count = (await self.db.execute(stmt_due_today)).scalar() or 0
-
         stmt_upcoming = select(func.count(Reminder.id)).where(
             and_(
                 Reminder.candidate_id == candidate_id,
@@ -86,30 +83,32 @@ class ReminderService:
                 Reminder.due_at >= today_end
             )
         )
-        upcoming_count = (await self.db.execute(stmt_upcoming)).scalar() or 0
-
         stmt_completed = select(func.count(Reminder.id)).where(
             and_(Reminder.candidate_id == candidate_id, Reminder.status == "COMPLETED")
         )
-        completed_count = (await self.db.execute(stmt_completed)).scalar() or 0
-
         stmt_snoozed = select(func.count(Reminder.id)).where(
             and_(Reminder.candidate_id == candidate_id, Reminder.status == "SNOOZED")
         )
-        snoozed_count = (await self.db.execute(stmt_snoozed)).scalar() or 0
-
         stmt_unread = select(func.count(Reminder.id)).where(
             and_(Reminder.candidate_id == candidate_id, Reminder.status == "ACTIVE", Reminder.read_at.is_(None))
         )
-        unread_count = (await self.db.execute(stmt_unread)).scalar() or 0
+
+        res_active, res_due, res_up, res_comp, res_snooze, res_unread = await asyncio.gather(
+            self.db.execute(stmt_active),
+            self.db.execute(stmt_due_today),
+            self.db.execute(stmt_upcoming),
+            self.db.execute(stmt_completed),
+            self.db.execute(stmt_snoozed),
+            self.db.execute(stmt_unread)
+        )
 
         return {
-            "active_count": active_count,
-            "due_today_count": due_today_count,
-            "upcoming_count": upcoming_count,
-            "completed_count": completed_count,
-            "snoozed_count": snoozed_count,
-            "unread_count": unread_count
+            "active_count": res_active.scalar() or 0,
+            "due_today_count": res_due.scalar() or 0,
+            "upcoming_count": res_up.scalar() or 0,
+            "completed_count": res_comp.scalar() or 0,
+            "snoozed_count": res_snooze.scalar() or 0,
+            "unread_count": res_unread.scalar() or 0
         }
 
     async def create_reminder(self, candidate_id: str, rem_in: ReminderCreate) -> Reminder:

@@ -1,9 +1,13 @@
-from sqlalchemy import Column, String, ForeignKey, Text, Integer, DateTime
+from sqlalchemy import Column, String, ForeignKey, Text, Integer, DateTime, Index
 from sqlalchemy.orm import relationship
 from app.models.base import TimeStampedModel
 
 class StudyTask(TimeStampedModel):
     __tablename__ = "study_tasks"
+    __table_args__ = (
+        Index("idx_study_tasks_cand_date", "candidate_id", "scheduled_date"),
+        Index("idx_study_tasks_cand_status", "candidate_id", "status"),
+    )
 
     candidate_id = Column(String(36), ForeignKey("candidates.id", ondelete="CASCADE"), nullable=False, index=True)
     study_plan_id = Column(String(36), ForeignKey("study_plans.id", ondelete="SET NULL"), nullable=True, index=True)

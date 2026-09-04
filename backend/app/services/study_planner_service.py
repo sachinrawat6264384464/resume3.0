@@ -1,3 +1,4 @@
+import asyncio
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func, and_, or_, desc
 from datetime import datetime, timedelta, timezone
@@ -61,11 +62,9 @@ class StudyPlannerService:
         now = datetime.now(timezone.utc)
         today_start = datetime(now.year, now.month, now.day, tzinfo=timezone.utc)
         today_end = today_start + timedelta(days=1)
-        
-        # Start of current week (Monday)
         start_of_week = today_start - timedelta(days=today_start.weekday())
 
-        # Today's tasks
+        # Build 7 parallel SQL query statements
         stmt_today = select(func.count(StudyTask.id)).where(
             and_(
                 StudyTask.candidate_id == candidate_id,
@@ -73,27 +72,18 @@ class StudyPlannerService:
                 StudyTask.scheduled_date < today_end
             )
         )
-        todays_tasks_count = (await self.db.execute(stmt_today)).scalar() or 0
-
-        # Completed tasks total
         stmt_completed = select(func.count(StudyTask.id)).where(
             and_(
                 StudyTask.candidate_id == candidate_id,
                 StudyTask.status == "COMPLETED"
             )
         )
-        completed_tasks_count = (await self.db.execute(stmt_completed)).scalar() or 0
-
-        # Pending tasks total
         stmt_pending = select(func.count(StudyTask.id)).where(
             and_(
                 StudyTask.candidate_id == candidate_id,
                 StudyTask.status.in_(["TODO", "IN_PROGRESS", "OVERDUE"])
             )
         )
-        pending_tasks_count = (await self.db.execute(stmt_pending)).scalar() or 0
-
-        # Weekly study hours completed
         stmt_weekly_mins = select(func.sum(StudyTask.duration_minutes)).where(
             and_(
                 StudyTask.candidate_id == candidate_id,
@@ -101,18 +91,12 @@ class StudyPlannerService:
                 StudyTask.completed_at >= start_of_week
             )
         )
-        weekly_mins = (await self.db.execute(stmt_weekly_mins)).scalar() or 0
-        weekly_study_hours = round(weekly_mins / 60.0, 1)
-
-        # Weekly total tasks planned vs completed
         stmt_weekly_all = select(func.count(StudyTask.id)).where(
             and_(
                 StudyTask.candidate_id == candidate_id,
                 StudyTask.scheduled_date >= start_of_week
             )
         )
-        weekly_all_count = (await self.db.execute(stmt_weekly_all)).scalar() or 0
-        
         stmt_weekly_done = select(func.count(StudyTask.id)).where(
             and_(
                 StudyTask.candidate_id == candidate_id,
@@ -120,13 +104,29 @@ class StudyPlannerService:
                 StudyTask.status == "COMPLETED"
             )
         )
-        weekly_done_count = (await self.db.execute(stmt_weekly_done)).scalar() or 0
+        stmt_cand = select(Candidate).where(Candidate.id == candidate_id)
 
+        # Execute all 7 DB queries concurrently in parallel over async pool
+        res_today, res_completed, res_pending, res_mins, res_wall, res_wdone, res_cand = await asyncio.gather(
+            self.db.execute(stmt_today),
+            self.db.execute(stmt_completed),
+            self.db.execute(stmt_pending),
+            self.db.execute(stmt_weekly_mins),
+            self.db.execute(stmt_weekly_all),
+            self.db.execute(stmt_weekly_done),
+            self.db.execute(stmt_cand)
+        )
+
+        todays_tasks_count = res_today.scalar() or 0
+        completed_tasks_count = res_completed.scalar() or 0
+        pending_tasks_count = res_pending.scalar() or 0
+        weekly_mins = res_mins.scalar() or 0
+        weekly_study_hours = round(weekly_mins / 60.0, 1)
+        weekly_all_count = res_wall.scalar() or 0
+        weekly_done_count = res_wdone.scalar() or 0
         weekly_completion_pct = round((weekly_done_count / weekly_all_count * 100.0), 1) if weekly_all_count > 0 else 0.0
 
-        # Fetch candidate for streak
-        stmt_cand = select(Candidate).where(Candidate.id == candidate_id)
-        cand = (await self.db.execute(stmt_cand)).scalar_one_or_none()
+        cand = res_cand.scalar_one_or_none()
         current_streak = cand.streak_days if cand else 1
 
         return {
