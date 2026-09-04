@@ -575,6 +575,8 @@ CERTIFICATIONS
           )}
 
         </div>
+      )}
+
       {/* FULL SCREEN ANIMATED AI PROCESSING MODAL OVERLAY */}
       {isLoading && (
         <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 flex items-center justify-center p-4 animate-fadeIn">
