@@ -13,6 +13,11 @@ class AuthService:
     def __init__(self, db: AsyncSession):
         self.db = db
 
+    async def get_user_by_id(self, user_id: str) -> Optional[User]:
+        stmt = select(User).where(User.id == user_id)
+        result = await self.db.execute(stmt)
+        return result.scalar_one_or_none()
+
     async def get_or_create_default_org(self) -> Organization:
         stmt = select(Organization).where(Organization.slug == "default")
         result = await self.db.execute(stmt)
