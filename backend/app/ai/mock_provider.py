@@ -529,3 +529,77 @@ class MockAIProvider(AIProvider):
                 "hint_level_2": f"Consider which commands or telemetry metrics you would inspect first to diagnose this in a live environment.",
                 "hint_level_3": f"Structure your response with: Problem Context -> Diagnostic Steps -> Solution Implementation -> Long-term Prevention."
             }
+
+    async def generate_study_plan(self, target_role: str, available_hours: int, focus_skills: List[str]) -> List[Dict[str, Any]]:
+        s1 = focus_skills[0] if focus_skills else "AWS IAM & IRSA Roles"
+        s2 = focus_skills[1] if len(focus_skills) > 1 else "Kubernetes EKS Architecture"
+        s3 = focus_skills[2] if len(focus_skills) > 2 else "Terraform State Locking"
+
+        return [
+            {
+                "title": f"Mastery & Troubleshooting: {s1}",
+                "category": "Linux & Systems",
+                "skill": s1,
+                "difficulty": "INTERMEDIATE",
+                "priority": "HIGH",
+                "duration": 60,
+                "xp": 75,
+                "days_offset": 0,
+                "time": "09:00 AM",
+                "roadmap_stage": 1,
+                "interview_stage": 2
+            },
+            {
+                "title": f"Production Incident Simulation: {s2}",
+                "category": "Multi-Cloud",
+                "skill": s2,
+                "difficulty": "ADVANCED",
+                "priority": "HIGH",
+                "duration": 90,
+                "xp": 100,
+                "days_offset": 1,
+                "time": "10:30 AM",
+                "roadmap_stage": 2,
+                "interview_stage": 3
+            },
+            {
+                "title": f"Deep Dive Lab: {s3}",
+                "category": "Containers & K8s",
+                "skill": s3,
+                "difficulty": "ADVANCED",
+                "priority": "MEDIUM",
+                "duration": 75,
+                "xp": 80,
+                "days_offset": 2,
+                "time": "02:00 PM",
+                "roadmap_stage": 3,
+                "interview_stage": 4
+            },
+            {
+                "title": "CI/CD Pipeline Failure & Helm Rollback Exercise",
+                "category": "DevOps & CI/CD",
+                "skill": "GitHub Actions & Helm",
+                "difficulty": "INTERMEDIATE",
+                "priority": "MEDIUM",
+                "duration": 60,
+                "xp": 60,
+                "days_offset": 3,
+                "time": "04:00 PM",
+                "roadmap_stage": 4,
+                "interview_stage": 4
+            },
+            {
+                "title": "Full Outage Boss Battle Preparation (Stage 5 Review)",
+                "category": "Site Reliability",
+                "skill": "Production RCA & Outage Triage",
+                "difficulty": "ADVANCED",
+                "priority": "HIGH",
+                "duration": 90,
+                "xp": 120,
+                "days_offset": 4,
+                "time": "11:00 AM",
+                "roadmap_stage": 5,
+                "interview_stage": 5
+            }
+        ]
+

@@ -7,7 +7,7 @@ from app.ai.confidence_analyzer import analyze_communication_signals
 from app.ai.prompts import (
     JD_EXTRACTION_PROMPT, QUESTION_GENERATION_PROMPT, ANSWER_EVALUATION_PROMPT,
     REPORT_SYNTHESIS_PROMPT, RESUME_EXTRACTION_PROMPT, RESUME_ATS_MATCH_PROMPT,
-    RESUME_BULLET_IMPROVEMENT_PROMPT, QUESTION_HINTS_PROMPT
+    RESUME_BULLET_IMPROVEMENT_PROMPT, QUESTION_HINTS_PROMPT, STUDY_PLAN_GENERATION_PROMPT
 )
 from app.schemas.evaluation import QuestionEvaluationResult
 from app.core.config import settings
@@ -151,3 +151,15 @@ class OpenAIProvider(AIProvider):
         if res and "hint_level_1" in res:
             return res
         return await self.fallback.generate_question_hints(question_text, expected_topics)
+
+    async def generate_study_plan(self, target_role: str, available_hours: int, focus_skills: List[str]) -> List[Dict[str, Any]]:
+        prompt = STUDY_PLAN_GENERATION_PROMPT.format(
+            target_role=target_role,
+            available_hours=available_hours,
+            focus_skills=", ".join(focus_skills)
+        )
+        res = await self._generate_json(prompt)
+        if res and "tasks" in res and isinstance(res["tasks"], list) and len(res["tasks"]) > 0:
+            return res["tasks"]
+        return await self.fallback.generate_study_plan(target_role, available_hours, focus_skills)
+

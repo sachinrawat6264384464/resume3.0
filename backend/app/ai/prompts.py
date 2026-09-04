@@ -304,3 +304,33 @@ Return ONLY a JSON object with this schema:
   "hint_level_3": "Follow the triage flow: Pod events -> OOMKilled vs Application exception -> Liveness probe misconfiguration -> Resource limits adjustment."
 }}
 """
+
+STUDY_PLAN_GENERATION_PROMPT = """
+You are an expert CloudOps & DevOps Career Coach.
+Generate a structured 5-task personalized study plan for a candidate targeting the role of '{target_role}'.
+
+Candidate Profile & Detected Gaps:
+- Target Role: {target_role}
+- Available Hours Per Week: {available_hours}
+- Detected Skill Gaps & Weak Areas: {focus_skills}
+
+Return ONLY a JSON object with this exact schema:
+{{
+  "tasks": [
+    {{
+      "title": "Mastery & Troubleshooting: Topic Name",
+      "category": "Linux & Systems",
+      "skill": "Specific Skill Name",
+      "difficulty": "INTERMEDIATE",
+      "priority": "HIGH",
+      "duration": 60,
+      "xp": 75,
+      "days_offset": 0,
+      "time": "09:00 AM",
+      "roadmap_stage": 1,
+      "interview_stage": 2
+    }}
+  ]
+}}
+"""
+

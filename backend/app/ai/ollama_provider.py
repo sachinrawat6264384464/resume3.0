@@ -94,3 +94,19 @@ class OllamaAIProvider(AIProvider):
         if res and "thirty_day_plan" in res:
             return res
         return await self.fallback.generate_feedback_and_plan(role, stage_scores, question_evaluations)
+
+    async def extract_resume_profile(self, resume_text: str) -> Dict[str, Any]:
+        return await self.fallback.extract_resume_profile(resume_text)
+
+    async def match_resume_ats(self, job_title: str, job_description: str, resume_profile: Dict[str, Any]) -> Dict[str, Any]:
+        return await self.fallback.match_resume_ats(job_title, job_description, resume_profile)
+
+    async def improve_resume_bullet(self, role: str, current_bullet: str, keywords: str = "") -> Dict[str, Any]:
+        return await self.fallback.improve_resume_bullet(role, current_bullet, keywords)
+
+    async def generate_question_hints(self, question_text: str, expected_topics: List[str]) -> Dict[str, str]:
+        return await self.fallback.generate_question_hints(question_text, expected_topics)
+
+    async def generate_study_plan(self, target_role: str, available_hours: int, focus_skills: List[str]) -> List[Dict[str, Any]]:
+        return await self.fallback.generate_study_plan(target_role, available_hours, focus_skills)
+

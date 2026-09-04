@@ -68,3 +68,9 @@ class AIProvider(ABC):
     async def generate_question_hints(self, question_text: str, expected_topics: List[str]) -> Dict[str, str]:
         """Generates 3 progressive hint levels (clue, commands/tools, solution walkthrough)."""
         pass
+
+    @abstractmethod
+    async def generate_study_plan(self, target_role: str, available_hours: int, focus_skills: List[str]) -> List[Dict[str, Any]]:
+        """Generates structured 5-day study plan tasks tailored to detected skill gaps."""
+        pass
+

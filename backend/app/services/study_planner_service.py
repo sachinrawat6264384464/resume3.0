@@ -15,6 +15,7 @@ from app.models.resume_audit import ResumeAudit
 from app.schemas.study_planner import (
     StudyTaskCreate, StudyTaskUpdate, StudyGoalCreate, AIPlanRequest
 )
+from app.ai import get_ai_provider
 
 class StudyPlannerService:
     def __init__(self, db: AsyncSession):
@@ -376,77 +377,18 @@ class StudyPlannerService:
         now = datetime.now(timezone.utc)
         today_start = datetime(now.year, now.month, now.day, tzinfo=timezone.utc)
 
-        ai_templates = [
-            {
-                "title": f"Mastery & Troubleshooting: {focus_skills[0] if len(focus_skills) > 0 else 'Linux SystemD'}",
-                "category": "Linux & Systems",
-                "skill": focus_skills[0] if len(focus_skills) > 0 else "Linux Admin",
-                "difficulty": "INTERMEDIATE",
-                "priority": "HIGH",
-                "duration": 60,
-                "xp": 75,
-                "days_offset": 0,
-                "time": "09:00 AM",
-                "roadmap_stage": 1,
-                "interview_stage": 2
-            },
-            {
-                "title": f"Production Incident Simulation: {focus_skills[1] if len(focus_skills) > 1 else 'AWS VPC'}",
-                "category": "Multi-Cloud",
-                "skill": focus_skills[1] if len(focus_skills) > 1 else "AWS VPC Networking",
-                "difficulty": "ADVANCED",
-                "priority": "HIGH",
-                "duration": 90,
-                "xp": 100,
-                "days_offset": 1,
-                "time": "10:30 AM",
-                "roadmap_stage": 2,
-                "interview_stage": 3
-            },
-            {
-                "title": f"Deep Dive Lab: {focus_skills[2] if len(focus_skills) > 2 else 'Kubernetes EKS'}",
-                "category": "Containers & K8s",
-                "skill": focus_skills[2] if len(focus_skills) > 2 else "Kubernetes Deployments",
-                "difficulty": "ADVANCED",
-                "priority": "MEDIUM",
-                "duration": 75,
-                "xp": 80,
-                "days_offset": 2,
-                "time": "02:00 PM",
-                "roadmap_stage": 3,
-                "interview_stage": 4
-            },
-            {
-                "title": "CI/CD Pipeline Failure & Helm Rollback Exercise",
-                "category": "DevOps & CI/CD",
-                "skill": "GitHub Actions & Helm",
-                "difficulty": "INTERMEDIATE",
-                "priority": "MEDIUM",
-                "duration": 60,
-                "xp": 60,
-                "days_offset": 3,
-                "time": "04:00 PM",
-                "roadmap_stage": 4,
-                "interview_stage": 4
-            },
-            {
-                "title": "Full Outage Boss Battle Preparation (Stage 5 Review)",
-                "category": "Site Reliability",
-                "skill": "Production RCA & Outage Triage",
-                "difficulty": "ADVANCED",
-                "priority": "HIGH",
-                "duration": 90,
-                "xp": 120,
-                "days_offset": 4,
-                "time": "11:00 AM",
-                "roadmap_stage": 5,
-                "interview_stage": 5
-            }
-        ]
+        ai_provider = get_ai_provider()
+        ai_templates = await ai_provider.generate_study_plan(
+            target_role=target_role,
+            available_hours=req.available_weekly_hours or 15,
+            focus_skills=focus_skills
+        )
 
         created_tasks = []
         for tspec in ai_templates:
-            task_date = today_start + timedelta(days=tspec["days_offset"])
+            days_off = tspec.get("days_offset", 0)
+            task_date = today_start + timedelta(days=days_off)
+
             task = StudyTask(
                 id=str(uuid.uuid4()),
                 candidate_id=candidate_id,
