@@ -61,6 +61,7 @@ class ResumeATSResponse(BaseSchema):
     candidate_profile: ResumeProfile
     bullet_suggestions: List[BulletImprovementItem]
     cloudinary_url: Optional[str] = None
+    job_title: Optional[str] = "Senior DevOps Engineer"
 
 class BulletImprovementRequest(BaseModel):
     role: str = "CloudOps / DevOps Engineer"

@@ -23,7 +23,7 @@ async def parse_and_match_resume(
     resume_text: Optional[str] = Form(None),
     job_title: Optional[str] = Form("CloudOps / DevOps Engineer"),
     job_description: Optional[str] = Form(None),
-    payload: Optional[dict] = Depends(verify_optional_auth_token),
+    payload: dict = Depends(verify_auth_token),
     db: AsyncSession = Depends(get_db)
 ):
     text = ""
@@ -82,40 +82,49 @@ async def parse_and_match_resume(
         result = await analysis_task
 
     result.cloudinary_url = cloud_url
+    result.job_title = job_title or "Senior Cloud & DevOps Engineer"
 
     # Persist ResumeAudit into Database
-    if payload:
-        try:
-            auth_svc = AuthService(db)
-            user = await auth_svc.get_current_user_from_payload(payload)
-            cand_svc = CandidateService(db)
-            cand = await cand_svc.get_candidate_by_user_id(user.id, user.organization_id)
-            if cand:
-                await cand_svc.update_ats_profile(
-                    candidate_id=cand.id,
-                    ats_score=result.ats_score,
-                    profile_data=result.candidate_profile.model_dump(),
-                    matching_skills=result.matching_skills
-                )
-                
-                audit = ResumeAudit(
-                    candidate_id=cand.id,
-                    user_id=user.id,
-                    job_title=job_title or "Senior Cloud & DevOps Engineer",
-                    job_description=job_description,
-                    resume_text=text,
-                    cloudinary_url=cloud_url,
-                    ats_score=result.ats_score,
-                    breakdown_json=result.ats_breakdown.model_dump(),
-                    matching_skills_json=result.matching_skills,
-                    missing_skills_json=result.missing_skills,
-                    profile_data_json=result.candidate_profile.model_dump(),
-                    bullet_rewrites_json=[b.model_dump() for b in (result.sample_bullet_rewrites or [])]
-                )
-                db.add(audit)
-                await db.commit()
-        except Exception as e:
-            print(f"Failed to save ResumeAudit to database: {e}")
+    try:
+        auth_svc = AuthService(db)
+        user = await auth_svc.get_current_user_from_payload(payload)
+        cand_svc = CandidateService(db)
+        cand = await cand_svc.get_candidate_by_user_id(user.id, user.organization_id)
+        if cand:
+            # Clean up old audit records for candidate to ensure single latest record
+            stmt_old = select(ResumeAudit).where(ResumeAudit.candidate_id == cand.id)
+            res_old = await db.execute(stmt_old)
+            for old_aud in res_old.scalars().all():
+                await db.delete(old_aud)
+
+            cand.latest_ats_score = result.ats_score
+            cand.target_role = job_title or cand.target_role
+
+            await cand_svc.update_ats_profile(
+                candidate_id=cand.id,
+                ats_score=result.ats_score,
+                profile_data=result.candidate_profile.model_dump(),
+                matching_skills=result.matching_skills
+            )
+            
+            audit = ResumeAudit(
+                candidate_id=cand.id,
+                user_id=user.id,
+                job_title=job_title or "Senior Cloud & DevOps Engineer",
+                job_description=job_description,
+                resume_text=text,
+                cloudinary_url=cloud_url,
+                ats_score=result.ats_score,
+                breakdown_json=result.ats_breakdown.model_dump(),
+                matching_skills_json=result.matching_skills,
+                missing_skills_json=result.missing_skills,
+                profile_data_json=result.candidate_profile.model_dump(),
+                bullet_rewrites_json=[b.model_dump() for b in (result.sample_bullet_rewrites or [])]
+            )
+            db.add(audit)
+            await db.commit()
+    except Exception as e:
+        print(f"Failed to save ResumeAudit to database: {e}")
 
     return StandardResponse(
         message="Resume analyzed and saved to database successfully",
@@ -125,7 +134,7 @@ async def parse_and_match_resume(
 @router.post("/parse-text", response_model=StandardResponse[ResumeATSResponse])
 async def parse_text_resume(
     req: ResumeParseRequest,
-    payload: Optional[dict] = Depends(verify_optional_auth_token),
+    payload: dict = Depends(verify_auth_token),
     db: AsyncSession = Depends(get_db)
 ):
     resume_svc = ResumeService(db)
@@ -134,37 +143,46 @@ async def parse_text_resume(
         job_title=req.job_title or "CloudOps / DevOps Engineer",
         job_description=req.job_description
     )
+    result.job_title = req.job_title or "Senior Cloud & DevOps Engineer"
 
-    if payload:
-        try:
-            auth_svc = AuthService(db)
-            user = await auth_svc.get_current_user_from_payload(payload)
-            cand_svc = CandidateService(db)
-            cand = await cand_svc.get_candidate_by_user_id(user.id, user.organization_id)
-            if cand:
-                await cand_svc.update_ats_profile(
-                    candidate_id=cand.id,
-                    ats_score=result.ats_score,
-                    profile_data=result.candidate_profile.model_dump(),
-                    matching_skills=result.matching_skills
-                )
-                audit = ResumeAudit(
-                    candidate_id=cand.id,
-                    user_id=user.id,
-                    job_title=req.job_title or "Senior Cloud & DevOps Engineer",
-                    job_description=req.job_description,
-                    resume_text=req.resume_text,
-                    ats_score=result.ats_score,
-                    breakdown_json=result.ats_breakdown.model_dump(),
-                    matching_skills_json=result.matching_skills,
-                    missing_skills_json=result.missing_skills,
-                    profile_data_json=result.candidate_profile.model_dump(),
-                    bullet_rewrites_json=[b.model_dump() for b in (result.sample_bullet_rewrites or [])]
-                )
-                db.add(audit)
-                await db.commit()
-        except Exception as e:
-            print(f"Failed to save ResumeAudit to database: {e}")
+    try:
+        auth_svc = AuthService(db)
+        user = await auth_svc.get_current_user_from_payload(payload)
+        cand_svc = CandidateService(db)
+        cand = await cand_svc.get_candidate_by_user_id(user.id, user.organization_id)
+        if cand:
+            # Clean up old audit records for candidate to ensure single latest record
+            stmt_old = select(ResumeAudit).where(ResumeAudit.candidate_id == cand.id)
+            res_old = await db.execute(stmt_old)
+            for old_aud in res_old.scalars().all():
+                await db.delete(old_aud)
+
+            cand.latest_ats_score = result.ats_score
+            cand.target_role = req.job_title or cand.target_role
+
+            await cand_svc.update_ats_profile(
+                candidate_id=cand.id,
+                ats_score=result.ats_score,
+                profile_data=result.candidate_profile.model_dump(),
+                matching_skills=result.matching_skills
+            )
+            audit = ResumeAudit(
+                candidate_id=cand.id,
+                user_id=user.id,
+                job_title=req.job_title or "Senior Cloud & DevOps Engineer",
+                job_description=req.job_description,
+                resume_text=req.resume_text,
+                ats_score=result.ats_score,
+                breakdown_json=result.ats_breakdown.model_dump(),
+                matching_skills_json=result.matching_skills,
+                missing_skills_json=result.missing_skills,
+                profile_data_json=result.candidate_profile.model_dump(),
+                bullet_rewrites_json=[b.model_dump() for b in (result.sample_bullet_rewrites or [])]
+            )
+            db.add(audit)
+            await db.commit()
+    except Exception as e:
+        print(f"Failed to save ResumeAudit to database: {e}")
 
     return StandardResponse(
         message="Resume matched and saved to database successfully",
@@ -203,7 +221,8 @@ async def get_latest_resume_audit(
         recommended_interview_stages=[],
         candidate_profile=latest_audit.profile_data_json or {},
         bullet_suggestions=latest_audit.bullet_rewrites_json or [],
-        cloudinary_url=latest_audit.cloudinary_url
+        cloudinary_url=latest_audit.cloudinary_url,
+        job_title=latest_audit.job_title or cand.target_role or "Senior DevOps Engineer"
     )
     return StandardResponse(data=resp)
 

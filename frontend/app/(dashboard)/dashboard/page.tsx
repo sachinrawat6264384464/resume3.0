@@ -477,25 +477,34 @@ export default function CandidateDashboardPage() {
             <div className="flex flex-col gap-1.5 flex-1 min-w-0">
               <span className="text-[10px] font-bold text-slate-400 truncate">Matched JD: {resumeAts.matched_jd}</span>
               
-              <div className="flex flex-col gap-0.5">
-                <div className="flex justify-between text-[10px] font-semibold text-slate-600 dark:text-slate-400">
-                  <span>Skills Matched</span>
-                  <span className="font-mono font-bold text-emerald-600">{resumeAts.skills_matched}</span>
-                </div>
-                <div className="h-1.5 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
-                  <div className="h-full bg-emerald-500 rounded-full" style={{ width: `${Math.round(resumeAts.score)}%` }} />
-                </div>
-              </div>
+              {(() => {
+                const parts = (resumeAts.skills_matched || "0 / 0").split("/").map((s: string) => parseInt(s.trim()) || 0);
+                const matchPct = parts[1] > 0 ? Math.min(100, Math.round((parts[0] / parts[1]) * 100)) : 0;
+                const kwPct = Math.min(100, parseInt(resumeAts.keywords_found) || 0);
+                return (
+                  <>
+                    <div className="flex flex-col gap-0.5">
+                      <div className="flex justify-between text-[10px] font-semibold text-slate-600 dark:text-slate-400">
+                        <span>Skills Matched</span>
+                        <span className="font-mono font-bold text-emerald-600">{resumeAts.skills_matched}</span>
+                      </div>
+                      <div className="h-1.5 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                        <div className="h-full bg-emerald-500 rounded-full transition-all duration-300" style={{ width: `${matchPct}%` }} />
+                      </div>
+                    </div>
 
-              <div className="flex flex-col gap-0.5">
-                <div className="flex justify-between text-[10px] font-semibold text-slate-600 dark:text-slate-400">
-                  <span>Keywords Found</span>
-                  <span className="font-mono font-bold text-[#FF9900]">{resumeAts.keywords_found}</span>
-                </div>
-                <div className="h-1.5 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
-                  <div className="h-full bg-[#FF9900] rounded-full" style={{ width: `${Math.round(resumeAts.score * 0.95)}%` }} />
-                </div>
-              </div>
+                    <div className="flex flex-col gap-0.5">
+                      <div className="flex justify-between text-[10px] font-semibold text-slate-600 dark:text-slate-400">
+                        <span>Keywords Found</span>
+                        <span className="font-mono font-bold text-[#FF9900]">{resumeAts.keywords_found}</span>
+                      </div>
+                      <div className="h-1.5 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                        <div className="h-full bg-[#FF9900] rounded-full transition-all duration-300" style={{ width: `${kwPct}%` }} />
+                      </div>
+                    </div>
+                  </>
+                );
+              })()}
             </div>
           </div>
 
