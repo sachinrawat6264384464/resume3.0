@@ -94,9 +94,35 @@ CERTIFICATIONS
 - AWS Certified Solutions Architect - Associate
 - Certified Kubernetes Administrator (CKA)`;
 
+  const [progressPercent, setProgressPercent] = useState(0);
+  const [currentStepIndex, setCurrentStepIndex] = useState(0);
+
+  const processingSteps = [
+    { step: 1, title: "Extracting Document Text & Running OCR Scan", desc: "Parsing PDF structure, layout & text blocks" },
+    { step: 2, title: "Matching Skills Against Job Description & 6 ATS Pillars", desc: "Analyzing keyword overlap and semantic equivalences" },
+    { step: 3, title: "Generating STAR Framework Bullet Point Rewrites", desc: "Synthesizing quantifiable impact metrics & active verbs" }
+  ];
+
   const handleAnalyze = async () => {
     setIsAnalyzing(true);
     setAnalysisError(null);
+    setProgressPercent(12);
+    setCurrentStepIndex(0);
+
+    // Smooth progress animation over 2.5 seconds
+    const interval = setInterval(() => {
+      setProgressPercent((prev) => {
+        if (prev >= 90) {
+          clearInterval(interval);
+          return 92;
+        }
+        const next = prev + Math.floor(Math.random() * 15) + 12;
+        if (next > 40 && next < 75) setCurrentStepIndex(1);
+        if (next >= 75) setCurrentStepIndex(2);
+        return Math.min(next, 92);
+      });
+    }, 400);
+
     try {
       let res;
       if (selectedFile) {
@@ -121,12 +147,17 @@ CERTIFICATIONS
         });
       }
 
+      clearInterval(interval);
+      setProgressPercent(100);
+      setCurrentStepIndex(2);
+
+      await new Promise((r) => setTimeout(r, 300));
+
       if (res?.data) {
         setAtsResult(res.data);
-      } else {
-        setIsAnalyzing(false);
       }
     } catch (err: any) {
+      clearInterval(interval);
       const msg = err.message || "";
       if (msg.includes("Failed to fetch") || msg.includes("NetworkError") || msg.includes("timeout")) {
         setAnalysisError("⚠️ Unable to connect to backend server. Please check your network or local backend server and retry.");
@@ -135,6 +166,8 @@ CERTIFICATIONS
       } else {
         setAnalysisError(msg || "Analysis failed. Please try again.");
       }
+    } finally {
+      setIsAnalyzing(false);
     }
   };
 
@@ -541,6 +574,76 @@ CERTIFICATIONS
             </div>
           )}
 
+        </div>
+      {/* FULL SCREEN ANIMATED AI PROCESSING MODAL OVERLAY */}
+      {isLoading && (
+        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 flex items-center justify-center p-4 animate-fadeIn">
+          <div className="bg-slate-900 border border-[#FF9900]/40 rounded-[32px] p-8 max-w-md w-full shadow-2xl flex flex-col items-center gap-6 text-center text-white relative overflow-hidden">
+            
+            {/* Glowing background aura */}
+            <div className="absolute -top-20 -left-20 w-44 h-44 bg-[#FF9900]/20 rounded-full blur-3xl pointer-events-none" />
+            <div className="absolute -bottom-20 -right-20 w-44 h-44 bg-orange-500/20 rounded-full blur-3xl pointer-events-none" />
+
+            {/* Circular Progress Ring */}
+            <div className="relative w-24 h-24 flex items-center justify-center">
+              <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
+                <circle cx="50" cy="50" r="42" stroke="currentColor" strokeWidth="8" fill="transparent" className="text-slate-800" />
+                <circle
+                  cx="50" cy="50" r="42"
+                  stroke="currentColor" strokeWidth="8" fill="transparent"
+                  strokeDasharray={`${progressPercent * 2.64} 264`}
+                  strokeLinecap="round"
+                  className="text-[#FF9900] transition-all duration-300"
+                />
+              </svg>
+              <div className="absolute inset-0 flex flex-col items-center justify-center">
+                <span className="text-2xl font-black font-mono text-white">{progressPercent}%</span>
+                <span className="text-[9px] font-bold text-[#FF9900] uppercase tracking-widest">ANALYZING</span>
+              </div>
+            </div>
+
+            {/* Processing Info */}
+            <div className="flex flex-col gap-1 z-10">
+              <h3 className="text-lg font-black text-white flex items-center justify-center gap-2">
+                <Sparkles className="w-5 h-5 text-[#FF9900] animate-pulse" />
+                <span>AI ATS Engine Processing...</span>
+              </h3>
+              <p className="text-xs text-slate-400 font-medium">
+                Scanning document, benchmarking 6 ATS factors & rewriting STAR bullets.
+              </p>
+            </div>
+
+            {/* Step-by-Step Progress Checklist */}
+            <div className="w-full flex flex-col gap-2.5 z-10 text-left">
+              {processingSteps.map((s, idx) => {
+                const isCurrent = idx === currentStepIndex;
+                const isDone = idx < currentStepIndex || progressPercent >= 95;
+                return (
+                  <div
+                    key={s.step}
+                    className={`p-3 rounded-xl border flex items-center gap-3 transition-all ${
+                      isDone
+                        ? "bg-emerald-950/40 border-emerald-500/40 text-emerald-300"
+                        : isCurrent
+                        ? "bg-amber-950/60 border-[#FF9900] text-amber-200 ring-1 ring-[#FF9900]/30 shadow-md shadow-[#FF9900]/10"
+                        : "bg-slate-800/40 border-slate-800 text-slate-500 opacity-60"
+                    }`}
+                  >
+                    <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-black shrink-0 ${
+                      isDone ? "bg-emerald-500 text-slate-950" : isCurrent ? "bg-[#FF9900] text-slate-950" : "bg-slate-800 text-slate-500"
+                    }`}>
+                      {isDone ? <Check className="w-3.5 h-3.5 stroke-[3]" /> : isCurrent ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : s.step}
+                    </div>
+                    <div className="flex flex-col min-w-0">
+                      <span className="text-xs font-bold truncate">{s.title}</span>
+                      <span className="text-[10px] opacity-75 truncate">{s.desc}</span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+          </div>
         </div>
       )}
 
