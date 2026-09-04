@@ -13,7 +13,7 @@ export default function RoadmapPage() {
   const [items, setItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [expandedWeek, setExpandedWeek] = useState<number>(1);
-  const [completedLabs, setCompletedLabs] = useState<Record<number, boolean>>({ 1: true });
+  const [completedLabs, setCompletedLabs] = useState<Record<number, boolean>>({});
 
   useEffect(() => {
     const fetchRoadmap = async () => {
@@ -23,8 +23,8 @@ export default function RoadmapPage() {
           setItems(res.data);
           const map: Record<number, boolean> = {};
           res.data.forEach((item: any) => {
-            const num = item.week_number || parseInt(item.week?.replace("Week ", "") || "1");
-            map[num] = !!item.is_completed;
+            const num = item.week_number || (typeof item.week === "string" ? parseInt(item.week.replace("Week ", "")) : 1);
+            map[num] = item.is_completed ?? item.done ?? false;
           });
           setCompletedLabs(map);
         }
@@ -48,6 +48,10 @@ export default function RoadmapPage() {
       const res = await apiFetch(`/candidates/me/roadmap/${weekNum}/toggle`, { method: "POST" });
       if (res?.data && typeof res.data.done === "boolean") {
         setCompletedLabs(prev => ({ ...prev, [weekNum]: res.data.done }));
+        // Dispatch custom event so Sidebar and Candidate Dashboard instantly update XP & Level
+        if (typeof window !== "undefined") {
+          window.dispatchEvent(new Event("userProfileUpdated"));
+        }
       }
     } catch (e) {
       console.warn("Failed to toggle roadmap week in DB:", e);

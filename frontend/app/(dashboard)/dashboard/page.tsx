@@ -53,6 +53,19 @@ export default function CandidateDashboardPage() {
       }
     };
     fetchUserData();
+
+    const handleProfileUpdate = () => {
+      fetchUserData();
+    };
+
+    if (typeof window !== "undefined") {
+      window.addEventListener("userProfileUpdated", handleProfileUpdate);
+    }
+    return () => {
+      if (typeof window !== "undefined") {
+        window.removeEventListener("userProfileUpdated", handleProfileUpdate);
+      }
+    };
   }, []);
 
   const toggleTheme = () => {

@@ -33,6 +33,19 @@ export function Sidebar() {
         }
       };
       fetchProfile();
+
+      const handleProfileUpdate = () => {
+        fetchProfile();
+      };
+
+      if (typeof window !== "undefined") {
+        window.addEventListener("userProfileUpdated", handleProfileUpdate);
+      }
+      return () => {
+        if (typeof window !== "undefined") {
+          window.removeEventListener("userProfileUpdated", handleProfileUpdate);
+        }
+      };
     }
   }, [isAuthenticated]);
 

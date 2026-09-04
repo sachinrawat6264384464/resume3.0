@@ -379,10 +379,10 @@ async def get_my_roadmap(
     
     if not items:
         default_weeks = [
-            (1, "Linux Kernel & Networking", "In-depth disk I/O, memory heaps, systemd units & sockets.", "Linux", 50),
-            (2, "AWS VPC, IAM & Security", "Master subnets, NAT GW, IAM STS & IRSA policy binding.", "AWS", 100),
-            (3, "Docker & Kubernetes EKS", "Multi-stage Docker builds, pod probes & ingress routing.", "Containers", 150),
-            (4, "Terraform IaC & Incidents", "Remote state locking, module design & outage post mortems.", "IaC", 200)
+            (1, "Linux & Shell Deep Dive", "In-depth disk I/O, memory heaps, systemd units & sockets.", "Linux", 100),
+            (2, "AWS Core Services & VPC", "Master subnets, NAT GW, IAM STS & IRSA policy binding.", "AWS", 150),
+            (3, "Kubernetes Advanced & Helm", "Multi-stage Docker builds, pod probes & ingress routing.", "Containers", 200),
+            (4, "DevOps CI/CD & SRE Outages", "Remote state locking, module design & outage post mortems.", "IaC", 300)
         ]
         items = []
         for week_num, title, desc, cat, xp in default_weeks:
@@ -404,10 +404,12 @@ async def get_my_roadmap(
         {
             "id": rm.id,
             "week_number": rm.week_number,
+            "week": f"Week {rm.week_number}",
             "title": rm.title,
             "description": rm.description,
             "category": rm.category,
             "is_completed": rm.is_completed,
+            "done": rm.is_completed,
             "xp_reward": rm.xp_reward,
             "completed_at": rm.completed_at.isoformat() if rm.completed_at else None
         }
@@ -456,6 +458,9 @@ async def toggle_roadmap_week(
     user = await auth_svc.get_current_user_from_payload(payload)
     cand_svc = CandidateService(db)
     cand = await cand_svc.get_candidate_by_user_id(user.id, user.organization_id)
+    
+    if not cand:
+        raise HTTPException(status_code=404, detail="Candidate profile not found")
 
     stmt = select(CandidateRoadmap).where(
         CandidateRoadmap.candidate_id == cand.id,
@@ -465,11 +470,56 @@ async def toggle_roadmap_week(
     roadmap_item = res.scalar_one_or_none()
 
     if not roadmap_item:
+        default_weeks = [
+            (1, "Linux & Shell Deep Dive", "In-depth disk I/O, memory heaps, systemd units & sockets.", "Linux", 100),
+            (2, "AWS Core Services & VPC", "Master subnets, NAT GW, IAM STS & IRSA policy binding.", "AWS", 150),
+            (3, "Kubernetes Advanced & Helm", "Multi-stage Docker builds, pod probes & ingress routing.", "Containers", 200),
+            (4, "DevOps CI/CD & SRE Outages", "Remote state locking, module design & outage post mortems.", "IaC", 300)
+        ]
+        for w_num, title, desc, cat, xp in default_weeks:
+            rm = CandidateRoadmap(
+                candidate_id=cand.id,
+                week_number=w_num,
+                day_number=1,
+                title=title,
+                description=desc,
+                category=cat,
+                xp_reward=xp,
+                is_completed=False
+            )
+            db.add(rm)
+        await db.commit()
+
+        res = await db.execute(stmt)
+        roadmap_item = res.scalar_one_or_none()
+
+    if not roadmap_item:
         raise HTTPException(status_code=404, detail="Roadmap item not found")
 
+    # Toggle completion
     roadmap_item.is_completed = not roadmap_item.is_completed
+    
+    # Calculate XP & Level dynamically
+    xp_val = roadmap_item.xp_reward or 150
+    if roadmap_item.is_completed:
+        cand.xp = (cand.xp or 0) + xp_val
+    else:
+        cand.xp = max(0, (cand.xp or 0) - xp_val)
+
+    cand.level = max(1, 1 + (cand.xp // 300))
+
     await db.commit()
-    return StandardResponse(message="Roadmap status updated", data={"week": week_number, "done": roadmap_item.is_completed})
+    await db.refresh(cand)
+
+    return StandardResponse(
+        message="Roadmap status updated",
+        data={
+            "week": week_number,
+            "done": roadmap_item.is_completed,
+            "xp": cand.xp,
+            "level": cand.level
+        }
+    )
 
 @router.get("/me/performance", response_model=StandardResponse[dict])
 async def get_my_performance(
@@ -580,74 +630,7 @@ async def get_my_performance(
     }
     return StandardResponse(data=perf)
 
-@router.get("/me/roadmap", response_model=StandardResponse[List[dict]])
-async def get_my_roadmap(
-    payload: dict = Depends(verify_auth_token),
-    db: AsyncSession = Depends(get_db)
-):
-    auth_svc = AuthService(db)
-    user = await auth_svc.get_current_user_from_payload(payload)
-    cand_svc = CandidateService(db)
-    cand = await cand_svc.get_candidate_by_user_id(user.id, user.organization_id)
 
-    # Query DB candidate_roadmaps table
-    stmt = select(CandidateRoadmap).where(CandidateRoadmap.candidate_id == cand.id).order_by(CandidateRoadmap.week_number)
-    res = await db.execute(stmt)
-    roadmap_items = res.scalars().all()
-
-    if not roadmap_items:
-        # Auto-seed roadmap items in DB for this candidate
-        seed_items = [
-            CandidateRoadmap(candidate_id=cand.id, week_number=1, title="Linux & Shell Deep Dive", category="Linux", is_completed=True, xp_reward=100),
-            CandidateRoadmap(candidate_id=cand.id, week_number=2, title="AWS Core Services & VPC", category="AWS", is_completed=False, xp_reward=150),
-            CandidateRoadmap(candidate_id=cand.id, week_number=3, title="Kubernetes Advanced & Helm", category="Kubernetes", is_completed=False, xp_reward=200),
-            CandidateRoadmap(candidate_id=cand.id, week_number=4, title="DevOps CI/CD & SRE Outages", category="SRE", is_completed=False, xp_reward=300)
-        ]
-        for item in seed_items:
-            db.add(item)
-        await db.commit()
-
-        stmt = select(CandidateRoadmap).where(CandidateRoadmap.candidate_id == cand.id).order_by(CandidateRoadmap.week_number)
-        res = await db.execute(stmt)
-        roadmap_items = res.scalars().all()
-
-    items = []
-    for r in roadmap_items:
-        items.append({
-            "id": r.id,
-            "week": f"Week {r.week_number}",
-            "week_number": r.week_number,
-            "title": r.title,
-            "done": r.is_completed,
-            "topics": [r.category, "Hands-on Lab"]
-        })
-    return StandardResponse(data=items)
-
-@router.get("/me/certificates", response_model=StandardResponse[List[dict]])
-async def get_my_certificates(
-    payload: dict = Depends(verify_auth_token),
-    db: AsyncSession = Depends(get_db)
-):
-    auth_svc = AuthService(db)
-    user = await auth_svc.get_current_user_from_payload(payload)
-    cand_svc = CandidateService(db)
-    cand = await cand_svc.get_candidate_by_user_id(user.id, user.organization_id)
-
-    stmt = select(CandidateCertificate).where(CandidateCertificate.candidate_id == cand.id)
-    res = await db.execute(stmt)
-    certs = res.scalars().all()
-
-    cert_list = []
-    for c in certs:
-        cert_list.append({
-            "id": c.id,
-            "title": c.title,
-            "code": c.certificate_code,
-            "score": f"{int(c.score_percentage)}%",
-            "issued_at": c.issued_at.strftime("%b %d, %Y") if c.issued_at else "Recently",
-            "badge": "Verified Engineer"
-        })
-    return StandardResponse(data=cert_list)
 
 @router.get("/me/support", response_model=StandardResponse[List[dict]])
 async def get_my_support_tickets(
