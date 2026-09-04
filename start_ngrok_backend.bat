@@ -9,7 +9,7 @@ start "FastAPI Backend" cmd /k "cd /d d:\AI_Interview3.0\backend && venv\Scripts
 timeout /t 3 >nul
 
 echo [2/2] Starting ngrok Public Tunnel for Port 8000 ...
-start "ngrok Tunnel" cmd /k "ngrok http 127.0.0.1:8000"
+start "ngrok Tunnel" cmd /k "ngrok http --url=https://handcuff-dweller-crimp.ngrok-free.dev 8000"
 
 echo.
 echo ===================================================
