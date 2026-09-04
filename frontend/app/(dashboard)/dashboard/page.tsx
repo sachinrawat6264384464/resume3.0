@@ -17,29 +17,20 @@ export default function CandidateDashboardPage() {
   const { user, setAuth } = useAuthStore();
   
   const [theme, setTheme] = useState<"light" | "dark">("light");
-  const [dbMetrics, setDbMetrics] = useState<any>(() => {
-    if (typeof window !== "undefined") {
-      try {
-        const cached = localStorage.getItem("cached_dash_metrics");
-        return cached ? JSON.parse(cached) : null;
-      } catch {
-        return null;
-      }
-    }
-    return null;
-  });
-  const [candProfile, setCandProfile] = useState<any>(() => {
-    if (typeof window !== "undefined") {
-      try {
-        const cached = localStorage.getItem("cached_user_profile");
-        return cached ? JSON.parse(cached) : null;
-      } catch {
-        return null;
-      }
-    }
-    return null;
-  });
+  const [dbMetrics, setDbMetrics] = useState<any>(null);
+  const [candProfile, setCandProfile] = useState<any>(null);
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const cachedM = localStorage.getItem("cached_dash_metrics");
+        if (cachedM) setDbMetrics(JSON.parse(cachedM));
+        const cachedP = localStorage.getItem("cached_user_profile");
+        if (cachedP) setCandProfile(JSON.parse(cachedP));
+      } catch {}
+    }
+  }, []);
 
   useEffect(() => {
     // Fetch Real DB Data directly from backend
@@ -452,57 +443,76 @@ export default function CandidateDashboardPage() {
       {/* ROW 3: UPCOMING INTERVIEW + ATS SCORE + TOP SKILLS */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch">
         
-        {/* Resume ATS Score Widget */}
+        {/* AI Resume ATS Audit Studio Widget */}
         <div className="lg:col-span-4 bg-white dark:bg-slate-900 rounded-[24px] border border-slate-200 dark:border-slate-800 p-5 shadow-sm flex flex-col justify-between gap-3">
           
-          <div className="flex items-center gap-2 text-xs font-black text-slate-900 dark:text-white">
-            <FileText className="w-4 h-4 text-[#FF9900]" />
-            <span>Resume ATS Score</span>
+          <div className="flex items-center justify-between text-xs font-black text-slate-900 dark:text-white">
+            <span className="flex items-center gap-2">
+              <FileText className="w-4 h-4 text-[#FF9900]" />
+              AI Resume ATS Audit
+            </span>
+            {resumeAts.score > 0 ? (
+              <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-50 text-emerald-600 dark:bg-emerald-950/50 dark:text-emerald-400 border border-emerald-500/30">
+                Audited
+              </span>
+            ) : (
+              <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-amber-50 text-[#FF9900] dark:bg-amber-950/50 border border-[#FF9900]/30">
+                Pending Scan
+              </span>
+            )}
           </div>
 
           <div className="flex items-center gap-4 my-1">
+            {/* ATS Score Ring */}
             <div className="relative w-20 h-20 shrink-0 flex items-center justify-center">
               <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
                 <circle cx="50" cy="50" r="40" stroke="currentColor" strokeWidth="8" fill="transparent" className="text-slate-100 dark:text-slate-800" />
-                <circle cx="50" cy="50" r="40" stroke="currentColor" strokeWidth="8" fill="transparent" strokeDasharray={`${Math.round(resumeAts.score) * 2.51} 251`} strokeLinecap="round" className="text-[#FF9900]" />
+                <circle 
+                  cx="50" cy="50" r="40" 
+                  stroke="currentColor" strokeWidth="8" fill="transparent" 
+                  strokeDasharray={`${Math.round(resumeAts.score) * 2.51} 251`} 
+                  strokeLinecap="round" 
+                  className={resumeAts.score >= 75 ? "text-emerald-500" : resumeAts.score > 0 ? "text-[#FF9900]" : "text-slate-300 dark:text-slate-700"} 
+                />
               </svg>
               <div className="absolute inset-0 flex flex-col items-center justify-center">
                 <span className="text-lg font-black text-slate-900 dark:text-white">{Math.round(resumeAts.score)}%</span>
-                <span className="text-[7px] font-bold text-slate-400 uppercase tracking-widest">
-                  {resumeAts.score > 0 ? "Good Match" : "Not Analyzed"}
+                <span className="text-[7px] font-bold text-slate-400 uppercase tracking-widest text-center leading-tight">
+                  {resumeAts.score >= 80 ? "Target Fit" : resumeAts.score > 0 ? "Good Match" : "Not Audited"}
                 </span>
               </div>
             </div>
 
+            {/* Clean Stats Grid */}
             <div className="flex flex-col gap-1.5 flex-1 min-w-0">
-              <span className="text-[10px] font-bold text-slate-400 truncate">Matched JD: {resumeAts.matched_jd}</span>
-              
               {(() => {
                 const parts = (resumeAts.skills_matched || "0 / 0").split("/").map((s: string) => parseInt(s.trim()) || 0);
-                const matchPct = parts[1] > 0 ? Math.min(100, Math.round((parts[0] / parts[1]) * 100)) : 0;
-                const kwPct = Math.min(100, parseInt(resumeAts.keywords_found) || 0);
+                const matchedCount = parts[0] || 0;
+                const kwVal = parseInt(resumeAts.keywords_found) || 0;
+
                 return (
-                  <>
-                    <div className="flex flex-col gap-0.5">
-                      <div className="flex justify-between text-[10px] font-semibold text-slate-600 dark:text-slate-400">
-                        <span>Skills Matched</span>
-                        <span className="font-mono font-bold text-emerald-600">{resumeAts.skills_matched}</span>
-                      </div>
-                      <div className="h-1.5 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
-                        <div className="h-full bg-emerald-500 rounded-full transition-all duration-300" style={{ width: `${matchPct}%` }} />
-                      </div>
+                  <div className="flex flex-col gap-1.5 text-[11px] font-medium">
+                    <div className="flex items-center justify-between text-slate-600 dark:text-slate-400">
+                      <span className="text-slate-400 font-bold truncate">Target JD:</span>
+                      <span className="font-bold text-slate-900 dark:text-slate-100 truncate max-w-[110px]" title={resumeAts.matched_jd}>
+                        {resumeAts.matched_jd}
+                      </span>
                     </div>
 
-                    <div className="flex flex-col gap-0.5">
-                      <div className="flex justify-between text-[10px] font-semibold text-slate-600 dark:text-slate-400">
-                        <span>Keywords Found</span>
-                        <span className="font-mono font-bold text-[#FF9900]">{resumeAts.keywords_found}</span>
-                      </div>
-                      <div className="h-1.5 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
-                        <div className="h-full bg-[#FF9900] rounded-full transition-all duration-300" style={{ width: `${kwPct}%` }} />
-                      </div>
+                    <div className="flex items-center justify-between text-slate-600 dark:text-slate-400">
+                      <span className="text-slate-400 font-bold">Skills Found:</span>
+                      <span className="font-bold font-mono text-emerald-600 dark:text-emerald-400">
+                        {matchedCount > 0 ? `${matchedCount} Detected` : "Pending Scan"}
+                      </span>
                     </div>
-                  </>
+
+                    <div className="flex items-center justify-between text-slate-600 dark:text-slate-400">
+                      <span className="text-slate-400 font-bold">Keywords Match:</span>
+                      <span className="font-bold font-mono text-[#FF9900]">
+                        {kwVal > 0 ? `${kwVal}% Aligned` : "0% Match"}
+                      </span>
+                    </div>
+                  </div>
                 );
               })()}
             </div>
@@ -510,10 +520,10 @@ export default function CandidateDashboardPage() {
 
           <Link prefetch={false}
             href="/resume-ats"
-            className="w-full py-2 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-300 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-100 flex items-center justify-center gap-1 transition-all shadow-sm"
+            className="w-full py-2.5 rounded-xl font-black text-xs text-slate-950 bg-gradient-to-r from-amber-400 via-[#FF9900] to-orange-400 hover:from-amber-500 hover:to-orange-500 shadow-md shadow-[#FF9900]/20 flex items-center justify-center gap-1.5 transition-all"
           >
-            <Sparkles className="w-3.5 h-3.5 text-[#FF9900]" />
-            <span>Improve Resume</span>
+            <Sparkles className="w-3.5 h-3.5 fill-slate-950 text-slate-950" />
+            <span>Scan & Upgrade ATS Resume →</span>
           </Link>
 
         </div>

@@ -21,18 +21,19 @@ export function Sidebar({ isOpenMobile = false, onCloseMobile }: SidebarProps) {
   const router = useRouter();
   const { user, isAuthenticated, logout } = useAuthStore();
   const isAnalyzing = useATSStore((s) => s.isAnalyzing);
+  const [mounted, setMounted] = useState(false);
 
-  const [dbUser, setDbUser] = useState<any>(() => {
+  const [dbUser, setDbUser] = useState<any>(null);
+
+  useEffect(() => {
+    setMounted(true);
     if (typeof window !== "undefined") {
       try {
         const cached = localStorage.getItem("cached_user_profile");
-        return cached ? JSON.parse(cached) : null;
-      } catch {
-        return null;
-      }
+        if (cached) setDbUser(JSON.parse(cached));
+      } catch {}
     }
-    return null;
-  });
+  }, []);
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -73,9 +74,9 @@ export function Sidebar({ isOpenMobile = false, onCloseMobile }: SidebarProps) {
     router.push("/login");
   };
 
-  const isAdminMode = typeof window !== "undefined" && (
+  const isAdminMode = mounted && (
     process.env.NEXT_PUBLIC_IS_ADMIN_PORTAL === "true" ||
-    window.location.hostname.includes("admin") ||
+    (typeof window !== "undefined" && window.location.hostname.includes("admin")) ||
     user?.role === "ADMIN"
   );
 
@@ -180,7 +181,7 @@ export function Sidebar({ isOpenMobile = false, onCloseMobile }: SidebarProps) {
       {/* Bottom Section */}
       <div className="p-3.5 border-t border-slate-200 dark:border-slate-800 flex flex-col gap-3">
         
-        {isAnalyzing && (
+        {mounted && isAnalyzing && (
           <Link prefetch={false}
             href="/resume-ats"
             className="p-3 rounded-2xl bg-amber-50 dark:bg-amber-950/70 border border-[#FF9900] shadow-md flex items-center gap-2.5 animate-pulse text-xs font-bold text-amber-900 dark:text-amber-200 hover:scale-[1.02] transition-all"
@@ -219,7 +220,7 @@ export function Sidebar({ isOpenMobile = false, onCloseMobile }: SidebarProps) {
         )}
 
         {/* Logged in User Card */}
-        {isAuthenticated && user && (
+        {mounted && isAuthenticated && user && (
           <div className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 flex flex-col gap-2">
             <div className="flex items-center gap-2.5">
               <div className="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-700 overflow-hidden shrink-0 flex items-center justify-center text-xs font-bold text-slate-700 dark:text-slate-300">
@@ -273,7 +274,7 @@ export function Sidebar({ isOpenMobile = false, onCloseMobile }: SidebarProps) {
           className="flex items-center gap-2 px-3 py-2 text-xs font-bold text-slate-500 hover:text-red-600 transition-colors"
         >
           <LogOut className="w-3.5 h-3.5" />
-          <span>{isAuthenticated ? "Sign Out" : "Sign In"}</span>
+          <span>{mounted && isAuthenticated ? "Sign Out" : "Sign In"}</span>
         </button>
 
       </div>

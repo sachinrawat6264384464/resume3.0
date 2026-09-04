@@ -126,9 +126,9 @@ export function Header({ onToggleMobileSidebar }: HeaderProps) {
   };
 
   // Always use candidate profile name first, then auth store name, then email prefix
-  const candidateName = candProfile?.user?.full_name || user?.full_name || user?.email?.split("@")[0] || "Candidate User";
-  const candidateEmail = user?.email || "candidate@example.com";
-  const candidateRole = (user?.role === "ADMIN") ? "Administrator" : (candProfile?.target_role || "Cloud Engineer");
+  const candidateName = (mounted && (candProfile?.user?.full_name || user?.full_name || user?.email?.split("@")[0])) || "Candidate User";
+  const candidateEmail = (mounted && user?.email) || "candidate@example.com";
+  const candidateRole = (mounted && user?.role === "ADMIN") ? "Administrator" : ((mounted && candProfile?.target_role) || "Cloud Engineer");
 
   return (
     <header className="flex items-center justify-between gap-3 pb-4 sm:pb-6 border-b border-slate-200 dark:border-slate-800/80 mb-6 font-sans">
