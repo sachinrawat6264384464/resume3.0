@@ -7,7 +7,7 @@ import {
   Flame, Zap, Moon, Sun, ArrowRight, Play, Upload, Award, 
   CheckCircle2, Lock, Clock, Calendar, Search, Bell, Sparkles,
   ChevronRight, BarChart2, ShieldCheck, Check, Laptop, Trophy,
-  FileText, Cpu, Compass
+  FileText, Cpu, Compass, Settings, HelpCircle, Layers
 } from "lucide-react";
 import { useAuthStore } from "@/lib/store";
 import { apiFetch } from "@/lib/api";
@@ -163,6 +163,16 @@ export default function CandidateDashboardPage() {
   };
   const leaderboardData = activeMetrics?.leaderboard || [];
 
+  const servicesList = [
+    { name: "Interview Stages", href: "/interviews", icon: Layers, badge: "5 Stages Active", color: "text-[#FF9900]" },
+    { name: "Resume ATS Audit", href: "/resume-ats", icon: FileText, badge: `${Math.round(resumeAts.score)}% ATS Score`, color: "text-amber-500" },
+    { name: "My Progress & Matrix", href: "/performance", icon: BarChart2, badge: `${readiness}% Readiness`, color: "text-emerald-500" },
+    { name: "Leaderboard", href: "/leaderboard", icon: Trophy, badge: `${userXp} XP Rank`, color: "text-amber-400" },
+    { name: "Career Roadmap", href: "/roadmap", icon: Compass, badge: "30-Day Plan", color: "text-purple-500" },
+    { name: "Settings", href: "/settings", icon: Settings, badge: "Configured", color: "text-blue-500" },
+    { name: "Help & Support", href: "/help", icon: HelpCircle, badge: "24/7 AI Desk", color: "text-teal-500" },
+  ];
+
   return (
     <div className="flex flex-col gap-6 max-w-[1400px] mx-auto pb-12 text-slate-900 dark:text-slate-100 font-sans">
       
@@ -175,6 +185,54 @@ export default function CandidateDashboardPage() {
           <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mt-0.5">
             Continue your CloudOps AI journey and become production ready.
           </p>
+        </div>
+
+        <div className="flex items-center gap-3 self-start md:self-auto">
+          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-50 dark:bg-amber-950/50 border border-[#FF9900]/30 text-xs font-bold text-[#FF9900]">
+            <Flame className="w-4 h-4 text-orange-500 fill-orange-500" />
+            <span>{userStreak} Day Streak</span>
+          </div>
+          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-purple-50 dark:bg-purple-950/50 border border-purple-500/30 text-xs font-bold text-purple-600 dark:text-purple-400">
+            <Trophy className="w-4 h-4 text-purple-500" />
+            <span>{userXp.toLocaleString()} XP</span>
+          </div>
+        </div>
+      </div>
+
+      {/* 7 CANDIDATE SERVICES QUICK COMMAND CENTER HUB */}
+      <div className="bg-white dark:bg-slate-900 rounded-[24px] border border-slate-200 dark:border-slate-800 p-4 shadow-sm">
+        <div className="flex items-center justify-between mb-3 px-1">
+          <span className="text-xs font-black text-slate-900 dark:text-white tracking-wide uppercase flex items-center gap-2">
+            <Sparkles className="w-3.5 h-3.5 text-[#FF9900]" />
+            Candidate Services & Command Center
+          </span>
+          <span className="text-[11px] font-bold text-slate-400">
+            All 7 Services Connected Live
+          </span>
+        </div>
+
+        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2.5">
+          {servicesList.map((svc, idx) => {
+            const IconComp = svc.icon;
+            return (
+              <Link 
+                key={idx} 
+                prefetch={false}
+                href={svc.href}
+                className="flex flex-col items-center justify-between p-3 rounded-2xl bg-slate-50/70 dark:bg-slate-800/40 border border-slate-200/60 dark:border-slate-800 hover:border-[#FF9900]/60 hover:bg-amber-50/40 dark:hover:bg-amber-950/20 transition-all text-center group"
+              >
+                <div className="p-2 rounded-xl bg-white dark:bg-slate-900 shadow-xs mb-2 group-hover:scale-110 transition-transform">
+                  <IconComp className={`w-4 h-4 ${svc.color}`} />
+                </div>
+                <span className="text-[11px] font-black text-slate-900 dark:text-white leading-tight mb-1">
+                  {svc.name}
+                </span>
+                <span className="text-[9.5px] font-extrabold px-1.5 py-0.5 rounded-md bg-white/80 dark:bg-slate-900/80 text-slate-500 dark:text-slate-400 border border-slate-200/50 dark:border-slate-800 shrink-0">
+                  {svc.badge}
+                </span>
+              </Link>
+            );
+          })}
         </div>
       </div>
 
@@ -229,20 +287,33 @@ export default function CandidateDashboardPage() {
         </div>
 
         {/* Your Readiness Score Widget */}
-        <div className="lg:col-span-4 bg-white dark:bg-slate-900 rounded-[24px] border border-slate-200 dark:border-slate-800 p-5 shadow-sm flex flex-col justify-between">
+        <div className="lg:col-span-4 bg-white dark:bg-slate-900 rounded-[24px] border border-slate-200 dark:border-slate-800 p-5 shadow-sm flex flex-col justify-between gap-3">
           
-          <div className="flex items-center justify-between">
-            <h3 className="text-xs font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">
-              Your Readiness Score
-            </h3>
-            <span className="text-[10px] font-extrabold text-[#FF9900] bg-amber-50 dark:bg-amber-950/40 px-2 py-0.5 rounded-full border border-[#FF9900]/30">
-              Live
+          <div className="flex items-center justify-between text-xs font-black text-slate-900 dark:text-white">
+            <span className="flex items-center gap-2">
+              <Award className="w-4 h-4 text-[#FF9900]" />
+              YOUR READINESS SCORE
             </span>
+            {readiness >= 80 ? (
+              <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-50 text-emerald-600 dark:bg-emerald-950/50 dark:text-emerald-400 border border-emerald-500/30 flex items-center gap-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                Production Ready
+              </span>
+            ) : readiness > 0 ? (
+              <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-amber-50 text-[#FF9900] dark:bg-amber-950/50 border border-[#FF9900]/30 flex items-center gap-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#FF9900] animate-pulse" />
+                AI Evaluated
+              </span>
+            ) : (
+              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-500">
+                Evaluation Pending
+              </span>
+            )}
           </div>
 
-          <div className="flex items-center gap-4 my-3">
+          <div className="flex items-center gap-4 my-1">
             {/* 5-Segment Donut Chart */}
-            <div className="relative w-[88px] h-[88px] shrink-0 flex items-center justify-center">
+            <div className="relative w-[90px] h-[90px] shrink-0 flex items-center justify-center">
               {(() => {
                 const pillars = [
                   { val: readinessBreakdown.technical,       color: "#FF9900" },
@@ -257,7 +328,7 @@ export default function CandidateDashboardPage() {
                 return (
                   <svg className="w-full h-full -rotate-90" viewBox="0 0 100 100">
                     {/* Track */}
-                    <circle cx="50" cy="50" r="38" stroke="#f1f5f9" strokeWidth="10" fill="transparent" />
+                    <circle cx="50" cy="50" r="38" stroke="currentColor" strokeWidth="9" fill="transparent" className="text-slate-100 dark:text-slate-800" />
                     {pillars.map((p, i) => {
                       const dash = ((p.val || 0) / total) * circumference;
                       const gap = circumference - dash;
@@ -266,7 +337,7 @@ export default function CandidateDashboardPage() {
                           key={i}
                           cx="50" cy="50" r="38"
                           stroke={p.color}
-                          strokeWidth="10"
+                          strokeWidth="9"
                           fill="transparent"
                           strokeDasharray={`${Math.max(0, dash - 2)} ${gap + 2}`}
                           strokeDashoffset={-offset}
@@ -280,9 +351,9 @@ export default function CandidateDashboardPage() {
                 );
               })()}
               <div className="absolute inset-0 flex flex-col items-center justify-center">
-                <span className="text-lg font-black text-slate-900 dark:text-white leading-none">{readiness}%</span>
-                <span className="text-[7px] font-bold text-slate-400 uppercase tracking-widest text-center leading-tight mt-0.5">
-                  Ready
+                <span className="text-xl font-black text-slate-900 dark:text-white leading-none">{readiness}%</span>
+                <span className="text-[7px] font-extrabold text-slate-400 uppercase tracking-widest text-center leading-tight mt-0.5">
+                  {readiness >= 80 ? "Top 5% Fit" : readiness > 0 ? "Scored" : "Pending"}
                 </span>
               </div>
             </div>
@@ -298,10 +369,10 @@ export default function CandidateDashboardPage() {
               ].map((item, i) => (
                 <div key={i} className="flex flex-col gap-0.5">
                   <div className="flex items-center justify-between text-[10px]">
-                    <span className="text-slate-500 dark:text-slate-400 font-semibold truncate">{item.name}</span>
-                    <span className="font-black text-slate-900 dark:text-white ml-1 shrink-0">{item.val ?? 0}%</span>
+                    <span className="text-slate-600 dark:text-slate-400 font-bold truncate">{item.name}</span>
+                    <span className="font-mono font-black text-slate-900 dark:text-white ml-1 shrink-0">{item.val ?? 0}%</span>
                   </div>
-                  <div className="h-1 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                  <div className="h-1.5 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
                     <div
                       className={`h-full rounded-full transition-all duration-700 ${item.color}`}
                       style={{ width: `${Math.min(100, item.val ?? 0)}%` }}
@@ -314,10 +385,10 @@ export default function CandidateDashboardPage() {
 
           <Link prefetch={false}
             href="/performance"
-            className="w-full py-2 rounded-xl text-xs font-bold text-[#FF9900] bg-amber-50 dark:bg-amber-950/40 border border-[#FF9900]/30 hover:bg-amber-100 flex items-center justify-center gap-1 transition-all shadow-sm"
+            className="w-full py-2.5 rounded-xl font-bold text-xs bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/80 hover:border-[#FF9900]/60 hover:bg-amber-50/50 dark:hover:bg-amber-950/30 text-slate-800 dark:text-slate-200 flex items-center justify-center gap-1.5 transition-all shadow-xs group"
           >
-            <BarChart2 className="w-3.5 h-3.5" />
-            <span>View Full Report</span>
+            <BarChart2 className="w-3.5 h-3.5 text-[#FF9900] group-hover:scale-110 transition-transform" />
+            <span>View 5-Pillar Rubric Matrix →</span>
           </Link>
 
         </div>
