@@ -183,3 +183,16 @@ async def update_support_ticket_status_admin(
             "status": ticket.status
         }
     )
+
+@router.get("/telemetry/performance", response_model=StandardResponse[dict])
+async def get_api_performance_telemetry(
+    limit: int = 500,
+    payload: dict = Depends(verify_auth_token)
+):
+    from app.core.telemetry_logger import analyze_api_performance_logs
+    stats = analyze_api_performance_logs(limit=limit)
+    return StandardResponse(
+        message="API Telemetry performance metrics retrieved",
+        data=stats
+    )
+

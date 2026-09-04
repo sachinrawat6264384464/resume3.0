@@ -26,14 +26,13 @@ async def get_leaderboard(
     limit: int = Query(20, ge=1, le=100),
     db: AsyncSession = Depends(get_db)
 ):
-    # Query ONLY REAL candidates registered in database (exclude dummy example/internal seed accounts)
+    # Query candidates registered in database
     stmt = (
         select(Candidate)
         .options(selectinload(Candidate.user))
         .join(User, Candidate.user_id == User.id)
         .where(
             User.email.not_like("%example.com%"),
-            User.email.not_like("%cloudops.internal%"),
             User.email.not_like("%dummy%")
         )
         .order_by(desc(Candidate.xp), desc(Candidate.readiness_score))

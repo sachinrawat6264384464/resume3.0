@@ -284,7 +284,6 @@ async def get_dashboard_metrics(
         .join(User, Candidate.user_id == User.id)
         .where(
             User.email.not_like("%example.com%"),
-            User.email.not_like("%cloudops.internal%"),
             User.email.not_like("%dummy%")
         )
         .order_by(desc(Candidate.xp), desc(Candidate.readiness_score))

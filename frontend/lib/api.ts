@@ -1,5 +1,10 @@
 function getApiBase(): string {
-  return process.env.NEXT_PUBLIC_API_URL || "https://handcuff-dweller-crimp.ngrok-free.dev/api/v1";
+  let base = process.env.NEXT_PUBLIC_API_URL || "https://handcuff-dweller-crimp.ngrok-free.dev/api/v1";
+  base = base.trim().replace(/\/+$/, "");
+  if (!base.endsWith("/api/v1")) {
+    base = `${base}/api/v1`;
+  }
+  return base;
 }
 
 export async function apiFetch<T = any>(
