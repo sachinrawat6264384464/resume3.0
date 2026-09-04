@@ -155,6 +155,9 @@ CERTIFICATIONS
 
       if (res?.data) {
         setAtsResult(res.data);
+        if (typeof window !== "undefined") {
+          window.dispatchEvent(new Event("userProfileUpdated"));
+        }
       }
     } catch (err: any) {
       clearInterval(interval);

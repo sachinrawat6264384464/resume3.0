@@ -45,10 +45,11 @@ export default function CandidateDashboardPage() {
     // Fetch Real DB Data directly from backend
     const fetchUserData = async () => {
       try {
-        const [userRes, profileRes, metricsRes] = await Promise.all([
+        const [userRes, profileRes, metricsRes, resumeRes] = await Promise.all([
           apiFetch("/auth/me").catch(() => null),
           apiFetch("/candidates/me/profile").catch(() => null),
-          apiFetch("/candidates/me/dashboard-metrics").catch(() => null)
+          apiFetch("/candidates/me/dashboard-metrics").catch(() => null),
+          apiFetch("/resumes/latest").catch(() => null)
         ]);
 
         if (userRes?.data) {
@@ -62,9 +63,28 @@ export default function CandidateDashboardPage() {
           }
         }
         if (metricsRes?.data) {
-          setDbMetrics(metricsRes.data);
+          let mergedMetrics = { ...metricsRes.data };
+          if (resumeRes?.data) {
+            const audit = resumeRes.data;
+            const matchingCount = (audit.matching_skills || []).length;
+            const missingCount = (audit.missing_skills || []).length;
+            const totalCount = Math.max(matchingCount + missingCount, 1);
+            const kwVal = Math.round(audit.breakdown?.keywords_match ?? (audit.ats_score * 0.95));
+
+            mergedMetrics.resume_ats = {
+              score: audit.ats_score,
+              matched_jd: audit.job_title || profileRes?.data?.target_role || "Senior DevOps Engineer",
+              skills_matched: `${matchingCount} / ${totalCount}`,
+              keywords_found: `${kwVal}%`,
+              ats_score: `${Math.round(audit.ats_score)} / 100`
+            };
+            if (audit.matching_skills && audit.matching_skills.length > 0) {
+              mergedMetrics.top_skills = audit.matching_skills;
+            }
+          }
+          setDbMetrics(mergedMetrics);
           if (typeof window !== "undefined") {
-            localStorage.setItem("cached_dash_metrics", JSON.stringify(metricsRes.data));
+            localStorage.setItem("cached_dash_metrics", JSON.stringify(mergedMetrics));
           }
         }
       } catch (e) {

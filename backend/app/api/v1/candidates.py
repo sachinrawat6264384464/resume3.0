@@ -265,29 +265,46 @@ async def get_dashboard_metrics(
     latest_aud = res_aud.scalar_one_or_none()
 
     skills_detected = []
-    ats_score_val = float(latest_aud.ats_score) if (latest_aud and latest_aud.ats_score) else float(cand.latest_ats_score or 0.0)
+    
+    if latest_aud:
+        ats_score_val = float(latest_aud.ats_score or 0.0)
+        matching_skills = latest_aud.matching_skills_json or []
+        missing_skills = latest_aud.missing_skills_json or []
+        
+        skills_detected = matching_skills if matching_skills else ["Linux Admin", "AWS IAM & VPC", "Docker Containers", "Kubernetes EKS", "Terraform IaC"]
+        matching_count = len(matching_skills)
+        missing_count = len(missing_skills)
+        total_skills_count = max(matching_count + missing_count, 1)
 
-    if latest_aud and latest_aud.matching_skills_json:
-        skills_detected = list(latest_aud.matching_skills_json)
-    elif isinstance(cand.skills_matrix_json, dict) and cand.skills_matrix_json:
-        skills_detected = [k for k, v in cand.skills_matrix_json.items() if k != "detected"]
+        breakdown_data = latest_aud.breakdown_json or {}
+        kw_found_val = round(float(breakdown_data.get("keywords_match", ats_score_val * 0.95)))
 
-    if not skills_detected:
-        skills_detected = ["Linux Admin", "AWS IAM & VPC", "Docker Containers", "Kubernetes EKS", "Terraform IaC"]
+        resume_ats = {
+            "score": round(ats_score_val, 1),
+            "matched_jd": latest_aud.job_title or cand.target_role or "Senior DevOps Engineer",
+            "skills_matched": f"{matching_count} / {total_skills_count}",
+            "keywords_found": f"{kw_found_val}%",
+            "ats_score": f"{round(ats_score_val, 1)} / 100"
+        }
+    else:
+        ats_score_val = float(cand.latest_ats_score or 0.0)
+        if isinstance(cand.skills_matrix_json, dict) and cand.skills_matrix_json:
+            skills_detected = [k for k, v in cand.skills_matrix_json.items() if k != "detected"]
+        if not skills_detected:
+            skills_detected = ["Linux Admin", "AWS IAM & VPC", "Docker Containers", "Kubernetes EKS", "Terraform IaC"]
 
-    # If ATS score not analyzed yet, calculate baseline match from candidate XP & completed labs
-    if ats_score_val == 0 and (cand.xp or 0) > 0:
-        ats_score_val = min(94.0, round(62.0 + ((cand.xp or 0) / 750) * 26.0, 1))
+        if ats_score_val == 0 and (cand.xp or 0) > 0:
+            ats_score_val = min(94.0, round(62.0 + ((cand.xp or 0) / 750) * 26.0, 1))
 
-    skills_matched_count = min(24, max(5, int(5 + ((cand.xp or 0) / 750) * 17))) if (cand.xp or 0) > 0 else 5
+        skills_matched_count = min(24, max(5, int(5 + ((cand.xp or 0) / 750) * 17))) if (cand.xp or 0) > 0 else 0
 
-    resume_ats = {
-        "score": ats_score_val,
-        "matched_jd": cand.target_role or "Senior DevOps Engineer",
-        "skills_matched": f"{skills_matched_count} / 24",
-        "keywords_found": f"{int(ats_score_val * 0.95)}%" if ats_score_val > 0 else "0%",
-        "ats_score": f"{int(ats_score_val)} / 100" if ats_score_val > 0 else "0 / 100"
-    }
+        resume_ats = {
+            "score": ats_score_val,
+            "matched_jd": cand.target_role or "Senior DevOps Engineer",
+            "skills_matched": f"{skills_matched_count} / 24" if ats_score_val > 0 else "0 / 24",
+            "keywords_found": f"{int(ats_score_val * 0.95)}%" if ats_score_val > 0 else "0%",
+            "ats_score": f"{int(ats_score_val)} / 100" if ats_score_val > 0 else "0 / 100"
+        }
 
     # 5. Real Top 3 Leaderboard from Database
     stmt = (
