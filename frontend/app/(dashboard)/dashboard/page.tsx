@@ -577,6 +577,7 @@ export default function CandidateDashboardPage() {
             </span>
           </div>
 
+          <div className="flex flex-col gap-2 my-1">
             {(dbMetrics?.roadmap || []).map((item: any, i: number) => (
               <div key={i} className="flex items-center justify-between p-2 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200/60 dark:border-slate-800 text-xs font-bold">
                 <div className="flex items-center gap-2.5">
