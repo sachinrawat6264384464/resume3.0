@@ -498,6 +498,10 @@ async def toggle_roadmap_week(
 
     # Toggle completion
     roadmap_item.is_completed = not roadmap_item.is_completed
+    if roadmap_item.is_completed:
+        roadmap_item.completed_at = datetime.utcnow()
+    else:
+        roadmap_item.completed_at = None
     
     # Calculate XP & Level dynamically
     xp_val = roadmap_item.xp_reward or 150
@@ -508,8 +512,11 @@ async def toggle_roadmap_week(
 
     cand.level = max(1, 1 + (cand.xp // 300))
 
+    db.add(roadmap_item)
+    db.add(cand)
     await db.commit()
     await db.refresh(cand)
+    await db.refresh(roadmap_item)
 
     return StandardResponse(
         message="Roadmap status updated",
