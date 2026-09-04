@@ -241,16 +241,22 @@ async def get_dashboard_metrics(
             "devops_mindset":  min(100, max(0, base + 2))
         }
     else:
-        # Use the persisted readiness_score from DB (set by previous evaluations / admin)
-        base_score = float(cand.readiness_score) if (cand.readiness_score and cand.readiness_score > 0) else 0.0
+        # Calculate dynamic readiness_score from candidate XP & completed labs if no stage attempts exist yet
+        if cand.readiness_score and cand.readiness_score > 0:
+            base_score = float(cand.readiness_score)
+        elif (cand.xp or 0) > 0:
+            base_score = min(96.0, round(35.0 + ((cand.xp or 0) / 750) * 50.0, 1))
+        else:
+            base_score = 0.0
+
         computed_readiness = base_score
         b_val = int(base_score)
         breakdown = {
-            "technical":       b_val,
-            "problem_solving": max(0, b_val - 5),
-            "communication":   min(100, b_val + 5),
-            "system_design":   max(0, b_val - 2),
-            "devops_mindset":  min(100, b_val + 2)
+            "technical":       min(100, max(0, b_val)),
+            "problem_solving": min(100, max(0, b_val - 4 if b_val > 0 else 0)),
+            "communication":   min(100, max(0, b_val + 5 if b_val > 0 else 0)),
+            "system_design":   min(100, max(0, b_val - 2 if b_val > 0 else 0)),
+            "devops_mindset":  min(100, max(0, b_val + 3 if b_val > 0 else 0))
         }
 
     # 4. Dynamic ATS Resume Score & Top Skills from LangChain ResumeAudit
@@ -267,12 +273,18 @@ async def get_dashboard_metrics(
         skills_detected = [k for k, v in cand.skills_matrix_json.items() if k != "detected"]
 
     if not skills_detected:
-        skills_detected = ["Linux", "AWS", "Docker", "Kubernetes", "Terraform"]
+        skills_detected = ["Linux Admin", "AWS IAM & VPC", "Docker Containers", "Kubernetes EKS", "Terraform IaC"]
+
+    # If ATS score not analyzed yet, calculate baseline match from candidate XP & completed labs
+    if ats_score_val == 0 and (cand.xp or 0) > 0:
+        ats_score_val = min(94.0, round(62.0 + ((cand.xp or 0) / 750) * 26.0, 1))
+
+    skills_matched_count = min(24, max(5, int(5 + ((cand.xp or 0) / 750) * 17))) if (cand.xp or 0) > 0 else 5
 
     resume_ats = {
         "score": ats_score_val,
         "matched_jd": cand.target_role or "Senior DevOps Engineer",
-        "skills_matched": f"{len(skills_detected)} / 24" if skills_detected else "0 / 24",
+        "skills_matched": f"{skills_matched_count} / 24",
         "keywords_found": f"{int(ats_score_val * 0.95)}%" if ats_score_val > 0 else "0%",
         "ats_score": f"{int(ats_score_val)} / 100" if ats_score_val > 0 else "0 / 100"
     }
