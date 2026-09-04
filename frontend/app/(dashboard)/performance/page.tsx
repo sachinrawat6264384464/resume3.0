@@ -16,11 +16,7 @@ export default function CandidatePerformancePage() {
   useEffect(() => {
     async function loadData() {
       try {
-        const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout")), 1500));
-        const res: any = await Promise.race([
-          apiFetch("/candidates/me/performance"),
-          timeoutPromise
-        ]);
+        const res: any = await apiFetch("/candidates/me/performance");
         if (res?.data) {
           setPerfData(res.data);
         }
