@@ -182,10 +182,10 @@ export default function CandidateDashboardPage() {
               5-Stage Voice Interviews, AI Scoring, ATS Resume Analyzer & Career OS for Cloud Engineers.
             </p>
 
-            <div className="flex items-center gap-3 pt-1">
+            <div className="flex flex-wrap sm:flex-nowrap items-center gap-2.5 pt-1">
               <Link prefetch={false} 
                 href="/interviews"
-                className="py-2.5 px-5 rounded-xl font-black text-xs text-slate-950 bg-gradient-to-r from-[#FF9900] via-amber-400 to-orange-400 hover:from-amber-400 hover:to-orange-500 shadow-md shadow-[#FF9900]/25 flex items-center gap-2 transition-all"
+                className="py-2.5 px-5 rounded-xl font-black text-xs text-slate-950 bg-gradient-to-r from-[#FF9900] via-amber-400 to-orange-400 hover:from-amber-400 hover:to-orange-500 shadow-md shadow-[#FF9900]/25 flex items-center gap-2 transition-all shrink-0"
               >
                 <Play className="w-3.5 h-3.5 fill-slate-950 text-slate-950" />
                 <span>Continue Interview</span>
@@ -193,7 +193,7 @@ export default function CandidateDashboardPage() {
 
               <Link prefetch={false} 
                 href="/resume-ats"
-                className="py-2.5 px-4 rounded-xl font-bold text-xs text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:bg-amber-50 flex items-center gap-2 shadow-sm transition-all"
+                className="py-2.5 px-4 rounded-xl font-bold text-xs text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:bg-amber-50 flex items-center gap-2 shadow-sm transition-all shrink-0"
               >
                 <Upload className="w-3.5 h-3.5 text-[#FF9900]" />
                 <span>Upload Resume</span>

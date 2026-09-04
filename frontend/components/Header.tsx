@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { 
   Bell, Sun, Moon, LogOut, User, Settings, 
   BarChart3, CheckCircle2, Sparkles, Trophy, FileText, ChevronDown, Check, X,
-  ShieldCheck
+  ShieldCheck, Menu
 } from "lucide-react";
 import { useAuthStore } from "@/lib/store";
 import { apiFetch } from "@/lib/api";
@@ -20,7 +20,11 @@ interface NotificationItem {
   type: "assessment" | "resume" | "roadmap" | "achievement";
 }
 
-export function Header() {
+interface HeaderProps {
+  onToggleMobileSidebar?: () => void;
+}
+
+export function Header({ onToggleMobileSidebar }: HeaderProps) {
   const router = useRouter();
   const { user, isAuthenticated, logout } = useAuthStore();
   const [theme, setTheme] = useState<"light" | "dark">("light");
@@ -127,13 +131,22 @@ export function Header() {
   const candidateRole = (user?.role === "ADMIN") ? "Administrator" : (candProfile?.target_role || "Cloud Engineer");
 
   return (
-    <header className="flex items-center justify-between gap-4 pb-6 border-b border-slate-200 dark:border-slate-800/80 mb-6 font-sans">
+    <header className="flex items-center justify-between gap-3 pb-4 sm:pb-6 border-b border-slate-200 dark:border-slate-800/80 mb-6 font-sans">
       
-      {/* Left Brand / Assessment OS Badge */}
-      <div className="flex items-center gap-3">
-        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-2xl bg-amber-50/80 dark:bg-slate-900 border border-[#FF9900]/30 shadow-sm text-xs font-mono font-bold text-[#FF9900]">
-          <ShieldCheck className="w-4 h-4 text-[#FF9900]" />
-          <span className="tracking-wide">CLOUDOPS AI ASSESSMENT OS</span>
+      {/* Left Brand / Assessment OS Badge & Mobile Hamburger Menu */}
+      <div className="flex items-center gap-2.5">
+        <button
+          onClick={onToggleMobileSidebar}
+          className="p-2.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-200 hover:text-[#FF6B00] lg:hidden shadow-xs cursor-pointer"
+          title="Open Menu"
+          aria-label="Toggle navigation drawer"
+        >
+          <Menu className="w-5 h-5" />
+        </button>
+
+        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-2xl bg-amber-50/80 dark:bg-slate-900 border border-[#FF9900]/30 shadow-xs text-xs font-mono font-bold text-[#FF9900]">
+          <ShieldCheck className="w-4 h-4 text-[#FF9900] shrink-0" />
+          <span className="tracking-wide text-[10px] sm:text-xs truncate max-w-[150px] sm:max-w-none">CLOUDOPS AI ASSESSMENT OS</span>
         </div>
       </div>
 
@@ -169,7 +182,7 @@ export function Header() {
           </button>
 
           {showNotifications && (
-            <div className="absolute right-0 mt-3 w-80 sm:w-96 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl z-50 overflow-hidden animate-fadeIn">
+            <div className="absolute right-0 mt-3 w-80 sm:w-96 max-w-[calc(100vw-2rem)] rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl z-50 overflow-hidden animate-fadeIn">
               <div className="p-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50/50 dark:bg-slate-900/50">
                 <div className="flex items-center gap-2">
                   <Bell className="w-4.5 h-4.5 text-[#FF9900]" />
@@ -255,7 +268,7 @@ export function Header() {
           </button>
 
           {showUserMenu && (
-            <div className="absolute right-0 mt-3 w-64 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl z-50 overflow-hidden animate-fadeIn">
+            <div className="absolute right-0 mt-3 w-64 max-w-[calc(100vw-2rem)] rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl z-50 overflow-hidden animate-fadeIn">
               
               {/* User Header Info */}
               <div className="p-4 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 flex flex-col gap-1">

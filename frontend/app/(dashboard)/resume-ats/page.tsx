@@ -550,13 +550,13 @@ CERTIFICATIONS
                       </p>
                     </div>
 
-                    <div className="flex items-center justify-between pt-2">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pt-2 border-t border-slate-200/50 dark:border-slate-700/50">
                       <span className="text-[11px] font-medium text-slate-500 italic">
                         {item.rationale}
                       </span>
                       <button
                         onClick={() => setAcceptedBullets(prev => ({ ...prev, [idx]: true }))}
-                        className={`px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all ${
+                        className={`px-3 py-1.5 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all shrink-0 ${
                           acceptedBullets[idx]
                             ? "bg-emerald-600 text-white"
                             : "bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 hover:bg-[#FF9900] hover:text-slate-950"

@@ -163,26 +163,26 @@ export default function RoadmapPage() {
         }`}>
           <div 
             onClick={() => setExpandedWeek(expandedWeek === 1 ? 0 : 1)}
-            className="flex items-center justify-between cursor-pointer"
+            className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 cursor-pointer"
           >
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-2xl bg-blue-600 text-white flex items-center justify-center font-black text-sm shadow-md">
+              <div className="w-10 h-10 rounded-2xl bg-blue-600 text-white flex items-center justify-center font-black text-sm shadow-md shrink-0">
                 W1
               </div>
-              <div className="flex flex-col">
-                <div className="flex items-center gap-2">
+              <div className="flex flex-col min-w-0">
+                <div className="flex items-center gap-2 flex-wrap">
                   <span className="text-xs font-mono font-bold text-blue-600 dark:text-blue-400">Week 1</span>
                   <span className="text-[11px] font-bold text-emerald-600 bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded-md border border-emerald-200">
                     Server & Terminal Mastery
                   </span>
                 </div>
-                <h2 className="text-lg font-black text-slate-900 dark:text-white">
+                <h2 className="text-base sm:text-lg font-black text-slate-900 dark:text-white truncate">
                   🔥 Week 1 — Linux & Shell Deep Dive
                 </h2>
               </div>
             </div>
 
-            <div className="flex items-center gap-3">
+            <div className="flex items-center justify-between sm:justify-end gap-3 w-full sm:w-auto pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-100 dark:border-slate-800">
               <button 
                 onClick={(e) => { e.stopPropagation(); toggleLabComplete(1); }}
                 className={`px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all ${
@@ -277,26 +277,26 @@ export default function RoadmapPage() {
         }`}>
           <div 
             onClick={() => setExpandedWeek(expandedWeek === 2 ? 0 : 2)}
-            className="flex items-center justify-between cursor-pointer"
+            className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 cursor-pointer"
           >
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-2xl bg-amber-500 text-white flex items-center justify-center font-black text-sm shadow-md">
+              <div className="w-10 h-10 rounded-2xl bg-amber-500 text-white flex items-center justify-center font-black text-sm shadow-md shrink-0">
                 W2
               </div>
-              <div className="flex flex-col">
-                <div className="flex items-center gap-2">
+              <div className="flex flex-col min-w-0">
+                <div className="flex items-center gap-2 flex-wrap">
                   <span className="text-xs font-mono font-bold text-amber-600 dark:text-amber-400">Week 2</span>
                   <span className="text-[11px] font-bold text-amber-700 bg-amber-50 dark:bg-amber-950/60 px-2 py-0.5 rounded-md border border-amber-200">
                     Production Cloud Infrastructure
                   </span>
                 </div>
-                <h2 className="text-lg font-black text-slate-900 dark:text-white">
+                <h2 className="text-base sm:text-lg font-black text-slate-900 dark:text-white truncate">
                   ☁️ Week 2 — AWS Core + VPC Topology
                 </h2>
               </div>
             </div>
 
-            <div className="flex items-center gap-3">
+            <div className="flex items-center justify-between sm:justify-end gap-3 w-full sm:w-auto pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-100 dark:border-slate-800">
               <button 
                 onClick={(e) => { e.stopPropagation(); toggleLabComplete(2); }}
                 className={`px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all ${
@@ -379,26 +379,26 @@ export default function RoadmapPage() {
         }`}>
           <div 
             onClick={() => setExpandedWeek(expandedWeek === 3 ? 0 : 3)}
-            className="flex items-center justify-between cursor-pointer"
+            className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 cursor-pointer"
           >
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-2xl bg-purple-600 text-white flex items-center justify-center font-black text-sm shadow-md">
+              <div className="w-10 h-10 rounded-2xl bg-purple-600 text-white flex items-center justify-center font-black text-sm shadow-md shrink-0">
                 W3
               </div>
-              <div className="flex flex-col">
-                <div className="flex items-center gap-2">
+              <div className="flex flex-col min-w-0">
+                <div className="flex items-center gap-2 flex-wrap">
                   <span className="text-xs font-mono font-bold text-purple-600 dark:text-purple-400">Week 3</span>
                   <span className="text-[11px] font-bold text-purple-700 bg-purple-50 dark:bg-purple-950/60 px-2 py-0.5 rounded-md border border-purple-200">
                     Container Orchestration & Helm
                   </span>
                 </div>
-                <h2 className="text-lg font-black text-slate-900 dark:text-white">
+                <h2 className="text-base sm:text-lg font-black text-slate-900 dark:text-white truncate">
                   ☸️ Week 3 — Kubernetes Advanced + Helm Charts
                 </h2>
               </div>
             </div>
 
-            <div className="flex items-center gap-3">
+            <div className="flex items-center justify-between sm:justify-end gap-3 w-full sm:w-auto pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-100 dark:border-slate-800">
               <button 
                 onClick={(e) => { e.stopPropagation(); toggleLabComplete(3); }}
                 className={`px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all ${
@@ -480,26 +480,26 @@ export default function RoadmapPage() {
         }`}>
           <div 
             onClick={() => setExpandedWeek(expandedWeek === 4 ? 0 : 4)}
-            className="flex items-center justify-between cursor-pointer"
+            className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 cursor-pointer"
           >
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-2xl bg-red-600 text-white flex items-center justify-center font-black text-sm shadow-md">
+              <div className="w-10 h-10 rounded-2xl bg-red-600 text-white flex items-center justify-center font-black text-sm shadow-md shrink-0">
                 W4
               </div>
-              <div className="flex flex-col">
-                <div className="flex items-center gap-2">
+              <div className="flex flex-col min-w-0">
+                <div className="flex items-center gap-2 flex-wrap">
                   <span className="text-xs font-mono font-bold text-red-600 dark:text-red-400">Week 4</span>
                   <span className="text-[11px] font-bold text-red-700 bg-red-50 dark:bg-red-950/60 px-2 py-0.5 rounded-md border border-red-200">
                     Automated Deployment & Reliability
                   </span>
                 </div>
-                <h2 className="text-lg font-black text-slate-900 dark:text-white">
+                <h2 className="text-base sm:text-lg font-black text-slate-900 dark:text-white truncate">
                   🚀 Week 4 — CI/CD + SRE + Outage Simulations
                 </h2>
               </div>
             </div>
 
-            <div className="flex items-center gap-3">
+            <div className="flex items-center justify-between sm:justify-end gap-3 w-full sm:w-auto pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-100 dark:border-slate-800">
               <button 
                 onClick={(e) => { e.stopPropagation(); toggleLabComplete(4); }}
                 className={`px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all ${

@@ -6,12 +6,17 @@ import { usePathname, useRouter } from "next/navigation";
 import { 
   LayoutDashboard, CheckSquare, FileText, BarChart3, Trophy, 
   Map, Award, Settings, HelpCircle, LogOut, Cloud, Sparkles,
-  Users, CreditCard, Mail, HardDrive, Shield, Loader2
+  Users, CreditCard, Mail, HardDrive, Shield, Loader2, X
 } from "lucide-react";
 import { useAuthStore, useATSStore } from "@/lib/store";
 import { apiFetch } from "@/lib/api";
 
-export function Sidebar() {
+interface SidebarProps {
+  isOpenMobile?: boolean;
+  onCloseMobile?: () => void;
+}
+
+export function Sidebar({ isOpenMobile = false, onCloseMobile }: SidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
   const { user, isAuthenticated, logout } = useAuthStore();
@@ -64,6 +69,7 @@ export function Sidebar() {
 
   const handleLogout = () => {
     logout();
+    onCloseMobile?.();
     router.push("/login");
   };
 
@@ -103,51 +109,73 @@ export function Sidebar() {
   const displayName = dbUser?.user?.full_name || user?.full_name || user?.email?.split("@")[0] || "Candidate";
 
   return (
-    <aside className="w-[260px] h-screen border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-[#080d1a] flex flex-col sticky top-0 left-0 overflow-y-auto shrink-0 z-30 font-sans">
-      
-      {/* Brand Header */}
-      <div className="p-5 pb-3">
-        <Link prefetch={false} href="/" className="flex items-center gap-3 group">
-          <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-[#FF6B00] via-amber-500 to-orange-400 p-[1.5px] shadow-md shadow-[#FF6B00]/20 group-hover:scale-105 transition-transform">
-            <div className="w-full h-full bg-[#0B1E36] rounded-[10px] flex items-center justify-center text-white">
-              <Cloud className="w-4 h-4 text-[#FF6B00] fill-[#FF6B00]/20" />
-            </div>
-          </div>
-          <div className="flex flex-col">
-            <span className="text-base font-black tracking-tight text-[#0B1E36] dark:text-white leading-none">
-              CloudOps <span className="text-[#FF6B00]">AI</span>
-            </span>
-            <span className={`text-[9px] font-black uppercase tracking-widest mt-1.5 px-2 py-0.5 rounded-full w-max ${
-              isAdminMode 
-                ? 'bg-[#0B1E36] text-white border border-[#FF6B00]/40'
-                : 'bg-orange-100 dark:bg-orange-950/60 text-[#FF6B00] border border-[#FF6B00]/30'
-            }`}>
-              {isAdminMode ? "ADMIN PANEL PORTAL" : "CANDIDATE PORTAL"}
-            </span>
-          </div>
-        </Link>
-      </div>
+    <>
+      {/* Mobile Backdrop Overlay */}
+      {isOpenMobile && (
+        <div 
+          onClick={onCloseMobile}
+          className="fixed inset-0 bg-slate-950/60 backdrop-blur-xs z-40 lg:hidden transition-opacity"
+        />
+      )}
 
-      {/* Navigation List */}
-      <nav className="flex-1 px-3 py-2 flex flex-col gap-1 overflow-y-auto">
-        {navItems.map((item) => {
-          const isActive = pathname === item.href;
-          return (
-            <Link prefetch={false}
-              key={item.label}
-              href={item.href}
-              className={`flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-black transition-all ${
-                isActive
-                  ? "bg-gradient-to-r from-[#FF6B00] via-amber-500 to-orange-500 text-white shadow-md shadow-[#FF6B00]/20 font-extrabold"
-                  : "text-slate-600 dark:text-slate-400 hover:text-[#FF6B00] hover:bg-orange-50 dark:hover:bg-[#FF6B00]/10"
-              }`}
-            >
-              <item.icon className={`w-4 h-4 ${isActive ? "text-white" : "text-slate-400"}`} />
-              <span>{item.label}</span>
-            </Link>
-          );
-        })}
-      </nav>
+      <aside className={`
+        w-[260px] h-screen border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-[#080d1a] 
+        flex flex-col overflow-y-auto shrink-0 z-50 font-sans transition-transform duration-300
+        fixed lg:sticky top-0 left-0
+        ${isOpenMobile ? "translate-x-0 shadow-2xl" : "-translate-x-full lg:translate-x-0"}
+      `}>
+        
+        {/* Brand Header */}
+        <div className="p-5 pb-3 flex items-center justify-between">
+          <Link prefetch={false} href="/" onClick={onCloseMobile} className="flex items-center gap-3 group">
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-[#FF6B00] via-amber-500 to-orange-400 p-[1.5px] shadow-md shadow-[#FF6B00]/20 group-hover:scale-105 transition-transform">
+              <div className="w-full h-full bg-[#0B1E36] rounded-[10px] flex items-center justify-center text-white">
+                <Cloud className="w-4 h-4 text-[#FF6B00] fill-[#FF6B00]/20" />
+              </div>
+            </div>
+            <div className="flex flex-col">
+              <span className="text-base font-black tracking-tight text-[#0B1E36] dark:text-white leading-none">
+                CloudOps <span className="text-[#FF6B00]">AI</span>
+              </span>
+              <span className={`text-[9px] font-black uppercase tracking-widest mt-1.5 px-2 py-0.5 rounded-full w-max ${
+                isAdminMode 
+                  ? 'bg-[#0B1E36] text-white border border-[#FF6B00]/40'
+                  : 'bg-orange-100 dark:bg-orange-950/60 text-[#FF6B00] border border-[#FF6B00]/30'
+              }`}>
+                {isAdminMode ? "ADMIN PANEL PORTAL" : "CANDIDATE PORTAL"}
+              </span>
+            </div>
+          </Link>
+          <button
+            onClick={onCloseMobile}
+            className="p-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-slate-900 dark:hover:text-white lg:hidden"
+            title="Close Drawer"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+
+        {/* Navigation List */}
+        <nav className="flex-1 px-3 py-2 flex flex-col gap-1 overflow-y-auto">
+          {navItems.map((item) => {
+            const isActive = pathname === item.href;
+            return (
+              <Link prefetch={false}
+                key={item.label}
+                href={item.href}
+                onClick={onCloseMobile}
+                className={`flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-black transition-all ${
+                  isActive
+                    ? "bg-gradient-to-r from-[#FF6B00] via-amber-500 to-orange-500 text-white shadow-md shadow-[#FF6B00]/20 font-extrabold"
+                    : "text-slate-600 dark:text-slate-400 hover:text-[#FF6B00] hover:bg-orange-50 dark:hover:bg-[#FF6B00]/10"
+                }`}
+              >
+                <item.icon className={`w-4 h-4 ${isActive ? "text-white" : "text-slate-400"}`} />
+                <span>{item.label}</span>
+              </Link>
+            );
+          })}
+        </nav>
 
       {/* Bottom Section */}
       <div className="p-3.5 border-t border-slate-200 dark:border-slate-800 flex flex-col gap-3">
@@ -251,5 +279,6 @@ export function Sidebar() {
       </div>
 
     </aside>
+    </>
   );
 }

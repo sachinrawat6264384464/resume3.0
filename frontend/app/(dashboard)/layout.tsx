@@ -11,6 +11,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const router = useRouter();
   const { isAuthenticated, setAuth } = useAuthStore();
   const [mounted, setMounted] = useState(false);
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
 
   useEffect(() => {
     // Restore session from localStorage if present
@@ -30,11 +31,14 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   }, [setAuth]);
 
   return (
-    <div className="flex min-h-screen w-full bg-slate-50 dark:bg-[#050810]">
-      <Sidebar />
-      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-        <main className="flex-1 overflow-y-auto px-4 sm:px-6 lg:px-8 xl:px-12 py-6 sm:py-8 pb-20">
-          <Header />
+    <div className="flex min-h-screen w-full bg-slate-50 dark:bg-[#050810] relative">
+      <Sidebar 
+        isOpenMobile={isMobileSidebarOpen} 
+        onCloseMobile={() => setIsMobileSidebarOpen(false)} 
+      />
+      <div className="flex-1 flex flex-col min-w-0 overflow-hidden w-full">
+        <main className="flex-1 overflow-y-auto px-3 sm:px-6 lg:px-8 xl:px-10 py-4 sm:py-6 pb-20">
+          <Header onToggleMobileSidebar={() => setIsMobileSidebarOpen(prev => !prev)} />
           {children}
         </main>
       </div>
