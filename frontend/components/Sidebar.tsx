@@ -17,7 +17,17 @@ export function Sidebar() {
   const { user, isAuthenticated, logout } = useAuthStore();
   const isAnalyzing = useATSStore((s) => s.isAnalyzing);
 
-  const [dbUser, setDbUser] = useState<any>(null);
+  const [dbUser, setDbUser] = useState<any>(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const cached = localStorage.getItem("cached_user_profile");
+        return cached ? JSON.parse(cached) : null;
+      } catch {
+        return null;
+      }
+    }
+    return null;
+  });
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -27,6 +37,9 @@ export function Sidebar() {
           const res = await apiFetch("/candidates/me/profile");
           if (res?.data) {
             setDbUser(res.data);
+            if (typeof window !== "undefined") {
+              localStorage.setItem("cached_user_profile", JSON.stringify(res.data));
+            }
           }
         } catch (e) {
           console.warn("Sidebar profile fetch notice:", e);

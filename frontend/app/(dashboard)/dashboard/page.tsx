@@ -17,16 +17,31 @@ export default function CandidateDashboardPage() {
   const { user, setAuth } = useAuthStore();
   
   const [theme, setTheme] = useState<"light" | "dark">("light");
-  const [dbMetrics, setDbMetrics] = useState<any>(null);
-  const [candProfile, setCandProfile] = useState<any>(null);
+  const [dbMetrics, setDbMetrics] = useState<any>(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const cached = localStorage.getItem("cached_dash_metrics");
+        return cached ? JSON.parse(cached) : null;
+      } catch {
+        return null;
+      }
+    }
+    return null;
+  });
+  const [candProfile, setCandProfile] = useState<any>(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const cached = localStorage.getItem("cached_user_profile");
+        return cached ? JSON.parse(cached) : null;
+      } catch {
+        return null;
+      }
+    }
+    return null;
+  });
   const [loading, setLoading] = useState(false);
 
-  // Always fetch fresh real data from backend — no stale localStorage cache
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      localStorage.removeItem("cached_dash_metrics");
-    }
-
     // Fetch Real DB Data directly from backend
     const fetchUserData = async () => {
       try {
@@ -42,9 +57,15 @@ export default function CandidateDashboardPage() {
         }
         if (profileRes?.data) {
           setCandProfile(profileRes.data);
+          if (typeof window !== "undefined") {
+            localStorage.setItem("cached_user_profile", JSON.stringify(profileRes.data));
+          }
         }
         if (metricsRes?.data) {
           setDbMetrics(metricsRes.data);
+          if (typeof window !== "undefined") {
+            localStorage.setItem("cached_dash_metrics", JSON.stringify(metricsRes.data));
+          }
         }
       } catch (e) {
         console.warn("Dashboard fetch notice:", e);
@@ -556,13 +577,7 @@ export default function CandidateDashboardPage() {
             </span>
           </div>
 
-          <div className="flex flex-col gap-2 my-1">
-            {(dbMetrics?.roadmap || [
-              { week: "Week 1", title: "Linux & Shell Deep Dive", done: true },
-              { week: "Week 2", title: "AWS Core Services & VPC", done: false },
-              { week: "Week 3", title: "Kubernetes Advanced & Helm", done: false },
-              { week: "Week 4", title: "DevOps Projects & SRE Outages", done: false }
-            ]).map((item: any, i: number) => (
+            {(dbMetrics?.roadmap || []).map((item: any, i: number) => (
               <div key={i} className="flex items-center justify-between p-2 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200/60 dark:border-slate-800 text-xs font-bold">
                 <div className="flex items-center gap-2.5">
                   <span className="text-[10px] font-mono text-slate-400">{item.week}</span>

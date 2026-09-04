@@ -10,10 +10,38 @@ import {
 import { apiFetch } from "@/lib/api";
 
 export default function RoadmapPage() {
-  const [items, setItems] = useState<any[]>([]);
+  const [items, setItems] = useState<any[]>(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const cached = localStorage.getItem("cached_roadmap_items");
+        return cached ? JSON.parse(cached) : [];
+      } catch {
+        return [];
+      }
+    }
+    return [];
+  });
   const [loading, setLoading] = useState(true);
   const [expandedWeek, setExpandedWeek] = useState<number>(1);
-  const [completedLabs, setCompletedLabs] = useState<Record<number, boolean>>({});
+  const [completedLabs, setCompletedLabs] = useState<Record<number, boolean>>(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const cached = localStorage.getItem("cached_roadmap_items");
+        if (cached) {
+          const parsed = JSON.parse(cached);
+          const map: Record<number, boolean> = {};
+          parsed.forEach((item: any) => {
+            const num = item.week_number || (typeof item.week === "string" ? parseInt(item.week.replace("Week ", "")) : 1);
+            map[num] = item.is_completed ?? item.done ?? false;
+          });
+          return map;
+        }
+      } catch {
+        return {};
+      }
+    }
+    return {};
+  });
 
   useEffect(() => {
     const fetchRoadmap = async () => {
@@ -27,6 +55,9 @@ export default function RoadmapPage() {
             map[num] = item.is_completed ?? item.done ?? false;
           });
           setCompletedLabs(map);
+          if (typeof window !== "undefined") {
+            localStorage.setItem("cached_roadmap_items", JSON.stringify(res.data));
+          }
         }
       } catch (e) {
         console.warn("Roadmap fetch error:", e);
@@ -47,7 +78,26 @@ export default function RoadmapPage() {
     try {
       const res = await apiFetch(`/candidates/me/roadmap/${weekNum}/toggle`, { method: "POST" });
       if (res?.data && typeof res.data.done === "boolean") {
-        setCompletedLabs(prev => ({ ...prev, [weekNum]: res.data.done }));
+        setCompletedLabs(prev => {
+          const nextMap = { ...prev, [weekNum]: res.data.done };
+          if (typeof window !== "undefined") {
+            try {
+              const cached = localStorage.getItem("cached_roadmap_items");
+              if (cached) {
+                const arr = JSON.parse(cached);
+                const updated = arr.map((it: any) => {
+                  const num = it.week_number || (typeof it.week === "string" ? parseInt(it.week.replace("Week ", "")) : 1);
+                  if (num === weekNum) {
+                    return { ...it, is_completed: res.data.done, done: res.data.done };
+                  }
+                  return it;
+                });
+                localStorage.setItem("cached_roadmap_items", JSON.stringify(updated));
+              }
+            } catch {}
+          }
+          return nextMap;
+        });
         // Dispatch custom event so Sidebar and Candidate Dashboard instantly update XP & Level
         if (typeof window !== "undefined") {
           window.dispatchEvent(new Event("userProfileUpdated"));
