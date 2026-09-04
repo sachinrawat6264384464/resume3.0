@@ -157,8 +157,8 @@ export default function CandidateDashboardPage() {
   const candidateName = candProfile?.user?.full_name || user?.full_name || (user?.email ? user.email.split('@')[0] : "Candidate User");
   const userXp = candProfile?.xp ?? activeMetrics?.xp ?? (user as any)?.xp ?? 0;
   const userLevel = candProfile?.level ?? activeMetrics?.level ?? (user as any)?.level ?? 1;
-  const userStreak = candProfile?.streak_days ?? activeMetrics?.streak_days ?? (user as any)?.streak_days ?? 1;
-  const readiness = Math.round(candProfile?.readiness_score ?? activeMetrics?.readiness_score ?? 0);
+  const userStreak = activeMetrics?.streak_days ?? candProfile?.streak_days ?? (user as any)?.streak_days ?? 1;
+  const readiness = Math.round(activeMetrics?.readiness_score ?? candProfile?.readiness_score ?? 0);
   const targetSalaryBand = candProfile?.target_salary_band || dbMetrics?.target_salary_band || "₹18 – ₹40 LPA";
   const readinessBreakdown = activeMetrics?.readiness_breakdown || defaultCandidateMetrics.readiness_breakdown;
   const stagesProgress = activeMetrics?.stages_progress || defaultCandidateMetrics.stages_progress;

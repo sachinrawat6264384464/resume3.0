@@ -121,6 +121,30 @@ async def get_dashboard_metrics(
         await db.commit()
         await db.refresh(cand)
 
+    # 1. Real Datetime-Based Day Streak Tracking
+    from datetime import datetime, timezone
+    now_utc = datetime.now(timezone.utc)
+    today_date = now_utc.date()
+
+    if cand.last_active_at:
+        last_date = cand.last_active_at.date() if hasattr(cand.last_active_at, 'date') else now_utc.date()
+        days_diff = (today_date - last_date).days
+        if days_diff == 1:
+            cand.streak_days = (cand.streak_days or 0) + 1
+            cand.last_active_at = now_utc
+            await db.commit()
+        elif days_diff > 1:
+            cand.streak_days = 1
+            cand.last_active_at = now_utc
+            await db.commit()
+        elif days_diff == 0 and not cand.last_active_at:
+            cand.last_active_at = now_utc
+            await db.commit()
+    else:
+        cand.streak_days = 1
+        cand.last_active_at = now_utc
+        await db.commit()
+
     # 1. Real Stage Attempts from Database
     stmt_attempts = (
         select(StageAttempt)
@@ -258,6 +282,10 @@ async def get_dashboard_metrics(
             "system_design":   min(100, max(0, b_val - 2 if b_val > 0 else 0)),
             "devops_mindset":  min(100, max(0, b_val + 3 if b_val > 0 else 0))
         }
+
+    if round(cand.readiness_score or 0.0, 1) != round(computed_readiness, 1):
+        cand.readiness_score = computed_readiness
+        await db.commit()
 
     # 4. Dynamic ATS Resume Score & Top Skills from LangChain ResumeAudit
     stmt_aud = select(ResumeAudit).where(ResumeAudit.candidate_id == cand.id).order_by(desc(ResumeAudit.created_at)).limit(1)
