@@ -16,10 +16,29 @@ from app.schemas.common import StandardResponse
 router = APIRouter(prefix="/reminders", tags=["Smart Reminders"])
 
 async def get_current_candidate_id(payload: dict = Depends(verify_auth_token), db: AsyncSession = Depends(get_db)) -> str:
+    from sqlalchemy import select
+    import uuid
+    from app.models.candidate import Candidate
     auth_svc = AuthService(db)
     user = await auth_svc.get_current_user_from_payload(payload)
     cand_svc = CandidateService(db)
     cand = await cand_svc.get_candidate_by_user_id(user.id, user.organization_id)
+    if not cand:
+        stmt = select(Candidate).where(Candidate.user_id == user.id)
+        res = await db.execute(stmt)
+        cand = res.scalar_one_or_none()
+        if not cand:
+            cand = Candidate(
+                id=str(uuid.uuid4()),
+                user_id=user.id,
+                organization_id=user.organization_id or "org-default",
+                target_role="CloudOps Engineer",
+                xp=100,
+                level=1
+            )
+            db.add(cand)
+            await db.commit()
+            await db.refresh(cand)
     return cand.id
 
 @router.get("", response_model=StandardResponse[List[ReminderOut]])

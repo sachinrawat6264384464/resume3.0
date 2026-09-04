@@ -47,9 +47,13 @@ export default function SmartRemindersPage() {
     fetchRemindersData();
   }, [activeFilter]);
 
+  // Error message state (UI inline alert, no native browser popup)
+  const [modalError, setModalError] = useState<string | null>(null);
+
   const handleCreateReminder = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!title.trim() || !message.trim()) return;
+    setModalError(null);
     try {
       setIsSubmitting(true);
       await apiFetch("/reminders", {
@@ -65,8 +69,8 @@ export default function SmartRemindersPage() {
       setTitle("");
       setMessage("");
       fetchRemindersData();
-    } catch (e) {
-      alert("Failed to create reminder.");
+    } catch (e: any) {
+      setModalError(e.message || "Failed to create reminder. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
@@ -92,6 +96,7 @@ export default function SmartRemindersPage() {
 
   const handleSnooze = async (minutes: number) => {
     if (!snoozeModalReminderId) return;
+    setModalError(null);
     try {
       setIsSubmitting(true);
       await apiFetch(`/reminders/${snoozeModalReminderId}/snooze`, {
@@ -100,8 +105,8 @@ export default function SmartRemindersPage() {
       });
       setSnoozeModalReminderId(null);
       fetchRemindersData();
-    } catch (e) {
-      alert("Failed to snooze reminder.");
+    } catch (e: any) {
+      setModalError(e.message || "Failed to snooze reminder.");
     } finally {
       setIsSubmitting(false);
     }
@@ -378,6 +383,12 @@ export default function SmartRemindersPage() {
             </div>
 
             <form onSubmit={handleCreateReminder} className="flex flex-col gap-3">
+              {modalError && (
+                <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/30 text-red-500 text-xs font-bold flex items-center gap-2">
+                  <AlertCircle className="w-4 h-4 shrink-0 text-red-500" />
+                  <span>{modalError}</span>
+                </div>
+              )}
               <div>
                 <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1">Title</label>
                 <input

@@ -68,9 +68,13 @@ export default function StudyPlannerPage() {
     fetchPlannerData();
   }, [activeTab]);
 
+  // Error state for inline alerts (no browser popup alert)
+  const [modalError, setModalError] = useState<string | null>(null);
+
   const handleCreateTask = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!title.trim()) return;
+    setModalError(null);
     try {
       setIsSubmitting(true);
       await apiFetch("/study-planner/tasks", {
@@ -90,8 +94,8 @@ export default function StudyPlannerPage() {
       setIsAddModalOpen(false);
       setTitle("");
       fetchPlannerData();
-    } catch (e) {
-      alert("Failed to create study task. Please try again.");
+    } catch (e: any) {
+      setModalError(e.message || "Failed to create study task. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
@@ -119,6 +123,7 @@ export default function StudyPlannerPage() {
   };
 
   const handleGenerateAiPlan = async () => {
+    setModalError(null);
     try {
       setIsSubmitting(true);
       await apiFetch("/study-planner/generate-ai-plan", {
@@ -130,8 +135,8 @@ export default function StudyPlannerPage() {
       });
       setIsAiModalOpen(false);
       fetchPlannerData();
-    } catch (e) {
-      alert("Failed to generate AI plan. Please check backend connection.");
+    } catch (e: any) {
+      setModalError(e.message || "Failed to generate AI plan. Please check backend connection.");
     } finally {
       setIsSubmitting(false);
     }
@@ -139,6 +144,7 @@ export default function StudyPlannerPage() {
 
   const handleSaveGoals = async (e: React.FormEvent) => {
     e.preventDefault();
+    setModalError(null);
     try {
       setIsSubmitting(true);
       await apiFetch("/study-planner/goals", {
@@ -150,8 +156,8 @@ export default function StudyPlannerPage() {
         })
       });
       fetchPlannerData();
-    } catch (e) {
-      alert("Failed to save goals.");
+    } catch (e: any) {
+      setModalError(e.message || "Failed to save goals.");
     } finally {
       setIsSubmitting(false);
     }
@@ -487,6 +493,12 @@ export default function StudyPlannerPage() {
             </div>
 
             <form onSubmit={handleCreateTask} className="flex flex-col gap-3">
+              {modalError && (
+                <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/30 text-red-500 text-xs font-bold flex items-center gap-2">
+                  <AlertCircle className="w-4 h-4 shrink-0 text-red-500" />
+                  <span>{modalError}</span>
+                </div>
+              )}
               <div>
                 <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1">Task Title</label>
                 <input
@@ -589,6 +601,13 @@ export default function StudyPlannerPage() {
             <p className="text-xs text-slate-500 font-medium leading-relaxed">
               FastAPI AI Engine will analyze your evaluated voice interview question scores & missing ATS resume skills from PostgreSQL to generate a 5-task preparation sprint.
             </p>
+
+            {modalError && (
+              <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/30 text-red-500 text-xs font-bold flex items-center gap-2 text-left">
+                <AlertCircle className="w-4 h-4 shrink-0 text-red-500" />
+                <span>{modalError}</span>
+              </div>
+            )}
 
             <button
               onClick={handleGenerateAiPlan}
