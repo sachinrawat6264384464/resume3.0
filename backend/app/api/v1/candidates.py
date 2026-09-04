@@ -324,7 +324,7 @@ async def get_dashboard_metrics(
         resume_ats = {
             "score": round(ats_score_val, 1),
             "matched_jd": cand.target_role or "Senior DevOps Engineer",
-            "skills_matched": f"{min(24, int(5 + ((cand.xp or 0) / 750) * 17))} / 24" if ats_score_val > 0 else "0 / 0",
+            "skills_matched": "0 / 0",
             "keywords_found": f"{int(ats_score_val * 0.95)}%" if ats_score_val > 0 else "0%",
             "ats_score": f"{round(ats_score_val, 1)} / 100" if ats_score_val > 0 else "0 / 100"
         }
