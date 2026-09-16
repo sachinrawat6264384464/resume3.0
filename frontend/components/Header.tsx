@@ -131,22 +131,22 @@ export function Header({ onToggleMobileSidebar }: HeaderProps) {
   const candidateRole = (mounted && user?.role === "ADMIN") ? "Administrator" : ((mounted && candProfile?.target_role) || "Cloud Engineer");
 
   return (
-    <header className="flex items-center justify-between gap-3 pb-4 sm:pb-6 border-b border-slate-200 dark:border-slate-800/80 mb-6 font-sans">
+    <header className="flex items-center justify-between gap-3 p-3.5 px-5 rounded-3xl bg-white/90 dark:bg-[#090e1a]/90 backdrop-blur-xl border border-slate-200/80 dark:border-slate-800/90 shadow-md shadow-slate-950/5 mb-6 font-sans transition-all">
       
       {/* Left Brand / Assessment OS Badge & Mobile Hamburger Menu */}
-      <div className="flex items-center gap-2.5">
+      <div className="flex items-center gap-3">
         <button
           onClick={onToggleMobileSidebar}
-          className="p-2.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-200 hover:text-[#FF6B00] lg:hidden shadow-xs cursor-pointer"
+          className="p-2.5 rounded-2xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-200 hover:text-[#FF6B00] lg:hidden shadow-xs cursor-pointer transition-colors"
           title="Open Menu"
           aria-label="Toggle navigation drawer"
         >
           <Menu className="w-5 h-5" />
         </button>
 
-        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-2xl bg-amber-50/80 dark:bg-slate-900 border border-[#FF9900]/30 shadow-xs text-xs font-mono font-bold text-[#FF9900]">
+        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-2xl bg-[#FF9900]/10 dark:bg-[#FF9900]/10 border border-[#FF9900]/30 shadow-xs text-xs font-mono font-black text-[#FF9900]">
           <ShieldCheck className="w-4 h-4 text-[#FF9900] shrink-0" />
-          <span className="tracking-wide text-[10px] sm:text-xs truncate max-w-[150px] sm:max-w-none">CLOUDOPS AI ASSESSMENT OS</span>
+          <span className="tracking-widest text-[10px] sm:text-xs truncate max-w-[150px] sm:max-w-none uppercase">CLOUDOPS AI ASSESSMENT OS</span>
         </div>
       </div>
 

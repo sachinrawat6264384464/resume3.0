@@ -51,49 +51,62 @@ export default function LandingPage() {
   return (
     <div className="min-h-screen bg-[#FAFAFA] dark:bg-[#070b14] text-slate-900 dark:text-slate-100 font-sans selection:bg-[#FF6B00] selection:text-white overflow-x-hidden transition-colors duration-300">
       
-      {/* 1. TOP NAVBAR */}
-      <header className="sticky top-0 z-50 backdrop-blur-md bg-white/90 dark:bg-[#070b14]/90 border-b border-slate-200/80 dark:border-slate-800 shadow-xs transition-colors duration-300">
+      {/* 1. TOP NAVBAR (Ultra-Sleek Redox Glassmorphism) */}
+      <header className="sticky top-0 z-50 backdrop-blur-xl bg-white/80 dark:bg-[#070b14]/80 border-b border-slate-200/80 dark:border-slate-800/80 shadow-md shadow-slate-900/5 transition-all duration-300">
         <div className="max-w-[1536px] mx-auto px-4 sm:px-6 lg:px-12 h-20 flex items-center justify-between">
           
           {/* Logo */}
           <Link prefetch={false} href="/" className="flex items-center gap-3 group">
-            <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-[#FF6B00] via-amber-500 to-orange-400 p-[1.5px] shadow-md shadow-[#FF6B00]/20 group-hover:scale-105 transition-transform">
+            <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-[#FF6B00] via-amber-500 to-orange-400 p-[1.5px] shadow-lg shadow-[#FF6B00]/30 group-hover:scale-105 transition-transform duration-300">
               <div className="w-full h-full bg-[#0B1E36] rounded-[14px] flex items-center justify-center text-white">
                 <Cloud className="w-5 h-5 text-[#FF6B00] fill-[#FF6B00]/20" />
               </div>
             </div>
             <div className="flex flex-col">
-              <span className="text-xl font-black tracking-tight text-[#0B1E36] dark:text-white flex items-center gap-1">
-                CloudOps <span className="text-[#FF6B00]">AI</span>
-              </span>
-              <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none">
+              <div className="flex items-center gap-1.5">
+                <span className="text-xl font-black tracking-tight text-[#0B1E36] dark:text-white leading-none">
+                  CloudOps <span className="text-[#FF6B00]">AI</span>
+                </span>
+                <span className="px-2 py-0.5 rounded-full text-[9px] font-black text-[#FF6B00] bg-[#FF6B00]/10 border border-[#FF6B00]/30 uppercase tracking-widest hidden sm:inline-block">
+                  PRO
+                </span>
+              </div>
+              <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-widest leading-none mt-1">
                 AI VOICE INTERVIEW & ATS
               </span>
             </div>
           </Link>
 
-          {/* Center Links */}
-          <nav className="hidden md:flex items-center gap-8 text-xs font-extrabold text-slate-700 dark:text-slate-300">
-            <a href="#features" className="hover:text-[#FF6B00] dark:hover:text-[#FF6B00] transition-colors">Features</a>
-            <a href="#voice-ai" className="hover:text-[#FF6B00] dark:hover:text-[#FF6B00] transition-colors">How It Works</a>
-            <a href="#ats" className="hover:text-[#FF6B00] dark:hover:text-[#FF6B00] transition-colors">ATS Analyzer</a>
-            <a href="#faq" className="hover:text-[#FF6B00] dark:hover:text-[#FF6B00] transition-colors">FAQ</a>
+          {/* Center Links (Sleek High-Contrast Pills) */}
+          <nav className="hidden md:flex items-center gap-1.5 p-1.5 rounded-full bg-slate-100/80 dark:bg-slate-900/80 border border-slate-200/60 dark:border-slate-800">
+            <a href="#features" className="px-4 py-2 rounded-full text-xs font-black text-slate-700 dark:text-slate-300 hover:text-[#FF6B00] dark:hover:text-[#FF6B00] hover:bg-white dark:hover:bg-slate-800 transition-all">
+              Features
+            </a>
+            <a href="#voice-ai" className="px-4 py-2 rounded-full text-xs font-black text-slate-700 dark:text-slate-300 hover:text-[#FF6B00] dark:hover:text-[#FF6B00] hover:bg-white dark:hover:bg-slate-800 transition-all">
+              How It Works
+            </a>
+            <a href="#ats" className="px-4 py-2 rounded-full text-xs font-black text-slate-700 dark:text-slate-300 hover:text-[#FF6B00] dark:hover:text-[#FF6B00] hover:bg-white dark:hover:bg-slate-800 transition-all">
+              ATS Analyzer
+            </a>
+            <a href="#faq" className="px-4 py-2 rounded-full text-xs font-black text-slate-700 dark:text-slate-300 hover:text-[#FF6B00] dark:hover:text-[#FF6B00] hover:bg-white dark:hover:bg-slate-800 transition-all">
+              FAQ
+            </a>
           </nav>
 
           {/* Right Action Buttons */}
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3">
             <ThemeToggle />
 
             <Link prefetch={false} 
               href="/login" 
-              className="text-xs font-extrabold text-slate-700 dark:text-slate-300 hover:text-[#0B1E36] dark:hover:text-white px-2 py-2 transition-colors"
+              className="text-xs font-extrabold text-slate-700 dark:text-slate-200 hover:text-[#FF6B00] dark:hover:text-[#FF6B00] px-4 py-2.5 rounded-full hover:bg-slate-100 dark:hover:bg-slate-900 transition-all"
             >
               Sign In
             </Link>
 
             <Link prefetch={false} 
               href="/register" 
-              className="text-xs font-black text-white bg-gradient-to-r from-[#FF6B00] via-amber-500 to-orange-500 hover:from-orange-500 hover:to-amber-600 px-5 py-3 rounded-full shadow-lg shadow-[#FF6B00]/25 flex items-center gap-2 hover:scale-[1.02] active:scale-[0.98] transition-all"
+              className="text-xs font-black text-white bg-gradient-to-r from-[#FF6B00] via-amber-500 to-orange-500 hover:from-orange-500 hover:to-amber-600 px-5 py-3 rounded-full shadow-lg shadow-[#FF6B00]/30 flex items-center gap-2 hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer"
             >
               <span>Start Free Interview</span>
               <ArrowRight className="w-3.5 h-3.5" />
