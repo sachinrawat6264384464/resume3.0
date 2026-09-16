@@ -1,5 +1,5 @@
 function getApiBase(): string {
-  let base = process.env.NEXT_PUBLIC_API_URL || "https://handcuff-dweller-crimp.ngrok-free.dev/api/v1";
+  let base = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000/api/v1";
 
   // If running in browser on a production domain (like Vercel) and base points to localhost, force public ngrok endpoint
   if (typeof window !== "undefined") {
@@ -7,6 +7,11 @@ function getApiBase(): string {
     if (host !== "localhost" && host !== "127.0.0.1") {
       if (!base || base.includes("localhost") || base.includes("127.0.0.1")) {
         base = "https://handcuff-dweller-crimp.ngrok-free.dev/api/v1";
+      }
+    } else {
+      // On localhost/127.0.0.1, default to local backend unless explicitly pointing elsewhere
+      if (!base) {
+        base = "http://127.0.0.1:8000/api/v1";
       }
     }
   }

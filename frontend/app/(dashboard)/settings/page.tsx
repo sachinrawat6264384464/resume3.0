@@ -39,6 +39,7 @@ export default function SettingsPage() {
       const res = await apiFetch("/candidates/me/profile", {
         method: "PUT",
         body: JSON.stringify({
+          full_name: fullName,
           phone,
           target_role: targetRole,
           target_salary_band: salaryBand
@@ -46,6 +47,9 @@ export default function SettingsPage() {
       });
       if (res?.data) {
         setMsg("Settings saved successfully to database!");
+        if (typeof window !== "undefined") {
+          window.dispatchEvent(new Event("userProfileUpdated"));
+        }
       }
     } catch (e: any) {
       setMsg("Settings saved successfully!");

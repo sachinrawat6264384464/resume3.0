@@ -207,46 +207,52 @@ export default function LandingPage() {
             </div>
 
             {/* Hero Right Column: AWS Architecture Mock Visual with Background Engineer Photo Overlay */}
+            {/* Hero Right Column: AWS Architecture Mock Visual with High-End Redox Aesthetics */}
             <div className="lg:col-span-7 relative">
               
-              {/* Floating ambient glow */}
-              <div className="absolute -inset-4 rounded-3xl bg-gradient-to-r from-orange-400/20 via-blue-500/15 to-amber-500/10 blur-2xl pointer-events-none -z-10" />
+              {/* Floating ambient orange glow */}
+              <div className="absolute -inset-4 rounded-3xl bg-gradient-to-r from-[#FF6B00]/25 via-amber-500/15 to-orange-600/20 blur-3xl pointer-events-none -z-10" />
 
-              <div className="w-full rounded-[28px] bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-2xl shadow-slate-400/30 dark:shadow-black/70 overflow-hidden flex flex-col md:flex-row min-h-[470px] relative transition-colors duration-300">
+              <div className="w-full rounded-[32px] bg-[#070B14] border border-slate-800 shadow-2xl shadow-black/80 overflow-hidden flex flex-col md:flex-row min-h-[480px] relative transition-colors duration-300">
                 
-                {/* Dark Blue Sidebar */}
-                <div className="w-full md:w-52 bg-[#0B1E36] p-5 text-white flex flex-col justify-between shrink-0">
+                {/* Dark Blue-Black Sidebar */}
+                <div className="w-full md:w-56 bg-[#0B1220] p-5 text-white flex flex-col justify-between shrink-0 border-r border-slate-800/80">
                   <div className="flex flex-col gap-5">
-                    <div className="flex items-center gap-2">
-                      <div className="w-7 h-7 rounded-xl bg-[#FF6B00] flex items-center justify-center text-white font-bold shadow-md shadow-[#FF6B00]/30">
-                        <Cloud className="w-4 h-4" />
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-[#FF6B00] to-amber-500 flex items-center justify-center text-white font-black shadow-lg shadow-[#FF6B00]/30">
+                        <Cloud className="w-4.5 h-4.5" />
                       </div>
-                      <span className="text-sm font-black tracking-tight text-white">CloudOps AI</span>
+                      <div className="flex flex-col leading-none">
+                        <span className="text-sm font-black tracking-tight text-white uppercase">CloudOps AI</span>
+                        <span className="text-[9px] font-extrabold text-[#FF6B00] uppercase tracking-widest mt-0.5">ASSESSMENT OS</span>
+                      </div>
                     </div>
 
-                    <div className="flex flex-col items-center text-center p-3 rounded-2xl bg-white/5 border border-white/10">
-                      <div className="w-13 h-13 rounded-full overflow-hidden border-2 border-[#FF6B00] mb-2 shadow-md">
+                    {/* Candidate User Card */}
+                    <div className="flex flex-col items-center text-center p-3.5 rounded-2xl bg-white/[0.04] border border-white/10 shadow-inner">
+                      <div className="relative w-14 h-14 rounded-full overflow-hidden border-2 border-[#FF6B00] mb-2 shadow-lg shadow-[#FF6B00]/20">
                         <img loading="lazy" decoding="async" 
                           src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=200" 
                           alt="Rahul Rawat Profile" 
                           className="w-full h-full object-cover" 
                         />
+                        <span className="absolute bottom-0 right-0 w-3.5 h-3.5 bg-emerald-500 border-2 border-[#0B1220] rounded-full" title="Online" />
                       </div>
-                      <span className="text-xs font-black text-white">Rahul Rawat</span>
-                      <span className="text-[10px] text-slate-300 font-semibold">Cloud Engineer</span>
+                      <span className="text-xs font-black text-white tracking-wide">Rahul Rawat</span>
+                      <span className="text-[10px] text-amber-400 font-bold uppercase tracking-wider mt-0.5">Cloud Engineer</span>
                     </div>
 
                     {/* Interactive Sidebar Navigation Tabs */}
-                    <div className="flex flex-col gap-1.5 text-[11px] font-semibold">
+                    <div className="flex flex-col gap-1 text-[11px] font-bold">
                       <button
                         onClick={() => setActiveHeroTab("overview")}
                         className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl transition-all text-left ${
                           activeHeroTab === "overview"
-                            ? "bg-white/15 text-white font-bold border border-white/20 shadow-xs"
+                            ? "bg-[#FF6B00] text-white font-black shadow-lg shadow-[#FF6B00]/30"
                             : "text-slate-400 hover:text-white hover:bg-white/5"
                         }`}
                       >
-                        <Home className={`w-3.5 h-3.5 ${activeHeroTab === "overview" ? "text-[#FF6B00]" : ""}`} />
+                        <Home className="w-4 h-4" />
                         <span>Overview</span>
                       </button>
 
@@ -254,11 +260,11 @@ export default function LandingPage() {
                         onClick={() => setActiveHeroTab("practice")}
                         className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl transition-all text-left ${
                           activeHeroTab === "practice"
-                            ? "bg-white/15 text-white font-bold border border-white/20 shadow-xs"
+                            ? "bg-[#FF6B00] text-white font-black shadow-lg shadow-[#FF6B00]/30"
                             : "text-slate-400 hover:text-white hover:bg-white/5"
                         }`}
                       >
-                        <Mic className={`w-3.5 h-3.5 ${activeHeroTab === "practice" ? "text-[#FF6B00]" : ""}`} />
+                        <Mic className="w-4 h-4" />
                         <span>Interview Practice</span>
                       </button>
 
@@ -266,11 +272,11 @@ export default function LandingPage() {
                         onClick={() => setActiveHeroTab("ats")}
                         className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl transition-all text-left ${
                           activeHeroTab === "ats"
-                            ? "bg-white/15 text-white font-bold border border-white/20 shadow-xs"
+                            ? "bg-[#FF6B00] text-white font-black shadow-lg shadow-[#FF6B00]/30"
                             : "text-slate-400 hover:text-white hover:bg-white/5"
                         }`}
                       >
-                        <FileText className={`w-3.5 h-3.5 ${activeHeroTab === "ats" ? "text-[#FF6B00]" : ""}`} />
+                        <FileText className="w-4 h-4" />
                         <span>ATS Analyzer</span>
                       </button>
 
@@ -278,11 +284,11 @@ export default function LandingPage() {
                         onClick={() => setActiveHeroTab("roadmap")}
                         className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl transition-all text-left ${
                           activeHeroTab === "roadmap"
-                            ? "bg-white/15 text-white font-bold border border-white/20 shadow-xs"
+                            ? "bg-[#FF6B00] text-white font-black shadow-lg shadow-[#FF6B00]/30"
                             : "text-slate-400 hover:text-white hover:bg-white/5"
                         }`}
                       >
-                        <Flag className={`w-3.5 h-3.5 ${activeHeroTab === "roadmap" ? "text-[#FF6B00]" : ""}`} />
+                        <Flag className="w-4 h-4" />
                         <span>Roadmap</span>
                       </button>
 
@@ -290,11 +296,11 @@ export default function LandingPage() {
                         onClick={() => setActiveHeroTab("profile")}
                         className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl transition-all text-left ${
                           activeHeroTab === "profile"
-                            ? "bg-white/15 text-white font-bold border border-white/20 shadow-xs"
+                            ? "bg-[#FF6B00] text-white font-black shadow-lg shadow-[#FF6B00]/30"
                             : "text-slate-400 hover:text-white hover:bg-white/5"
                         }`}
                       >
-                        <User className={`w-3.5 h-3.5 ${activeHeroTab === "profile" ? "text-[#FF6B00]" : ""}`} />
+                        <User className="w-4 h-4" />
                         <span>Profile</span>
                       </button>
                     </div>
@@ -303,141 +309,159 @@ export default function LandingPage() {
                 </div>
 
                 {/* Dynamic Right Content Panel */}
-                <div className="flex-1 p-6 bg-slate-50/70 dark:bg-slate-900/70 flex flex-col justify-between gap-5">
+                <div className="flex-1 p-6 bg-[#070B14] flex flex-col justify-between gap-5">
                   
                   {activeHeroTab === "overview" && (
                     <>
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
-                          <span className="px-2 py-0.5 rounded text-[10px] font-mono font-black text-[#FF6B00] bg-orange-500/10 border border-[#FF6B00]/30 uppercase">AWS</span>
-                          <span className="text-xs font-black text-slate-900 dark:text-white">AWS Incident Simulation OS</span>
+                          <span className="px-2.5 py-1 rounded-md text-[10px] font-mono font-black text-[#FF6B00] bg-[#FF6B00]/10 border border-[#FF6B00]/30 uppercase tracking-widest">
+                            AWS
+                          </span>
+                          <span className="text-xs sm:text-sm font-black text-white tracking-wide uppercase">
+                            AWS Incident Simulation OS
+                          </span>
                         </div>
-                        <span className="text-xs font-extrabold px-3 py-1 rounded-full bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800 flex items-center gap-1.5 shadow-xs">
-                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                        <span className="text-xs font-black px-3.5 py-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 flex items-center gap-1.5 shadow-lg shadow-emerald-500/10">
+                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
                           94% Match Score
                         </span>
                       </div>
 
                       {/* AWS Connected Architecture Flow */}
-                      <div className="p-4 rounded-2xl bg-white dark:bg-slate-950 border border-slate-200/80 dark:border-slate-800 shadow-sm flex items-center justify-between overflow-x-auto gap-2">
+                      <div className="p-4 rounded-2xl bg-[#0F172A] border border-slate-800 shadow-xl flex items-center justify-between overflow-x-auto gap-2">
                         <div className="flex flex-col items-center gap-1.5 shrink-0">
-                          <div className="w-10 h-10 rounded-xl bg-slate-900 text-white flex items-center justify-center shadow-md border border-slate-700">
-                            <Monitor className="w-4 h-4" />
+                          <div className="w-10 h-10 rounded-xl bg-slate-800 text-white flex items-center justify-center shadow-md border border-slate-700">
+                            <Monitor className="w-4.5 h-4.5 text-slate-200" />
                           </div>
-                          <span className="text-[10px] font-bold text-slate-600 dark:text-slate-300">Client</span>
+                          <span className="text-[10px] font-extrabold text-slate-300 uppercase tracking-wider">Client</span>
                         </div>
-                        <span className="text-[#FF6B00] font-bold text-xs">➔</span>
+                        <span className="text-[#FF6B00] font-black text-xs animate-pulse">➔</span>
 
                         <div className="flex flex-col items-center gap-1.5 shrink-0">
-                          <div className="w-10 h-10 rounded-xl bg-purple-600 text-white flex items-center justify-center shadow-md shadow-purple-500/20">
-                            <Globe className="w-4 h-4" />
+                          <div className="w-10 h-10 rounded-xl bg-purple-600/90 text-white flex items-center justify-center shadow-lg shadow-purple-500/20 border border-purple-400/30">
+                            <Globe className="w-4.5 h-4.5" />
                           </div>
-                          <span className="text-[10px] font-bold text-slate-600 dark:text-slate-300">Route 53</span>
+                          <span className="text-[10px] font-extrabold text-purple-300 uppercase tracking-wider">Route 53</span>
                         </div>
-                        <span className="text-[#FF6B00] font-bold text-xs">➔</span>
+                        <span className="text-[#FF6B00] font-black text-xs animate-pulse">➔</span>
 
                         <div className="flex flex-col items-center gap-1.5 shrink-0">
-                          <div className="w-10 h-10 rounded-xl bg-indigo-600 text-white flex items-center justify-center shadow-md shadow-indigo-500/20">
-                            <Layers className="w-4 h-4" />
+                          <div className="w-10 h-10 rounded-xl bg-indigo-600/90 text-white flex items-center justify-center shadow-lg shadow-indigo-500/20 border border-indigo-400/30">
+                            <Layers className="w-4.5 h-4.5" />
                           </div>
-                          <span className="text-[10px] font-bold text-slate-600 dark:text-slate-300">ALB</span>
+                          <span className="text-[10px] font-extrabold text-indigo-300 uppercase tracking-wider">ALB</span>
                         </div>
-                        <span className="text-[#FF6B00] font-bold text-xs">➔</span>
+                        <span className="text-[#FF6B00] font-black text-xs animate-pulse">➔</span>
 
                         <div className="flex flex-col items-center gap-1.5 shrink-0">
-                          <div className="w-10 h-10 rounded-xl bg-[#FF6B00] text-white flex items-center justify-center shadow-md shadow-orange-500/20">
-                            <Cpu className="w-4 h-4" />
+                          <div className="w-10 h-10 rounded-xl bg-[#FF6B00] text-white flex items-center justify-center shadow-lg shadow-[#FF6B00]/30 border border-orange-400/30">
+                            <Cpu className="w-4.5 h-4.5" />
                           </div>
-                          <span className="text-[10px] font-bold text-slate-600 dark:text-slate-300">EC2</span>
+                          <span className="text-[10px] font-extrabold text-[#FF6B00] uppercase tracking-wider">EC2</span>
                         </div>
-                        <span className="text-[#FF6B00] font-bold text-xs">➔</span>
+                        <span className="text-[#FF6B00] font-black text-xs animate-pulse">➔</span>
 
                         <div className="flex flex-col items-center gap-1.5 shrink-0">
-                          <div className="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center shadow-md shadow-blue-500/20">
-                            <Database className="w-4 h-4" />
+                          <div className="w-10 h-10 rounded-xl bg-blue-600/90 text-white flex items-center justify-center shadow-lg shadow-blue-500/20 border border-blue-400/30">
+                            <Database className="w-4.5 h-4.5" />
                           </div>
-                          <span className="text-[10px] font-bold text-slate-600 dark:text-slate-300">RDS</span>
+                          <span className="text-[10px] font-extrabold text-blue-300 uppercase tracking-wider">RDS</span>
                         </div>
-                        <span className="text-[#FF6B00] font-bold text-xs">➔</span>
+                        <span className="text-[#FF6B00] font-black text-xs animate-pulse">➔</span>
 
                         <div className="flex flex-col items-center gap-1.5 shrink-0">
-                          <div className="w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center shadow-md shadow-emerald-500/20">
-                            <Archive className="w-4 h-4" />
+                          <div className="w-10 h-10 rounded-xl bg-emerald-600/90 text-white flex items-center justify-center shadow-lg shadow-emerald-500/20 border border-emerald-400/30">
+                            <Archive className="w-4.5 h-4.5" />
                           </div>
-                          <span className="text-[10px] font-bold text-slate-600 dark:text-slate-300">S3</span>
+                          <span className="text-[10px] font-extrabold text-emerald-300 uppercase tracking-wider">S3</span>
                         </div>
                       </div>
 
-                      {/* 3 Metric Columns */}
+                      {/* 3 Metric Columns with Redox Bold Typography */}
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                        <div className="p-3.5 rounded-2xl bg-white dark:bg-slate-950 border border-slate-200/80 dark:border-slate-800 shadow-xs flex flex-col gap-2.5">
-                          <span className="text-xs font-black text-slate-900 dark:text-white flex items-center gap-1.5">
+                        
+                        {/* Skills */}
+                        <div className="p-4 rounded-2xl bg-[#0F172A] border border-slate-800 shadow-lg flex flex-col gap-3">
+                          <span className="text-xs font-black text-white flex items-center gap-1.5 uppercase tracking-wider">
                             <Code2 className="w-4 h-4 text-[#FF6B00]" />
-                            Skills
+                            Skills Matrix
                           </span>
-                          <div className="flex flex-col gap-2 text-[10px] font-bold text-slate-600 dark:text-slate-300">
+                          <div className="flex flex-col gap-2.5 text-[10px] font-bold text-slate-300">
                             <div>
-                              <div className="flex justify-between mb-1"><span>AWS Services</span></div>
-                              <div className="h-1.5 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
-                                <div className="h-full bg-gradient-to-r from-[#FF6B00] to-amber-500 w-[90%]" />
+                              <div className="flex justify-between mb-1 text-[11px] font-extrabold text-white">
+                                <span>AWS Services</span>
+                                <span className="font-mono text-[#FF6B00]">90%</span>
+                              </div>
+                              <div className="h-1.5 w-full bg-slate-800 rounded-full overflow-hidden">
+                                <div className="h-full bg-gradient-to-r from-[#FF6B00] via-amber-500 to-orange-400 w-[90%]" />
                               </div>
                             </div>
                             <div>
-                              <div className="flex justify-between mb-1"><span>Networking</span></div>
-                              <div className="h-1.5 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
-                                <div className="h-full bg-gradient-to-r from-[#FF6B00] to-amber-500 w-[84%]" />
+                              <div className="flex justify-between mb-1 text-[11px] font-extrabold text-white">
+                                <span>Networking</span>
+                                <span className="font-mono text-[#FF6B00]">84%</span>
+                              </div>
+                              <div className="h-1.5 w-full bg-slate-800 rounded-full overflow-hidden">
+                                <div className="h-full bg-gradient-to-r from-[#FF6B00] via-amber-500 to-orange-400 w-[84%]" />
                               </div>
                             </div>
                             <div>
-                              <div className="flex justify-between mb-1"><span>IAM & Security</span></div>
-                              <div className="h-1.5 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
-                                <div className="h-full bg-gradient-to-r from-[#FF6B00] to-amber-500 w-[78%]" />
+                              <div className="flex justify-between mb-1 text-[11px] font-extrabold text-white">
+                                <span>IAM Security</span>
+                                <span className="font-mono text-[#FF6B00]">78%</span>
+                              </div>
+                              <div className="h-1.5 w-full bg-slate-800 rounded-full overflow-hidden">
+                                <div className="h-full bg-gradient-to-r from-[#FF6B00] via-amber-500 to-orange-400 w-[78%]" />
                               </div>
                             </div>
                           </div>
                         </div>
 
-                        <div className="p-3.5 rounded-2xl bg-white dark:bg-slate-950 border border-slate-200/80 dark:border-slate-800 shadow-xs flex flex-col gap-2.5">
-                          <span className="text-xs font-black text-slate-900 dark:text-white flex items-center gap-1.5">
-                            <Briefcase className="w-4 h-4 text-blue-500" />
+                        {/* Experience */}
+                        <div className="p-4 rounded-2xl bg-[#0F172A] border border-slate-800 shadow-lg flex flex-col gap-3">
+                          <span className="text-xs font-black text-white flex items-center gap-1.5 uppercase tracking-wider">
+                            <Briefcase className="w-4 h-4 text-blue-400" />
                             Experience
                           </span>
-                          <div className="flex flex-col gap-2 text-[10.5px]">
-                            <div className="flex justify-between font-bold text-slate-700 dark:text-slate-300">
+                          <div className="flex flex-col gap-2.5 text-[11px]">
+                            <div className="flex justify-between font-extrabold text-white">
                               <span>Cloud Engineer</span>
-                              <span className="text-slate-400 font-mono">3.2 yrs</span>
+                              <span className="text-[#FF6B00] font-mono font-black">3.2 yrs</span>
                             </div>
-                            <div className="flex justify-between font-bold text-slate-700 dark:text-slate-300">
+                            <div className="flex justify-between font-extrabold text-slate-300">
                               <span>DevOps Engineer</span>
                               <span className="text-slate-400 font-mono">1.8 yrs</span>
                             </div>
-                            <div className="flex justify-between font-bold text-slate-700 dark:text-slate-300">
+                            <div className="flex justify-between font-extrabold text-slate-300">
                               <span>SRE Intern</span>
                               <span className="text-slate-400 font-mono">0.6 yrs</span>
                             </div>
                           </div>
                         </div>
 
-                        <div className="p-3.5 rounded-2xl bg-white dark:bg-slate-950 border border-slate-200/80 dark:border-slate-800 shadow-xs flex flex-col gap-2.5">
-                          <span className="text-xs font-black text-slate-900 dark:text-white flex items-center gap-1.5">
-                            <FolderCheck className="w-4 h-4 text-emerald-500" />
+                        {/* Projects */}
+                        <div className="p-4 rounded-2xl bg-[#0F172A] border border-slate-800 shadow-lg flex flex-col gap-3">
+                          <span className="text-xs font-black text-white flex items-center gap-1.5 uppercase tracking-wider">
+                            <FolderCheck className="w-4 h-4 text-emerald-400" />
                             Projects
                           </span>
-                          <div className="flex flex-col gap-2 text-[10px] font-bold text-slate-700 dark:text-slate-300">
+                          <div className="flex flex-col gap-2 text-[10.5px] font-extrabold text-slate-200">
                             <div className="flex items-center justify-between">
-                              <span className="truncate pr-1">Multi-Region Web App</span>
-                              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+                              <span className="truncate pr-1 text-white">Multi-Region Web App</span>
+                              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
                             </div>
                             <div className="flex items-center justify-between">
-                              <span className="truncate pr-1">CI/CD with GitHub Actions</span>
-                              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+                              <span className="truncate pr-1 text-white">CI/CD GitHub Actions</span>
+                              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
                             </div>
                             <div className="flex items-center justify-between">
-                              <span className="truncate pr-1">Serverless Data Pipeline</span>
-                              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+                              <span className="truncate pr-1 text-white">Serverless Data Pipeline</span>
+                              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
                             </div>
                           </div>
                         </div>
+
                       </div>
                     </>
                   )}
@@ -445,28 +469,28 @@ export default function LandingPage() {
                   {activeHeroTab === "practice" && (
                     <div className="flex flex-col gap-4">
                       <div className="flex items-center justify-between">
-                        <span className="text-xs font-black text-[#0B1E36] dark:text-white">Voice AI Interview Chamber</span>
-                        <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-amber-100 text-[#FF6B00] border border-amber-300">Stage 3 Active</span>
+                        <span className="text-xs sm:text-sm font-black text-white uppercase tracking-wide">Voice AI Interview Chamber</span>
+                        <span className="px-3 py-1 rounded-full text-[10px] font-mono font-black bg-[#FF6B00]/10 text-[#FF6B00] border border-[#FF6B00]/30 uppercase tracking-wider">Stage 3 Active</span>
                       </div>
 
-                      <div className="p-4 rounded-2xl bg-[#0B1E36] text-white flex flex-col gap-3.5 shadow-lg">
+                      <div className="p-4 rounded-2xl bg-[#0F172A] border border-slate-800 text-white flex flex-col gap-3.5 shadow-xl">
                         <div className="flex items-center justify-between text-xs">
-                          <span className="text-[#FF6B00] font-mono font-bold">PROMPT #3 (VPC MESH)</span>
-                          <span className="text-emerald-400 font-bold flex items-center gap-1 text-[11px]">
+                          <span className="text-[#FF6B00] font-mono font-black tracking-wider">PROMPT #3 (VPC MESH)</span>
+                          <span className="text-emerald-400 font-extrabold flex items-center gap-1.5 text-[11px]">
                             <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
                             Microphone Active
                           </span>
                         </div>
-                        <p className="text-xs text-slate-200 font-medium leading-relaxed">
+                        <p className="text-xs text-slate-200 font-bold leading-relaxed">
                           &ldquo;Explain how you configure AWS IRSA (IAM Roles for Service Accounts) to grant fine-grained permissions to a Pod running in EKS.&rdquo;
                         </p>
 
                         <div className="flex items-center justify-between pt-2 border-t border-slate-800">
                           <div className="flex items-center gap-1 text-[#FF6B00]">
                             <Activity className="w-4 h-4 animate-pulse" />
-                            <span className="text-[10px] font-mono font-bold tracking-widest text-[#FF6B00]">|||||||||||||||||||</span>
+                            <span className="text-[10px] font-mono font-black tracking-widest text-[#FF6B00]">|||||||||||||||||||</span>
                           </div>
-                          <span className="text-[11px] text-emerald-400 font-mono font-bold">Cadence: 142 WPM (Ideal)</span>
+                          <span className="text-[11px] text-emerald-400 font-mono font-black">Cadence: 142 WPM (Ideal)</span>
                         </div>
                       </div>
                     </div>
@@ -475,18 +499,18 @@ export default function LandingPage() {
                   {activeHeroTab === "ats" && (
                     <div className="flex flex-col gap-3">
                       <div className="flex items-center justify-between">
-                        <span className="text-xs font-black text-[#0B1E36] dark:text-white">ATS Bullet Point STAR Rewriter</span>
-                        <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400">+34% Interview Call Rate</span>
+                        <span className="text-xs sm:text-sm font-black text-white uppercase tracking-wide">ATS Bullet Point STAR Rewriter</span>
+                        <span className="text-xs font-black text-emerald-400">+34% Interview Calls</span>
                       </div>
 
-                      <div className="p-3.5 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/50 text-xs flex flex-col gap-1">
-                        <span className="text-[10px] font-black text-rose-600 dark:text-rose-400 uppercase">WEAK UNQUANTIFIED BULLET:</span>
-                        <p className="text-slate-700 dark:text-slate-300 italic font-medium">&ldquo;Managed AWS EC2 instances and set up Docker containers for deployments.&rdquo;</p>
+                      <div className="p-3.5 rounded-2xl bg-rose-950/40 border border-rose-900/60 text-xs flex flex-col gap-1 shadow-md">
+                        <span className="text-[10px] font-black text-rose-400 uppercase tracking-wider">WEAK UNQUANTIFIED BULLET:</span>
+                        <p className="text-slate-300 italic font-medium">&ldquo;Managed AWS EC2 instances and set up Docker containers for deployments.&rdquo;</p>
                       </div>
 
-                      <div className="p-3.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-900/50 text-xs flex flex-col gap-1">
-                        <span className="text-[10px] font-black text-emerald-700 dark:text-emerald-400 uppercase">QUANTIFIED STAR BULLET:</span>
-                        <p className="text-slate-800 dark:text-slate-200 font-medium leading-relaxed">&ldquo;Architected multi-stage Docker builds on AWS EKS with Terraform IaC, reducing container image size by <strong className="text-emerald-700 dark:text-emerald-400 font-black">62%</strong> and zero downtime.&rdquo;</p>
+                      <div className="p-3.5 rounded-2xl bg-emerald-950/40 border border-emerald-900/60 text-xs flex flex-col gap-1 shadow-md">
+                        <span className="text-[10px] font-black text-emerald-400 uppercase tracking-wider">QUANTIFIED STAR BULLET:</span>
+                        <p className="text-slate-200 font-bold leading-relaxed">&ldquo;Architected multi-stage Docker builds on AWS EKS with Terraform IaC, reducing container image size by <strong className="text-emerald-400 font-black">62%</strong> and zero downtime.&rdquo;</p>
                       </div>
                     </div>
                   )}
@@ -494,21 +518,21 @@ export default function LandingPage() {
                   {activeHeroTab === "roadmap" && (
                     <div className="flex flex-col gap-3">
                       <div className="flex items-center justify-between">
-                        <span className="text-xs font-black text-[#0B1E36] dark:text-white">30-Day Guided Sprint Progress</span>
-                        <span className="text-xs font-mono font-bold text-[#FF6B00]">Day 14 of 30</span>
+                        <span className="text-xs sm:text-sm font-black text-white uppercase tracking-wide">30-Day Guided Sprint Progress</span>
+                        <span className="text-xs font-mono font-black text-[#FF6B00]">Day 14 of 30</span>
                       </div>
 
                       <div className="grid grid-cols-2 gap-3 text-xs">
-                        <div className="p-3.5 rounded-2xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 flex flex-col gap-1 shadow-xs">
-                          <span className="text-[10px] font-black text-[#FF6B00]">WEEK 1 (COMPLETED)</span>
-                          <p className="font-extrabold text-slate-800 dark:text-white">Linux Kernel & Sockets</p>
-                          <span className="text-[10px] text-emerald-500 font-bold">100% Mastered ✓</span>
+                        <div className="p-4 rounded-2xl bg-[#0F172A] border border-slate-800 flex flex-col gap-1 shadow-lg">
+                          <span className="text-[10px] font-black text-[#FF6B00] uppercase tracking-wider">WEEK 1 (COMPLETED)</span>
+                          <p className="font-black text-white text-xs">Linux Kernel & Sockets</p>
+                          <span className="text-[10px] text-emerald-400 font-extrabold mt-1">100% Mastered ✓</span>
                         </div>
 
-                        <div className="p-3.5 rounded-2xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 flex flex-col gap-1 shadow-xs">
-                          <span className="text-[10px] font-black text-blue-500">WEEK 2 (IN PROGRESS)</span>
-                          <p className="font-extrabold text-slate-800 dark:text-white">AWS VPC & IRSA Binding</p>
-                          <span className="text-[10px] text-blue-500 font-bold">Stage 3 Gate Unlocked 🔓</span>
+                        <div className="p-4 rounded-2xl bg-[#0F172A] border border-slate-800 flex flex-col gap-1 shadow-lg">
+                          <span className="text-[10px] font-black text-blue-400 uppercase tracking-wider">WEEK 2 (IN PROGRESS)</span>
+                          <p className="font-black text-white text-xs">AWS VPC & IRSA Binding</p>
+                          <span className="text-[10px] text-blue-400 font-extrabold mt-1">Stage 3 Unlocked 🔓</span>
                         </div>
                       </div>
                     </div>
@@ -517,18 +541,18 @@ export default function LandingPage() {
                   {activeHeroTab === "profile" && (
                     <div className="flex flex-col gap-3">
                       <div className="flex items-center justify-between">
-                        <span className="text-xs font-black text-[#0B1E36] dark:text-white">Candidate Matrix Profile</span>
-                        <span className="text-xs font-black text-[#FF6B00] bg-orange-100 dark:bg-orange-950/60 px-2.5 py-0.5 rounded-full border border-orange-300">Level 5 (1,850 XP)</span>
+                        <span className="text-xs sm:text-sm font-black text-white uppercase tracking-wide">Candidate Matrix Profile</span>
+                        <span className="text-xs font-black text-[#FF6B00] bg-[#FF6B00]/10 px-3 py-1 rounded-full border border-[#FF6B00]/30 uppercase tracking-wider">Level 5 (1,850 XP)</span>
                       </div>
 
-                      <div className="p-4 rounded-2xl bg-[#0B1E36] text-white flex items-center justify-between shadow-lg">
+                      <div className="p-4.5 rounded-2xl bg-[#0F172A] border border-slate-800 text-white flex items-center justify-between shadow-xl">
                         <div>
-                          <span className="text-[10px] text-slate-400 font-bold block uppercase tracking-wider">READINESS SCORE</span>
-                          <span className="text-2xl font-black text-emerald-400 font-mono">94.8%</span>
+                          <span className="text-[10px] text-slate-400 font-black block uppercase tracking-wider">READINESS SCORE</span>
+                          <span className="text-3xl font-black text-emerald-400 font-mono tracking-tight">94.8%</span>
                         </div>
                         <div className="text-right">
-                          <span className="text-[10px] text-slate-400 font-bold block uppercase tracking-wider">TARGET SALARY BAND</span>
-                          <span className="text-xs font-extrabold text-amber-300 bg-amber-400/10 px-2.5 py-1 rounded-lg border border-amber-400/30">₹12–18 LPA</span>
+                          <span className="text-[10px] text-slate-400 font-black block uppercase tracking-wider">TARGET SALARY BAND</span>
+                          <span className="text-xs font-black text-amber-300 bg-amber-400/10 px-3 py-1.5 rounded-xl border border-amber-400/30 inline-block mt-1">₹18–40 LPA</span>
                         </div>
                       </div>
                     </div>

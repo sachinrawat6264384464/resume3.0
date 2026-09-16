@@ -101,6 +101,19 @@ async def verify_otp(req: VerifyOTPRequest, db: AsyncSession = Depends(get_db)):
         res = await db.execute(stmt)
         existing_user = res.scalar_one_or_none()
         if existing_user:
+            # Update user full_name if provided during verification
+            if req.full_name and req.full_name.strip():
+                existing_user.full_name = req.full_name.strip()
+                await db.flush()
+
+            # Dispatch Welcome Email with credentials
+            from app.services.email_service import EmailService
+            await EmailService.send_welcome_email(
+                to_email=existing_user.email,
+                full_name=existing_user.full_name,
+                password=req.password if req.password else "********"
+            )
+
             # Login if user already exists
             try:
                 return await service.authenticate_local(
@@ -114,19 +127,28 @@ async def verify_otp(req: VerifyOTPRequest, db: AsyncSession = Depends(get_db)):
     # 2. REGISTER NEW CANDIDATE USER
     final_email = target_email or f"user_{target_phone[-4:]}@cloudops.internal"
     final_phone = target_phone or f"91{secrets.randbelow(9000000000) + 1000000000}"
-    final_name = req.full_name or f"Candidate {final_email.split('@')[0]}"
+    final_name = (req.full_name or "").strip() or f"Candidate {final_email.split('@')[0]}"
+    final_password = req.password or "DefaultPass@123"
 
     user = await service.register_user(
         UserCreate(
             email=final_email,
             phone_number=final_phone,
             full_name=final_name,
-            password=req.password or "DefaultPass@123"
+            password=final_password
         )
     )
 
+    # Dispatch Welcome Email with username & password
+    from app.services.email_service import EmailService
+    await EmailService.send_welcome_email(
+        to_email=final_email,
+        full_name=final_name,
+        password=final_password
+    )
+
     login_resp = await service.authenticate_local(
-        LoginRequest(email=final_email, password=req.password or "DefaultPass@123")
+        LoginRequest(email=final_email, password=final_password)
     )
     return login_resp
 

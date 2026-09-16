@@ -81,12 +81,11 @@ export default function RegisterPage() {
           channel: "email"
         })
       });
-      setSuccessMsg(`Verification code sent to ${email.trim()}! Check inbox or use 123456.`);
+      setSuccessMsg(`Verification code sent to ${email.trim()}! Please check your email inbox (and spam folder).`);
       setStep("OTP");
     } catch (err: any) {
-      console.warn("send-otp notice:", err);
-      setSuccessMsg(`Verification code dispatched! Enter OTP (or default code 123456).`);
-      setStep("OTP");
+      console.error("send-otp error:", err);
+      setError(err.message || "Failed to send verification code. Please check your backend connection.");
     } finally {
       setIsLoading(false);
     }
@@ -452,17 +451,19 @@ export default function RegisterPage() {
                     <span>We sent a 6-digit verification code to <strong>{email}</strong>. Check your inbox (and spam).</span>
                   </div>
 
-                  <div className="flex items-center justify-between gap-2">
+                  <div className="grid grid-cols-6 gap-2 sm:gap-3 w-full my-1">
                     {otp.map((digit, idx) => (
                       <input
                         key={idx}
                         id={`otp-input-${idx}`}
                         type="text"
+                        inputMode="numeric"
+                        pattern="[0-9]*"
                         maxLength={1}
                         value={digit}
                         onChange={(e) => handleOtpChange(idx, e.target.value)}
                         onKeyDown={(e) => handleOtpKeyDown(idx, e)}
-                        className="flex-1 h-14 text-center text-2xl font-mono font-black rounded-2xl bg-slate-50 dark:bg-slate-950 border-2 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white focus:outline-none focus:border-[#FF9900] shadow-sm transition-all"
+                        className="w-full h-12 sm:h-14 text-center text-xl sm:text-2xl font-mono font-black rounded-xl sm:rounded-2xl bg-slate-50 dark:bg-slate-950 border-2 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white focus:outline-none focus:border-[#FF9900] shadow-sm transition-all"
                       />
                     ))}
                   </div>

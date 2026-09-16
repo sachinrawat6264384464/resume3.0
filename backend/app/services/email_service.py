@@ -29,7 +29,7 @@ class EmailService:
 
             text_body = f"Your CloudOps AI verification code is: {otp_code}. Valid for 10 minutes."
             html_body = f"""
-            <div style="font-family: Arial, sans-serif; max-width: 500px; margin: 0 auto; padding: 24px; border: 1px solid #e2e8f0; rounded: 16px; background-color: #ffffff;">
+            <div style="font-family: Arial, sans-serif; max-width: 500px; margin: 0 auto; padding: 24px; border: 1px solid #e2e8f0; border-radius: 16px; background-color: #ffffff;">
                 <div style="text-align: center; margin-bottom: 20px;">
                     <h2 style="color: #232F3E; margin: 0;">CloudOps <span style="color: #FF9900;">AI</span></h2>
                     <p style="color: #64748b; font-size: 12px; margin-top: 4px;">Student Onboarding Verification</p>
@@ -57,4 +57,85 @@ class EmailService:
             return True
         except Exception as e:
             logger.error(f"❌ Failed to dispatch Email OTP via SMTP ({e})")
+            return False
+
+    @staticmethod
+    async def send_welcome_email(to_email: str, full_name: str, password: str) -> bool:
+        smtp_server = os.getenv("SMTP_SERVER", "smtp.gmail.com")
+        smtp_port = int(os.getenv("SMTP_PORT", "587"))
+        smtp_user = os.getenv("SMTP_USERNAME", "")
+        smtp_pass = os.getenv("SMTP_PASSWORD", "")
+        from_email = os.getenv("SMTP_FROM_EMAIL", smtp_user or "noreply@cloudops.ai")
+        from_name = os.getenv("SMTP_FROM_NAME", "CloudOps AI Assessment Platform")
+
+        if not smtp_user or not smtp_pass:
+            logger.info(f"📧 [DEV MODE] Welcome email for {full_name} ({to_email}) simulated.")
+            return True
+
+        try:
+            msg = MIMEMultipart("alternative")
+            msg["Subject"] = f"🎉 Welcome to CloudOps AI, {full_name}! Your Account Details"
+            msg["From"] = f"{from_name} <{from_email}>"
+            msg["To"] = to_email
+
+            login_url = "http://localhost:3000/login"
+
+            text_body = f"Welcome to CloudOps AI, {full_name}!\n\nYour account has been successfully verified.\n\nAccount Credentials:\nUsername (Email): {to_email}\nPassword: {password}\n\nLogin URL: {login_url}"
+
+            html_body = f"""
+            <div style="font-family: Arial, sans-serif; max-width: 550px; margin: 0 auto; padding: 28px; border: 1px solid #e2e8f0; border-radius: 20px; background-color: #ffffff;">
+                <div style="text-align: center; margin-bottom: 24px;">
+                    <h2 style="color: #232F3E; margin: 0; font-size: 24px;">CloudOps <span style="color: #FF9900;">AI</span></h2>
+                    <p style="color: #64748b; font-size: 13px; margin-top: 4px; font-weight: 600;">Candidate Assessment & Interview OS</p>
+                </div>
+
+                <div style="background-color: #fffbe6; padding: 20px; border-radius: 14px; border: 1px solid #ffe58f; margin-bottom: 20px;">
+                    <h3 style="color: #d48806; margin: 0 0 8px 0; font-size: 18px;">Welcome aboard, {full_name}! 🎉</h3>
+                    <p style="font-size: 14px; color: #434343; margin: 0; line-height: 1.5;">
+                        Your email has been verified successfully. Below are your login credentials to access the CloudOps AI Candidate Portal:
+                    </p>
+                </div>
+
+                <div style="background-color: #f8fafc; padding: 20px; border-radius: 14px; border: 1px solid #cbd5e1; margin-bottom: 24px;">
+                    <table style="width: 100%; border-collapse: collapse;">
+                        <tr>
+                            <td style="padding: 8px 0; font-size: 13px; font-weight: bold; color: #64748b; width: 140px;">Full Name:</td>
+                            <td style="padding: 8px 0; font-size: 14px; font-weight: bold; color: #0f172a;">{full_name}</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 8px 0; font-size: 13px; font-weight: bold; color: #64748b;">Username (Email):</td>
+                            <td style="padding: 8px 0; font-size: 14px; font-weight: bold; color: #FF9900; font-family: monospace;">{to_email}</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 8px 0; font-size: 13px; font-weight: bold; color: #64748b;">Password:</td>
+                            <td style="padding: 8px 0; font-size: 14px; font-weight: bold; color: #0f172a; font-family: monospace;">{password}</td>
+                        </tr>
+                    </table>
+                </div>
+
+                <div style="text-align: center; margin-bottom: 24px;">
+                    <a href="{login_url}" style="display: inline-block; background: linear-gradient(135deg, #FF6B00 0%, #FF9900 100%); color: #ffffff; font-weight: bold; font-size: 15px; padding: 14px 32px; border-radius: 12px; text-decoration: none; box-shadow: 0 4px 12px rgba(255, 153, 0, 0.3);">
+                        Sign In to Candidate Portal →
+                    </a>
+                </div>
+
+                <p style="font-size: 12px; color: #94a3b8; text-align: center; margin: 0;">
+                    256-bit Encrypted Security · CloudOps AI Candidate Assessment OS
+                </p>
+            </div>
+            """
+
+            msg.attach(MIMEText(text_body, "plain"))
+            msg.attach(MIMEText(html_body, "html"))
+
+            server = smtplib.SMTP(smtp_server, smtp_port)
+            server.starttls()
+            server.login(smtp_user, smtp_pass)
+            server.sendmail(from_email, [to_email], msg.as_string())
+            server.quit()
+
+            logger.info(f"🚀 Welcome Email with credentials sent successfully to {to_email}")
+            return True
+        except Exception as e:
+            logger.error(f"❌ Failed to dispatch Welcome Email ({e})")
             return False
