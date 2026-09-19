@@ -42,10 +42,11 @@ export default function AdminAnalyticsPage() {
     const isAdminPortalEnv = process.env.NEXT_PUBLIC_IS_ADMIN_PORTAL === "true";
     const isAdminUser = user?.role === "ADMIN" || user?.role === "SUPER_ADMIN" || (user as any)?.is_admin === true;
 
-    // Allow Admin portal access when in Admin environment OR when logged in with Admin Role
+    // Allow Admin portal access when in Admin environment OR when logged in with Admin Role.
+    // If logged in as CANDIDATE, redirect to Admin Login page so they can authenticate as Admin.
     if (!isAdminPortalEnv && !isAdminUser && typeof window !== "undefined" && !window.location.hostname.includes("admin")) {
       if (user?.role === "CANDIDATE") {
-        router.replace("/dashboard");
+        router.replace("/login?admin=true&notice=admin_required");
         return;
       }
     }
@@ -160,9 +161,21 @@ export default function AdminAnalyticsPage() {
         { icon: Server, color: "text-teal-500 bg-teal-50 dark:bg-teal-950", title: "Retention Cleaner Worker", desc: "90-Day Auto Purge Ready", time: "2 hours ago" },
       ];
 
-  const topCandidates = [
-    { rank: 1, name: "Sachin Rawat", email: "sachin@cloudops.internal", score: `${displayMetrics.average_score ?? 0}%`, stage: "Stage 1", date: "Registered", medal: "🥇" },
-  ];
+  const topCandidates = (displayMetrics as any).top_candidates && (displayMetrics as any).top_candidates.length > 0
+    ? (displayMetrics as any).top_candidates
+    : displayMetrics.recent_interviews && displayMetrics.recent_interviews.length > 0
+    ? displayMetrics.recent_interviews.slice(0, 5).map((item, idx) => ({
+        rank: idx + 1,
+        name: item.candidate_name,
+        email: item.candidate_email,
+        score: item.overall_score != null ? `${item.overall_score}%` : "80%",
+        stage: item.template_title || "Stage 1",
+        date: item.created_at ? new Date(item.created_at).toLocaleDateString() : "Active",
+        medal: idx === 0 ? "🥇" : idx === 1 ? "🥈" : idx === 2 ? "🥉" : `#${idx + 1}`
+      }))
+    : [
+        { rank: 1, name: "Sachin Rawat", email: "sachin@cloudops.internal", score: `${displayMetrics.average_score ?? 0}%`, stage: "Stage 1", date: "Registered", medal: "🥇" },
+      ];
 
   const systemHealth = [
     { service: "Neon Cloud PostgreSQL", status: "Operational", icon: Database },
@@ -176,7 +189,7 @@ export default function AdminAnalyticsPage() {
   const stageColors = ["#FF6B00", "#3B82F6", "#10B981", "#F59E0B", "#8B5CF6"];
 
   return (
-    <div className="flex flex-col gap-6 w-full max-w-[1440px] mx-auto pb-12 font-sans text-slate-900 dark:text-slate-100">
+    <div className="flex flex-col gap-6 w-full pb-12 font-sans text-slate-900 dark:text-slate-100">
       
       {/* 1. TOP HEADER & GREETING BAR */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white dark:bg-slate-900 p-5 rounded-3xl border border-slate-200/80 dark:border-slate-800 shadow-sm">
@@ -250,7 +263,7 @@ export default function AdminAnalyticsPage() {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         
         {/* CHART 1: Interviews Overview Line Chart (5 cols) */}
-        <div className="lg:col-span-5 p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-sm flex flex-col justify-between">
+        <div className="lg:col-span-5 p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-sm flex flex-col gap-4">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-sm font-black text-slate-900 dark:text-white">Interviews Overview</h2>
             <button className="px-3 py-1.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-[11px] font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1">
@@ -315,7 +328,7 @@ export default function AdminAnalyticsPage() {
         </div>
 
         {/* CHART 2: Candidates by Stage Donut Chart (4 cols) */}
-        <div className="lg:col-span-4 p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-sm flex flex-col justify-between">
+        <div className="lg:col-span-4 p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-sm flex flex-col gap-4">
           <h2 className="text-sm font-black text-slate-900 dark:text-white mb-2">Candidates by Stage</h2>
 
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
@@ -351,7 +364,7 @@ export default function AdminAnalyticsPage() {
         </div>
 
         {/* 3. RECENT ACTIVITIES (3 cols) */}
-        <div className="lg:col-span-3 p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-sm flex flex-col justify-between">
+        <div className="lg:col-span-3 p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-sm flex flex-col gap-4">
           <div className="flex items-center justify-between mb-3">
             <h2 className="text-sm font-black text-slate-900 dark:text-white">Recent Activities</h2>
             <button className="text-xs font-mono font-bold text-rose-500 hover:underline">View All</button>
@@ -378,7 +391,7 @@ export default function AdminAnalyticsPage() {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         
         {/* LEFT: Top Performing Candidates Table (8 cols) */}
-        <div className="lg:col-span-8 p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-sm flex flex-col justify-between">
+        <div className="lg:col-span-8 p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-sm flex flex-col gap-4">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-sm font-black text-slate-900 dark:text-white">Top Performing Candidates</h2>
             <button className="text-xs font-mono font-bold text-rose-500 hover:underline">View All</button>
@@ -396,7 +409,7 @@ export default function AdminAnalyticsPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60 font-medium">
-                {topCandidates.map((cand) => (
+                {topCandidates.map((cand: any) => (
                   <tr key={cand.rank} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors">
                     <td className="py-3.5 font-bold font-mono text-sm">{cand.medal}</td>
                     <td className="py-3.5">
@@ -424,30 +437,13 @@ export default function AdminAnalyticsPage() {
         {/* RIGHT: System Health & Quick Actions (4 cols) */}
         <div className="lg:col-span-4 flex flex-col gap-6">
           
-          {/* System Health Card */}
-          <div className="p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-sm flex flex-col gap-3">
-            <h2 className="text-sm font-black text-slate-900 dark:text-white mb-1">System Health</h2>
 
-            <div className="flex flex-col gap-2.5">
-              {systemHealth.map((sh, idx) => (
-                <div key={idx} className="flex items-center justify-between text-xs">
-                  <div className="flex items-center gap-2 font-medium text-slate-700 dark:text-slate-300">
-                    <sh.icon className="w-4 h-4 text-slate-400" />
-                    <span>{sh.service}</span>
-                  </div>
-                  <span className="text-[11px] font-black text-emerald-600 dark:text-emerald-400 font-mono">
-                    {sh.status}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
 
           {/* Quick Actions Grid */}
           <div className="p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-sm flex flex-col gap-3">
             <h2 className="text-sm font-black text-slate-900 dark:text-white mb-1">Quick Actions</h2>
 
-            <div className="grid grid-cols-2 gap-2.5">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
               <button className="p-3 rounded-2xl bg-indigo-50 dark:bg-indigo-950/40 hover:bg-indigo-100 text-indigo-700 dark:text-indigo-300 text-xs font-bold flex items-center justify-center gap-1.5 transition-all">
                 <UserPlus className="w-3.5 h-3.5" />
                 <span>Add New Admin</span>
@@ -459,10 +455,6 @@ export default function AdminAnalyticsPage() {
               <button className="p-3 rounded-2xl bg-blue-50 dark:bg-blue-950/40 hover:bg-blue-100 text-blue-700 dark:text-blue-300 text-xs font-bold flex items-center justify-center gap-1.5 transition-all">
                 <Download className="w-3.5 h-3.5" />
                 <span>Export Reports</span>
-              </button>
-              <button className="p-3 rounded-2xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-700 dark:text-slate-300 text-xs font-bold flex items-center justify-center gap-1.5 transition-all">
-                <Settings className="w-3.5 h-3.5" />
-                <span>System Settings</span>
               </button>
             </div>
           </div>

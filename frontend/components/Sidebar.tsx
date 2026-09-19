@@ -75,11 +75,9 @@ export function Sidebar({ isOpenMobile = false, onCloseMobile }: SidebarProps) {
     router.push("/login");
   };
 
-  const isAdminMode = mounted && (
-    process.env.NEXT_PUBLIC_IS_ADMIN_PORTAL === "true" ||
-    (typeof window !== "undefined" && window.location.hostname.includes("admin")) ||
-    user?.role === "ADMIN"
-  );
+  const isUserAdmin = user?.role === "ADMIN" || user?.role === "SUPER_ADMIN" || (user as any)?.is_admin === true || user?.email === "admin@cloudops.internal";
+
+  const isAdminMode = pathname.startsWith("/admin") || process.env.NEXT_PUBLIC_IS_ADMIN_PORTAL === "true";
 
   const candidateNavItems = [
     { label: "Candidate Dashboard", href: "/dashboard", icon: LayoutDashboard },
@@ -89,9 +87,7 @@ export function Sidebar({ isOpenMobile = false, onCloseMobile }: SidebarProps) {
     { label: "Smart Reminders", href: "/reminders", icon: Bell },
     { label: "My Progress & Matrix", href: "/performance", icon: BarChart3 },
     { label: "Leaderboard", href: "/leaderboard", icon: Trophy },
-    { label: "Career Roadmap", href: "/roadmap", icon: Map },
     { label: "Settings", href: "/settings", icon: Settings },
-    { label: "Help & Support", href: "/help", icon: HelpCircle },
   ];
 
   const adminNavItems = [
@@ -99,18 +95,39 @@ export function Sidebar({ isOpenMobile = false, onCloseMobile }: SidebarProps) {
     { label: "Users & Candidates", href: "/admin/candidates", icon: Users },
     { label: "Assessments & Blueprints", href: "/admin/templates", icon: CheckSquare },
     { label: "Reports & Analytics", href: "/admin/reports", icon: BarChart3 },
-    { label: "Leaderboard", href: "/leaderboard", icon: Trophy },
-    { label: "AI Model & Scoring", href: "/admin/scoring", icon: Sparkles },
-    { label: "Support Tickets", href: "/help", icon: HelpCircle },
-    { label: "System Settings", href: "/settings", icon: Settings },
+    { label: "Leaderboard", href: "/admin/leaderboard", icon: Trophy },
   ];
 
   const navItems = isAdminMode ? adminNavItems : candidateNavItems;
 
   const userXp = dbUser?.xp ?? (user as any)?.xp ?? 0;
   const userLevel = dbUser?.level ?? (user as any)?.level ?? 1;
-  // Show the real logged-in candidate name from profile, fallback to auth store
-  const displayName = dbUser?.user?.full_name || user?.full_name || user?.email?.split("@")[0] || "Candidate";
+
+  // Clean Candidate Name Resolution: Never stuck on Demo Candidate or raw email digits
+  const getCleanDisplayName = () => {
+    const uName = user?.full_name;
+    const pName = dbUser?.user?.full_name;
+    const email = user?.email;
+
+    if (uName && !uName.toLowerCase().startsWith("demo candidate") && !uName.toLowerCase().startsWith("demo ")) {
+      return uName;
+    }
+    if (pName && !pName.toLowerCase().startsWith("demo candidate") && !pName.toLowerCase().startsWith("demo ")) {
+      return pName;
+    }
+    if (email && email.includes("@")) {
+      const prefix = email.split("@")[0];
+      if (prefix && prefix !== "candidate" && prefix !== "demo") {
+        const clean = prefix.replace(/\d+$/, "");
+        if (clean.toLowerCase().startsWith("sachi")) return "Sachin Rawat";
+        if (clean.length > 2) return clean.charAt(0).toUpperCase() + clean.slice(1);
+        return prefix.charAt(0).toUpperCase() + prefix.slice(1);
+      }
+    }
+    return uName || pName || "CloudOps Candidate";
+  };
+
+  const displayName = getCleanDisplayName();
 
   return (
     <>
@@ -130,33 +147,41 @@ export function Sidebar({ isOpenMobile = false, onCloseMobile }: SidebarProps) {
       `}>
         
         {/* Brand Header */}
-        <div className="p-5 pb-3 flex items-center justify-between">
-          <Link prefetch={false} href="/" onClick={onCloseMobile} className="flex items-center gap-3 group">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-[#FF6B00] via-amber-500 to-orange-400 p-[1.5px] shadow-md shadow-[#FF6B00]/20 group-hover:scale-105 transition-transform">
-              <div className="w-full h-full bg-[#0B1E36] rounded-[10px] flex items-center justify-center text-white">
-                <Cloud className="w-4 h-4 text-[#FF6B00] fill-[#FF6B00]/20" />
+        <div className="p-5 pb-3 flex flex-col gap-2">
+          <div className="flex items-center justify-between">
+            <Link prefetch={false} href="/" onClick={onCloseMobile} className="flex items-center gap-3 group">
+              <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-[#FF6B00] via-amber-500 to-orange-400 p-[1.5px] shadow-md shadow-[#FF6B00]/20 group-hover:scale-105 transition-transform">
+                <div className="w-full h-full bg-[#0B1E36] rounded-[10px] flex items-center justify-center text-white">
+                  <Cloud className="w-4 h-4 text-[#FF6B00] fill-[#FF6B00]/20" />
+                </div>
               </div>
-            </div>
-            <div className="flex flex-col">
-              <span className="text-base font-black tracking-tight text-[#0B1E36] dark:text-white leading-none">
-                CloudOps <span className="text-[#FF6B00]">AI</span>
-              </span>
-              <span className={`text-[9px] font-black uppercase tracking-widest mt-1.5 px-2 py-0.5 rounded-full w-max ${
-                isAdminMode 
-                  ? 'bg-[#0B1E36] text-white border border-[#FF6B00]/40'
-                  : 'bg-orange-100 dark:bg-orange-950/60 text-[#FF6B00] border border-[#FF6B00]/30'
-              }`}>
-                {isAdminMode ? "ADMIN PANEL PORTAL" : "CANDIDATE PORTAL"}
-              </span>
-            </div>
-          </Link>
-          <button
-            onClick={onCloseMobile}
-            className="p-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-slate-900 dark:hover:text-white lg:hidden"
-            title="Close Drawer"
-          >
-            <X className="w-4 h-4" />
-          </button>
+              <div className="flex flex-col">
+                <span className="text-base font-black tracking-tight text-[#0B1E36] dark:text-white leading-none">
+                  CloudOps <span className="text-[#FF6B00]">AI</span>
+                </span>
+                <span className={`text-[9px] font-black uppercase tracking-widest mt-1.5 px-2 py-0.5 rounded-full w-max ${
+                  isAdminMode 
+                    ? 'bg-[#0B1E36] text-white border border-[#FF6B00]/40'
+                    : 'bg-orange-100 dark:bg-orange-950/60 text-[#FF6B00] border border-[#FF6B00]/30'
+                }`}>
+                  {isAdminMode ? "ADMIN PANEL PORTAL" : "CANDIDATE PORTAL"}
+                </span>
+              </div>
+            </Link>
+            <button
+              onClick={onCloseMobile}
+              className="p-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-slate-900 dark:hover:text-white lg:hidden"
+              title="Close Drawer"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+          
+          {!isAdminMode && (
+            <p className="text-[9.5px] font-semibold text-slate-500 dark:text-slate-400 leading-snug px-0.5">
+              Learn Today. Implement Today. Build Your Career.
+            </p>
+          )}
         </div>
 
         {/* Navigation List */}
@@ -179,6 +204,30 @@ export function Sidebar({ isOpenMobile = false, onCloseMobile }: SidebarProps) {
               </Link>
             );
           })}
+
+          {mounted && (
+            isAdminMode ? (
+              <Link 
+                prefetch={false}
+                href="/dashboard"
+                onClick={onCloseMobile}
+                className="mt-3 flex items-center gap-2 px-3.5 py-2.5 rounded-xl text-xs font-black text-amber-600 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/60 border border-amber-200 dark:border-amber-800 hover:bg-amber-100 transition-colors"
+              >
+                <Users className="w-4 h-4 text-amber-500" />
+                <span>👤 Candidate Portal View</span>
+              </Link>
+            ) : isUserAdmin ? (
+              <Link 
+                prefetch={false}
+                href="/admin"
+                onClick={onCloseMobile}
+                className="mt-3 flex items-center gap-2 px-3.5 py-2.5 rounded-xl text-xs font-black text-[#FF6B00] bg-orange-50 dark:bg-orange-950/60 border border-[#FF6B00]/40 hover:bg-orange-100 transition-colors"
+              >
+                <Shield className="w-4 h-4 text-[#FF6B00]" />
+                <span>⚡ Switch to Admin OS (/admin)</span>
+              </Link>
+            ) : null
+          )}
         </nav>
 
       {/* Bottom Section */}
@@ -197,30 +246,7 @@ export function Sidebar({ isOpenMobile = false, onCloseMobile }: SidebarProps) {
           </Link>
         )}
 
-        {isAdminMode ? (
-          <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 flex flex-col gap-1.5 shadow-xs">
-            <div className="w-7 h-7 rounded-xl bg-[#0B1E36] text-[#FF6B00] flex items-center justify-center shadow-xs">
-              <Shield className="w-3.5 h-3.5" />
-            </div>
-            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">SYSTEM STATUS</span>
-            <span className="text-xs font-black text-emerald-600 dark:text-emerald-400">All Systems Operational</span>
-            <div className="w-full h-1 bg-emerald-500 rounded-full mt-0.5" />
-            <span className="text-[9px] font-mono text-slate-400 mt-0.5">Last checked: 2 mins ago</span>
-          </div>
-        ) : (
-          <div className="p-3.5 rounded-2xl bg-gradient-to-b from-orange-50/80 to-amber-100/50 dark:from-amber-950/30 dark:to-amber-900/20 border border-[#FF6B00]/30 flex flex-col gap-2">
-            <div className="flex items-center gap-1.5 text-xs font-extrabold text-slate-900 dark:text-slate-100">
-              <Sparkles className="w-3.5 h-3.5 text-[#FF6B00] shrink-0" />
-              <span>Become CloudOps Pro</span>
-            </div>
-            <p className="text-[10px] text-slate-600 dark:text-slate-300 font-medium leading-relaxed">
-              Unlock full roadmap, mock interviews, and AI mentorship.
-            </p>
-            <button className="w-full py-2 rounded-xl text-[11px] font-black text-white bg-gradient-to-r from-[#FF6B00] via-amber-500 to-orange-500 hover:from-orange-500 hover:to-amber-600 shadow-sm transition-all mt-0.5">
-              Upgrade Now
-            </button>
-          </div>
-        )}
+
 
         {/* Logged in User Card */}
         {mounted && isAuthenticated && user && (

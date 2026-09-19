@@ -1,14 +1,98 @@
 from fastapi import APIRouter, Depends, status
 from sqlalchemy.ext.asyncio import AsyncSession
-from typing import List
+from sqlalchemy import select
+from sqlalchemy.orm import selectinload
+from typing import List, Optional
 from app.core.database import get_db
 from app.core.security import verify_auth_token
 from app.services.auth_service import AuthService
 from app.services.interview_service import InterviewService
+from app.models.interview_stage import InterviewStage
 from app.schemas.interview import TemplateCreate, TemplateAdminOut, TemplateCandidateOut
 from app.schemas.common import StandardResponse
 
 router = APIRouter(prefix="/interviews", tags=["Interviews & Templates"])
+
+@router.get("/stages", response_model=StandardResponse[List[dict]])
+async def get_candidate_stages(
+    payload: Optional[dict] = Depends(verify_auth_token),
+    db: AsyncSession = Depends(get_db)
+):
+    stmt = (
+        select(InterviewStage)
+        .options(selectinload(InterviewStage.questions))
+        .order_by(InterviewStage.stage_number)
+    )
+    res = await db.execute(stmt)
+    stages = res.scalars().all()
+    
+    data = []
+    for s in stages:
+        active_q = [q for q in (s.questions or []) if q.is_active != "INACTIVE"]
+        lvl_num = 1 if s.stage_number <= 5 else (2 if s.stage_number <= 10 else (3 if s.stage_number <= 15 else (4 if s.stage_number <= 20 else "Bonus")))
+        lvl_name = s.level_name or (f"Level {lvl_num}: Foundation" if lvl_num == 1 else (f"Level {lvl_num}: Cloud" if lvl_num == 2 else (f"Level {lvl_num}: DevOps" if lvl_num == 3 else (f"Level {lvl_num}: Advanced" if lvl_num == 4 else "Bonus Challenge"))))
+        
+        data.append({
+            "id": s.stage_number,
+            "stage_id": s.id,
+            "level": f"Level {lvl_num}",
+            "levelName": lvl_name,
+            "title": s.title,
+            "description": s.description or "",
+            "category": s.category or "General",
+            "difficulty": s.difficulty or "Medium",
+            "xp_reward": s.xp_reward or "+200 XP",
+            "duration": s.duration or "20 Mins",
+            "icon": s.icon or "🏆",
+            "questions_count": len(active_q),
+            "minimum_score": s.minimum_score or 80.0,
+            "questions": [
+                {
+                    "id": q.id,
+                    "question_text": q.question_text,
+                    "question_type": q.question_type,
+                    "difficulty": q.difficulty,
+                    "skill_category": q.skill_category
+                } for q in active_q
+            ]
+        })
+    return StandardResponse(data=data)
+
+@router.put("/stages/{stage_id}", response_model=StandardResponse[dict])
+async def update_stage(
+    stage_id: str,
+    s_in: StageUpdate,
+    payload: dict = Depends(verify_auth_token),
+    db: AsyncSession = Depends(get_db)
+):
+    stmt = select(InterviewStage).where(InterviewStage.id == stage_id)
+    res = await db.execute(stmt)
+    stage = res.scalar_one_or_none()
+    if not stage:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Interview stage not found")
+
+    update_data = s_in.model_dump(exclude_unset=True)
+    for field, val in update_data.items():
+        if hasattr(stage, field) and val is not None:
+            setattr(stage, field, val)
+
+    await db.commit()
+    await db.refresh(stage)
+    return StandardResponse(
+        message="Interview stage updated successfully in database",
+        data={
+            "id": stage.id,
+            "stage_number": stage.stage_number,
+            "title": stage.title,
+            "description": stage.description,
+            "category": stage.category,
+            "difficulty": stage.difficulty,
+            "xp_reward": stage.xp_reward,
+            "duration": stage.duration,
+            "icon": stage.icon,
+            "minimum_score": stage.minimum_score
+        }
+    )
 
 @router.get("/templates", response_model=StandardResponse[List[TemplateAdminOut]])
 async def list_templates(
@@ -54,3 +138,4 @@ async def create_template(
         message="Interview template created successfully",
         data=TemplateAdminOut.model_validate(template)
     )
+

@@ -31,7 +31,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   }, [setAuth]);
 
   return (
-    <div className="flex min-h-screen w-full bg-slate-50 dark:bg-[#050810] relative">
+    <div className="flex min-h-screen w-full bg-slate-50 dark:bg-[#050810] relative" suppressHydrationWarning>
       <Sidebar 
         isOpenMobile={isMobileSidebarOpen} 
         onCloseMobile={() => setIsMobileSidebarOpen(false)} 

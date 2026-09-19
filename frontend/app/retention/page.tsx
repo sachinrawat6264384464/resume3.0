@@ -9,7 +9,7 @@ export default function RetentionPolicyPage() {
       
       {/* Header Bar */}
       <header className="border-b border-slate-800 bg-[#0B1E36]/80 backdrop-blur-md sticky top-0 z-50">
-        <div className="max-w-[1536px] mx-auto px-4 sm:px-6 lg:px-12 py-4 flex items-center justify-between">
+        <div className="w-full px-4 sm:px-6 lg:px-12 py-4 flex items-center justify-between">
           <Link prefetch={false} 
             href="/#faq" 
             className="flex items-center gap-2 text-xs sm:text-sm font-black text-slate-300 hover:text-[#FF6B00] transition-colors"
@@ -28,7 +28,7 @@ export default function RetentionPolicyPage() {
       </header>
 
       {/* Main Responsive Container */}
-      <main className="max-w-[1536px] mx-auto px-4 sm:px-6 lg:px-12 py-10 lg:py-16">
+      <main className="w-full px-4 sm:px-6 lg:px-12 py-10 lg:py-16">
         
         {/* Page Title */}
         <div className="flex flex-col gap-3 pb-8 border-b border-slate-800">

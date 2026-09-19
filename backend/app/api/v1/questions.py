@@ -6,7 +6,7 @@ from app.core.database import get_db
 from app.core.security import verify_auth_token
 from app.models.question import Question
 from app.schemas.question import (
-    QuestionCreate, QuestionAdminOut, QuestionGenerateRequest, QuestionHintsOut,
+    QuestionCreate, QuestionUpdate, QuestionAdminOut, QuestionGenerateRequest, QuestionHintsOut,
     QuickPracticeRequest
 )
 from app.schemas.evaluation import QuestionEvaluationResult
@@ -80,6 +80,49 @@ async def create_question(
     return StandardResponse(
         message="Question created",
         data=QuestionAdminOut.model_validate(q)
+    )
+
+@router.put("/{question_id}", response_model=StandardResponse[QuestionAdminOut])
+async def update_question(
+    question_id: str,
+    q_in: QuestionUpdate,
+    payload: dict = Depends(verify_auth_token),
+    db: AsyncSession = Depends(get_db)
+):
+    stmt = select(Question).where(Question.id == question_id)
+    res = await db.execute(stmt)
+    q = res.scalar_one_or_none()
+    if not q:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Question not found")
+
+    update_data = q_in.model_dump(exclude_unset=True)
+    for field, val in update_data.items():
+        if hasattr(q, field) and val is not None:
+            setattr(q, field, val)
+
+    await db.flush()
+    return StandardResponse(
+        message="Question updated successfully",
+        data=QuestionAdminOut.model_validate(q)
+    )
+
+@router.delete("/{question_id}", response_model=StandardResponse[dict])
+async def delete_question(
+    question_id: str,
+    payload: dict = Depends(verify_auth_token),
+    db: AsyncSession = Depends(get_db)
+):
+    stmt = select(Question).where(Question.id == question_id)
+    res = await db.execute(stmt)
+    q = res.scalar_one_or_none()
+    if not q:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Question not found")
+
+    await db.delete(q)
+    await db.flush()
+    return StandardResponse(
+        message="Question deleted successfully",
+        data={"deleted_id": question_id}
     )
 
 @router.post("/generate-ai", response_model=StandardResponse[List[dict]])

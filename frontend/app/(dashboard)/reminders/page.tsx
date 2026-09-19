@@ -34,7 +34,11 @@ export default function SmartRemindersPage() {
         apiFetch("/reminders/summary").catch(() => null)
       ]);
 
-      if (remRes?.data) setReminders(remRes.data);
+      if (remRes?.data && Array.isArray(remRes.data)) {
+        setReminders(remRes.data);
+      } else {
+        setReminders([]);
+      }
       if (sumRes?.data) setSummary(sumRes.data);
     } catch (e) {
       console.warn("Reminders fetch notice:", e);
@@ -122,7 +126,7 @@ export default function SmartRemindersPage() {
   };
 
   return (
-    <div className="flex flex-col gap-6 max-w-[1400px] mx-auto pb-16 text-slate-900 dark:text-slate-100 font-sans">
+    <div className="flex flex-col gap-6 w-full pb-16 text-slate-900 dark:text-slate-100 font-sans">
       
       {/* HEADER BANNER */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-6 sm:p-7 rounded-[28px] bg-gradient-to-r from-amber-500/10 via-orange-500/5 to-transparent dark:from-amber-950/40 dark:via-slate-900 dark:to-slate-900 border border-[#FF9900]/30 shadow-sm">
@@ -338,7 +342,12 @@ export default function SmartRemindersPage() {
               <Moon className="w-6 h-6" />
             </div>
             <h3 className="text-base font-black text-slate-900 dark:text-white">Snooze Reminder</h3>
-            <p className="text-xs text-slate-500 font-medium">Select snooze duration. Updates `snoozed_until` in PostgreSQL.</p>
+            {modalError && (
+              <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/30 text-red-500 text-xs font-bold flex items-center gap-2 text-left">
+                <AlertCircle className="w-4 h-4 shrink-0 text-red-500" />
+                <span>{modalError}</span>
+              </div>
+            )}
 
             <div className="grid grid-cols-2 gap-2 pt-1">
               {[
@@ -351,9 +360,9 @@ export default function SmartRemindersPage() {
                   key={i}
                   onClick={() => handleSnooze(opt.mins)}
                   disabled={isSubmitting}
-                  className="py-2.5 px-3 rounded-xl border border-slate-200 dark:border-slate-700 hover:border-purple-500 hover:bg-purple-50 dark:hover:bg-purple-950/40 text-xs font-bold text-slate-800 dark:text-slate-200 transition-all"
+                  className="py-2.5 px-3 rounded-xl border border-slate-200 dark:border-slate-700 hover:border-purple-500 hover:bg-purple-50 dark:hover:bg-purple-950/40 text-xs font-bold text-slate-800 dark:text-slate-200 transition-all flex items-center justify-center gap-1 disabled:opacity-50"
                 >
-                  {opt.label}
+                  {isSubmitting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : opt.label}
                 </button>
               ))}
             </div>

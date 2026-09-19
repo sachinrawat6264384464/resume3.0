@@ -11,6 +11,10 @@ class StageBase(BaseSchema):
     category: str = "Fundamentals"
     minimum_score: float = 80.0
     unlock_rule: str = "PASS_PREVIOUS_STAGE"
+    difficulty: Optional[str] = "Medium"
+    xp_reward: Optional[str] = "+200 XP"
+    duration: Optional[str] = "20 Mins"
+    icon: Optional[str] = "🏆"
 
 class StageCreate(StageBase):
     pass
@@ -21,6 +25,10 @@ class StageUpdate(BaseSchema):
     category: Optional[str] = None
     minimum_score: Optional[float] = None
     unlock_rule: Optional[str] = None
+    difficulty: Optional[str] = None
+    xp_reward: Optional[str] = None
+    duration: Optional[str] = None
+    icon: Optional[str] = None
 
 class StageCandidateOut(StageBase):
     id: str

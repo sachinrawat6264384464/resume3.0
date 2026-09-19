@@ -49,7 +49,11 @@ export default function StudyPlannerPage() {
       ]);
 
       if (sumRes?.data) setSummary(sumRes.data);
-      if (taskRes?.data) setTasks(taskRes.data);
+      if (taskRes?.data && Array.isArray(taskRes.data)) {
+        setTasks(taskRes.data);
+      } else {
+        setTasks([]);
+      }
       if (weekRes?.data) setWeeklyData(weekRes.data);
       if (goalRes?.data) {
         setGoals(goalRes.data);
@@ -164,7 +168,7 @@ export default function StudyPlannerPage() {
   };
 
   return (
-    <div className="flex flex-col gap-6 max-w-[1400px] mx-auto pb-16 text-slate-900 dark:text-slate-100 font-sans">
+    <div className="flex flex-col gap-6 w-full pb-16 text-slate-900 dark:text-slate-100 font-sans">
       
       {/* HEADER BANNER */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-6 sm:p-7 rounded-[28px] bg-gradient-to-r from-amber-500/10 via-orange-500/5 to-transparent dark:from-amber-950/40 dark:via-slate-900 dark:to-slate-900 border border-[#FF9900]/30 shadow-sm">

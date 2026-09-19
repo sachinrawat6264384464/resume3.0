@@ -137,6 +137,18 @@ class AuthService:
                 )
                 self.db.add(cand)
                 await self.db.flush()
+        else:
+            # Overwrite legacy "Demo Candidate" or default name with real name or email prefix
+            new_name = mock_req.name or (email.split('@')[0].capitalize() if '@' in email else None)
+            if new_name and not new_name.lower().startswith("demo candidate"):
+                user.full_name = new_name
+                await self.db.flush()
+            elif user.full_name and (user.full_name.lower().startswith("demo candidate") or user.full_name.lower().startswith("demo ")):
+                if email and "@" in email:
+                    prefix = email.split("@")[0]
+                    if prefix not in ["candidate", "demo", "admin"]:
+                        user.full_name = prefix.capitalize()
+                        await self.db.flush()
 
         token_data = {
             "sub": user.id,

@@ -183,7 +183,7 @@ export default function HelpPage() {
   // ==========================================
   if (isAdmin) {
     return (
-      <div className="max-w-[1240px] mx-auto flex flex-col gap-6 pb-16 text-slate-900 dark:text-slate-100 font-sans">
+      <div className="w-full flex flex-col gap-6 pb-16 text-slate-900 dark:text-slate-100 font-sans">
         
         {/* Top Title Banner */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-200/80 dark:border-slate-800 shadow-sm">
@@ -524,7 +524,7 @@ export default function HelpPage() {
   // 🎓 CANDIDATE VIEW (Form Submit + My Tickets)
   // ==========================================
   return (
-    <div className="max-w-[1240px] mx-auto flex flex-col gap-8 pb-16 text-slate-900 dark:text-slate-100 font-sans">
+    <div className="w-full flex flex-col gap-8 pb-16 text-slate-900 dark:text-slate-100 font-sans">
       
       {/* HEADER BANNER */}
       <div className="p-6 sm:p-8 rounded-[32px] bg-gradient-to-r from-[#232F3E] via-[#1c2532] to-[#232F3E] text-white border border-[#FF9900]/30 shadow-2xl relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-6">

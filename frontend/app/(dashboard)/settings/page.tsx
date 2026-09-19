@@ -63,7 +63,7 @@ export default function SettingsPage() {
       initial={{ opacity: 0, y: 15 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4 }}
-      className="max-w-[800px] mx-auto flex flex-col gap-6 pb-12 text-slate-900 dark:text-slate-100 font-sans"
+      className="w-full flex flex-col gap-6 pb-12 text-slate-900 dark:text-slate-100 font-sans"
     >
       <div className="flex flex-col gap-1">
         <h1 className="text-2xl font-black tracking-tight text-slate-900 dark:text-white flex items-center gap-2">

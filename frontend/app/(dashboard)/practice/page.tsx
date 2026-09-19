@@ -111,7 +111,7 @@ export default function QuickPracticePage() {
   };
 
   return (
-    <div className="flex flex-col gap-8 max-w-5xl mx-auto pb-16">
+    <div className="flex flex-col gap-8 w-full pb-16">
       {/* Header */}
       <div className="p-6 sm:p-8 rounded-3xl glass-panel-glow border border-indigo-500/20 relative overflow-hidden flex flex-col sm:flex-row sm:items-center justify-between gap-6">
         <div className="flex flex-col gap-2 z-10">

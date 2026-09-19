@@ -12,6 +12,10 @@ class InterviewStage(TimeStampedModel):
     category = Column(String(100), default="Fundamentals", nullable=False)
     minimum_score = Column(Float, default=80.0, nullable=False)
     unlock_rule = Column(String(50), default="PASS_PREVIOUS_STAGE", nullable=False) # PASS_PREVIOUS_STAGE, ALWAYS_UNLOCKED
+    difficulty = Column(String(50), default="Medium", nullable=True)
+    xp_reward = Column(String(50), default="+200 XP", nullable=True)
+    duration = Column(String(50), default="20 Mins", nullable=True)
+    icon = Column(String(20), default="🏆", nullable=True)
 
     template = relationship("InterviewTemplate", back_populates="stages")
     questions = relationship("Question", back_populates="stage", order_by="Question.order_index", cascade="all, delete-orphan")

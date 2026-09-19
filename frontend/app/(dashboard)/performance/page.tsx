@@ -61,7 +61,7 @@ export default function CandidatePerformancePage() {
   ];
 
   return (
-    <div className="flex flex-col gap-8 max-w-[1350px] mx-auto pb-16 text-slate-900 dark:text-slate-100 font-sans">
+    <div className="flex flex-col gap-8 w-full pb-16 text-slate-900 dark:text-slate-100 font-sans">
       
       {/* HEADER BANNER */}
       <div className="p-6 sm:p-8 rounded-[32px] bg-gradient-to-r from-[#232F3E] via-[#1c2532] to-[#232F3E] text-white border border-[#FF9900]/30 shadow-2xl relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-6">
@@ -115,140 +115,62 @@ export default function CandidatePerformancePage() {
 
       </div>
 
-      {/* 5-STAGE INTERVIEW MASTERY & COMPETENCY MATRIX */}
-      <div className="p-6 sm:p-8 rounded-[32px] bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-xl flex flex-col gap-6">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-4 border-b border-slate-100 dark:border-slate-800">
-          <div className="flex flex-col gap-1">
-            <span className="text-xs font-black text-[#FF9900] uppercase tracking-widest flex items-center gap-2">
-              <TrendingUp className="w-4 h-4 text-[#FF9900]" />
-              5-STAGE INTERVIEW MASTERY & COMPETENCY MATRIX
-            </span>
-            <span className="text-xs text-slate-500 font-medium">
-              Live evaluation & stage-by-stage skill breakdown synced directly from PostgreSQL attempt history
-            </span>
+      {/* 🏅 12 GAMIFIED BADGES SHOWCASE */}
+      <div className="p-6 sm:p-8 rounded-[32px] bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-xl flex flex-col gap-4">
+        <div className="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-slate-800">
+          <div className="flex flex-col gap-0.5">
+            <h3 className="text-base font-black text-slate-900 dark:text-white flex items-center gap-2">
+              <Award className="w-5 h-5 text-[#FF9900]" />
+              Gamified Badges & Career Milestones (12 Badges)
+            </h3>
+            <span className="text-xs text-slate-500 font-medium">Earn badges as you pass interview stages and complete resume audit milestones</span>
           </div>
-          <span className="px-3 py-1 rounded-full bg-amber-50 dark:bg-amber-950/50 border border-[#FF9900]/30 text-[#FF9900] text-[11px] font-extrabold w-fit shrink-0">
-            5 Stages Connected
+          <span className="px-3 py-1 rounded-full bg-amber-50 dark:bg-amber-950/60 text-[#FF9900] text-xs font-black border border-[#FF9900]/30">
+            {readiness >= 80 ? "4 Unlocked" : "1 Unlocked"}
           </span>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
           {[
-            {
-              id: 1,
-              name: "Profile & Career Pitch",
-              skills: ["Soft Skills", "Career Pitch", "STAR Method"],
-              techVal: parseInt(progression[0]?.tech || "0") || Math.round(readiness * 0.7) || 0,
-              commVal: parseInt(progression[0]?.comm || "0") || Math.round(readiness * 0.75) || 0,
-              confVal: parseInt(progression[0]?.conf || "0") || Math.round(readiness * 0.72) || 0,
-            },
-            {
-              id: 2,
-              name: "Linux Systems Warrior",
-              skills: ["Kernel / OS", "SystemD", "Shell Scripting"],
-              techVal: parseInt(progression[1]?.tech || "0") || Math.round(readiness * 0.82) || 0,
-              commVal: parseInt(progression[1]?.comm || "0") || Math.round(readiness * 0.8) || 0,
-              confVal: parseInt(progression[1]?.conf || "0") || Math.round(readiness * 0.78) || 0,
-            },
-            {
-              id: 3,
-              name: "Multi-Cloud Architecture",
-              skills: ["AWS VPC", "IAM & IRSA", "Terraform IaC"],
-              techVal: parseInt(progression[2]?.tech || "0") || Math.round(readiness * 0.9) || 0,
-              commVal: parseInt(progression[2]?.comm || "0") || Math.round(readiness * 0.85) || 0,
-              confVal: parseInt(progression[2]?.conf || "0") || Math.round(readiness * 0.84) || 0,
-            },
-            {
-              id: 4,
-              name: "DevOps & Containers",
-              skills: ["Docker", "Kubernetes EKS", "CI/CD Pipelines"],
-              techVal: parseInt(progression[3]?.tech || "0") || Math.round(readiness * 0.95) || 0,
-              commVal: parseInt(progression[3]?.comm || "0") || Math.round(readiness * 0.92) || 0,
-              confVal: parseInt(progression[3]?.conf || "0") || Math.round(readiness * 0.9) || 0,
-            },
-            {
-              id: 5,
-              name: "Production Incident Boss Battle",
-              skills: ["Outage Triage", "Log Analysis", "Site Reliability"],
-              techVal: Math.round(readiness) || 0,
-              commVal: Math.round(readiness * 0.96) || 0,
-              confVal: Math.round(readiness * 0.94) || 0,
-            }
-          ].map((stage) => {
-            const overallStageScore = Math.round((stage.techVal + stage.commVal + stage.confVal) / 3);
-            const isCompleted = overallStageScore >= 70;
-            const isAttempted = overallStageScore > 0;
-
-            return (
-              <div 
-                key={stage.id} 
-                className="p-4 sm:p-5 rounded-2xl bg-slate-50/80 dark:bg-slate-950/80 border border-slate-200/80 dark:border-slate-800 flex flex-col justify-between gap-3.5 shadow-sm hover:border-[#FF9900]/50 transition-all group"
-              >
-                <div className="flex items-center justify-between gap-2 min-w-0">
-                  <div className="flex items-center gap-2 min-w-0">
-                    <span className="w-6 h-6 rounded-full bg-[#FF9900]/10 border border-[#FF9900]/30 text-[#FF9900] font-black text-xs flex items-center justify-center shrink-0">
-                      S{stage.id}
-                    </span>
-                    <span className="text-xs sm:text-sm font-black text-slate-900 dark:text-white truncate" title={stage.name}>
-                      {stage.name}
-                    </span>
-                  </div>
-                  <span className={`text-[10.5px] font-mono font-black px-2 py-0.5 rounded-lg shrink-0 ${
-                    isCompleted 
-                      ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300"
-                      : isAttempted 
-                      ? "bg-amber-100 text-[#FF9900] dark:bg-amber-950 dark:text-amber-300"
-                      : "bg-slate-200 text-slate-500 dark:bg-slate-800 dark:text-slate-400"
-                  }`}>
-                    {overallStageScore > 0 ? `${overallStageScore}%` : "Pending"}
-                  </span>
-                </div>
-
-                {/* Skill Badges */}
-                <div className="flex flex-wrap gap-1.5 my-0.5">
-                  {stage.skills.map((s, i) => (
-                    <span key={i} className="text-[10px] sm:text-[10.5px] font-bold px-2 py-0.5 rounded-md bg-white dark:bg-slate-900 border border-slate-200/70 dark:border-slate-800 text-slate-700 dark:text-slate-300 whitespace-nowrap shadow-2xs">
-                      {s}
-                    </span>
-                  ))}
-                </div>
-
-                {/* Metrics Breakdown */}
-                <div className="flex flex-col gap-1.5 pt-1 text-xs font-mono">
-                  <div className="flex justify-between items-center text-slate-600 dark:text-slate-400">
-                    <span className="font-medium">Technical:</span>
-                    <span className="font-black text-[#FF9900]">{stage.techVal}%</span>
-                  </div>
-                  <div className="flex justify-between items-center text-slate-600 dark:text-slate-400">
-                    <span className="font-medium">Communication:</span>
-                    <span className="font-black text-blue-500">{stage.commVal}%</span>
-                  </div>
-                  <div className="flex justify-between items-center text-slate-600 dark:text-slate-400">
-                    <span className="font-medium">Confidence:</span>
-                    <span className="font-black text-emerald-500">{stage.confVal}%</span>
-                  </div>
-                </div>
-
-                {/* Progress Bar */}
-                <div className="w-full h-2 rounded-full bg-slate-200 dark:bg-slate-800 overflow-hidden mt-1">
-                  <div 
-                    className="h-full bg-gradient-to-r from-[#FF9900] via-amber-400 to-emerald-400 rounded-full transition-all duration-700" 
-                    style={{ width: `${Math.min(100, overallStageScore)}%` }} 
-                  />
-                </div>
-
-                {/* Quick Action Button */}
-                <Link prefetch={false}
-                  href="/interviews"
-                  className="w-full py-2 rounded-xl font-bold text-xs bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-[#FF9900] hover:bg-amber-50/50 dark:hover:bg-amber-950/30 hover:text-[#FF9900] text-slate-700 dark:text-slate-200 flex items-center justify-center gap-1.5 transition-all mt-1 shadow-xs"
-                >
-                  <span>{isAttempted ? "Re-attempt Stage 🔄" : "Start Stage →"}</span>
-                </Link>
+            { title: "Linux Warrior", icon: "🏅", desc: "Pass Linux Systems Stage", unlocked: true },
+            { title: "Cloud Explorer", icon: "🏅", desc: "Complete Cloud Basics", unlocked: true },
+            { title: "AWS Ninja", icon: "🏅", desc: "Score 85%+ on AWS VPC", unlocked: readiness >= 70 },
+            { title: "Kubernetes Warrior", icon: "🏅", desc: "Master K8s Pod Debugging", unlocked: readiness >= 75 },
+            { title: "Terraform Expert", icon: "🏅", desc: "IaC State & Modules", unlocked: readiness >= 80 },
+            { title: "CI/CD Master", icon: "🏅", desc: "Jenkins & GitHub Pipelines", unlocked: readiness >= 80 },
+            { title: "DevSecOps Defender", icon: "🏅", desc: "Trivy & Vault Hardening", unlocked: readiness >= 85 },
+            { title: "AI Engineer", icon: "🏅", desc: "Complete AIOps Challenge", unlocked: readiness >= 85 },
+            { title: "MCP Explorer", icon: "🏅", desc: "Model Context Protocol Tool", unlocked: readiness >= 90 },
+            { title: "Multi-Cloud Architect", icon: "🏅", desc: "Pass Multi-Cloud Stage", unlocked: readiness >= 90 },
+            { title: "Interview Ready", icon: "🏆", desc: "Readiness Score ≥ 80%", unlocked: readiness >= 80 },
+            { title: "40 LPA Challenger", icon: "👑", desc: "Complete 40 LPA Boss Battle", unlocked: readiness >= 95 }
+          ].map((badge, idx) => (
+            <div
+              key={idx}
+              className={`p-3.5 rounded-2xl border flex flex-col items-center justify-between text-center gap-2 transition-all ${
+                badge.unlocked
+                  ? "bg-amber-50/70 dark:bg-amber-950/40 border-[#FF9900]/60 shadow-sm"
+                  : "bg-slate-50/50 dark:bg-slate-900/40 border-slate-200 dark:border-slate-800 opacity-60"
+              }`}
+            >
+              <div className="w-10 h-10 rounded-2xl bg-white dark:bg-slate-900 shadow-xs flex items-center justify-center text-xl">
+                {badge.icon}
               </div>
-            );
-          })}
+              <div className="flex flex-col">
+                <span className="text-xs font-black text-slate-900 dark:text-white leading-tight">{badge.title}</span>
+                <span className="text-[9.5px] text-slate-500 dark:text-slate-400 font-medium leading-tight mt-0.5">{badge.desc}</span>
+              </div>
+              <span className={`text-[9px] font-extrabold px-2 py-0.5 rounded-full uppercase ${
+                badge.unlocked ? "bg-[#FF9900] text-slate-950" : "bg-slate-200 dark:bg-slate-800 text-slate-500"
+              }`}>
+                {badge.unlocked ? "Unlocked" : "Locked"}
+              </span>
+            </div>
+          ))}
         </div>
       </div>
+
+
 
       {/* 5-PILLAR RUBRIC AVERAGES & SPEECH TELEMETRY GRID */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">

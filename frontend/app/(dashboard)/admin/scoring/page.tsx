@@ -37,7 +37,7 @@ export default function AdminScoringPage() {
       initial={{ opacity: 0, y: 15 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4 }}
-      className="max-w-[1280px] mx-auto flex flex-col gap-6 pb-16 text-slate-900 dark:text-slate-100 font-sans"
+      className="w-full flex flex-col gap-6 pb-16 text-slate-900 dark:text-slate-100 font-sans"
     >
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-200/80 dark:border-slate-800 shadow-xs">

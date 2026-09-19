@@ -25,7 +25,7 @@ export default function CertificatesPage() {
   }, []);
 
   return (
-    <div className="max-w-[1200px] mx-auto flex flex-col gap-6 pb-12 text-slate-900 dark:text-slate-100 font-sans">
+    <div className="w-full flex flex-col gap-6 pb-12 text-slate-900 dark:text-slate-100 font-sans">
       
       {/* Header */}
       <div className="flex flex-col gap-1">

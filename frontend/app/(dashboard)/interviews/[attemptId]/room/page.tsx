@@ -224,8 +224,9 @@ export default function InterviewRoomPage() {
     };
   }, []);
 
-  // Question Attempts Slicing (3 for Practice, 10 for Real Interview)
-  const maxQCount = chamberMode === "PRACTICE" ? 3 : 10;
+  // Dynamic DB Question Count Resolution
+  const dbTotalQCount = activeStage?.question_attempts?.length || 10;
+  const maxQCount = chamberMode === "PRACTICE" ? Math.min(3, dbTotalQCount) : dbTotalQCount;
 
   // 13-Minute Countdown Timer with Automatic Expiration & Score Aggregation
   useEffect(() => {
@@ -237,7 +238,8 @@ export default function InterviewRoomPage() {
       const allScores = accumulatedScores.length > 0 ? accumulatedScores : [0];
       const avgScore = Math.round(allScores.reduce((a, b) => a + b, 0) / allScores.length);
       const correctQuestionsCount = allScores.filter((s) => s >= 60.0).length;
-      const isPassedStage = (avgScore >= 80.0) && (correctQuestionsCount >= 8);
+      const requiredPassCount = Math.ceil(maxQCount * 0.75);
+      const isPassedStage = (avgScore >= 80.0) && (correctQuestionsCount >= requiredPassCount);
 
       const finalSummary: StageSummaryData = {
         overallScore: avgScore,
@@ -262,7 +264,16 @@ export default function InterviewRoomPage() {
   const allQAttempts = activeStage?.question_attempts || [];
   const activeQuestionAttempt = allQAttempts[currentQIndex];
 
-  const currentBenchmark = STAGE_1_BENCHMARKS[currentQIndex % STAGE_1_BENCHMARKS.length];
+  // Resolve dynamic DB questions configured by Admin, fallback to STAGE_1_BENCHMARKS template
+  const dbQuestionText = activeQuestionAttempt?.question?.question_text || (activeQuestionAttempt as any)?.question_text;
+  const dbIdealAnswer = activeQuestionAttempt?.question?.reference_answer || (activeQuestionAttempt as any)?.reference_answer;
+  const dbKeywords = activeQuestionAttempt?.question?.expected_topics || (activeQuestionAttempt as any)?.expected_topics;
+
+  const currentBenchmark = {
+    q: dbQuestionText || STAGE_1_BENCHMARKS[currentQIndex % STAGE_1_BENCHMARKS.length].q,
+    ideal: dbIdealAnswer || STAGE_1_BENCHMARKS[currentQIndex % STAGE_1_BENCHMARKS.length].ideal,
+    keywords: (dbKeywords && dbKeywords.length > 0) ? dbKeywords : STAGE_1_BENCHMARKS[currentQIndex % STAGE_1_BENCHMARKS.length].keywords
+  };
   const questionText = currentBenchmark.q;
 
   const playVoice = useCallback(() => {
@@ -458,16 +469,17 @@ export default function InterviewRoomPage() {
           setSpokenTranscript("");
           setIsProcessing(false);
         } else {
-          // Final 10th Question Completed -> Calculate Stage Average & Strict Gatekeeper Math Rules!
+          // Final Question Completed -> Calculate Stage Average & Gatekeeper Rules!
           const avgScore = Math.round(newAccumulated.reduce((a, b) => a + b, 0) / newAccumulated.length);
           const correctQuestionsCount = newAccumulated.filter((s) => s >= 60.0).length;
           const totalDurationSeconds = 780 - timeLeftSeconds;
+          const requiredPassCount = Math.ceil(maxQCount * 0.75);
 
-          // Strict Stage 1 Mathematical Gatekeeper Rules:
+          // Dynamic Stage Gatekeeper Rules:
           // 1. Overall Score >= 80.0%
-          // 2. At least 8/10 Questions Correct (>= 60% concept match each)
+          // 2. At least 75% of questions correct (>= 60% concept match each)
           // 3. Time Duration <= 13 Minutes (780 Seconds)
-          const isPassedStage = (avgScore >= 80.0) && (correctQuestionsCount >= 8) && (totalDurationSeconds <= 780);
+          const isPassedStage = (avgScore >= 80.0) && (correctQuestionsCount >= requiredPassCount) && (totalDurationSeconds <= 780);
 
           if (chamberMode === "INTERVIEW" && activeStage) {
             try {
@@ -527,7 +539,7 @@ export default function InterviewRoomPage() {
                   : "text-slate-400 hover:text-white"
               }`}
             >
-              🎯 Practice Mode (3 Qs)
+              🎯 Practice Mode ({Math.min(3, dbTotalQCount)} Qs)
             </button>
             <button
               onClick={() => {
@@ -542,7 +554,7 @@ export default function InterviewRoomPage() {
                   : "text-slate-400 hover:text-white"
               }`}
             >
-              🎥 Real Interview Mode (10 Qs)
+              🎥 Real Interview Mode ({dbTotalQCount} Qs)
             </button>
           </div>
         </div>
@@ -582,17 +594,17 @@ export default function InterviewRoomPage() {
           {chamberMode === "PRACTICE" ? (
             <>
               <Sparkles className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-              <span>🎯 PRACTICE MODE ACTIVE: 3 Sample Questions • AI Feedback & Model Answer Active • No Data Saved to DB</span>
+              <span>🎯 PRACTICE MODE ACTIVE: {Math.min(3, dbTotalQCount)} Questions • AI Hints & Model Answer Active • No Data Saved</span>
             </>
           ) : (
             <>
               <Database className="w-4 h-4 text-rose-600 dark:text-rose-400" />
-              <span>🎥 REAL INTERVIEW MODE ACTIVE: 10 Stage 1 Questions • 60%+ Semantic Match Threshold • Saved to PostgreSQL DB</span>
+              <span>🎥 REAL INTERVIEW MODE ACTIVE: {dbTotalQCount} Stage Questions • 60%+ Semantic Match Threshold • Saved to Database</span>
             </>
           )}
         </div>
         <span className="font-mono text-[11px] bg-white/60 dark:bg-slate-900/60 px-2.5 py-0.5 rounded-md border font-bold">
-          {chamberMode === "PRACTICE" ? "PRACTICE RUN (3 Qs)" : "NEON DB SAVING (10 Qs)"}
+          {chamberMode === "PRACTICE" ? `PRACTICE RUN (${Math.min(3, dbTotalQCount)} Qs)` : `NEON DB SAVING (${dbTotalQCount} Qs)`}
         </span>
       </div>
 
@@ -655,20 +667,43 @@ export default function InterviewRoomPage() {
         </div>
       </div>
 
-      {/* Benchmark Ideal Model Answer Drawer for Practice Mode */}
-      {chamberMode === "PRACTICE" && showHintDrawer && (
+      {/* Benchmark Ideal Model Answer & 3-Level Hint Drawer for Practice Mode */}
+      {chamberMode === "PRACTICE" && (
         <div className="p-5 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-200 flex flex-col gap-3 animate-fadeIn">
-          <div className="flex items-center gap-2 font-bold text-sm text-amber-300">
-            <Lightbulb className="w-4 h-4" />
-            <span>2-Line Benchmark Ideal Model Solution:</span>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2 font-bold text-sm text-amber-300">
+              <Lightbulb className="w-4 h-4" />
+              <span>🎯 Practice Mode AI Hint Assistant</span>
+            </div>
+            <button 
+              onClick={() => setShowHintDrawer(!showHintDrawer)}
+              className="text-xs font-extrabold px-3 py-1 rounded-xl bg-amber-500/20 hover:bg-amber-500/40 text-amber-300 border border-amber-500/40"
+            >
+              {showHintDrawer ? "Hide Hints 🙈" : "Show AI Hints 💡"}
+            </button>
           </div>
-          <div className="p-3.5 rounded-xl bg-slate-900 border border-amber-500/30 font-mono text-xs text-amber-200 leading-relaxed">
-            "{currentBenchmark.ideal}"
-          </div>
-          <div className="flex items-center gap-2 text-xs text-slate-300">
-            <span className="font-bold text-amber-400">Target Concept Keywords (Need ≥ 60% match):</span>
-            <span className="font-mono text-slate-200">{currentBenchmark.keywords.join(", ")}</span>
-          </div>
+
+          {showHintDrawer && (
+            <div className="flex flex-col gap-3 pt-2 border-t border-amber-500/30">
+              {/* Level 1: General Strategy */}
+              <div className="p-3 rounded-xl bg-slate-900/90 border border-amber-500/20 text-xs flex flex-col gap-1">
+                <span className="font-mono font-bold text-amber-400">💡 Hint Level 1 — Strategic Angle:</span>
+                <span className="text-slate-300">Start with high-level architecture/workflow, then name the specific AWS service or CLI tool.</span>
+              </div>
+
+              {/* Level 2: Core Keywords */}
+              <div className="p-3 rounded-xl bg-slate-900/90 border border-amber-500/20 text-xs flex flex-col gap-1">
+                <span className="font-mono font-bold text-amber-400">🔑 Hint Level 2 — Target Concept Keywords:</span>
+                <span className="font-mono text-emerald-400 font-bold">{currentBenchmark.keywords.join(", ")}</span>
+              </div>
+
+              {/* Level 3: Model Answer */}
+              <div className="p-3 rounded-xl bg-slate-900/90 border border-amber-500/20 text-xs flex flex-col gap-1">
+                <span className="font-mono font-bold text-amber-400">👑 Hint Level 3 — 2-Line Ideal Solution:</span>
+                <span className="font-mono text-amber-200 italic">"{currentBenchmark.ideal}"</span>
+              </div>
+            </div>
+          )}
         </div>
       )}
 
@@ -767,6 +802,25 @@ export default function InterviewRoomPage() {
               <div className="p-3 rounded-xl bg-blue-950/40 border border-blue-500/30 flex flex-col gap-1 text-xs">
                 <span className="font-bold text-blue-300">Benchmark Model Answer Solution:</span>
                 <span className="font-mono text-slate-200">"{currentBenchmark.ideal}"</span>
+              </div>
+
+              {/* Human Review Upgrade Request */}
+              <div className="p-3.5 rounded-2xl bg-gradient-to-r from-purple-950/60 to-slate-900 border border-purple-500/40 flex flex-col sm:flex-row sm:items-center justify-between gap-3 mt-1">
+                <div className="flex flex-col">
+                  <span className="text-xs font-black text-purple-300 flex items-center gap-1.5">
+                    <Award className="w-4 h-4 text-purple-400" />
+                    Request Human Mentor Review (+500 XP)
+                  </span>
+                  <span className="text-[10.5px] text-slate-400">
+                    Get 1:1 human expert review on communication, architecture depth & hiring readiness.
+                  </span>
+                </div>
+                <button
+                  onClick={() => alert("Human Review Requested! A senior CloudOps mentor will review your submission within 24 hours.")}
+                  className="px-4 py-2 rounded-xl text-xs font-black text-white bg-purple-600 hover:bg-purple-500 shadow-md transition-all shrink-0 cursor-pointer"
+                >
+                  👨‍💻 Request Human Review
+                </button>
               </div>
             </div>
           )}

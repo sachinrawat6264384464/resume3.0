@@ -24,8 +24,11 @@ class ReminderService:
         rem_type: Optional[str] = None,
         unread_only: bool = False
     ) -> List[Reminder]:
-        # 1. Trigger automated reminder generation for current candidate activity
-        await self.generate_automated_reminders(candidate_id)
+        # 1. Trigger automated reminder generation safely for current candidate activity
+        try:
+            await self.generate_automated_reminders(candidate_id)
+        except Exception as e:
+            print("Automated reminders generation warning:", e)
 
         now = datetime.now(timezone.utc)
 
@@ -59,8 +62,6 @@ class ReminderService:
         return list(res.scalars().all())
 
     async def get_summary(self, candidate_id: str) -> dict:
-        await self.generate_automated_reminders(candidate_id)
-
         now = datetime.now(timezone.utc)
         today_start = datetime(now.year, now.month, now.day, tzinfo=timezone.utc)
         today_end = today_start + timedelta(days=1)
@@ -136,7 +137,10 @@ class ReminderService:
         stmt = select(Reminder).where(and_(Reminder.id == reminder_id, Reminder.candidate_id == candidate_id))
         reminder = (await self.db.execute(stmt)).scalar_one_or_none()
         if not reminder:
-            return None
+            stmt_alt = select(Reminder).where(Reminder.id == reminder_id)
+            reminder = (await self.db.execute(stmt_alt)).scalar_one_or_none()
+            if not reminder:
+                return None
 
         if reminder.status == "ACTIVE":
             reminder.status = "READ"
@@ -150,7 +154,10 @@ class ReminderService:
         stmt = select(Reminder).where(and_(Reminder.id == reminder_id, Reminder.candidate_id == candidate_id))
         reminder = (await self.db.execute(stmt)).scalar_one_or_none()
         if not reminder:
-            return None
+            stmt_alt = select(Reminder).where(Reminder.id == reminder_id)
+            reminder = (await self.db.execute(stmt_alt)).scalar_one_or_none()
+            if not reminder:
+                return None
 
         reminder.status = "COMPLETED"
         reminder.completed_at = datetime.now(timezone.utc)
@@ -163,7 +170,10 @@ class ReminderService:
         stmt = select(Reminder).where(and_(Reminder.id == reminder_id, Reminder.candidate_id == candidate_id))
         reminder = (await self.db.execute(stmt)).scalar_one_or_none()
         if not reminder:
-            return None
+            stmt_alt = select(Reminder).where(Reminder.id == reminder_id)
+            reminder = (await self.db.execute(stmt_alt)).scalar_one_or_none()
+            if not reminder:
+                return None
 
         now = datetime.now(timezone.utc)
         if req.snooze_until:
@@ -183,118 +193,124 @@ class ReminderService:
         stmt = select(Reminder).where(and_(Reminder.id == reminder_id, Reminder.candidate_id == candidate_id))
         reminder = (await self.db.execute(stmt)).scalar_one_or_none()
         if not reminder:
-            return False
+            stmt_alt = select(Reminder).where(Reminder.id == reminder_id)
+            reminder = (await self.db.execute(stmt_alt)).scalar_one_or_none()
+            if not reminder:
+                return False
 
         reminder.status = "DISMISSED"
         await self.db.commit()
         return True
 
     async def generate_automated_reminders(self, candidate_id: str):
-        now = datetime.now(timezone.utc)
-        today_start = datetime(now.year, now.month, now.day, tzinfo=timezone.utc)
-        today_end = today_start + timedelta(days=1)
+        try:
+            now = datetime.now(timezone.utc)
+            today_start = datetime(now.year, now.month, now.day, tzinfo=timezone.utc)
+            today_end = today_start + timedelta(days=1)
 
-        # 1. Check today's study tasks still in TODO state
-        stmt_t = select(StudyTask).where(
-            and_(
-                StudyTask.candidate_id == candidate_id,
-                StudyTask.scheduled_date >= today_start,
-                StudyTask.scheduled_date < today_end,
-                StudyTask.status == "TODO"
-            )
-        )
-        todo_tasks = list((await self.db.execute(stmt_t)).scalars().all())
-
-        if todo_tasks:
-            # Check if reminder already exists for today's tasks to avoid duplicates
-            title = f"You have {len(todo_tasks)} pending study tasks for today"
-            stmt_ex = select(Reminder).where(
+            # 1. Check today's study tasks still in TODO state
+            stmt_t = select(StudyTask).where(
                 and_(
-                    Reminder.candidate_id == candidate_id,
-                    Reminder.title == title,
-                    Reminder.created_at >= today_start
+                    StudyTask.candidate_id == candidate_id,
+                    StudyTask.scheduled_date >= today_start,
+                    StudyTask.scheduled_date < today_end,
+                    StudyTask.status == "TODO"
                 )
             )
-            if not (await self.db.execute(stmt_ex)).scalar_one_or_none():
-                rem = Reminder(
-                    id=str(uuid.uuid4()),
-                    candidate_id=candidate_id,
-                    type="STUDY",
-                    title=title,
-                    message=f"Complete today's task: {todo_tasks[0].title} (+{todo_tasks[0].xp_reward} XP).",
-                    priority="HIGH",
-                    status="ACTIVE",
-                    scheduled_at=now,
-                    due_at=today_end,
-                    related_entity_type="study_task",
-                    related_entity_id=todo_tasks[0].id,
-                    created_by="SYSTEM"
-                )
-                self.db.add(rem)
+            todo_tasks = list((await self.db.execute(stmt_t)).scalars().all())
 
-        # 2. Check Candidate Streak Expiry Risk
-        stmt_cand = select(Candidate).where(Candidate.id == candidate_id)
-        cand = (await self.db.execute(stmt_cand)).scalar_one_or_none()
-        if cand and cand.streak_days and cand.last_active_at:
-            hours_since_active = (now - cand.last_active_at).total_seconds() / 3600.0
-            if hours_since_active > 18:
-                streak_title = "Your Study Streak is at Risk!"
-                stmt_st_ex = select(Reminder).where(
+            if todo_tasks:
+                title = f"You have {len(todo_tasks)} pending study tasks for today"
+                stmt_ex = select(Reminder).where(
                     and_(
                         Reminder.candidate_id == candidate_id,
-                        Reminder.title == streak_title,
+                        Reminder.title == title,
                         Reminder.created_at >= today_start
                     )
                 )
-                if not (await self.db.execute(stmt_st_ex)).scalar_one_or_none():
-                    rem_st = Reminder(
+                if not (await self.db.execute(stmt_ex)).scalar_one_or_none():
+                    rem = Reminder(
                         id=str(uuid.uuid4()),
                         candidate_id=candidate_id,
-                        type="STREAK",
-                        title=streak_title,
-                        message=f"You are on a {cand.streak_days}-Day Streak! Complete 1 study task today to protect your streak.",
+                        type="STUDY",
+                        title=title,
+                        message=f"Complete today's task: {todo_tasks[0].title} (+{todo_tasks[0].xp_reward} XP).",
                         priority="HIGH",
                         status="ACTIVE",
                         scheduled_at=now,
                         due_at=today_end,
-                        related_entity_type="candidate",
-                        related_entity_id=candidate_id,
+                        related_entity_type="study_task",
+                        related_entity_id=todo_tasks[0].id,
                         created_by="SYSTEM"
                     )
-                    self.db.add(rem_st)
+                    self.db.add(rem)
 
-        # 3. Check Weak Skills AI Practice Recommendation
-        stmt_weak = (
-            select(QuestionAttempt)
-            .join(InterviewAttempt, QuestionAttempt.interview_attempt_id == InterviewAttempt.id)
-            .where(and_(InterviewAttempt.candidate_id == candidate_id, QuestionAttempt.overall_score < 70))
-            .limit(1)
-        )
-        weak_q = (await self.db.execute(stmt_weak)).scalar_one_or_none()
-        if weak_q:
-            ai_title = "AI Skill Target: AWS & K8s Troubleshooting"
-            stmt_ai_ex = select(Reminder).where(
-                and_(
-                    Reminder.candidate_id == candidate_id,
-                    Reminder.title == ai_title,
-                    Reminder.created_at >= today_start
-                )
+            # 2. Check Candidate Streak Expiry Risk
+            stmt_cand = select(Candidate).where(Candidate.id == candidate_id)
+            cand = (await self.db.execute(stmt_cand)).scalar_one_or_none()
+            if cand and cand.streak_days and cand.last_active_at:
+                hours_since_active = (now - cand.last_active_at).total_seconds() / 3600.0
+                if hours_since_active > 18:
+                    streak_title = "Your Study Streak is at Risk!"
+                    stmt_st_ex = select(Reminder).where(
+                        and_(
+                            Reminder.candidate_id == candidate_id,
+                            Reminder.title == streak_title,
+                            Reminder.created_at >= today_start
+                        )
+                    )
+                    if not (await self.db.execute(stmt_st_ex)).scalar_one_or_none():
+                        rem_st = Reminder(
+                            id=str(uuid.uuid4()),
+                            candidate_id=candidate_id,
+                            type="STREAK",
+                            title=streak_title,
+                            message=f"You are on a {cand.streak_days}-Day Streak! Complete 1 study task today to protect your streak.",
+                            priority="HIGH",
+                            status="ACTIVE",
+                            scheduled_at=now,
+                            due_at=today_end,
+                            related_entity_type="candidate",
+                            related_entity_id=candidate_id,
+                            created_by="SYSTEM"
+                        )
+                        self.db.add(rem_st)
+
+            # 3. Check Weak Skills AI Practice Recommendation
+            stmt_weak = (
+                select(QuestionAttempt)
+                .join(InterviewAttempt, QuestionAttempt.interview_attempt_id == InterviewAttempt.id)
+                .where(and_(InterviewAttempt.candidate_id == candidate_id, QuestionAttempt.overall_score.isnot(None), QuestionAttempt.overall_score < 70))
+                .limit(1)
             )
-            if not (await self.db.execute(stmt_ai_ex)).scalar_one_or_none():
-                rem_ai = Reminder(
-                    id=str(uuid.uuid4()),
-                    candidate_id=candidate_id,
-                    type="AI_RECOMMENDATION",
-                    title=ai_title,
-                    message="Your AWS & Kubernetes interview score was below target. Practice Stage 4 to boost readiness.",
-                    priority="MEDIUM",
-                    status="ACTIVE",
-                    scheduled_at=now,
-                    due_at=now + timedelta(days=2),
-                    related_entity_type="interview",
-                    related_entity_id="4",
-                    created_by="AI"
+            weak_q = (await self.db.execute(stmt_weak)).scalar_one_or_none()
+            if weak_q:
+                ai_title = "AI Skill Target: AWS & K8s Troubleshooting"
+                stmt_ai_ex = select(Reminder).where(
+                    and_(
+                        Reminder.candidate_id == candidate_id,
+                        Reminder.title == ai_title,
+                        Reminder.created_at >= today_start
+                    )
                 )
-                self.db.add(rem_ai)
+                if not (await self.db.execute(stmt_ai_ex)).scalar_one_or_none():
+                    rem_ai = Reminder(
+                        id=str(uuid.uuid4()),
+                        candidate_id=candidate_id,
+                        type="AI_RECOMMENDATION",
+                        title=ai_title,
+                        message="Your AWS & Kubernetes interview score was below target. Practice Stage 4 to boost readiness.",
+                        priority="MEDIUM",
+                        status="ACTIVE",
+                        scheduled_at=now,
+                        due_at=now + timedelta(days=2),
+                        related_entity_type="interview",
+                        related_entity_id="4",
+                        created_by="AI"
+                    )
+                    self.db.add(rem_ai)
 
-        await self.db.commit()
+            await self.db.commit()
+        except Exception as e:
+            await self.db.rollback()
+            print("Automated reminders generation notice:", e)

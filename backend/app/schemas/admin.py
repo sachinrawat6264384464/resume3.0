@@ -9,6 +9,7 @@ class StagePassRateMetric(BaseModel):
     total_attempts: int
     passed_attempts: int
     pass_rate_percentage: float
+    avg_score: Optional[float] = 0.0
 
 class WeakTopicMetric(BaseModel):
     topic: str
@@ -37,6 +38,9 @@ class AdminDashboardMetrics(BaseModel):
     most_common_weak_topics: List[WeakTopicMetric]
     candidates_requiring_attention: List[RecentInterviewItem]
     recent_interviews: List[RecentInterviewItem]
+    pillar_scores: Optional[Dict[str, float]] = None
+    top_candidates: Optional[List[Dict[str, Any]]] = None
+
 
 class StageOverrideRequest(BaseModel):
     new_status: str # PASSED, FAILED, IN_PROGRESS

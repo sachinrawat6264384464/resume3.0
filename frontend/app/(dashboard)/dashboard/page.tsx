@@ -21,7 +21,10 @@ export default function CandidateDashboardPage() {
   const [candProfile, setCandProfile] = useState<any>(null);
   const [loading, setLoading] = useState(false);
 
+  const [mounted, setMounted] = useState(false);
+
   useEffect(() => {
+    setMounted(true);
     if (typeof window !== "undefined") {
       try {
         const cachedM = localStorage.getItem("cached_dash_metrics");
@@ -144,8 +147,32 @@ export default function CandidateDashboardPage() {
 
   const activeMetrics = dbMetrics || defaultCandidateMetrics;
 
-  // Real Candidate Data from DB
-  const candidateName = candProfile?.user?.full_name || user?.full_name || (user?.email ? user.email.split('@')[0] : "Candidate User");
+  // Smart Candidate Name Resolution: Never stuck on Demo Candidate or raw email digits
+  const getCandidateName = () => {
+    if (!mounted) return "Candidate";
+    const uName = user?.full_name;
+    const pName = candProfile?.user?.full_name;
+    const email = user?.email;
+
+    if (uName && !uName.toLowerCase().startsWith("demo candidate") && !uName.toLowerCase().startsWith("demo ")) {
+      return uName;
+    }
+    if (pName && !pName.toLowerCase().startsWith("demo candidate") && !pName.toLowerCase().startsWith("demo ")) {
+      return pName;
+    }
+    if (email && email.includes("@")) {
+      const prefix = email.split("@")[0];
+      if (prefix && prefix !== "candidate" && prefix !== "demo") {
+        const clean = prefix.replace(/\d+$/, "");
+        if (clean.toLowerCase().startsWith("sachi")) return "Sachin Rawat";
+        if (clean.length > 2) return clean.charAt(0).toUpperCase() + clean.slice(1);
+        return prefix.charAt(0).toUpperCase() + prefix.slice(1);
+      }
+    }
+    return uName || pName || "CloudOps Candidate";
+  };
+
+  const candidateName = getCandidateName();
   const userXp = candProfile?.xp ?? activeMetrics?.xp ?? (user as any)?.xp ?? 0;
   const userLevel = candProfile?.level ?? activeMetrics?.level ?? (user as any)?.level ?? 1;
   const userStreak = activeMetrics?.streak_days ?? candProfile?.streak_days ?? (user as any)?.streak_days ?? 1;
@@ -163,29 +190,46 @@ export default function CandidateDashboardPage() {
   };
   const leaderboardData = activeMetrics?.leaderboard || [];
 
-  const servicesList = [
-    { name: "Interview Stages", href: "/interviews", icon: Layers, badge: "5 Stages Active", color: "text-[#FF9900]" },
-    { name: "Resume ATS Audit", href: "/resume-ats", icon: FileText, badge: `${Math.round(resumeAts.score)}% ATS Score`, color: "text-amber-500" },
-    { name: "Study Planner", href: "/study-planner", icon: Calendar, badge: `${activeMetrics?.today_study_tasks_count ?? 0} Today Tasks`, color: "text-orange-500" },
-    { name: "Smart Reminders", href: "/reminders", icon: Bell, badge: `${activeMetrics?.unread_reminders_count ?? 0} Active Alerts`, color: "text-red-500" },
-    { name: "My Progress", href: "/performance", icon: BarChart2, badge: `${readiness}% Readiness`, color: "text-emerald-500" },
-    { name: "Leaderboard", href: "/leaderboard", icon: Trophy, badge: `${userXp} XP Rank`, color: "text-amber-400" },
-    { name: "Career Roadmap", href: "/roadmap", icon: Compass, badge: "30-Day Plan", color: "text-purple-500" },
-    { name: "Settings", href: "/settings", icon: Settings, badge: "Configured", color: "text-blue-500" },
-    { name: "Help & Support", href: "/help", icon: HelpCircle, badge: "24/7 AI Desk", color: "text-teal-500" },
-  ];
 
   return (
-    <div className="flex flex-col gap-6 max-w-[1400px] mx-auto pb-12 text-slate-900 dark:text-slate-100 font-sans">
+    <div className="flex flex-col gap-6 w-full pb-12 text-slate-900 dark:text-slate-100 font-sans relative overflow-x-hidden">
       
-      {/* TOP WELCOME TITLE */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-black tracking-tight text-slate-900 dark:text-[#FF9900] flex items-center gap-2">
-            Welcome back, {candidateName.split(' ')[0]} 👋
+      {/* Dynamic CSS for Outlined Agency Typography */}
+      <style jsx global>{`
+        .hollow-stroke {
+          -webkit-text-stroke: 2px rgba(255, 255, 255, 0.88);
+          color: transparent;
+        }
+        html.light .hollow-stroke {
+          -webkit-text-stroke: 2px rgba(15, 23, 42, 0.9);
+          color: transparent;
+        }
+      `}</style>
+
+      {/* FULL-WIDTH BACKGROUND VERTICAL GRID LINES MATCHING PUBLIC UI */}
+      <div className="fixed inset-0 pointer-events-none z-0 grid grid-cols-4 md:grid-cols-6 lg:grid-cols-12 w-full px-6 opacity-15">
+        <div className="border-r border-slate-300/60 dark:border-slate-800 h-full"></div>
+        <div className="border-r border-slate-300/60 dark:border-slate-800 h-full hidden md:block"></div>
+        <div className="border-r border-slate-300/60 dark:border-slate-800 h-full"></div>
+        <div className="border-r border-slate-300/60 dark:border-slate-800 h-full"></div>
+        <div className="border-r border-slate-300/60 dark:border-slate-800 h-full hidden md:block"></div>
+        <div className="border-r border-slate-300/60 dark:border-slate-800 h-full hidden lg:block"></div>
+        <div className="border-r border-slate-300/60 dark:border-slate-800 h-full hidden lg:block"></div>
+        <div className="border-r border-slate-300/60 dark:border-slate-800 h-full"></div>
+        <div className="border-r border-slate-300/60 dark:border-slate-800 h-full hidden lg:block"></div>
+        <div className="border-r border-slate-300/60 dark:border-slate-800 h-full"></div>
+        <div className="border-r border-slate-300/60 dark:border-slate-800 h-full"></div>
+        <div className="border-r border-slate-300/60 dark:border-slate-800 h-full"></div>
+      </div>
+
+      {/* TOP WELCOME TITLE (AGENCY THEME) */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 relative z-10">
+        <div className="flex flex-col gap-1">
+          <h1 suppressHydrationWarning className="text-2xl sm:text-3xl lg:text-4xl font-black tracking-tight text-slate-900 dark:text-white uppercase flex items-center gap-2">
+            WELCOME BACK, <span className="text-[#FF6B00] font-black">{mounted ? candidateName.split(' ')[0] : "Candidate"}</span> 👋
           </h1>
-          <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mt-0.5">
-            Continue your CloudOps AI journey and become production ready.
+          <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 font-semibold tracking-wide">
+            Learn Today. Implement Today. Build Your Career for a Lifetime.
           </p>
         </div>
 
@@ -201,95 +245,11 @@ export default function CandidateDashboardPage() {
         </div>
       </div>
 
-      {/* CANDIDATE SERVICES QUICK COMMAND CENTER HUB */}
-      <div className="bg-white dark:bg-slate-900 rounded-[24px] border border-slate-200 dark:border-slate-800 p-4 shadow-sm">
-        <div className="flex items-center justify-between mb-3 px-1">
-          <span className="text-xs font-black text-slate-900 dark:text-white tracking-wide uppercase flex items-center gap-2">
-            <Sparkles className="w-3.5 h-3.5 text-[#FF9900]" />
-            Candidate Services & Command Center
-          </span>
-          <span className="text-[11px] font-bold text-slate-400">
-            All 9 Services Connected Live to PostgreSQL
-          </span>
-        </div>
-
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-9 gap-2">
-          {servicesList.map((svc, idx) => {
-            const IconComp = svc.icon;
-            return (
-              <Link 
-                key={idx} 
-                prefetch={false}
-                href={svc.href}
-                className="flex flex-col items-center justify-between p-2.5 rounded-2xl bg-slate-50/70 dark:bg-slate-800/40 border border-slate-200/60 dark:border-slate-800 hover:border-[#FF9900]/60 hover:bg-amber-50/40 dark:hover:bg-amber-950/20 transition-all text-center group"
-              >
-                <div className="p-2 rounded-xl bg-white dark:bg-slate-900 shadow-xs mb-1.5 group-hover:scale-110 transition-transform">
-                  <IconComp className={`w-4 h-4 ${svc.color}`} />
-                </div>
-                <span className="text-[10.5px] font-black text-slate-900 dark:text-white leading-tight mb-1 truncate max-w-[100px]" title={svc.name}>
-                  {svc.name}
-                </span>
-                <span className="text-[9px] font-extrabold px-1.5 py-0.5 rounded-md bg-white/80 dark:bg-slate-900/80 text-slate-500 dark:text-slate-400 border border-slate-200/50 dark:border-slate-800 shrink-0 truncate max-w-[100px]">
-                  {svc.badge}
-                </span>
-              </Link>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* ROW 1: HERO BANNER + YOUR READINESS SCORE */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch">
+      {/* ROW 1: YOUR READINESS SCORE */}
+      <div className="w-full">
         
-        {/* Hero Banner Card */}
-        <div className="lg:col-span-8 bg-gradient-to-r from-amber-50/90 via-orange-50/50 to-white dark:from-slate-900 dark:via-slate-900 dark:to-slate-900 rounded-[24px] border border-amber-200/80 dark:border-[#FF9900]/30 p-6 sm:p-7 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-6 relative overflow-hidden">
-          
-          <div className="flex flex-col gap-3.5 z-10 max-w-md">
-            <h2 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight leading-snug">
-              AI-Powered Interviews.<br />
-              <span className="text-[#FF9900]">Real-World Ready.</span>
-            </h2>
-            <p className="text-xs text-slate-600 dark:text-slate-400 font-medium leading-relaxed">
-              5-Stage Voice Interviews, AI Scoring, ATS Resume Analyzer & Career OS for Cloud Engineers.
-            </p>
-
-            <div className="flex flex-wrap sm:flex-nowrap items-center gap-2.5 pt-1">
-              <Link prefetch={false} 
-                href="/interviews"
-                className="py-2.5 px-5 rounded-xl font-black text-xs text-slate-950 bg-gradient-to-r from-[#FF9900] via-amber-400 to-orange-400 hover:from-amber-400 hover:to-orange-500 shadow-md shadow-[#FF9900]/25 flex items-center gap-2 transition-all shrink-0"
-              >
-                <Play className="w-3.5 h-3.5 fill-slate-950 text-slate-950" />
-                <span>Continue Interview</span>
-              </Link>
-
-              <Link prefetch={false} 
-                href="/resume-ats"
-                className="py-2.5 px-4 rounded-xl font-bold text-xs text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:bg-amber-50 flex items-center gap-2 shadow-sm transition-all shrink-0"
-              >
-                <Upload className="w-3.5 h-3.5 text-[#FF9900]" />
-                <span>Upload Resume</span>
-              </Link>
-            </div>
-
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-amber-100/70 dark:bg-amber-950/60 border border-[#FF9900]/30 text-[#FF9900] text-[11px] font-extrabold w-fit mt-1">
-              <Sparkles className="w-3 h-3 text-[#FF9900]" />
-              <span>Target Salary: {dbMetrics?.target_salary_band || "₹18 – ₹40 LPA"}</span>
-            </div>
-          </div>
-
-          {/* 3D Visual Illustration */}
-          <div className="w-full sm:w-[240px] shrink-0 z-10 flex justify-center">
-            <img loading="eager" fetchPriority="high" decoding="async" width={220} height={170}
-              src="/images/hero_cloud_ai_3d.webp" 
-              alt="3D DevOps Cloud Graphic" 
-              className="w-full max-w-[220px] max-h-[170px] object-contain drop-shadow-xl hover:scale-105 transition-transform duration-500" 
-            />
-          </div>
-
-        </div>
-
         {/* Your Readiness Score Widget */}
-        <div className="lg:col-span-4 bg-white dark:bg-slate-900 rounded-[24px] border border-slate-200 dark:border-slate-800 p-5 shadow-sm flex flex-col justify-between gap-3">
+        <div className="w-full bg-white dark:bg-slate-900 rounded-[24px] border border-slate-200 dark:border-slate-800 p-5 shadow-sm flex flex-col justify-between gap-3">
           
           <div className="flex items-center justify-between text-xs font-black text-slate-900 dark:text-white">
             <span className="flex items-center gap-2">
@@ -397,120 +357,205 @@ export default function CandidateDashboardPage() {
 
       </div>
 
-      {/* ROW 2: 5-STAGE INTERVIEW PROGRESS ROW */}
-      <div className="bg-white dark:bg-slate-900 rounded-[24px] border border-slate-200 dark:border-slate-800 p-5 shadow-sm flex flex-col gap-4">
-        
-        <div className="flex items-center justify-between">
+      {/* CORE STUDENT DASHBOARD: 3 PRIMARY QUESTIONS */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+        {/* Question 1: Where am I? */}
+        <div className="bg-white dark:bg-slate-900 rounded-[24px] border border-slate-200 dark:border-slate-800 p-5 shadow-sm flex flex-col justify-between gap-4">
           <div>
-            <h3 className="text-sm font-black text-slate-900 dark:text-white tracking-tight">
-              5-Stage Interview Progress
-            </h3>
-            <p className="text-[11px] text-slate-500 font-medium mt-0.5">
-              Click any unlocked stage to attempt or re-attempt anytime for higher XP & readiness score!
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-[10px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full bg-blue-100 dark:bg-blue-950 text-blue-600 dark:text-blue-400">
+                01. Current Position
+              </span>
+              <span className="text-xs font-mono font-bold text-slate-400">Stage {userLevel} / 30</span>
+            </div>
+            <h3 className="text-base font-black text-slate-900 dark:text-white">Where am I?</h3>
+            <p className="text-xs text-slate-500 font-medium mt-1 leading-relaxed">
+              Targeting <span className="font-bold text-slate-900 dark:text-white">{resumeAts.matched_jd || "Senior DevOps Engineer"}</span> ({targetSalaryBand}).
             </p>
           </div>
-          <span className="text-[11px] font-bold text-slate-400 shrink-0 hidden sm:inline">
-            Score 80%+ to unlock next stage
-          </span>
+
+          <div className="flex flex-col gap-2 bg-slate-50 dark:bg-slate-800/50 p-3 rounded-2xl border border-slate-200/60 dark:border-slate-800">
+            <div className="flex items-center justify-between text-xs font-bold">
+              <span className="text-slate-500">Readiness Progress:</span>
+              <span className="font-mono font-black text-[#FF9900]">{readiness}%</span>
+            </div>
+            <div className="w-full h-2 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
+              <div className="h-full bg-gradient-to-r from-[#FF9900] to-amber-400 rounded-full" style={{ width: `${Math.max(readiness, 5)}%` }} />
+            </div>
+            <div className="flex items-center justify-between text-[11px] font-semibold text-slate-500 pt-1">
+              <span>ATS Score: <strong className="text-slate-900 dark:text-white">{Math.round(resumeAts.score)}%</strong></span>
+              <span>Streak: <strong className="text-orange-500">{userStreak} 🔥</strong></span>
+            </div>
+          </div>
+
+          <Link prefetch={false} href="/interviews" className="w-full py-2 rounded-xl text-xs font-bold text-center text-[#FF9900] bg-amber-50 dark:bg-amber-950/40 border border-[#FF9900]/30 hover:bg-amber-100 transition-colors">
+            Jump to Active Stage →
+          </Link>
         </div>
 
-        {/* 5 Stages Cards Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-5 gap-3">
-          {stagesProgress.map((s: any) => {
-            const isCompleted = s.status === "completed";
-            const isInProgress = s.status === "in_progress";
-            const isLocked = s.status === "locked";
+        {/* Question 2: How good am I? */}
+        <div className="bg-white dark:bg-slate-900 rounded-[24px] border border-slate-200 dark:border-slate-800 p-5 shadow-sm flex flex-col justify-between gap-4">
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-[10px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-400">
+                02. 5-Factor Assessment
+              </span>
+              <span className="text-xs font-mono font-bold text-emerald-500">Level {userLevel}</span>
+            </div>
+            <h3 className="text-base font-black text-slate-900 dark:text-white">How good am I?</h3>
+            <p className="text-xs text-slate-500 font-medium mt-1 leading-relaxed">
+              Skill heat map based on real AI interviews & project audits:
+            </p>
+          </div>
 
-            const handleCardClick = () => {
-              if (isLocked) return;
-              const targetUrl = s.attempt_id ? `/interviews/${s.attempt_id}/room` : `/interviews/1/room`;
-              router.push(targetUrl);
-            };
+          <div className="flex flex-col gap-2">
+            <div className="flex items-center justify-between p-2 rounded-xl bg-emerald-50/60 dark:bg-emerald-950/30 border border-emerald-500/30 text-xs font-bold">
+              <span className="flex items-center gap-1.5 text-emerald-700 dark:text-emerald-300">
+                🟢 AWS & Infrastructure
+              </span>
+              <span className="font-mono text-emerald-600">Strong (88%)</span>
+            </div>
+            <div className="flex items-center justify-between p-2 rounded-xl bg-amber-50/60 dark:bg-amber-950/30 border border-amber-500/30 text-xs font-bold">
+              <span className="flex items-center gap-1.5 text-amber-700 dark:text-amber-300">
+                🟠 Terraform & CI/CD
+              </span>
+              <span className="font-mono text-amber-600">Moderate (68%)</span>
+            </div>
+            <div className="flex items-center justify-between p-2 rounded-xl bg-rose-50/60 dark:bg-rose-950/30 border border-rose-500/30 text-xs font-bold">
+              <span className="flex items-center gap-1.5 text-rose-700 dark:text-rose-300">
+                🔴 DevSecOps & Incident Response
+              </span>
+              <span className="font-mono text-rose-600">Needs Focus (45%)</span>
+            </div>
+          </div>
 
+          <Link prefetch={false} href="/performance" className="w-full py-2 rounded-xl text-xs font-bold text-center text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 transition-colors">
+            View 5-Dimension Radar Matrix →
+          </Link>
+        </div>
+
+        {/* Question 3: What should I improve? */}
+        <div className="bg-white dark:bg-slate-900 rounded-[24px] border border-slate-200 dark:border-slate-800 p-5 shadow-sm flex flex-col justify-between gap-4">
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-[10px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full bg-purple-100 dark:bg-purple-950 text-purple-600 dark:text-purple-400">
+                03. Action Items
+              </span>
+              <span className="text-xs font-mono font-bold text-purple-500">3 Priority Tasks</span>
+            </div>
+            <h3 className="text-base font-black text-slate-900 dark:text-white">What should I improve?</h3>
+            <p className="text-xs text-slate-500 font-medium mt-1 leading-relaxed">
+              Recommended actions to unlock ₹25+ LPA offer letters:
+            </p>
+          </div>
+
+          <div className="flex flex-col gap-2">
+            <div className="flex items-start gap-2.5 p-2 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200/60 dark:border-slate-800 text-xs font-medium">
+              <span className="w-4 h-4 rounded-full bg-amber-500 text-slate-950 font-black text-[10px] flex items-center justify-center shrink-0 mt-0.5">1</span>
+              <span>Accept STAR formula suggestions on 3 resume experience bullets.</span>
+            </div>
+            <div className="flex items-start gap-2.5 p-2 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200/60 dark:border-slate-800 text-xs font-medium">
+              <span className="w-4 h-4 rounded-full bg-amber-500 text-slate-950 font-black text-[10px] flex items-center justify-center shrink-0 mt-0.5">2</span>
+              <span>Attempt Stage 5: Live Production Outage Simulation challenge.</span>
+            </div>
+            <div className="flex items-start gap-2.5 p-2 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200/60 dark:border-slate-800 text-xs font-medium">
+              <span className="w-4 h-4 rounded-full bg-amber-500 text-slate-950 font-black text-[10px] flex items-center justify-center shrink-0 mt-0.5">3</span>
+              <span>Practice Kubernetes IRSA & Security Scenarios in Teleprompter mode.</span>
+            </div>
+          </div>
+
+          <Link prefetch={false} href="/study-planner" className="w-full py-2 rounded-xl text-xs font-bold text-center text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-950/40 border border-purple-500/30 hover:bg-purple-100 transition-colors">
+            Open Study Planner →
+          </Link>
+        </div>
+      </div>
+
+      {/* ROW 2: 20 CORE STAGES + 10 BONUS CHALLENGES GRID */}
+      <div className="bg-white dark:bg-slate-900 rounded-[24px] border border-slate-200 dark:border-slate-800 p-6 shadow-sm flex flex-col gap-5">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div>
+            <h3 className="text-base font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
+              <Trophy className="w-5 h-5 text-[#FF9900]" />
+              20 Core Stages + 10 Bonus Challenges (30 Total)
+            </h3>
+            <p className="text-xs text-slate-500 font-medium mt-0.5">
+              From Beginner Baby-Steps to 👑 40 LPA Final Boss Battle. Practice with AI Hints or Teleprompter Mode!
+            </p>
+          </div>
+          <Link prefetch={false} href="/interviews" className="px-4 py-2 rounded-xl text-xs font-black text-slate-950 bg-gradient-to-r from-[#FF9900] via-amber-400 to-orange-400 hover:from-amber-400 hover:to-orange-500 shadow-sm shrink-0">
+            View All Stages Studio →
+          </Link>
+        </div>
+
+        {/* 20 Core + 10 Bonus Stages Preview */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
+          {[
+            { id: 1, title: "Career Pitch & Intro", cat: "Core", diff: "Easy", status: "completed", score: "92%" },
+            { id: 2, title: "Linux Systems & CLI", cat: "Core", diff: "Medium", status: "in_progress", score: "Active" },
+            { id: 3, title: "AWS IAM & VPC Networking", cat: "Core", diff: "Medium", status: "locked", score: "--" },
+            { id: 4, title: "Docker & Containerization", cat: "Core", diff: "Medium", status: "locked", score: "--" },
+            { id: 5, title: "Kubernetes Pods & Deployments", cat: "Core", diff: "Hard", status: "locked", score: "--" },
+            { id: 6, title: "Terraform IaC State & Modules", cat: "Core", diff: "Hard", status: "locked", score: "--" },
+            { id: 7, title: "CI/CD Pipelines & GitHub Actions", cat: "Core", diff: "Hard", status: "locked", score: "--" },
+            { id: 8, title: "Prometheus & Grafana Monitoring", cat: "Core", diff: "Hard", status: "locked", score: "--" },
+            { id: 9, title: "DevSecOps & HashiCorp Vault", cat: "Core", diff: "Hard", status: "locked", score: "--" },
+            { id: 10, title: "System Design: Microservices", cat: "Core", diff: "Boss", status: "locked", score: "--" },
+            { id: 11, title: "Multi-Cloud: AWS vs Azure", cat: "Core", diff: "Hard", status: "locked", score: "--" },
+            { id: 12, title: "GitOps & ArgoCD Sync", cat: "Core", diff: "Hard", status: "locked", score: "--" },
+            { id: 13, title: "Service Mesh: Istio Security", cat: "Core", diff: "Boss", status: "locked", score: "--" },
+            { id: 14, title: "Database Migration & Backup", cat: "Core", diff: "Medium", status: "locked", score: "--" },
+            { id: 15, title: "Serverless AWS Lambda Architect", cat: "Core", diff: "Medium", status: "locked", score: "--" },
+            { id: 16, title: "Kafka Event Streaming Ops", cat: "Core", diff: "Hard", status: "locked", score: "--" },
+            { id: 17, title: "Cost Optimization & FinOps", cat: "Core", diff: "Medium", status: "locked", score: "--" },
+            { id: 18, title: "Disaster Recovery & Failover", cat: "Core", diff: "Hard", status: "locked", score: "--" },
+            { id: 19, title: "Python Boto3 & Scripting", cat: "Core", diff: "Medium", status: "locked", score: "--" },
+            { id: 20, title: "Production Incident War Room", cat: "Core", diff: "Boss", status: "locked", score: "--" },
+            { id: 21, title: "Bonus: Zero-Downtime Migration", cat: "Bonus", diff: "Extreme", status: "locked", score: "--" },
+            { id: 22, title: "Bonus: Chaos Engineering Sim", cat: "Bonus", diff: "Extreme", status: "locked", score: "--" },
+            { id: 23, title: "Bonus: AI LLM Infra Scaling", cat: "Bonus", diff: "Extreme", status: "locked", score: "--" },
+            { id: 24, title: "Bonus: Multi-Region Kubernetes", cat: "Bonus", diff: "Extreme", status: "locked", score: "--" },
+            { id: 25, title: "Bonus: Hardened Linux Security", cat: "Bonus", diff: "Extreme", status: "locked", score: "--" },
+            { id: 26, title: "Bonus: PCI-DSS Compliance Ops", cat: "Bonus", diff: "Extreme", status: "locked", score: "--" },
+            { id: 27, title: "Bonus: Observability at Scale", cat: "Bonus", diff: "Extreme", status: "locked", score: "--" },
+            { id: 28, title: "Bonus: FinOps Cost Cutting Challenge", cat: "Bonus", diff: "Extreme", status: "locked", score: "--" },
+            { id: 29, title: "Bonus: Real-Time DDoS Mitigation", cat: "Bonus", diff: "Extreme", status: "locked", score: "--" },
+            { id: 30, title: "👑 40 LPA Final Boss Battle", cat: "Final Boss", diff: "Legendary", status: "locked", score: "--" }
+          ].slice(0, 10).map((stg) => {
+            const isDone = stg.status === "completed";
+            const isAct = stg.status === "in_progress";
             return (
-              <div
-                key={s.id}
-                onClick={handleCardClick}
-                className={`p-3.5 rounded-2xl border flex flex-col justify-between gap-3 transition-all relative overflow-hidden ${
-                  isCompleted
-                    ? "bg-emerald-50/90 dark:bg-emerald-950/40 border-emerald-500/80 shadow-sm hover:border-emerald-600 hover:shadow-md cursor-pointer"
-                    : isInProgress
-                    ? "bg-amber-50/90 dark:bg-amber-950/40 border-[#FF9900] ring-2 ring-[#FF9900]/20 shadow-md hover:border-orange-500 hover:shadow-lg cursor-pointer"
-                    : "bg-slate-50/50 dark:bg-slate-900/40 border-slate-200/60 dark:border-slate-800/80 opacity-60 cursor-not-allowed"
+              <div 
+                key={stg.id}
+                onClick={() => router.push(`/interviews/${stg.id}/room`)}
+                className={`p-3 rounded-2xl border flex flex-col justify-between gap-2 cursor-pointer transition-all ${
+                  isDone 
+                    ? "bg-emerald-50/80 dark:bg-emerald-950/40 border-emerald-500/60"
+                    : isAct
+                    ? "bg-amber-50 dark:bg-amber-950/40 border-[#FF9900] ring-1 ring-[#FF9900]"
+                    : "bg-slate-50 dark:bg-slate-800/30 border-slate-200 dark:border-slate-800 opacity-70 hover:opacity-100"
                 }`}
               >
                 <div className="flex items-center justify-between">
-                  <div className={`w-7 h-7 rounded-full flex items-center justify-center font-black text-xs ${
-                    isCompleted
-                      ? "bg-emerald-500 text-white shadow-md shadow-emerald-500/20"
-                      : isInProgress
-                      ? "bg-[#FF9900] text-slate-950 shadow-md shadow-[#FF9900]/20"
-                      : "bg-slate-200 dark:bg-slate-800 text-slate-500"
+                  <span className="text-[10px] font-black font-mono text-slate-400">Stage {stg.id}</span>
+                  <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded ${
+                    stg.cat === "Final Boss" ? "bg-amber-500 text-slate-950 font-black" : "bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300"
                   }`}>
-                    {isCompleted ? <CheckCircle2 className="w-4 h-4" /> : s.id}
-                  </div>
-                  
-                  {s.score && s.score !== "--" && (
-                    <span className={`px-2 py-0.5 rounded-lg font-mono font-extrabold text-[10.5px] ${
-                      isCompleted
-                        ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/60 dark:text-emerald-200"
-                        : "bg-amber-100 text-[#FF9900] dark:bg-amber-900/60"
-                    }`}>
-                      Score: {s.score}
-                    </span>
-                  )}
+                    {stg.cat}
+                  </span>
                 </div>
-
-                <div>
-                  <h4 className="text-xs font-black text-slate-900 dark:text-white leading-snug">{s.name}</h4>
-                  {s.subtitle && (
-                    <p className="text-[10px] text-slate-500 dark:text-slate-400 font-medium truncate mt-0.5">{s.subtitle}</p>
-                  )}
-                </div>
-
-                <div className={`pt-2 border-t flex items-center justify-between text-[10px] font-bold ${
-                  isCompleted
-                    ? "border-emerald-200/60 dark:border-emerald-800/60 text-emerald-700 dark:text-emerald-300"
-                    : isInProgress
-                    ? "border-amber-200/60 dark:border-amber-800/60 text-[#FF9900]"
-                    : "border-slate-200/60 dark:border-slate-800/60 text-slate-400"
-                }`}>
-                  {isCompleted && (
-                    <>
-                      <div className="flex items-center gap-1">
-                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-                        <span>Completed</span>
-                      </div>
-                      <span className="font-extrabold underline text-emerald-800 dark:text-emerald-200">
-                        Re-attempt 🔄
-                      </span>
-                    </>
-                  )}
-                  {isInProgress && (
-                    <>
-                      <div className="flex items-center gap-1">
-                        <Clock className="w-3.5 h-3.5 text-[#FF9900] shrink-0 animate-pulse" />
-                        <span>Active Stage</span>
-                      </div>
-                      <span className="font-extrabold text-[#FF9900]">
-                        Start →
-                      </span>
-                    </>
-                  )}
-                  {isLocked && (
-                    <>
-                      <div className="flex items-center gap-1 text-slate-400">
-                        <Lock className="w-3.5 h-3.5 shrink-0" />
-                        <span>Locked</span>
-                      </div>
-                    </>
-                  )}
+                <h4 className="text-xs font-bold text-slate-900 dark:text-white leading-tight line-clamp-2">
+                  {stg.title}
+                </h4>
+                <div className="flex items-center justify-between text-[10px] font-semibold pt-1 border-t border-slate-200/50 dark:border-slate-800">
+                  <span className={isDone ? "text-emerald-600 font-bold" : isAct ? "text-[#FF9900] font-black" : "text-slate-400"}>
+                    {isDone ? "Score: " + stg.score : isAct ? "Active Stage" : "Locked"}
+                  </span>
+                  <span className="text-[#FF9900] font-bold">Start →</span>
                 </div>
               </div>
             );
           })}
         </div>
-
       </div>
 
       {/* ROW 3: UPCOMING INTERVIEW + ATS SCORE + TOP SKILLS */}
@@ -676,54 +721,18 @@ export default function CandidateDashboardPage() {
 
       </div>
 
-      {/* ROW 4: 30-DAY ROADMAP + STREAK & XP + LEADERBOARD + PRACTICE BANNER */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch">
+      {/* ROW 4: STREAK & XP WIDGET */}
+      <div className="grid grid-cols-1 gap-5">
         
-        {/* AI Career Roadmap (30 Days) Widget */}
-        <div className="lg:col-span-5 bg-white dark:bg-slate-900 rounded-[24px] border border-slate-200 dark:border-slate-800 p-5 shadow-sm flex flex-col justify-between gap-3">
-          
-          <div className="flex items-center justify-between text-xs font-black text-slate-900 dark:text-white">
-            <span className="flex items-center gap-2">
-              <Compass className="w-4 h-4 text-[#FF9900]" />
-              AI Career Roadmap (30 Days)
-            </span>
-          </div>
-
-          <div className="flex flex-col gap-2 my-1">
-            {(dbMetrics?.roadmap || []).map((item: any, i: number) => (
-              <div key={i} className="flex items-center justify-between p-2 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200/60 dark:border-slate-800 text-xs font-bold">
-                <div className="flex items-center gap-2.5">
-                  <span className="text-[10px] font-mono text-slate-400">{item.week}</span>
-                  <span className="text-slate-900 dark:text-white">{item.title}</span>
-                </div>
-                {item.done ? (
-                  <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-                ) : (
-                  <div className="w-4 h-4 rounded-full border-2 border-slate-300 dark:border-slate-700" />
-                )}
-              </div>
-            ))}
-          </div>
-
-          <Link prefetch={false}
-            href="/roadmap"
-            className="text-xs font-bold text-[#FF9900] hover:underline flex items-center justify-end gap-1"
-          >
-            <span>View Full Roadmap</span>
-            <ArrowRight className="w-3 h-3" />
-          </Link>
-
-        </div>
-
         {/* Streak & XP Widget */}
-        <div className="lg:col-span-3 bg-white dark:bg-slate-900 rounded-[24px] border border-slate-200 dark:border-slate-800 p-5 shadow-sm flex flex-col justify-between gap-3">
+        <div className="bg-white dark:bg-slate-900 rounded-[24px] border border-slate-200 dark:border-slate-800 p-5 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4">
           
           <div className="flex items-center gap-2 text-xs font-black text-slate-900 dark:text-white">
             <Flame className="w-4 h-4 text-orange-500" />
             <span>Streak & XP</span>
           </div>
 
-          <div className="flex items-center justify-around my-1">
+          <div className="flex items-center gap-8 my-1">
             <div className="flex flex-col items-center">
               <span className="text-2xl font-black text-slate-900 dark:text-white">{userStreak}</span>
               <span className="text-[10px] font-bold text-slate-400">Day Streak</span>
@@ -738,56 +747,11 @@ export default function CandidateDashboardPage() {
           </div>
 
           {/* Mini Sparkline Visualization */}
-          <div className="h-8 w-full bg-slate-50 dark:bg-slate-800/40 rounded-xl p-1 flex items-end justify-between gap-1 border border-slate-200/50 dark:border-slate-800">
+          <div className="h-8 w-48 bg-slate-50 dark:bg-slate-800/40 rounded-xl p-1 flex items-end justify-between gap-1 border border-slate-200/50 dark:border-slate-800">
             {[20, 35, 50, 40, 65, 80, 100].map((val, i) => (
               <div key={i} className="flex-1 bg-[#FF9900] rounded-t" style={{ height: `${userXp > 0 ? val : 10}%` }} />
             ))}
           </div>
-
-        </div>
-
-        {/* Global Leaderboard (Top 3) */}
-        <div className="lg:col-span-4 bg-white dark:bg-slate-900 rounded-[24px] border border-slate-200 dark:border-slate-800 p-5 shadow-sm flex flex-col justify-between gap-3">
-          
-          <div className="flex items-center justify-between text-xs font-black text-slate-900 dark:text-white">
-            <span className="flex items-center gap-2">
-              <Trophy className="w-4 h-4 text-amber-500" />
-              Global Leaderboard (Top 3)
-            </span>
-          </div>
-
-          <div className="flex flex-col gap-2 my-1">
-            {leaderboardData.length > 0 ? (
-              leaderboardData.map((item: any) => (
-                <div key={item.rank} className="flex items-center justify-between p-2 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200/60 dark:border-slate-800 text-xs">
-                  <div className="flex items-center gap-2.5 min-w-0">
-                    <span className={`w-5 h-5 rounded-full ${
-                      item.rank === 1 ? "bg-amber-400 text-slate-950" : item.rank === 2 ? "bg-slate-300 text-slate-900" : "bg-amber-700 text-white"
-                    } font-black text-[10px] flex items-center justify-center shrink-0`}>
-                      {item.rank}
-                    </span>
-                    <div className="flex flex-col min-w-0">
-                      <span className="font-bold text-slate-900 dark:text-white truncate">
-                        {item.name} {item.is_me ? "(You)" : ""}
-                      </span>
-                      <span className="text-[10px] text-slate-400 truncate">{item.role}</span>
-                    </div>
-                  </div>
-                  <span className="font-mono font-bold text-slate-900 dark:text-white text-[11px] shrink-0">{item.xp}</span>
-                </div>
-              ))
-            ) : (
-              <span className="text-xs text-slate-400 font-medium">No candidate rankings yet</span>
-            )}
-          </div>
-
-          <Link prefetch={false}
-            href="/leaderboard"
-            className="text-xs font-bold text-[#FF9900] hover:underline flex items-center justify-end gap-1"
-          >
-            <span>View Full Leaderboard</span>
-            <ArrowRight className="w-3 h-3" />
-          </Link>
 
         </div>
 

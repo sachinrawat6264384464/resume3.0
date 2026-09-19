@@ -15,13 +15,13 @@ export function Navbar() {
   const router = useRouter();
 
   const isDashboardRoute = [
-    '/dashboard', '/admin', '/resume-ats', '/performance', 
-    '/practice', '/leaderboard', '/interviews', '/roadmap', '/certificates', '/mock', '/achievements', '/settings', '/help'
+    '/dashboard', '/admin', '/resume-ats', '/performance', '/study-planner', '/reminders',
+    '/practice', '/leaderboard', '/interviews', '/roadmap', '/certificates', '/mock', '/achievements', '/settings', '/help', '/results'
   ].some(route => pathname?.startsWith(route));
 
   const isLegalRoute = ['/privacy', '/terms', '/security', '/retention'].some(route => pathname?.startsWith(route));
 
-  if (pathname === "/" || pathname === "/login" || pathname === "/register" || isDashboardRoute || isLegalRoute) {
+  if (isAuthenticated || pathname === "/" || pathname === "/login" || pathname === "/register" || isDashboardRoute || isLegalRoute) {
     return null;
   }
 
@@ -139,17 +139,23 @@ export function Navbar() {
         ) : (
           /* Public Menu */
           <nav className="hidden md:flex items-center gap-3 lg:gap-6">
-            <Link prefetch={false} href="#features" className="text-xs font-semibold text-slate-600 dark:text-slate-400 hover:text-blue-600 dark:hover:text-cyan-400 transition-colors">
+            <Link prefetch={false} href="/#features" className="text-xs font-bold text-slate-600 dark:text-slate-400 hover:text-[#FF6B00] dark:hover:text-[#FF6B00] transition-colors">
               Features
             </Link>
-            <Link prefetch={false} href="#how-it-works" className="text-xs font-semibold text-slate-600 dark:text-slate-400 hover:text-blue-600 dark:hover:text-cyan-400 transition-colors">
-              How it Works
+            <Link prefetch={false} href="/#how-it-works" className="text-xs font-bold text-slate-600 dark:text-slate-400 hover:text-[#FF6B00] dark:hover:text-[#FF6B00] transition-colors">
+              How It Works
             </Link>
-            <Link prefetch={false} href="/leaderboard" className="text-xs font-semibold text-slate-600 dark:text-slate-400 hover:text-blue-600 dark:hover:text-cyan-400 transition-colors">
+            <Link prefetch={false} href="/resume-ats" className="text-xs font-bold text-slate-600 dark:text-slate-400 hover:text-[#FF6B00] dark:hover:text-[#FF6B00] transition-colors">
+              Resume ATS
+            </Link>
+            <Link prefetch={false} href="/interviews" className="text-xs font-bold text-slate-600 dark:text-slate-400 hover:text-[#FF6B00] dark:hover:text-[#FF6B00] transition-colors">
+              Interview Journey
+            </Link>
+            <Link prefetch={false} href="/leaderboard" className="text-xs font-bold text-slate-600 dark:text-slate-400 hover:text-[#FF6B00] dark:hover:text-[#FF6B00] transition-colors">
               Leaderboard
             </Link>
-            <Link prefetch={false} href="#pricing" className="text-xs font-semibold text-slate-600 dark:text-slate-400 hover:text-blue-600 dark:hover:text-cyan-400 transition-colors">
-              Pricing
+            <Link prefetch={false} href="/#faq" className="text-xs font-bold text-slate-600 dark:text-slate-400 hover:text-[#FF6B00] dark:hover:text-[#FF6B00] transition-colors">
+              FAQ
             </Link>
           </nav>
         )}

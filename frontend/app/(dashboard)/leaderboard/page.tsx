@@ -77,7 +77,8 @@ export default function LeaderboardPage() {
         {[
           { id: "global", label: "Global Ranking", icon: Trophy },
           { id: "weekly", label: "Weekly Sprint", icon: Flame },
-          { id: "improved", label: "Most Improved", icon: TrendingUp },
+          { id: "batch", label: "Batch Cohort (Batch 44)", icon: Users },
+          { id: "improved", label: "Most Improved This Week", icon: TrendingUp },
           { id: "tech", label: "Technology Tracks", icon: Star },
         ].map((tab) => (
           <button
@@ -97,8 +98,8 @@ export default function LeaderboardPage() {
 
       {/* Technology Sub-Selector if Tech tab selected */}
       {activeTab === "tech" && (
-        <div className="flex items-center gap-2 animate-fadeIn">
-          {["AWS", "Kubernetes", "Terraform", "Linux"].map((tech) => (
+        <div className="flex flex-wrap items-center gap-2 animate-fadeIn">
+          {["AWS", "Kubernetes", "Terraform", "DevOps", "AI"].map((tech) => (
             <button
               key={tech}
               onClick={() => setSelectedTech(tech)}

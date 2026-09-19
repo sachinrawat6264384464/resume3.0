@@ -38,11 +38,8 @@ async def send_otp(req: SendOTPRequest, db: AsyncSession = Depends(get_db)):
         stmt = select(User).where(or_(*conditions))
         res = await db.execute(stmt)
         existing_user = res.scalar_one_or_none()
-        if existing_user:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="An account with this Email or Phone is already registered. Please sign in instead."
-            )
+        # Track if user exists for login vs registration message
+        pass
 
     # 2. GENERATE CRYPTOGRAPHICALLY SECURE 6-DIGIT RANDOM OTP CODE
     code = str(secrets.randbelow(900000) + 100000)

@@ -110,7 +110,7 @@ export default function RoadmapPage() {
   };
 
   return (
-    <div className="max-w-[1200px] mx-auto flex flex-col gap-6 pb-16 text-slate-900 dark:text-slate-100 font-sans">
+    <div className="w-full flex flex-col gap-6 pb-16 text-slate-900 dark:text-slate-100 font-sans">
       
       {/* Header Banner */}
       <div className="p-8 sm:p-10 rounded-3xl bg-gradient-to-br from-blue-700 via-blue-600 to-indigo-800 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 relative overflow-hidden flex flex-col justify-between gap-4 shadow-xl text-white">
