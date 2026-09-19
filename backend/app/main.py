@@ -61,6 +61,7 @@ app.add_middleware(
     allow_origins=[
         "https://resume3-0.vercel.app",
         "https://resume3-admin.vercel.app",
+        "https://resume3-0.onrender.com",
         "http://localhost:3000",
         "http://localhost:3001",
         "http://localhost:3006",
@@ -68,7 +69,7 @@ app.add_middleware(
         "http://127.0.0.1:3001",
         "http://127.0.0.1:3006"
     ],
-    allow_origin_regex=r"https://.*\.vercel\.app|https://.*\.ngrok-free\.app|https://.*\.ngrok\.io|http://(localhost|127\.0\.0\.1):[0-9]+",
+    allow_origin_regex=r"https://.*\.vercel\.app|https://.*\.onrender\.com|https://.*\.ngrok-free\.app|https://.*\.ngrok\.io|http://(localhost|127\.0\.0\.1):[0-9]+",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
