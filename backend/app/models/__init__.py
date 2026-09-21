@@ -19,6 +19,8 @@ from app.models.study_plan import StudyPlan
 from app.models.study_task import StudyTask
 from app.models.study_goal import StudyGoal
 from app.models.reminder import Reminder
+from app.models.payment_gateway import PaymentGatewayConfig, PaymentTransaction
+from app.models.live_session import LiveSession
 
 __all__ = [
     "Base",
@@ -43,5 +45,8 @@ __all__ = [
     "StudyPlan",
     "StudyTask",
     "StudyGoal",
-    "Reminder"
+    "Reminder",
+    "PaymentGatewayConfig",
+    "PaymentTransaction",
+    "LiveSession"
 ]

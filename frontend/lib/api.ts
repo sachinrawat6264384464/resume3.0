@@ -1,7 +1,13 @@
 function getApiBase(): string {
-  let base = process.env.NEXT_PUBLIC_API_URL || "https://resume3-0.onrender.com/api/v1";
+  if (typeof window !== "undefined") {
+    const host = window.location.hostname;
+    if (host === "localhost" || host === "127.0.0.1") {
+      return "http://localhost:8000/api/v1";
+    }
+  }
 
-  // If running in browser on a production domain (like Vercel) and base points to localhost or ngrok, force public Render endpoint
+  let base = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1";
+
   if (typeof window !== "undefined") {
     const host = window.location.hostname;
     if (host !== "localhost" && host !== "127.0.0.1") {

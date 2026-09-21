@@ -11,6 +11,7 @@ from app.models.study_task import StudyTask
 from app.models.interview_attempt import InterviewAttempt
 from app.models.question_attempt import QuestionAttempt
 from app.models.resume_audit import ResumeAudit
+from app.models.live_session import LiveSession
 from app.schemas.reminder import ReminderCreate, ReminderUpdate, ReminderSnoozeRequest
 
 class ReminderService:
@@ -38,6 +39,8 @@ class ReminderService:
             stmt = stmt.where(Reminder.status.in_(["ACTIVE", "SNOOZED"]))
         elif status:
             stmt = stmt.where(Reminder.status == status)
+        else:
+            stmt = stmt.where(Reminder.status != "DISMISSED")
 
         if rem_type:
             stmt = stmt.where(Reminder.type == rem_type)
@@ -149,6 +152,15 @@ class ReminderService:
         await self.db.commit()
         await self.db.refresh(reminder)
         return reminder
+
+    async def mark_all_read(self, candidate_id: str):
+        stmt = select(Reminder).where(and_(Reminder.candidate_id == candidate_id, Reminder.status == "ACTIVE"))
+        reminders = list((await self.db.execute(stmt)).scalars().all())
+        now = datetime.now(timezone.utc)
+        for rem in reminders:
+            rem.status = "READ"
+            rem.read_at = now
+        await self.db.commit()
 
     async def complete_reminder(self, candidate_id: str, reminder_id: str) -> Optional[Reminder]:
         stmt = select(Reminder).where(and_(Reminder.id == reminder_id, Reminder.candidate_id == candidate_id))
@@ -310,7 +322,36 @@ class ReminderService:
                     )
                     self.db.add(rem_ai)
 
+            # 4. Check for active Admin Live Sessions
+            stmt_ls = select(LiveSession).where(LiveSession.is_active == True).order_by(desc(LiveSession.created_at)).limit(3)
+            active_sessions = list((await self.db.execute(stmt_ls)).scalars().all())
+            for ls in active_sessions:
+                stmt_ls_ex = select(Reminder).where(
+                    and_(
+                        Reminder.candidate_id == candidate_id,
+                        Reminder.related_entity_type == "live_session",
+                        Reminder.related_entity_id == ls.id
+                    )
+                )
+                if not (await self.db.execute(stmt_ls_ex)).scalar_one_or_none():
+                    rem_ls = Reminder(
+                        id=str(uuid.uuid4()),
+                        candidate_id=candidate_id,
+                        type="SYSTEM",
+                        title=f"Live Webinar: {ls.title}",
+                        message=f"{ls.description or 'Live masterclass session active.'} Date: {ls.session_date}",
+                        priority="HIGH",
+                        status="ACTIVE",
+                        scheduled_at=now,
+                        due_at=now + timedelta(days=7),
+                        related_entity_type="live_session",
+                        related_entity_id=ls.id,
+                        created_by="ADMIN"
+                    )
+                    self.db.add(rem_ls)
+
             await self.db.commit()
         except Exception as e:
             await self.db.rollback()
             print("Automated reminders generation notice:", e)
+

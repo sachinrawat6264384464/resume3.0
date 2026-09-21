@@ -93,6 +93,8 @@ export function Sidebar({ isOpenMobile = false, onCloseMobile }: SidebarProps) {
   const adminNavItems = [
     { label: "Dashboard", href: "/admin", icon: LayoutDashboard },
     { label: "Users & Candidates", href: "/admin/candidates", icon: Users },
+    { label: "Live Sessions", href: "/admin/live-sessions", icon: Calendar },
+    { label: "Payment Gateway", href: "/admin/payment-gateway", icon: CreditCard },
     { label: "Assessments & Blueprints", href: "/admin/templates", icon: CheckSquare },
     { label: "Reports & Analytics", href: "/admin/reports", icon: BarChart3 },
     { label: "Leaderboard", href: "/admin/leaderboard", icon: Trophy },

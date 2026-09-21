@@ -72,6 +72,15 @@ async def create_reminder(
         data=ReminderOut.model_validate(reminder)
     )
 
+@router.post("/read-all", response_model=StandardResponse[dict])
+async def mark_all_read(
+    candidate_id: str = Depends(get_current_candidate_id),
+    db: AsyncSession = Depends(get_db)
+):
+    svc = ReminderService(db)
+    await svc.mark_all_read(candidate_id)
+    return StandardResponse(message="All reminders marked as read in database", data={"updated": True})
+
 @router.post("/{reminder_id}/read", response_model=StandardResponse[ReminderOut])
 async def mark_read(
     reminder_id: str,

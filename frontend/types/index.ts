@@ -6,6 +6,7 @@ export interface User {
   full_name: string;
   role: UserRole;
   organization_id: string;
+  phone_number?: string;
   firebase_uid?: string;
   is_active: boolean;
   created_at: string;

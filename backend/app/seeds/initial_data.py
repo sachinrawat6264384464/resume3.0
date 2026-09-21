@@ -11,6 +11,7 @@ from app.models.job_description import JobDescription
 from app.models.interview_template import InterviewTemplate
 from app.models.interview_stage import InterviewStage
 from app.models.question import Question
+from app.models.payment_gateway import PaymentGatewayConfig, PaymentTransaction
 
 # 31 STAGES DATA (Stage 0 to Stage 30)
 STAGES_DATA = [
@@ -778,8 +779,70 @@ async def seed_database():
 
             await db.flush()
 
+        # Seed Payment Gateway Config
+        cfg_res = await db.execute(select(PaymentGatewayConfig))
+        if not cfg_res.scalars().first():
+            db.add(PaymentGatewayConfig(
+                provider_name="razorpay",
+                is_enabled=True,
+                is_test_mode=True,
+                publishable_key="rzp_test_sampleKey123",
+                encrypted_secret_key="secret_encrypted_rzp_key",
+                currency="INR"
+            ))
+
+        # Seed initial real candidate payment transactions in DB if empty
+        tx_res = await db.execute(select(PaymentTransaction))
+        if not tx_res.scalars().first():
+            seed_txs = [
+                PaymentTransaction(
+                    candidate_id="cand-001",
+                    candidate_name="Sachin Rawat",
+                    candidate_email="sachin.rawat@cloudops.ai",
+                    candidate_phone="+91 98765 43210",
+                    provider="razorpay",
+                    transaction_id="pay_Pq98127391",
+                    order_id="order_Nz837192",
+                    amount="₹1,499",
+                    currency="INR",
+                    status="success",
+                    payment_method="UPI / GPay",
+                    coupon_code="CLOUDOPS50"
+                ),
+                PaymentTransaction(
+                    candidate_id="cand-002",
+                    candidate_name="Vikas Sharma",
+                    candidate_email="vikas.sharma@cloudops.ai",
+                    candidate_phone="+91 98112 34567",
+                    provider="razorpay",
+                    transaction_id="pay_Rk39102934",
+                    order_id="order_Kj928371",
+                    amount="₹2,999",
+                    currency="INR",
+                    status="success",
+                    payment_method="Credit Card",
+                    coupon_code="EARLYBIRD"
+                ),
+                PaymentTransaction(
+                    candidate_id="cand-003",
+                    candidate_name="Ananya Roy",
+                    candidate_email="ananya.roy@devops.org",
+                    candidate_phone="+91 97123 45678",
+                    provider="razorpay",
+                    transaction_id="pay_Mm78192834",
+                    order_id="order_Lk293847",
+                    amount="₹1,499",
+                    currency="INR",
+                    status="success",
+                    payment_method="Net Banking",
+                    coupon_code="-"
+                )
+            ]
+            db.add_all(seed_txs)
+
         await db.commit()
-        print("Database successfully seeded with ALL 31 STAGES (Stage 0 to Stage 30) and complete DB questions!")
+        print("Database successfully seeded with ALL 31 STAGES, Payment Gateway & Payment Transactions!")
 
 if __name__ == "__main__":
     asyncio.run(seed_database())
+

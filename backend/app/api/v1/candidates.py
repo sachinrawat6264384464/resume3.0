@@ -412,12 +412,26 @@ async def get_dashboard_metrics(
     )
     unread_reminders_count = (await db.execute(stmt_rem)).scalar() or 0
 
+    # 8. Real PRO Subscription Check from PostgreSQL DB
+    from app.models.payment_gateway import PaymentTransaction
+    from sqlalchemy import or_
+    stmt_tx = select(func.count(PaymentTransaction.id)).where(
+        and_(
+            or_(PaymentTransaction.candidate_email == user.email, PaymentTransaction.candidate_id == cand.id),
+            PaymentTransaction.status.in_(["success", "COMPLETED", "SUCCESS"])
+        )
+    )
+    has_paid_tx = (await db.execute(stmt_tx)).scalar() or 0
+    is_pro_json = bool(cand.resume_data_json and cand.resume_data_json.get("is_pro"))
+    is_subscribed = bool(user.role == "ADMIN" or is_pro_json or has_paid_tx > 0)
+
     # Return 100% DB-driven metrics
     metrics = {
         "readiness_score": computed_readiness,
         "xp": cand.xp or 0,
         "level": cand.level or 1,
         "streak_days": cand.streak_days or 1,
+        "is_subscribed": is_subscribed,
         "target_salary_band": cand.target_salary_band or "₹18 – ₹40 LPA",
         "readiness_breakdown": breakdown,
         "stages_progress": stages_progress,
@@ -809,5 +823,137 @@ async def create_support_ticket(
             "status": ticket.status,
             "priority": ticket.priority,
             "created_at": ticket.created_at.strftime("%b %d, %Y") if ticket.created_at else "Just now"
+        }
+    )
+
+@router.get("/export/csv")
+async def export_candidates_csv(
+    payload: dict = Depends(verify_auth_token),
+    db: AsyncSession = Depends(get_db)
+):
+    from fastapi.responses import Response
+    import csv
+    import io
+
+    stmt = select(Candidate).options(selectinload(Candidate.user)).order_by(desc(Candidate.created_at))
+    res = await db.execute(stmt)
+    candidates = res.scalars().all()
+
+    output = io.StringIO()
+    writer = csv.writer(output)
+    writer.writerow(["Candidate ID", "Full Name", "Email", "Phone Number", "Target Role", "Readiness Score (%)", "Level", "XP", "Target Salary Band", "Created At"])
+
+    for c in candidates:
+        email = c.user.email if c.user else c.email or ""
+        phone = c.user.phone_number if c.user else c.phone or ""
+        name = c.user.full_name if c.user else c.full_name or ""
+        writer.writerow([
+            c.id,
+            name,
+            email,
+            phone,
+            c.target_role or "Senior DevOps Engineer",
+            round(c.readiness_score or 0, 1),
+            c.level or 1,
+            c.xp or 0,
+            c.target_salary_band or "₹18 – ₹40 LPA",
+            c.created_at.isoformat() if c.created_at else ""
+        ])
+
+    csv_data = output.getvalue()
+    output.close()
+
+    return Response(
+        content=csv_data,
+        media_type="text/csv",
+        headers={"Content-Disposition": "attachment; filename=AI_Interview_Candidates_Export.csv"}
+    )
+
+class ClaimBadgeRequest(BaseModel):
+    badge_id: str
+    badge_title: str
+
+class SpendXPRequest(BaseModel):
+    amount: int = 100
+    reason: str = "Unlock Badge Early"
+
+@router.post("/spend-xp", response_model=StandardResponse[dict])
+async def spend_xp(
+    req: SpendXPRequest,
+    payload: dict = Depends(verify_auth_token),
+    db: AsyncSession = Depends(get_db)
+):
+    from app.services.auth_service import AuthService
+    from app.services.candidate_service import CandidateService
+
+    auth_svc = AuthService(db)
+    user = await auth_svc.get_current_user_from_payload(payload)
+    cand_svc = CandidateService(db)
+    cand = await cand_svc.get_candidate_by_user_id(user.id, user.organization_id)
+
+    if not cand:
+        raise HTTPException(status_code=404, detail="Candidate profile not found")
+
+    current_xp = cand.xp or 0
+    if current_xp < req.amount:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Insufficient XP Coins balance. You have {current_xp} XP, but {req.amount} XP is required."
+        )
+
+    cand.xp = current_xp - req.amount
+    db.add(cand)
+    await db.commit()
+    await db.refresh(cand)
+
+    return StandardResponse(
+        message=f"Deducted {req.amount} XP Coins for '{req.reason}'. New Wallet Balance: {cand.xp} XP",
+        data={
+            "xp": cand.xp,
+            "deducted": req.amount,
+            "reason": req.reason
+        }
+    )
+
+@router.post("/claim-badge", response_model=StandardResponse[dict])
+async def claim_badge(
+    req: ClaimBadgeRequest,
+    payload: dict = Depends(verify_auth_token),
+    db: AsyncSession = Depends(get_db)
+):
+    from app.services.auth_service import AuthService
+    from app.services.candidate_service import CandidateService
+
+    auth_svc = AuthService(db)
+    user = await auth_svc.get_current_user_from_payload(payload)
+    cand_svc = CandidateService(db)
+    cand = await cand_svc.get_candidate_by_user_id(user.id, user.organization_id)
+
+    if not cand:
+        cand = Candidate(
+            user_id=user.id,
+            organization_id=user.organization_id,
+            target_role="Senior DevOps Engineer",
+            xp=100,
+            level=1
+        )
+        db.add(cand)
+
+    existing_badges = list(cand.badges_json or [])
+    if req.badge_title not in existing_badges:
+        existing_badges.append(req.badge_title)
+        cand.badges_json = existing_badges
+
+    cand.xp = (cand.xp or 0) + 50
+    db.add(cand)
+    await db.commit()
+    await db.refresh(cand)
+
+    return StandardResponse(
+        message=f"🎉 Badge '{req.badge_title}' claimed successfully! +50 XP added to candidate profile.",
+        data={
+            "xp": cand.xp,
+            "badges": cand.badges_json,
+            "badge_title": req.badge_title
         }
     )

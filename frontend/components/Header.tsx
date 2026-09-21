@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { 
   Bell, Sun, Moon, LogOut, User, Settings, 
   BarChart3, CheckCircle2, Sparkles, Trophy, FileText, ChevronDown, Check, X,
-  ShieldCheck, Menu
+  ShieldCheck, Menu, Trash2
 } from "lucide-react";
 import { useAuthStore } from "@/lib/store";
 import { apiFetch } from "@/lib/api";
@@ -18,11 +18,29 @@ interface NotificationItem {
   desc: string;
   time: string;
   read: boolean;
-  type: "assessment" | "resume" | "roadmap" | "achievement";
+  type: string;
 }
 
 interface HeaderProps {
   onToggleMobileSidebar?: () => void;
+}
+
+function formatRelativeTime(dateString?: string): string {
+  if (!dateString) return "Just now";
+  try {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffMins = Math.floor(diffMs / (1000 * 60));
+    if (diffMins < 1) return "Just now";
+    if (diffMins < 60) return `${diffMins}m ago`;
+    const diffHours = Math.floor(diffMins / 60);
+    if (diffHours < 24) return `${diffHours}h ago`;
+    const diffDays = Math.floor(diffHours / 24);
+    return `${diffDays}d ago`;
+  } catch (e) {
+    return "Recently";
+  }
 }
 
 export function Header({ onToggleMobileSidebar }: HeaderProps) {
@@ -37,35 +55,28 @@ export function Header({ onToggleMobileSidebar }: HeaderProps) {
   const notificationRef = useRef<HTMLDivElement>(null);
   const userMenuRef = useRef<HTMLDivElement>(null);
 
-  // Dynamic Notifications State
-  const [notifications, setNotifications] = useState<NotificationItem[]>([
-    {
-      id: "notif-1",
-      title: "Stage 1 Assessment Active 🏆",
-      desc: "CloudOps 5-Stage Voice Interview Stage 1 is ready for evaluation.",
-      time: "2m ago",
-      read: false,
-      type: "assessment"
-    },
-    {
-      id: "notif-2",
-      title: "Resume ATS Audit Complete 📄",
-      desc: "ATS Compatibility Score is 85% with 12 matching skills extracted.",
-      time: "1h ago",
-      read: false,
-      type: "resume"
-    },
-    {
-      id: "notif-3",
-      title: "Weekly Roadmap Target ⚡",
-      desc: "AWS Infrastructure & Terraform automation target active.",
-      time: "3h ago",
-      read: false,
-      type: "roadmap"
-    }
-  ]);
-
+  // Dynamic Notifications State from PostgreSQL DB
+  const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [candProfile, setCandProfile] = useState<any>(null);
+
+  const fetchNotifications = async () => {
+    try {
+      const res = await apiFetch("/reminders?status=ACTIVE");
+      if (res?.data && Array.isArray(res.data)) {
+        const items: NotificationItem[] = res.data.map((r: any) => ({
+          id: r.id,
+          title: r.title,
+          desc: r.message,
+          time: formatRelativeTime(r.created_at || r.scheduled_at),
+          read: r.status === "READ" || !!r.read_at,
+          type: r.type || "SYSTEM"
+        }));
+        setNotifications(items);
+      }
+    } catch (e) {
+      console.warn("Notice: Header notifications DB fetch:", e);
+    }
+  };
 
   useEffect(() => {
     setMounted(true);
@@ -83,7 +94,10 @@ export function Header({ onToggleMobileSidebar }: HeaderProps) {
         // Render cold-start — ignore, auth store name will be used
       }
     };
-    if (isAuthenticated) fetchProfile();
+    if (isAuthenticated) {
+      fetchProfile();
+      fetchNotifications();
+    }
 
     // Close dropdowns when clicking outside
     function handleClickOutside(event: MouseEvent) {
@@ -113,12 +127,31 @@ export function Header({ onToggleMobileSidebar }: HeaderProps) {
 
   const unreadCount = notifications.filter((n) => !n.read).length;
 
-  const markAllAsRead = () => {
-    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+  const markAllAsRead = async () => {
+    try {
+      await apiFetch("/reminders/read-all", { method: "POST" });
+      setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+    } catch (e) {
+      console.warn("Mark all read notice:", e);
+    }
   };
 
-  const markAsRead = (id: string) => {
-    setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, read: true } : n)));
+  const markAsRead = async (id: string) => {
+    try {
+      await apiFetch(`/reminders/${id}/read`, { method: "POST" });
+      setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, read: true } : n)));
+    } catch (e) {
+      console.warn("Mark read notice:", e);
+    }
+  };
+
+  const handleDeleteNotification = async (id: string) => {
+    try {
+      await apiFetch(`/reminders/${id}`, { method: "DELETE" });
+      setNotifications((prev) => prev.filter((n) => n.id !== id));
+    } catch (e) {
+      console.warn("Delete notification notice:", e);
+    }
   };
 
   const handleLogout = () => {
@@ -178,13 +211,34 @@ export function Header({ onToggleMobileSidebar }: HeaderProps) {
       {/* Right Header Action Bar (Enlarged, Professional & Sleek) */}
       <div className="flex items-center gap-1.5 sm:gap-3.5 relative shrink-0">
         
+        {/* 🪙 TOP CANDIDATE XP WALLET WIDGET */}
+        <Link
+          href="/performance"
+          className="flex items-center gap-2 px-3 py-1.5 rounded-2xl bg-gradient-to-r from-amber-500/15 via-orange-500/10 to-amber-500/15 border border-[#FF9900]/40 shadow-xs hover:border-[#FF9900] transition-all cursor-pointer group"
+          title="Candidate XP Wallet Balance - Click to Manage Badges & Rewards"
+        >
+          <div className="w-6 h-6 rounded-full bg-amber-500 text-slate-950 flex items-center justify-center font-black text-xs shrink-0 shadow-xs group-hover:scale-110 transition-transform">
+            🪙
+          </div>
+          <div className="flex flex-col text-left leading-none">
+            <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-widest">XP WALLET</span>
+            <span className="text-xs font-black text-[#FF9900] font-mono mt-0.5">
+              {((candProfile?.xp ?? 2450)).toLocaleString()} XP
+            </span>
+          </div>
+        </Link>
+
         {/* Theme Toggle Button */}
         <ThemeToggle />
 
         {/* 🔔 Live Smart Reminders Bell Dropdown */}
         <div className="relative" ref={notificationRef}>
           <button
-            onClick={() => setShowNotifications(!showNotifications)}
+            onClick={() => {
+              const nextState = !showNotifications;
+              setShowNotifications(nextState);
+              if (nextState) fetchNotifications();
+            }}
             className="relative p-2.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-200 hover:text-[#FF9900] shadow-sm hover:shadow-md transition-all cursor-pointer"
             title="Smart Reminders & Alerts"
           >
@@ -204,7 +258,7 @@ export function Header({ onToggleMobileSidebar }: HeaderProps) {
                   <span className="text-sm font-black text-slate-900 dark:text-white">Smart Reminders</span>
                 </div>
                 {unreadCount > 0 && (
-                  <button onClick={markAllAsRead} className="text-[11px] font-bold text-[#FF9900] hover:underline">
+                  <button onClick={markAllAsRead} className="text-[11px] font-bold text-[#FF9900] hover:underline cursor-pointer">
                     Mark all read
                   </button>
                 )}
@@ -217,19 +271,28 @@ export function Header({ onToggleMobileSidebar }: HeaderProps) {
                   notifications.map((n) => (
                     <div
                       key={n.id}
-                      onClick={() => markAsRead(n.id)}
-                      className={`p-3.5 flex items-start gap-3 transition-colors cursor-pointer ${
+                      className={`p-3.5 flex items-start gap-3 transition-colors ${
                         !n.read ? "bg-amber-50/50 dark:bg-amber-950/20" : "hover:bg-slate-50 dark:hover:bg-slate-800/40"
                       }`}
                     >
                       <div className="p-2 rounded-xl bg-amber-100 dark:bg-amber-950 text-[#FF9900] shrink-0 mt-0.5">
                         <Sparkles className="w-3.5 h-3.5" />
                       </div>
-                      <div className="flex flex-col min-w-0 flex-1">
+                      <div className="flex flex-col min-w-0 flex-1 cursor-pointer" onClick={() => markAsRead(n.id)}>
                         <span className="text-xs font-black text-slate-900 dark:text-white truncate">{n.title}</span>
                         <span className="text-[11px] font-medium text-slate-500 line-clamp-2">{n.desc}</span>
                         <span className="text-[10px] text-slate-400 font-mono mt-1">{n.time}</span>
                       </div>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDeleteNotification(n.id);
+                        }}
+                        className="p-1 rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/40 transition-colors shrink-0 mt-0.5 cursor-pointer"
+                        title="Delete Notification from DB"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
                     </div>
                   ))
                 )}

@@ -95,59 +95,59 @@ export default function LandingPage() {
         </div>
       </header>
 
-      {/* SECTION 1: HERO (FULL WIDTH + EXACT PRODUCT DOCUMENTATION HEADLINE & CREATIVE TYPOGRAPHY) */}
-      <section className="relative z-10 min-h-[85vh] flex flex-col justify-center pt-6 pb-12 sm:pt-8 sm:pb-16 lg:py-24 overflow-hidden w-full">
+      {/* SECTION 1: HERO (FULL SCREEN HEIGHT + IMPACTFUL BIG TYPOGRAPHY) */}
+      <section className="relative z-10 min-h-[calc(100vh-80px)] flex flex-col justify-center py-12 sm:py-16 lg:py-20 overflow-hidden w-full">
         
         {/* HERO MAIN CONTAINER - STRETCHED FULL WIDTH */}
-        <div className="w-full px-4 sm:px-8 lg:px-20 flex flex-col justify-center">
+        <div className="w-full px-4 sm:px-8 lg:px-20 flex flex-col justify-center my-auto">
           
           {/* TOP ACCENT BADGE */}
-          <div className="w-max max-w-full inline-flex items-center gap-2 text-[#FF6B00] text-[10px] sm:text-xs font-black tracking-wider uppercase mb-6 sm:mb-8 leading-tight">
-            <Sparkles className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#FF6B00] shrink-0" />
+          <div className="w-max max-w-full inline-flex items-center gap-2 text-[#FF6B00] text-xs sm:text-sm font-black tracking-wider uppercase mb-6 sm:mb-10 leading-tight bg-[#FF6B00]/10 border border-[#FF6B00]/30 px-4 py-2 rounded-full">
+            <Sparkles className="w-4 h-4 text-[#FF6B00] shrink-0" />
             <span className="truncate">Multi-Cloud + DevOps + DevSecOps + AI Careers</span>
           </div>
 
-          {/* GIANT HIGH-END DISPLAY TYPOGRAPHY WITH PRODUCT DOCUMENTATION HEADLINE */}
+          {/* DISPLAY TYPOGRAPHY WITH PRODUCT DOCUMENTATION HEADLINE - ENLARGED FONT SIZES */}
           <div className="flex flex-col tracking-tighter uppercase font-black select-none w-full">
             
             {/* LINE 1: EXACT DOCUMENTATION HEADLINE PART 1 */}
-            <h1 className="text-2xl xs:text-3xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-black text-slate-900 dark:text-white leading-[0.95] tracking-tight">
+            <h1 className="text-3xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-black text-slate-900 dark:text-white leading-[0.96] tracking-tight">
               NO SHORTCUT.
             </h1>
 
-            {/* LINE 2: ENLARGED ORANGE ARROW ICON + HOLLOW OUTLINED STROKE TEXT */}
-            <div className="flex items-center gap-2 sm:gap-4 my-1 sm:my-3 flex-wrap">
-              <ArrowUpRight className="w-8 h-8 xs:w-10 xs:h-10 sm:w-16 sm:h-16 lg:w-20 lg:h-20 xl:w-24 xl:h-24 text-[#FF6B00] stroke-[3.5] shrink-0 hover:scale-110 transition-transform duration-300 drop-shadow-[0_4px_25px_rgba(255,107,0,0.4)]" />
-              <span className="text-2xl xs:text-3xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-black leading-[0.95] hollow-stroke tracking-tight">
+            {/* LINE 2: ORANGE ARROW ICON + HOLLOW OUTLINED STROKE TEXT */}
+            <div className="flex items-center gap-3 sm:gap-4 my-2 sm:my-3 flex-wrap">
+              <ArrowUpRight className="w-8 h-8 sm:w-14 sm:h-14 lg:w-16 lg:h-16 text-[#FF6B00] stroke-[3.5] shrink-0 hover:scale-110 transition-transform duration-300 drop-shadow-[0_4px_20px_rgba(255,107,0,0.35)]" />
+              <span className="text-3xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-black leading-[0.96] hollow-stroke tracking-tight">
                 REAL PRACTICE
               </span>
             </div>
 
             {/* LINE 3: EXACT DOCUMENTATION HEADLINE PART 2 */}
-            <h1 className="text-2xl xs:text-3xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-black text-slate-900 dark:text-white leading-[0.95] tracking-tight">
+            <h1 className="text-3xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-black text-slate-900 dark:text-white leading-[0.96] tracking-tight">
               INTERVIEW PREP.
             </h1>
 
           </div>
 
           {/* SUBTEXT & GET STARTED ACTION BAR - FULL WIDTH GRID */}
-          <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-center mt-12 pt-8 border-t border-slate-200 dark:border-slate-800/80 w-full">
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-center mt-10 sm:mt-14 pt-8 border-t border-slate-200 dark:border-slate-800/80 w-full">
             
             {/* Left Narrative from Documentation */}
             <div className="md:col-span-8 flex flex-col gap-2">
-              <p className="text-base sm:text-lg text-slate-800 dark:text-slate-200 font-bold leading-relaxed max-w-3xl">
+              <p className="text-base sm:text-xl lg:text-2xl text-slate-900 dark:text-slate-100 font-extrabold leading-relaxed max-w-3xl">
                 "Learn Today. Implement Today. Build Your Career for a Lifetime."
               </p>
-              <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 font-medium">
+              <p className="text-xs sm:text-base text-slate-600 dark:text-slate-400 font-semibold max-w-3xl">
                 Upload Resume → Match with JD → Fix Resume with STAR Formula → Practice Voice AI → Land High-Paying Multi-Cloud & DevOps Roles.
               </p>
             </div>
 
             {/* Right Quick Action Circular / Pill Glass Button */}
-            <div className="md:col-span-4 flex items-center justify-start md:justify-end gap-4">
+            <div className="md:col-span-4 flex items-center justify-start md:justify-end gap-3">
               <Link 
                 href="/register" 
-                className="relative group px-8 py-5 rounded-full bg-white dark:bg-slate-900/90 border border-slate-300 dark:border-slate-700/80 hover:border-[#FF6B00] dark:hover:border-[#FF6B00] text-slate-900 dark:text-white font-black text-xs uppercase tracking-widest transition-all duration-300 shadow-lg hover:shadow-[#FF6B00]/20 flex items-center gap-3 backdrop-blur-xl"
+                className="relative group px-8 py-4 rounded-full bg-white dark:bg-slate-900/90 border-2 border-slate-300 dark:border-slate-700 hover:border-[#FF6B00] dark:hover:border-[#FF6B00] text-slate-900 dark:text-white font-black text-xs sm:text-sm uppercase tracking-widest transition-all duration-300 shadow-xl hover:shadow-[#FF6B00]/25 flex items-center gap-3 backdrop-blur-xl"
               >
                 <span>GET IN TOUCH & START FREE</span>
                 <div className="w-7 h-7 rounded-full bg-[#FF6B00] text-white flex items-center justify-center group-hover:translate-x-1 transition-transform">
@@ -158,23 +158,36 @@ export default function LandingPage() {
 
           </div>
 
-          {/* THE 2 PRIMARY JOURNEY CARDS - FULL WIDTH FLEX GRID */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8 lg:gap-12 w-full mt-10 sm:mt-16 text-left">
+        </div>
+      </section>
+
+      {/* SECTION 2: THE 2 PRIMARY JOURNEY CARDS (PUSHED DOWN BELOW THE FOLD) */}
+      <section className="relative z-10 py-16 sm:py-24 border-t border-slate-200/80 dark:border-slate-800/80 w-full bg-slate-50/50 dark:bg-slate-950/40">
+        <div className="w-full px-4 sm:px-8 lg:px-20">
+          
+          <div className="flex flex-col gap-1 mb-8 text-center sm:text-left">
+            <span className="text-[10px] font-mono font-black text-[#FF6B00] uppercase tracking-widest">SELECT YOUR PATH</span>
+            <h2 className="text-xl sm:text-2xl lg:text-3xl font-black text-slate-900 dark:text-white uppercase tracking-tight">
+              Choose Your Primary Preparation Journey
+            </h2>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8 lg:gap-10 w-full text-left">
             
             {/* OPTION 1: REVIEW MY RESUME */}
-            <div className="p-5 sm:p-7 lg:p-8 rounded-[24px] sm:rounded-[30px] bg-white dark:bg-slate-900/80 border-2 border-slate-200 dark:border-slate-800 hover:border-[#FF6B00] dark:hover:border-[#FF6B00] shadow-xl dark:shadow-2xl hover:shadow-[#FF6B00]/15 transition-all duration-300 flex flex-col justify-between gap-5 sm:gap-6 group relative overflow-hidden backdrop-blur-xl w-full">
-              <div className="absolute top-0 right-0 p-6 text-slate-200 dark:text-slate-800/80 font-black text-6xl sm:text-8xl select-none group-hover:text-[#FF6B00]/20 transition-colors">
+            <div className="p-6 sm:p-8 rounded-[28px] bg-white dark:bg-slate-900/90 border-2 border-slate-200 dark:border-slate-800 hover:border-[#FF6B00] dark:hover:border-[#FF6B00] shadow-xl hover:shadow-[#FF6B00]/15 transition-all duration-300 flex flex-col justify-between gap-6 group relative overflow-hidden backdrop-blur-xl w-full">
+              <div className="absolute top-0 right-0 p-4 text-slate-200 dark:text-slate-800/80 font-black text-5xl sm:text-7xl select-none group-hover:text-[#FF6B00]/20 transition-colors">
                 01
               </div>
 
-              <div className="flex flex-col gap-4 sm:gap-6 z-10">
-                <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-xl sm:rounded-2xl bg-[#FF6B00]/10 text-[#FF6B00] border border-[#FF6B00]/30 flex items-center justify-center font-black shadow-md group-hover:scale-110 transition-transform">
-                  <FileText className="w-6 h-6 sm:w-8 sm:h-8" />
+              <div className="flex flex-col gap-3.5 z-10">
+                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg sm:rounded-xl bg-[#FF6B00]/10 text-[#FF6B00] border border-[#FF6B00]/30 flex items-center justify-center font-black shadow-sm group-hover:scale-105 transition-transform">
+                  <FileText className="w-5 h-5 sm:w-6 sm:h-6" />
                 </div>
 
                 <div>
-                  <span className="text-[10px] sm:text-xs font-mono font-bold text-[#FF6B00] uppercase tracking-widest">PRIMARY JOURNEY 1</span>
-                  <h2 className="text-xl sm:text-3xl lg:text-4xl font-black text-slate-900 dark:text-white mt-1">
+                  <span className="text-[10px] font-mono font-bold text-[#FF6B00] uppercase tracking-widest">PRIMARY JOURNEY 1</span>
+                  <h2 className="text-base sm:text-lg lg:text-xl font-black text-slate-900 dark:text-white mt-0.5 tracking-tight">
                     📄 Option 1 — Review My Resume
                   </h2>
                 </div>
@@ -183,17 +196,17 @@ export default function LandingPage() {
                   Upload Resume / LinkedIn → Add Target Job Description → Instant ATS Score → Resume Skill Analysis → Rewrite bullets with <strong className="text-[#FF6B00]">STAR Formula</strong> (Accept | Edit | Reject).
                 </p>
 
-                <div className="flex flex-col gap-2.5 pt-3 sm:pt-4 border-t border-slate-100 dark:border-slate-800/80 text-xs sm:text-sm font-semibold text-slate-700 dark:text-slate-300">
-                  <div className="flex items-center gap-2.5">
-                    <CheckCircle2 className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-500 dark:text-emerald-400 shrink-0" />
+                <div className="flex flex-col gap-2 pt-2.5 border-t border-slate-100 dark:border-slate-800/80 text-xs font-semibold text-slate-700 dark:text-slate-300">
+                  <div className="flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-500 dark:text-emerald-400 shrink-0" />
                     <span>6-Factor ATS Breakdown (Skills, Experience, Keywords...)</span>
                   </div>
-                  <div className="flex items-center gap-2.5">
-                    <CheckCircle2 className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-500 dark:text-emerald-400 shrink-0" />
+                  <div className="flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-500 dark:text-emerald-400 shrink-0" />
                     <span>Resume-JD Gap Matcher ("You Already Have" vs "Improve")</span>
                   </div>
-                  <div className="flex items-center gap-2.5">
-                    <CheckCircle2 className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-500 dark:text-emerald-400 shrink-0" />
+                  <div className="flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-500 dark:text-emerald-400 shrink-0" />
                     <span>STAR Formula AI Bullet Point Rewriter</span>
                   </div>
                 </div>
@@ -201,27 +214,27 @@ export default function LandingPage() {
 
               <Link prefetch={false}
                 href="/resume-ats"
-                className="w-full py-3.5 sm:py-5 rounded-xl sm:rounded-2xl font-black text-xs sm:text-sm text-white bg-[#FF6B00] hover:bg-orange-500 shadow-xl shadow-[#FF6B00]/30 flex items-center justify-center gap-2 transition-all z-10 uppercase tracking-widest"
+                className="w-full py-3 rounded-xl font-black text-xs text-white bg-[#FF6B00] hover:bg-orange-500 shadow-md shadow-[#FF6B00]/25 flex items-center justify-center gap-2 transition-all z-10 uppercase tracking-widest mt-2"
               >
-                <Upload className="w-4 h-4 sm:w-5 sm:h-5" />
+                <Upload className="w-4 h-4" />
                 <span>Upload & Audit Resume ATS Now →</span>
               </Link>
             </div>
 
             {/* OPTION 2: PREPARE FOR MY INTERVIEW */}
-            <div className="p-5 sm:p-7 lg:p-8 rounded-[24px] sm:rounded-[30px] bg-white dark:bg-slate-900/80 border-2 border-slate-200 dark:border-slate-800 hover:border-purple-500 shadow-xl dark:shadow-2xl hover:shadow-purple-500/15 transition-all duration-300 flex flex-col justify-between gap-5 sm:gap-6 group relative overflow-hidden backdrop-blur-xl w-full">
-              <div className="absolute top-0 right-0 p-6 text-slate-200 dark:text-slate-800/80 font-black text-6xl sm:text-8xl select-none group-hover:text-purple-500/20 transition-colors">
+            <div className="p-4 sm:p-6 rounded-[20px] sm:rounded-[24px] bg-white dark:bg-slate-900/80 border-2 border-slate-200 dark:border-slate-800 hover:border-purple-500 shadow-lg dark:shadow-xl hover:shadow-purple-500/15 transition-all duration-300 flex flex-col justify-between gap-4 group relative overflow-hidden backdrop-blur-xl w-full">
+              <div className="absolute top-0 right-0 p-4 text-slate-200 dark:text-slate-800/80 font-black text-5xl sm:text-7xl select-none group-hover:text-purple-500/20 transition-colors">
                 02
               </div>
 
-              <div className="flex flex-col gap-4 sm:gap-6 z-10">
-                <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-xl sm:rounded-2xl bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/30 flex items-center justify-center font-black shadow-md group-hover:scale-110 transition-transform">
-                  <Mic className="w-6 h-6 sm:w-8 sm:h-8" />
+              <div className="flex flex-col gap-3.5 z-10">
+                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg sm:rounded-xl bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/30 flex items-center justify-center font-black shadow-sm group-hover:scale-105 transition-transform">
+                  <Mic className="w-5 h-5 sm:w-6 sm:h-6" />
                 </div>
 
                 <div>
-                  <span className="text-[10px] sm:text-xs font-mono font-bold text-purple-600 dark:text-purple-400 uppercase tracking-widest">PRIMARY JOURNEY 2</span>
-                  <h2 className="text-xl sm:text-3xl lg:text-4xl font-black text-slate-900 dark:text-white mt-1">
+                  <span className="text-[10px] font-mono font-bold text-purple-600 dark:text-purple-400 uppercase tracking-widest">PRIMARY JOURNEY 2</span>
+                  <h2 className="text-base sm:text-lg lg:text-xl font-black text-slate-900 dark:text-white mt-0.5 tracking-tight">
                     🎤 Option 2 — Prepare for My Interview
                   </h2>
                 </div>
@@ -230,17 +243,17 @@ export default function LandingPage() {
                   Select Career Path → Take Challenges → Practice Mock Interviews with <strong className="text-purple-600 dark:text-purple-400">Hints Level 1-3</strong> → Get AI Evaluated → Pass 20 Core Stages + 👑 <strong className="text-[#FF6B00]">40 LPA Final Boss Battle</strong>.
                 </p>
 
-                <div className="flex flex-col gap-3 pt-4 border-t border-slate-100 dark:border-slate-800/80 text-xs sm:text-sm font-semibold text-slate-700 dark:text-slate-300">
-                  <div className="flex items-center gap-3">
-                    <CheckCircle2 className="w-5 h-5 text-emerald-500 dark:text-emerald-400 shrink-0" />
+                <div className="flex flex-col gap-2 pt-2.5 border-t border-slate-100 dark:border-slate-800/80 text-xs font-semibold text-slate-700 dark:text-slate-300">
+                  <div className="flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-500 dark:text-emerald-400 shrink-0" />
                     <span>🎯 Practice Mode (Hints Level 1-3) vs 🎥 Interview Mode</span>
                   </div>
-                  <div className="flex items-center gap-3">
-                    <CheckCircle2 className="w-5 h-5 text-emerald-500 dark:text-emerald-400 shrink-0" />
+                  <div className="flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-500 dark:text-emerald-400 shrink-0" />
                     <span>5-Dimension AI Scoring (Technical, Communication, Confidence...)</span>
                   </div>
-                  <div className="flex items-center gap-3">
-                    <CheckCircle2 className="w-5 h-5 text-emerald-500 dark:text-emerald-400 shrink-0" />
+                  <div className="flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-500 dark:text-emerald-400 shrink-0" />
                     <span>Strict 80% Stage Gate & Multi-Leaderboard Rankings</span>
                   </div>
                 </div>
@@ -248,9 +261,9 @@ export default function LandingPage() {
 
               <Link prefetch={false}
                 href="/interviews"
-                className="w-full py-4 sm:py-5 rounded-2xl font-black text-xs sm:text-sm text-white bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 shadow-xl shadow-purple-600/30 flex items-center justify-center gap-2 transition-all z-10 uppercase tracking-widest"
+                className="w-full py-3 rounded-xl font-black text-xs text-white bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 shadow-md shadow-purple-600/25 flex items-center justify-center gap-2 transition-all z-10 uppercase tracking-widest mt-2"
               >
-                <Play className="w-5 h-5 fill-white" />
+                <Play className="w-4 h-4 fill-white" />
                 <span>Start Voice AI Interview Challenge →</span>
               </Link>
             </div>

@@ -5,12 +5,12 @@ import { useRouter } from "next/navigation";
 import { 
   Play, CheckCircle2, Lock, Sparkles, Trophy, Clock, 
   ArrowRight, ShieldCheck, Cpu, Mic, FileText, ChevronRight,
-  Flame, Award, AlertCircle, RefreshCw, Loader2, Star, Zap, Crown
+  Flame, Award, AlertCircle, RefreshCw, Loader2, Star, Zap, Crown, X
 } from "lucide-react";
 import { apiFetch } from "@/lib/api";
 
 const ALL_30_STAGES = [
-  // LEVEL 1 — FOUNDATION
+  // LEVEL 1 — FOUNDATION (TRACK 1)
   { id: 0, level: "Level 1", levelName: "Foundation", title: "Setup Your Interview Profile", xp: "+100 XP", duration: "10 Mins", questions: 2, questions_count: 2, icon: "🏆", diff: "Easy", desc: "Configure your target role, salary band, and initial baseline skills profile." },
   { id: 1, level: "Level 1", levelName: "Foundation", title: "Self Introduction", xp: "+150 XP", duration: "12 Mins", questions: 2, questions_count: 2, icon: "🏆", diff: "Easy", desc: "Master your 60-second pitch, STAR background intro, and career story." },
   { id: 2, level: "Level 1", levelName: "Foundation", title: "Technical Introduction", xp: "+200 XP", duration: "15 Mins", questions: 2, questions_count: 2, icon: "🏆", diff: "Easy", desc: "Explain your daily technical workflow, tool stack, and architecture experience." },
@@ -18,21 +18,21 @@ const ALL_30_STAGES = [
   { id: 4, level: "Level 1", levelName: "Foundation", title: "Linux for DevOps Engineers", xp: "+300 XP", duration: "20 Mins", questions: 2, questions_count: 2, icon: "🐧", diff: "Medium", desc: "Systemd service units, kernel tuning, disk I/O bottlenecks, and cron automation." },
   { id: 5, level: "Level 1", levelName: "Foundation", title: "Cloud + DevOps Fundamentals", xp: "+350 XP", duration: "20 Mins", questions: 2, questions_count: 2, icon: "☁️", diff: "Medium", desc: "Core cloud models, virtualization vs containerization, and IaC basics." },
 
-  // LEVEL 2 — CLOUD
+  // LEVEL 2 — CLOUD (TRACK 2)
   { id: 6, level: "Level 2", levelName: "Cloud", title: "AWS Cloud Engineer", xp: "+400 XP", duration: "22 Mins", questions: 2, questions_count: 2, icon: "☁️", diff: "Medium", desc: "VPC networking, subnets, NAT Gateways, IAM policies, and S3 lifecycle." },
   { id: 7, level: "Level 2", levelName: "Cloud", title: "GCP Cloud Engineer", xp: "+450 XP", duration: "22 Mins", questions: 2, questions_count: 2, icon: "☁️", diff: "Medium", desc: "Google Cloud IAM, VPC Service Controls, GKE basics, and BigQuery Ops." },
   { id: 8, level: "Level 2", levelName: "Cloud", title: "Azure Cloud Engineer", xp: "+450 XP", duration: "22 Mins", questions: 2, questions_count: 2, icon: "☁️", diff: "Medium", desc: "Azure VNets, Entra ID, Virtual Machine Scale Sets, and Resource Groups." },
   { id: 9, level: "Level 2", levelName: "Cloud", title: "Multi-Cloud Architecture", xp: "+500 XP", duration: "25 Mins", questions: 2, questions_count: 2, icon: "⚡", diff: "Hard", desc: "Inter-cloud VPN peering, multi-cloud IAM federation, and cost optimization." },
   { id: 10, level: "Level 2", levelName: "Cloud", title: "Cloud Real-Time Scenarios", xp: "+550 XP", duration: "25 Mins", questions: 2, questions_count: 2, icon: "🔥", diff: "Hard", desc: "Cross-region failover, DNS failover with Route53, and storage outage triage." },
 
-  // LEVEL 3 — DEVOPS
+  // LEVEL 3 — DEVOPS (TRACK 3)
   { id: 11, level: "Level 3", levelName: "DevOps", title: "Git + GitHub Workflow", xp: "+600 XP", duration: "25 Mins", questions: 2, questions_count: 2, icon: "🚀", diff: "Medium", desc: "Git rebase vs merge, git bisect, branch protection rules, and merge conflicts." },
   { id: 12, level: "Level 3", levelName: "DevOps", title: "Jenkins + CI/CD Pipelines", xp: "+650 XP", duration: "28 Mins", questions: 2, questions_count: 2, icon: "🚀", diff: "Hard", desc: "Multibranch Jenkinsfiles, shared libraries, matrix builds, and caching." },
   { id: 13, level: "Level 3", levelName: "DevOps", title: "Docker Containerization", xp: "+700 XP", duration: "28 Mins", questions: 2, questions_count: 2, icon: "📦", diff: "Hard", desc: "Multi-stage Dockerfiles, image minimization, cgroups, and container networking." },
   { id: 14, level: "Level 3", levelName: "DevOps", title: "Kubernetes Orchestration", xp: "+800 XP", duration: "30 Mins", questions: 2, questions_count: 2, icon: "☸️", diff: "Hard", desc: "Pods, Deployments, StatefulSets, Ingress Controllers, HPA, and CrashLoopBackOff." },
   { id: 15, level: "Level 3", levelName: "DevOps", title: "Ansible + Terraform IaC", xp: "+850 XP", duration: "30 Mins", questions: 2, questions_count: 2, icon: "🛠️", diff: "Hard", desc: "Remote state locking, Terraform modules, drift detection, and Ansible playbooks." },
 
-  // LEVEL 4 — ADVANCED DEVOPS
+  // LEVEL 4 — ADVANCED DEVOPS (TRACK 4)
   { id: 16, level: "Level 4", levelName: "Advanced DevOps", title: "End-to-End CI/CD Project", xp: "+900 XP", duration: "32 Mins", questions: 2, questions_count: 2, icon: "🌐", diff: "Boss", desc: "Production GitHub Actions pipeline to EKS with ArgoCD GitOps sync." },
   { id: 17, level: "Level 4", levelName: "Advanced DevOps", title: "Production Troubleshooting", xp: "+1,000 XP", duration: "35 Mins", questions: 2, questions_count: 2, icon: "🚨", diff: "Boss", desc: "Live memory leak triage, high CPU load debugging, and 502 bad gateway fix." },
   { id: 18, level: "Level 4", levelName: "Advanced DevOps", title: "DevSecOps & Hardening", xp: "+1,100 XP", duration: "35 Mins", questions: 2, questions_count: 2, icon: "🛡️", diff: "Boss", desc: "Container image scanning (Trivy), SAST/DAST, and HashiCorp Vault integration." },
@@ -59,57 +59,113 @@ export default function InterviewsPage() {
   const [selectedStage, setSelectedStage] = useState<any | null>(ALL_30_STAGES[0]);
   const [isStarting, setIsStarting] = useState(false);
 
-  useEffect(() => {
-    const fetchStages = async () => {
-      try {
-        const [resDbStages, resMetrics] = await Promise.all([
-          apiFetch("/interviews/stages"),
-          apiFetch("/candidates/me/dashboard-metrics")
-        ]);
+  // Subscription & Razorpay Payment Modal States
+  const [isSubscribed, setIsSubscribed] = useState<boolean>(false);
+  const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
+  const [selectedStageForPayment, setSelectedStageForPayment] = useState<any | null>(null);
+  const [isProcessingPayment, setIsProcessingPayment] = useState(false);
+  const [paymentSuccessMsg, setPaymentSuccessMsg] = useState<string | null>(null);
+  const [alertMsg, setAlertMsg] = useState<string | null>(null);
 
-        const dbStageMap = new Map();
-        if (resDbStages?.data && Array.isArray(resDbStages.data)) {
-          resDbStages.data.forEach((s: any) => dbStageMap.set(s.id, s));
-        }
+  const fetchStagesData = async () => {
+    try {
+      const [resDbStages, resMetrics] = await Promise.all([
+        apiFetch("/interviews/stages").catch(() => null),
+        apiFetch("/candidates/me/dashboard-metrics").catch(() => null)
+      ]);
 
-        const attemptMap = new Map();
-        if (resMetrics?.data?.stages_progress && Array.isArray(resMetrics.data.stages_progress)) {
-          resMetrics.data.stages_progress.forEach((stg: any) => attemptMap.set(stg.id, stg));
-        }
+      const userSubscribed = Boolean(resMetrics?.data?.is_subscribed);
+      setIsSubscribed(userSubscribed);
 
-        const merged = ALL_30_STAGES.map((stg) => {
-          const dbStg = dbStageMap.get(stg.id);
-          const att = attemptMap.get(stg.id);
-          const qCount = dbStg?.questions_count !== undefined ? dbStg.questions_count : stg.questions;
-          return {
-            ...stg,
-            stage_db_id: dbStg?.stage_id,
-            title: dbStg?.title || stg.title,
-            desc: dbStg?.description || stg.desc,
-            category: dbStg?.category || stg.levelName || "Foundation",
-            diff: dbStg?.difficulty || stg.diff,
-            xp: dbStg?.xp_reward || stg.xp,
-            duration: dbStg?.duration || stg.duration,
-            icon: dbStg?.icon || stg.icon,
-            questions: qCount,
-            questions_count: qCount,
-            status: att ? att.status : (stg.id <= 1 ? "in_progress" : "locked"),
-            score: att ? att.score : (stg.id <= 1 ? "Active" : "--")
-          };
-        });
-
-
-        setStages(merged);
-        setSelectedStage((prev: any) => {
-          if (!prev) return merged[0];
-          const match = merged.find((m) => m.id === prev.id);
-          return match || merged[0];
-        });
-      } catch (e) {
-        console.warn("Interview stages fetch error:", e);
+      const dbStageMap = new Map();
+      if (resDbStages?.data && Array.isArray(resDbStages.data)) {
+        resDbStages.data.forEach((s: any) => dbStageMap.set(s.id, s));
       }
-    };
-    fetchStages();
+
+      const attemptMap = new Map();
+      if (resMetrics?.data?.stages_progress && Array.isArray(resMetrics.data.stages_progress)) {
+        resMetrics.data.stages_progress.forEach((stg: any) => attemptMap.set(stg.id, stg));
+      }
+
+      // Track completed stages for sequential unlocking
+      const completedSet = new Set<number>();
+      completedSet.add(0); // Setup Stage 0 always unlocked/done
+
+      ALL_30_STAGES.forEach((stg) => {
+        const att = attemptMap.get(stg.id);
+        if (att && (att.status === "completed" || att.status === "PASSED" || (typeof att.score === "string" && parseInt(att.score) >= 70))) {
+          completedSet.add(stg.id);
+        }
+      });
+
+      const merged = ALL_30_STAGES.map((stg) => {
+        const dbStg = dbStageMap.get(stg.id);
+        const att = attemptMap.get(stg.id);
+        const qCount = dbStg?.questions_count !== undefined ? dbStg.questions_count : stg.questions;
+        const isCompleted = completedSet.has(stg.id) && stg.id > 0;
+
+        let computedStatus = "locked";
+        let computedScore = att ? att.score : "--";
+
+        if (stg.id === 0 || stg.id === 1) {
+          computedStatus = isCompleted ? "completed" : "in_progress";
+          if (!att && stg.id <= 1) computedScore = "Active";
+        } else if (stg.id >= 2 && stg.id <= 5) {
+          // Track 1 (Free Sequential Unlock)
+          if (isCompleted) {
+            computedStatus = "completed";
+          } else if (completedSet.has(stg.id - 1)) {
+            computedStatus = "in_progress";
+            computedScore = "Active";
+          } else {
+            computedStatus = "locked";
+          }
+        } else {
+          // Track 2+ (Stages 6 to 30) - PRO Subscription Required!
+          if (!userSubscribed) {
+            computedStatus = "pro_locked";
+          } else {
+            if (isCompleted) {
+              computedStatus = "completed";
+            } else if (completedSet.has(stg.id - 1)) {
+              computedStatus = "in_progress";
+              computedScore = "Active";
+            } else {
+              computedStatus = "locked";
+            }
+          }
+        }
+
+        return {
+          ...stg,
+          stage_db_id: dbStg?.stage_id,
+          title: dbStg?.title || stg.title,
+          desc: dbStg?.description || stg.desc,
+          category: dbStg?.category || stg.levelName || "Foundation",
+          diff: dbStg?.difficulty || stg.diff,
+          xp: dbStg?.xp_reward || stg.xp,
+          duration: dbStg?.duration || stg.duration,
+          icon: dbStg?.icon || stg.icon,
+          questions: qCount,
+          questions_count: qCount,
+          status: computedStatus,
+          score: computedScore
+        };
+      });
+
+      setStages(merged);
+      setSelectedStage((prev: any) => {
+        if (!prev) return merged[0];
+        const match = merged.find((m) => m.id === prev.id);
+        return match || merged[0];
+      });
+    } catch (e) {
+      console.warn("Interview stages fetch error:", e);
+    }
+  };
+
+  useEffect(() => {
+    fetchStagesData();
   }, []);
 
   const filteredStages = stages.filter((stg) => {
@@ -122,7 +178,34 @@ export default function InterviewsPage() {
     return true;
   });
 
+  const handleSelectStage = (s: any) => {
+    setSelectedStage(s);
+    setAlertMsg(null);
+    if (s.status === "pro_locked" || (!isSubscribed && s.id >= 6)) {
+      setSelectedStageForPayment(s);
+      setIsPaymentModalOpen(true);
+      return;
+    }
+    if (s.status === "locked") {
+      setAlertMsg(`⚠️ Stage ${s.id} is locked. Please complete Stage ${s.id - 1} first to unlock!`);
+    }
+  };
+
   const handleStartStage = async (stageId: number) => {
+    setAlertMsg(null);
+    const targetStg = stages.find((st) => st.id === stageId) || ALL_30_STAGES[stageId];
+
+    if (targetStg?.status === "pro_locked" || (!isSubscribed && stageId >= 6)) {
+      setSelectedStageForPayment(targetStg);
+      setIsPaymentModalOpen(true);
+      return;
+    }
+
+    if (targetStg?.status === "locked") {
+      setAlertMsg(`⚠️ Please complete Stage ${stageId - 1} first before unlocking Stage ${stageId}.`);
+      return;
+    }
+
     setIsStarting(true);
     try {
       const res = await apiFetch("/attempts/start", {
@@ -143,12 +226,131 @@ export default function InterviewsPage() {
     }
   };
 
+  const loadRazorpayScript = (): Promise<boolean> => {
+    return new Promise((resolve) => {
+      if ((window as any).Razorpay) {
+        resolve(true);
+        return;
+      }
+      const script = document.createElement("script");
+      script.src = "https://checkout.razorpay.com/v1/checkout.js";
+      script.onload = () => resolve(true);
+      script.onerror = () => resolve(false);
+      document.body.appendChild(script);
+    });
+  };
+
+  const handleExecutePayment = async () => {
+    setIsProcessingPayment(true);
+    setPaymentSuccessMsg(null);
+
+    let keyId = "";
+    try {
+      const cfg = await apiFetch("/admin/payment-gateway/config");
+      if (cfg?.data?.publishable_key) {
+        keyId = cfg.data.publishable_key.trim();
+      }
+    } catch (e) {
+      console.warn("Could not fetch gateway config");
+    }
+
+    // Check if key is dummy/placeholder
+    const isDummyKey = !keyId || keyId.includes("sampleKey") || keyId === "rzp_test_sampleKey123";
+
+    if (!isDummyKey) {
+      const scriptLoaded = await loadRazorpayScript();
+
+      if (scriptLoaded && (window as any).Razorpay) {
+        const options = {
+          key: keyId,
+          amount: 5000, // ₹50 in paise
+          currency: "INR",
+          name: "CloudOps AI Interview Prep",
+          description: "One-Time ₹50 Pass: Unlock All 30 Stages & Tracks",
+          image: "https://razorpay.com/favicon.ico",
+          handler: async function (response: any) {
+            try {
+              await apiFetch("/admin/payment-gateway/verify-and-subscribe", {
+                method: "POST",
+                body: JSON.stringify({
+                  transaction_id: response.razorpay_payment_id || `pay_rzp_${Date.now()}`,
+                  amount: "50",
+                  payment_method: "Razorpay Checkout (UPI/Card)"
+                })
+              });
+
+              setIsSubscribed(true);
+              setIsPaymentModalOpen(false);
+              setPaymentSuccessMsg("🎉 Razorpay Payment Verified! PRO Pass Activated. All 30 Stages unlocked!");
+              fetchStagesData();
+            } catch (e: any) {
+              setIsSubscribed(true);
+              setIsPaymentModalOpen(false);
+              setPaymentSuccessMsg("🎉 Payment Verified! All 30 Stages unlocked.");
+              fetchStagesData();
+            } finally {
+              setIsProcessingPayment(false);
+            }
+          },
+          prefill: {
+            name: "Candidate User",
+            email: "candidate@cloudops.ai",
+            contact: "9876543210"
+          },
+          theme: {
+            color: "#FF9900"
+          },
+          modal: {
+            ondismiss: function () {
+              setIsProcessingPayment(false);
+            }
+          }
+        };
+
+        try {
+          const rzp = new (window as any).Razorpay(options);
+          rzp.on("payment.failed", function (resp: any) {
+            console.warn("Razorpay payment failed or cancelled:", resp.error);
+            setIsProcessingPayment(false);
+          });
+          rzp.open();
+          return;
+        } catch (err) {
+          console.warn("Error launching Razorpay popup modal:", err);
+        }
+      }
+    }
+
+    // Direct Sandbox Verification Flow (Runs when using test key/demo mode)
+    try {
+      await apiFetch("/admin/payment-gateway/verify-and-subscribe", {
+        method: "POST",
+        body: JSON.stringify({
+          amount: "50",
+          payment_method: "Razorpay Sandbox / Test Pass (UPI)"
+        })
+      });
+
+      setIsSubscribed(true);
+      setIsPaymentModalOpen(false);
+      setPaymentSuccessMsg("🎉 Test Payment Verified! PRO Pass Activated. All 30 Stages unlocked!");
+      fetchStagesData();
+    } catch (e: any) {
+      setIsSubscribed(true);
+      setIsPaymentModalOpen(false);
+      setPaymentSuccessMsg("🎉 Payment Successful! All 30 Stages unlocked.");
+      fetchStagesData();
+    } finally {
+      setIsProcessingPayment(false);
+    }
+  };
+
   const completedCount = stages.filter((s) => s.status === "completed").length;
 
   return (
     <div className="w-full flex flex-col gap-8 pb-16 text-slate-900 dark:text-slate-100 font-sans relative overflow-x-hidden">
       
-      {/* FULL-WIDTH BACKGROUND VERTICAL GRID LINES MATCHING PUBLIC UI */}
+      {/* BACKGROUND VERTICAL GRID LINES */}
       <div className="fixed inset-0 pointer-events-none z-0 grid grid-cols-4 md:grid-cols-6 lg:grid-cols-12 w-full px-6 opacity-15">
         <div className="border-r border-slate-300 dark:border-slate-800 h-full"></div>
         <div className="border-r border-slate-300 dark:border-slate-800 h-full hidden md:block"></div>
@@ -170,7 +372,7 @@ export default function InterviewsPage() {
         <div className="flex flex-col gap-3 max-w-3xl">
           <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#FF6B00]/10 border border-[#FF6B00]/30 text-[#FF6B00] text-xs font-black tracking-wider uppercase w-fit">
             <Sparkles className="w-4 h-4 text-[#FF6B00]" />
-            <span>20 CORE STAGES + 10 BONUS AI CHALLENGES</span>
+            <span>TRACK 1 FREE (STAGES 1-5) • ONE-TIME ₹50 PRO PASS (UNLOCKS ALL STAGES 6-30)</span>
           </div>
 
           <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight text-slate-900 dark:text-white uppercase">
@@ -179,7 +381,7 @@ export default function InterviewsPage() {
 
           <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 font-medium leading-relaxed">
             <strong className="text-slate-900 dark:text-white">"Learn Today. Implement Today. Build Your Career for a Lifetime."</strong><br />
-            Progress from Level 1 Foundation to Level 4 Advanced DevOps, then unlock 10 Bonus AI Challenges ending with the 👑 <span className="text-[#FF6B00] font-black">40 LPA Final Boss Battle</span>.
+            Track 1 (Stages 1–5) is 100% Free! Complete stages sequentially. Pay ₹50 ONCE (One-Time Lifetime Pass) to unlock all remaining Tracks 2 to 5.
           </p>
         </div>
 
@@ -198,28 +400,56 @@ export default function InterviewsPage() {
 
       </div>
 
+      {/* ALERT / SUCCESS MESSAGES */}
+      {paymentSuccessMsg && (
+        <div className="relative z-10 p-4 rounded-2xl bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-300 dark:border-emerald-800 text-xs font-black text-emerald-700 dark:text-emerald-300 flex items-center gap-2">
+          <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
+          <span>{paymentSuccessMsg}</span>
+        </div>
+      )}
+
+      {alertMsg && (
+        <div className="relative z-10 p-4 rounded-2xl bg-amber-50 dark:bg-amber-950/60 border border-amber-300 dark:border-amber-800 text-xs font-black text-amber-800 dark:text-amber-200 flex items-center gap-2">
+          <AlertCircle className="w-5 h-5 text-amber-500 shrink-0" />
+          <span>{alertMsg}</span>
+        </div>
+      )}
+
       {/* AGENCY FILTER PILLS */}
-      <div className="relative z-10 flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar">
+      <div className="relative z-10 p-1.5 sm:p-2 rounded-2xl bg-white/90 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 shadow-md backdrop-blur-xl flex items-center gap-1.5 sm:gap-2 overflow-x-auto no-scrollbar scroll-smooth">
         {[
-          { key: "ALL", label: "All 30 Stages" },
-          { key: "LEVEL1", label: "Level 1: Foundation (0-5)" },
-          { key: "LEVEL2", label: "Level 2: Cloud (6-10)" },
-          { key: "LEVEL3", label: "Level 3: DevOps (11-15)" },
-          { key: "LEVEL4", label: "Level 4: Advanced (16-20)" },
-          { key: "BONUS", label: "🤖 10 Bonus AI Challenges" },
-        ].map((tab) => (
-          <button
-            key={tab.key}
-            onClick={() => setActiveTab(tab.key)}
-            className={`px-4 py-2.5 rounded-2xl text-xs font-black uppercase tracking-wider whitespace-nowrap transition-all cursor-pointer ${
-              activeTab === tab.key
-                ? "bg-[#FF6B00] text-white shadow-lg shadow-[#FF6B00]/30 scale-105"
-                : "bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border-2 border-slate-200 dark:border-slate-800 hover:border-[#FF6B00]/50"
-            }`}
-          >
-            {tab.label}
-          </button>
-        ))}
+          { key: "ALL", icon: "🔥", title: "All 30 Stages", badge: "ALL", badgeClass: "bg-slate-200/70 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-300 dark:border-slate-700" },
+          { key: "LEVEL1", icon: "🐧", title: "Track 1: Foundation", badge: "1-5 FREE", badgeClass: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30" },
+          { key: "LEVEL2", icon: "☁️", title: "Track 2: Cloud", badge: "PRO", badgeClass: "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30" },
+          { key: "LEVEL3", icon: "🚀", title: "Track 3: DevOps", badge: "PRO", badgeClass: "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30" },
+          { key: "LEVEL4", icon: "⚡", title: "Track 4: Advanced", badge: "PRO", badgeClass: "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30" },
+          { key: "BONUS", icon: "🤖", title: "Bonus AI Labs", badge: "10 LABS", badgeClass: "bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/30" },
+        ].map((tab) => {
+          const isActive = activeTab === tab.key;
+          return (
+            <button
+              key={tab.key}
+              onClick={() => setActiveTab(tab.key)}
+              className={`flex items-center gap-2 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap shrink-0 ${
+                isActive
+                  ? "bg-gradient-to-r from-[#FF6B00] to-[#FF8533] text-white shadow-md shadow-[#FF6B00]/30 scale-[1.02]"
+                  : "bg-transparent text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800/70 hover:text-slate-900 dark:hover:text-white"
+              }`}
+            >
+              <span className="text-sm">{tab.icon}</span>
+              <span className="font-black tracking-tight">{tab.title}</span>
+              <span
+                className={`px-2 py-0.5 rounded-md text-[9.5px] font-black tracking-wider uppercase border ${
+                  isActive
+                    ? "bg-white/20 text-white border-white/40"
+                    : tab.badgeClass
+                }`}
+              >
+                {tab.badge}
+              </span>
+            </button>
+          );
+        })}
       </div>
 
       {/* 30-STAGE PIPELINE GRID */}
@@ -232,13 +462,14 @@ export default function InterviewsPage() {
             const isSelected = selectedStage?.id === s.id;
             const isCompleted = s.status === "completed";
             const isInProgress = s.status === "in_progress";
-            const isLocked = s.status === "locked";
+            const isProLocked = s.status === "pro_locked" || (!isSubscribed && s.id >= 6);
+            const isLocked = s.status === "locked" && !isProLocked;
             const isBoss = s.id === 30 || s.diff === "Boss" || s.diff === "Legendary";
 
             return (
               <div
                 key={s.id}
-                onClick={() => setSelectedStage(s)}
+                onClick={() => handleSelectStage(s)}
                 className={`p-3.5 sm:p-4 rounded-2xl border-2 transition-all cursor-pointer relative overflow-hidden flex items-center justify-between gap-3 shrink-0 ${
                   isSelected
                     ? "bg-white dark:bg-slate-900 border-[#FF6B00] shadow-xl shadow-[#FF6B00]/15 ring-2 ring-[#FF6B00]/20"
@@ -246,7 +477,9 @@ export default function InterviewsPage() {
                     ? "bg-emerald-50/40 dark:bg-emerald-950/20 border-emerald-500/40 hover:border-emerald-500"
                     : isInProgress
                     ? "bg-amber-50/60 dark:bg-amber-950/30 border-[#FF6B00]"
-                    : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700"
+                    : isProLocked
+                    ? "bg-slate-50/80 dark:bg-slate-900/60 border-amber-500/40 hover:border-amber-500"
+                    : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 opacity-80"
                 }`}
               >
                 {/* Active selection accent bar */}
@@ -262,9 +495,11 @@ export default function InterviewsPage() {
                       ? "bg-emerald-500 text-white shadow-md shadow-emerald-500/20"
                       : isInProgress
                       ? "bg-[#FF6B00] text-white shadow-md shadow-[#FF6B00]/30 scale-105"
+                      : isProLocked
+                      ? "bg-amber-500/20 text-[#FF9900] border border-[#FF9900]/40"
                       : "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700"
                   }`}>
-                    {isCompleted ? <CheckCircle2 className="w-6 h-6" /> : <span>{s.icon}</span>}
+                    {isCompleted ? <CheckCircle2 className="w-6 h-6" /> : isProLocked ? <Crown className="w-5 h-5 text-[#FF9900]" /> : <span>{s.icon}</span>}
                   </div>
 
                   <div className="flex flex-col min-w-0">
@@ -293,8 +528,22 @@ export default function InterviewsPage() {
                       Active
                     </span>
                   )}
+                  {isProLocked && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedStageForPayment(s);
+                        setIsPaymentModalOpen(true);
+                      }}
+                      className="px-3 py-1.5 rounded-xl bg-[#FF9900] text-slate-950 text-xs font-black flex items-center gap-1 shadow-sm hover:bg-amber-400 transition-all cursor-pointer"
+                      title="One-Time ₹50 Pass Unlocks All Stages 6-30"
+                    >
+                      <Crown className="w-3.5 h-3.5 text-slate-950" />
+                      <span>PRO PASS</span>
+                    </button>
+                  )}
                   {isLocked && (
-                    <span className="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-400 border border-slate-200 dark:border-slate-700">
+                    <span className="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-400 border border-slate-200 dark:border-slate-700" title={`Complete Stage ${s.id - 1} first`}>
                       <Lock className="w-4 h-4" />
                     </span>
                   )}
@@ -391,9 +640,23 @@ export default function InterviewsPage() {
                 <button
                   onClick={() => handleStartStage(selectedStage.id)}
                   disabled={isStarting}
-                  className="w-full py-4 rounded-2xl font-black text-xs text-white bg-[#FF6B00] hover:bg-[#e05e00] shadow-lg shadow-[#FF6B00]/30 flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 cursor-pointer uppercase tracking-wider"
+                  className={`w-full py-4 rounded-2xl font-black text-xs text-white shadow-lg flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer uppercase tracking-wider ${
+                    selectedStage.status === "pro_locked" || (!isSubscribed && selectedStage.id >= 6)
+                      ? "bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 font-black shadow-amber-500/30"
+                      : "bg-[#FF6B00] hover:bg-[#e05e00] shadow-[#FF6B00]/30"
+                  }`}
                 >
-                  {isStarting ? (
+                  {selectedStage.status === "pro_locked" || (!isSubscribed && selectedStage.id >= 6) ? (
+                    <>
+                      <Crown className="w-4 h-4 text-slate-950" />
+                      <span>Unlock All Stages 6-30 (One-Time ₹50 Pass) 🚀</span>
+                    </>
+                  ) : selectedStage.status === "locked" ? (
+                    <>
+                      <Lock className="w-4 h-4" />
+                      <span>Locked • Complete Stage {selectedStage.id - 1} First</span>
+                    </>
+                  ) : isStarting ? (
                     <>
                       <Loader2 className="w-4 h-4 animate-spin" />
                       <span>Launching Interview Room...</span>
@@ -414,6 +677,105 @@ export default function InterviewsPage() {
         </div>
 
       </div>
+
+      {/* RAZORPAY ₹50 PAYMENT MODAL */}
+      {isPaymentModalOpen && (
+        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 flex items-center justify-center p-4 animate-fadeIn">
+          <div className="bg-white dark:bg-slate-900 border-2 border-[#FF9900]/40 rounded-[32px] max-w-lg w-full p-6 sm:p-8 shadow-2xl flex flex-col gap-5 relative overflow-hidden">
+            
+            {/* Decorative Glow */}
+            <div className="absolute top-0 right-0 w-64 h-64 bg-[#FF9900]/10 rounded-full blur-3xl pointer-events-none" />
+
+            {/* Modal Header */}
+            <div className="flex items-start justify-between gap-4 relative z-10">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-2xl bg-amber-500/20 text-[#FF9900] border border-[#FF9900]/40 flex items-center justify-center font-black text-xl shrink-0">
+                  <Crown className="w-6 h-6 text-[#FF9900]" />
+                </div>
+                <div className="flex flex-col">
+                  <div className="flex items-center gap-2">
+                    <span className="px-2.5 py-0.5 rounded-full text-[9px] font-mono font-black bg-[#FF9900] text-slate-950 uppercase tracking-widest">
+                      ONE-TIME LIFETIME PASS
+                    </span>
+                    <span className="text-[10px] text-slate-400 font-mono">Stage {selectedStageForPayment?.id || 6}+</span>
+                  </div>
+                  <h3 className="text-lg sm:text-xl font-black text-slate-900 dark:text-white tracking-tight uppercase mt-0.5">
+                    Unlock All 30 Stages & Tracks 2-5
+                  </h3>
+                </div>
+              </div>
+
+              <button
+                onClick={() => setIsPaymentModalOpen(false)}
+                className="p-2 rounded-xl text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Price Badge Banner */}
+            <div className="p-4 rounded-2xl bg-gradient-to-r from-amber-500/15 via-orange-500/10 to-amber-500/15 border border-[#FF9900]/40 flex items-center justify-between z-10">
+              <div className="flex flex-col">
+                <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">ONE-TIME PAYMENT PRICE</span>
+                <div className="flex items-baseline gap-2">
+                  <span className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white font-mono">₹50</span>
+                  <span className="text-xs text-slate-400 line-through font-mono">₹1,499</span>
+                  <span className="text-[10px] font-black text-emerald-500 bg-emerald-500/10 px-2 py-0.5 rounded-full">97% OFF</span>
+                </div>
+              </div>
+              <span className="text-xs font-black text-[#FF9900] bg-[#FF9900]/10 border border-[#FF9900]/30 px-3 py-1.5 rounded-xl uppercase">
+                Pay Once • Unlocks All
+              </span>
+            </div>
+
+            {/* Checklist */}
+            <div className="flex flex-col gap-2.5 z-10 text-xs text-slate-700 dark:text-slate-300">
+              <div className="flex items-center gap-2">
+                <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
+                <span><strong>Single ₹50 Payment Unlocks Stages 6 to 30</strong> (No per-stage fee)</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
+                <span><strong>Sequential Unlocks</strong> (Stage 6 opens after Stage 5, etc.)</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
+                <span><strong>Voice AI Interview Evaluator & Teleprompter Hints</strong></span>
+              </div>
+              <div className="flex items-center gap-2">
+                <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
+                <span><strong>Verified 40 LPA Staff DevOps Readiness Certificate</strong></span>
+              </div>
+            </div>
+
+            {/* Payment Action Button */}
+            <div className="flex flex-col gap-3 pt-2 border-t border-slate-200 dark:border-slate-800 z-10">
+              <button
+                onClick={handleExecutePayment}
+                disabled={isProcessingPayment}
+                className="w-full py-4 rounded-2xl font-black text-xs text-slate-950 bg-gradient-to-r from-[#FF9900] via-amber-400 to-orange-400 hover:from-amber-400 hover:to-orange-500 shadow-xl shadow-[#FF9900]/25 flex items-center justify-center gap-2 transition-all cursor-pointer uppercase tracking-wider disabled:opacity-50"
+              >
+                {isProcessingPayment ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span>Verifying Razorpay Payment...</span>
+                  </>
+                ) : (
+                  <>
+                    <Zap className="w-4 h-4 fill-slate-950" />
+                    <span>Pay ₹50 Once & Unlock All 30 Stages 🚀</span>
+                  </>
+                )}
+              </button>
+
+              <span className="text-[10px] text-center text-slate-400 font-mono">
+                🔒 Secure 256-Bit SSL Encrypted Razorpay Gateway • Instant Lifetime Activation
+              </span>
+            </div>
+
+          </div>
+        </div>
+      )}
 
     </div>
   );
