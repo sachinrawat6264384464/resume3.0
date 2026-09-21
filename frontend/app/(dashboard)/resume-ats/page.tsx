@@ -559,20 +559,89 @@ CERTIFICATIONS
             </div>
           )}
 
+          {/* AI PROCESSING & OCR SCAN LOADER DISPLAY CARD */}
+          {isLoading && (
+            <div className="p-5 sm:p-6 rounded-3xl bg-[#FF6B00]/10 border-2 border-[#FF6B00]/40 shadow-xl flex flex-col gap-4 animate-fadeIn relative overflow-hidden mt-2">
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-2xl bg-[#FF6B00] text-white flex items-center justify-center shadow-md shadow-[#FF6B00]/30 shrink-0">
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                  </div>
+                  <div className="flex flex-col">
+                    <h3 className="text-xs sm:text-sm font-black text-slate-900 dark:text-white uppercase tracking-tight flex items-center gap-2">
+                      <span>AI OCR SCAN & ATS BENCHMARK ANALYSIS</span>
+                      <span className="animate-pulse text-[#FF6B00] hidden sm:inline">● IN PROGRESS</span>
+                    </h3>
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400 font-bold truncate max-w-xs sm:max-w-md">
+                      {processingSteps[currentStepIndex]?.title || "Analyzing document..."}
+                    </p>
+                  </div>
+                </div>
+
+                <span className="text-lg sm:text-xl font-black font-mono text-[#FF6B00] shrink-0">
+                  {progressPercent}%
+                </span>
+              </div>
+
+              {/* Smooth Animated Progress Bar */}
+              <div className="w-full h-3 rounded-full bg-slate-200 dark:bg-slate-800 overflow-hidden p-0.5 border border-slate-300 dark:border-slate-700">
+                <div
+                  className="h-full rounded-full bg-gradient-to-r from-[#FF6B00] via-amber-500 to-orange-500 transition-all duration-300 shadow-sm"
+                  style={{ width: `${progressPercent}%` }}
+                />
+              </div>
+
+              {/* 3 Step Breakdown Pills */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 mt-1">
+                {processingSteps.map((st, idx) => {
+                  const isDone = progressPercent === 100 || currentStepIndex > idx;
+                  const isCurrent = currentStepIndex === idx && progressPercent < 100;
+                  return (
+                    <div
+                      key={idx}
+                      className={`p-2.5 rounded-xl border text-xs font-bold flex items-center gap-2 transition-all ${
+                        isDone
+                          ? "bg-emerald-50 dark:bg-emerald-950/40 border-emerald-500/40 text-emerald-700 dark:text-emerald-300"
+                          : isCurrent
+                          ? "bg-amber-50 dark:bg-amber-950/40 border-[#FF6B00] text-[#FF6B00] shadow-sm"
+                          : "bg-slate-50 dark:bg-slate-800/40 border-slate-200 dark:border-slate-800 text-slate-400"
+                      }`}
+                    >
+                      {isDone ? (
+                        <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
+                      ) : isCurrent ? (
+                        <Loader2 className="w-4 h-4 text-[#FF6B00] animate-spin shrink-0" />
+                      ) : (
+                        <div className="w-4 h-4 rounded-full border border-slate-300 dark:border-slate-700 shrink-0 flex items-center justify-center text-[10px]">
+                          {st.step}
+                        </div>
+                      )}
+                      <span className="truncate text-[11px] font-extrabold">{st.title.split("&")[0]}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
           {/* Primary Action Button */}
           <button
             onClick={() => handleAnalyze()}
             disabled={isLoading}
-            className="w-full py-4 rounded-2xl font-black text-xs text-white bg-[#FF6B00] hover:bg-[#e05e00] shadow-xl shadow-[#FF6B00]/30 flex items-center justify-center gap-2 hover:scale-[1.01] active:scale-[0.98] transition-all disabled:opacity-50 cursor-pointer uppercase tracking-wider mt-2"
+            className={`w-full py-4 rounded-2xl font-black text-xs text-white transition-all cursor-pointer uppercase tracking-wider mt-2 flex items-center justify-center gap-2.5 shadow-xl ${
+              isLoading
+                ? "bg-gradient-to-r from-orange-600 via-[#FF6B00] to-amber-600 cursor-not-allowed opacity-90 shadow-[#FF6B00]/40 scale-[0.99] animate-pulse"
+                : "bg-[#FF6B00] hover:bg-[#e05e00] shadow-[#FF6B00]/30 hover:scale-[1.01] active:scale-[0.98]"
+            }`}
           >
             {isLoading ? (
               <>
-                <Loader2 className="w-4 h-4 animate-spin" />
-                <span>Running AI OCR & ATS Benchmark Analysis...</span>
+                <Loader2 className="w-5 h-5 animate-spin text-white shrink-0" />
+                <span className="text-xs sm:text-sm tracking-wide">RUNNING AI OCR & ATS BENCHMARK ANALYSIS ({progressPercent}%)...</span>
               </>
             ) : (
               <>
-                <Sparkles className="w-4 h-4" />
+                <Sparkles className="w-4 h-4 text-white" />
                 <span>Run AI ATS Benchmark Analysis 🚀</span>
               </>
             )}
