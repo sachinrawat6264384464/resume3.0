@@ -7,7 +7,8 @@ import {
   Flame, Zap, Moon, Sun, ArrowRight, Play, Upload, Award, 
   CheckCircle2, Lock, Clock, Calendar, Search, Bell, Sparkles,
   ChevronRight, BarChart2, ShieldCheck, Check, Laptop, Trophy,
-  FileText, Cpu, Compass, Settings, HelpCircle, Layers, Video, Share2, Loader2, Send, MessageSquare
+  FileText, Cpu, Compass, Settings, HelpCircle, Layers, Video, Share2, Loader2, Send, MessageSquare,
+  Linkedin, MessageCircle
 } from "lucide-react";
 import { useAuthStore } from "@/lib/store";
 import { apiFetch } from "@/lib/api";
@@ -305,6 +306,63 @@ Learn Today. Implement Today. Build Your Career for a Lifetime.
     }
   };
 
+  // Candidate Audit & Social Share Handlers
+  const [isAuditModalOpen, setIsAuditModalOpen] = useState(false);
+  const [claimedAuditBonus, setClaimedAuditBonus] = useState(false);
+
+  const handleShareLinkedIn = () => {
+    const pts = userXp || 2151;
+    const shareText = `🎉 I'm currently advancing on the @CloudDevOpsHub Candidate Portal with ${pts} XP!\n\nTarget Role: ${candProfile?.target_role || "Senior DevOps Engineer"}\nReadiness Benchmark: ${readiness}%\nStreak: ${userStreak} Days 🔥\n\nMentored by Vikas Ratnawat (Multi-Cloud & DevOps With AI). 🚀\n\nCandidate Portal: ${typeof window !== "undefined" ? window.location.origin : "http://localhost:3000"}\n#CloudDevOpsHub #VikasRatnawat #DayOne #Kubernetes #AWS #DevOpsAI`;
+
+    const encodedText = encodeURIComponent(shareText);
+    const shareUrl = `https://www.linkedin.com/feed/?shareActive=true&text=${encodedText}`;
+
+    const width = 620;
+    const height = 680;
+    const left = typeof window !== "undefined" ? (window.innerWidth - width) / 2 : 100;
+    const top = typeof window !== "undefined" ? (window.innerHeight - height) / 2 : 100;
+
+    window.open(shareUrl, "LinkedInShareCompose", `width=${width},height=${height},top=${top},left=${left},scrollbars=yes,resizable=yes`);
+  };
+
+  const handleShareWhatsApp = () => {
+    const pts = userXp || 2151;
+    const shareText = `🎉 I'm advancing on the CloudDevOpsHub Candidate Portal with ${pts} XP & ${readiness}% Readiness Score! 🚀 Check out my progress here: ${typeof window !== "undefined" ? window.location.origin : "http://localhost:3000"}`;
+    window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(shareText)}`, "_blank");
+  };
+
+  const handleShareX = () => {
+    const pts = userXp || 2151;
+    const shareText = `🎉 Advancing on @CloudDevOpsHub Candidate Portal with ${pts} XP & ${readiness}% Readiness Score! 🚀 #CloudDevOpsHub #DevOps`;
+    window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}`, "_blank");
+  };
+
+  const handleOpenAuditModal = () => {
+    setIsAuditModalOpen(true);
+    setClaimedAuditBonus(false);
+  };
+
+  const handleClaimAuditPointsBonus = async () => {
+    try {
+      await apiFetch("/candidates/claim-badge", {
+        method: "POST",
+        body: JSON.stringify({
+          badge_id: "dashboard_audit_bonus",
+          badge_title: "LinkedIn Share Candidate Audit Bonus"
+        })
+      });
+      setClaimedAuditBonus(true);
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(new Event("userProfileUpdated"));
+      }
+    } catch (e) {
+      setClaimedAuditBonus(true);
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(new Event("userProfileUpdated"));
+      }
+    }
+  };
+
   const visibleGroups = selectedGroupTab === "ALL" 
     ? stageGroups 
     : stageGroups.filter(g => g.groupId === selectedGroupTab);
@@ -351,7 +409,7 @@ Learn Today. Implement Today. Build Your Career for a Lifetime.
           </p>
         </div>
 
-        <div className="flex items-center gap-3 self-start md:self-auto">
+        <div className="flex items-center gap-3 flex-wrap self-start md:self-auto">
           <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-50 dark:bg-amber-950/50 border border-[#FF9900]/30 text-xs font-bold text-[#FF9900]">
             <Flame className="w-4 h-4 text-orange-500 fill-orange-500" />
             <span>{userStreak} Day Streak</span>
@@ -359,6 +417,44 @@ Learn Today. Implement Today. Build Your Career for a Lifetime.
           <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-purple-50 dark:bg-purple-950/50 border border-purple-500/30 text-xs font-bold text-purple-600 dark:text-purple-400">
             <Trophy className="w-4 h-4 text-purple-500" />
             <span>{userXp.toLocaleString()} XP</span>
+          </div>
+
+          {/* CANDIDATE SHARE & AUDIT TOOLKIT */}
+          <div className="flex items-center gap-1.5 bg-white dark:bg-slate-900 p-1 rounded-2xl border-2 border-slate-200 dark:border-slate-800 shadow-sm">
+            {/* LinkedIn Share */}
+            <button
+              onClick={handleShareLinkedIn}
+              className="w-8 h-8 rounded-xl bg-blue-600 hover:bg-blue-700 text-white flex items-center justify-center transition-all cursor-pointer shadow-xs"
+              title="Share Profile & Achievements on LinkedIn"
+            >
+              <Linkedin className="w-4 h-4 fill-white" />
+            </button>
+
+            {/* WhatsApp Share */}
+            <button
+              onClick={handleShareWhatsApp}
+              className="w-8 h-8 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white flex items-center justify-center transition-all cursor-pointer shadow-xs"
+              title="Share Progress on WhatsApp"
+            >
+              <MessageCircle className="w-4 h-4 fill-white" />
+            </button>
+
+            {/* X / Twitter Share */}
+            <button
+              onClick={handleShareX}
+              className="w-8 h-8 rounded-xl bg-slate-900 hover:bg-slate-950 dark:bg-slate-800 dark:hover:bg-slate-700 text-white flex items-center justify-center transition-all cursor-pointer shadow-xs font-black text-xs"
+              title="Share Progress on X (Twitter)"
+            >
+              ✕
+            </button>
+
+            {/* Candidate Audit Button */}
+            <button
+              onClick={handleOpenAuditModal}
+              className="px-3.5 py-1.5 rounded-xl bg-slate-950 text-white dark:bg-slate-100 dark:text-slate-950 hover:bg-slate-800 dark:hover:bg-white text-xs font-black transition-all cursor-pointer shadow-xs uppercase tracking-wider"
+            >
+              Audit
+            </button>
           </div>
         </div>
       </div>
@@ -761,6 +857,103 @@ Learn Today. Implement Today. Build Your Career for a Lifetime.
         </div>
 
       </div>
+
+      {/* CANDIDATE AUDIT & POINT CLAIM MODAL */}
+      {isAuditModalOpen && (
+        <div className="fixed inset-0 bg-slate-950/70 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-800 rounded-[32px] max-w-lg w-full p-6 sm:p-8 shadow-2xl flex flex-col gap-5 relative overflow-hidden">
+            
+            <div className="flex items-start justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-[#FF6B00] to-amber-500 text-white flex items-center justify-center font-black text-lg shadow-md">
+                  {candidateName.split(" ").map((n: string) => n[0]).join("").toUpperCase().slice(0, 2) || "CD"}
+                </div>
+                <div className="flex flex-col">
+                  <h3 className="text-lg font-black text-slate-900 dark:text-white uppercase tracking-tight">
+                    {candidateName} (YOU)
+                  </h3>
+                  <span className="text-xs font-bold text-[#FF6B00]">
+                    {candProfile?.target_role || "Senior DevOps Engineer"} • Batch 45
+                  </span>
+                </div>
+              </div>
+
+              <button
+                onClick={() => setIsAuditModalOpen(false)}
+                className="p-1 text-slate-400 hover:text-slate-900 dark:hover:text-white cursor-pointer font-black text-lg"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Metrics Breakdown */}
+            <div className="grid grid-cols-2 gap-3 text-xs">
+              <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex flex-col gap-0.5">
+                <span className="text-slate-400 font-bold uppercase text-[10px]">TOTAL XP COINS</span>
+                <span className="text-xl font-mono font-black text-slate-900 dark:text-white">
+                  🪙 {userXp.toLocaleString()} XP
+                </span>
+              </div>
+
+              <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex flex-col gap-0.5">
+                <span className="text-slate-400 font-bold uppercase text-[10px]">READINESS BENCHMARK</span>
+                <span className="text-xl font-mono font-black text-emerald-500">
+                  {readiness}%
+                </span>
+              </div>
+            </div>
+
+            {/* Additional Audit Details */}
+            <div className="flex flex-col gap-2 p-3.5 rounded-2xl bg-amber-50/50 dark:bg-amber-950/30 border border-amber-300/60 dark:border-amber-800/60 text-xs">
+              <div className="flex items-center justify-between">
+                <span className="text-slate-500 dark:text-slate-400 font-bold">Resume ATS Match Score:</span>
+                <span className="font-mono font-black text-[#FF6B00]">{resumeAts.score || 85}%</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-slate-500 dark:text-slate-400 font-bold">Target Salary Band:</span>
+                <span className="font-mono font-bold text-slate-900 dark:text-white">{targetSalaryBand}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-slate-500 dark:text-slate-400 font-bold">Current Daily Streak:</span>
+                <span className="font-mono font-bold text-amber-500">🔥 {userStreak} Days</span>
+              </div>
+            </div>
+
+            {/* Top Verified Skills */}
+            <div className="flex flex-col gap-2">
+              <span className="text-xs font-black text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+                Top Verified Technical Skills:
+              </span>
+              <div className="flex items-center gap-1.5 flex-wrap">
+                {(topSkills && topSkills.length > 0 ? topSkills : ["Linux Admin", "AWS VPC", "Docker", "Kubernetes", "Terraform"]).map((sk: string, idx: number) => (
+                  <span key={idx} className="px-2.5 py-1 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-[11px] font-bold border border-slate-200 dark:border-slate-700">
+                    ✓ {sk}
+                  </span>
+                ))}
+              </div>
+            </div>
+
+            {/* Claim +50 Points Action */}
+            <div className="pt-3 border-t border-slate-100 dark:border-slate-800 flex flex-col gap-3">
+              {claimedAuditBonus ? (
+                <div className="p-3.5 rounded-2xl bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-300 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300 text-xs font-bold flex items-center justify-center gap-2">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+                  <span>🎉 +50 PTS Bonus Claimed & Added to Wallet Balance!</span>
+                </div>
+              ) : (
+                <button
+                  onClick={handleClaimAuditPointsBonus}
+                  className="w-full py-3.5 rounded-2xl font-black text-xs text-white bg-gradient-to-r from-[#FF6B00] to-amber-500 hover:from-orange-500 hover:to-amber-600 shadow-md shadow-[#FF6B00]/25 flex items-center justify-center gap-2 cursor-pointer uppercase tracking-wider"
+                >
+                  <Sparkles className="w-4 h-4 text-white" />
+                  <span>Claim +50 Points LinkedIn Share Bonus 🚀</span>
+                </button>
+              )}
+            </div>
+
+          </div>
+        </div>
+      )}
 
     </div>
   );

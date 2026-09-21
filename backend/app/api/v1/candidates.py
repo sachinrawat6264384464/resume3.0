@@ -2,10 +2,10 @@ import secrets
 from fastapi import APIRouter, Depends, Query, status, HTTPException, Response
 from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, desc, func
+from sqlalchemy import select, desc, func, and_
 from sqlalchemy.orm import selectinload
 from typing import Optional, List
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from app.core.database import get_db
 from app.core.security import verify_auth_token
 from app.services.auth_service import AuthService
@@ -13,7 +13,11 @@ from app.services.candidate_service import CandidateService
 from app.schemas.candidate import CandidateCreate, CandidateUpdate, CandidateOut, CandidateWithAttemptsOut
 from app.schemas.support import SupportTicketCreate
 from app.schemas.common import StandardResponse, PaginatedResponse
-from app.models import Candidate, CandidateRoadmap, CandidateCertificate, SupportTicket, StageAttempt, InterviewStage, User, InterviewAttempt, ResumeAudit, QuestionAttempt
+from app.models import (
+    Candidate, CandidateRoadmap, CandidateCertificate, SupportTicket, 
+    StageAttempt, InterviewStage, User, InterviewAttempt, ResumeAudit, 
+    QuestionAttempt, StudyTask, Reminder
+)
 
 router = APIRouter(prefix="/candidates", tags=["Candidates"])
 
