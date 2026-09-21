@@ -31,13 +31,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   }, [setAuth]);
 
   return (
-    <div className="flex min-h-screen w-full bg-slate-50 dark:bg-[#050810] relative" suppressHydrationWarning>
+    <div className="flex min-h-screen w-full max-w-full bg-slate-50 dark:bg-[#050810] relative overflow-x-hidden" suppressHydrationWarning>
       <Sidebar 
         isOpenMobile={isMobileSidebarOpen} 
         onCloseMobile={() => setIsMobileSidebarOpen(false)} 
       />
-      <div className="flex-1 flex flex-col min-w-0 overflow-hidden w-full">
-        <main className="flex-1 overflow-y-auto px-3 sm:px-6 lg:px-8 xl:px-10 py-4 sm:py-6 pb-20">
+      <div className="flex-1 flex flex-col min-w-0 overflow-hidden w-full max-w-full">
+        <main className="flex-1 overflow-y-auto px-2.5 sm:px-6 lg:px-8 xl:px-10 py-3 sm:py-6 pb-20 w-full max-w-full">
           <Header onToggleMobileSidebar={() => setIsMobileSidebarOpen(prev => !prev)} />
           {children}
         </main>

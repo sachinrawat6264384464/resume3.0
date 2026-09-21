@@ -209,20 +209,20 @@ export function Header({ onToggleMobileSidebar }: HeaderProps) {
       </div>
 
       {/* Right Header Action Bar (Enlarged, Professional & Sleek) */}
-      <div className="flex items-center gap-1.5 sm:gap-3.5 relative shrink-0">
+      <div className="flex items-center gap-1 sm:gap-3.5 relative shrink-0">
         
         {/* 🪙 TOP CANDIDATE XP WALLET WIDGET */}
         <Link
           href="/performance"
-          className="flex items-center gap-2 px-3 py-1.5 rounded-2xl bg-gradient-to-r from-amber-500/15 via-orange-500/10 to-amber-500/15 border border-[#FF9900]/40 shadow-xs hover:border-[#FF9900] transition-all cursor-pointer group"
+          className="flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-1.5 rounded-2xl bg-gradient-to-r from-amber-500/15 via-orange-500/10 to-amber-500/15 border border-[#FF9900]/40 shadow-xs hover:border-[#FF9900] transition-all cursor-pointer group shrink-0"
           title="Candidate XP Wallet Balance - Click to Manage Badges & Rewards"
         >
-          <div className="w-6 h-6 rounded-full bg-amber-500 text-slate-950 flex items-center justify-center font-black text-xs shrink-0 shadow-xs group-hover:scale-110 transition-transform">
+          <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-amber-500 text-slate-950 flex items-center justify-center font-black text-xs shrink-0 shadow-xs group-hover:scale-110 transition-transform">
             🪙
           </div>
           <div className="flex flex-col text-left leading-none">
-            <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-widest">XP WALLET</span>
-            <span className="text-xs font-black text-[#FF9900] font-mono mt-0.5">
+            <span className="text-[8px] sm:text-[9px] font-extrabold text-slate-400 uppercase tracking-widest hidden xs:inline">XP WALLET</span>
+            <span className="text-[11px] sm:text-xs font-black text-[#FF9900] font-mono mt-0.5">
               {((candProfile?.xp ?? 2450)).toLocaleString()} XP
             </span>
           </div>
