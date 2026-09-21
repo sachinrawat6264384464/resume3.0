@@ -5,7 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, desc, func
 from sqlalchemy.orm import selectinload
 from typing import Optional, List
-from datetime import datetime
+from datetime import datetime, timedelta
 from app.core.database import get_db
 from app.core.security import verify_auth_token
 from app.services.auth_service import AuthService
