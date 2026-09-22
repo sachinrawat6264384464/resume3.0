@@ -3,6 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, text
 from typing import List, Optional
 from pydantic import BaseModel
+from datetime import datetime
 import uuid
 
 from app.core.database import get_db
@@ -100,9 +101,10 @@ async def update_payment_config(
 
     stmt = select(PaymentGatewayConfig).order_by(PaymentGatewayConfig.updated_at.desc())
     res = await db.execute(stmt)
-    config = res.scalars().first()
+    configs = res.scalars().all()
 
-    if not config:
+    now = datetime.utcnow()
+    if not configs:
         config = PaymentGatewayConfig(
             provider_name=req.provider_name,
             is_enabled=req.is_enabled,
@@ -111,10 +113,12 @@ async def update_payment_config(
             encrypted_secret_key=req.secret_key if req.secret_key else None,
             webhook_secret=req.webhook_secret,
             currency=req.currency,
-            amount=req.amount or "499"
+            amount=req.amount or "499",
+            updated_at=now
         )
         db.add(config)
     else:
+        config = configs[0]
         config.is_enabled = req.is_enabled
         config.is_test_mode = req.is_test_mode
         if req.publishable_key is not None:
@@ -127,6 +131,10 @@ async def update_payment_config(
             config.currency = req.currency
         if req.amount:
             config.amount = req.amount
+        config.updated_at = now
+
+        for stale in configs[1:]:
+            await db.delete(stale)
 
     await db.commit()
     await db.refresh(config)

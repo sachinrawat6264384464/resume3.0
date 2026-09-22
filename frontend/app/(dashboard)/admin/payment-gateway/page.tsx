@@ -89,7 +89,7 @@ export default function AdminPaymentGatewayPage() {
   const handleToggleEnabled = async (newVal: boolean) => {
     setIsEnabled(newVal);
     try {
-      await apiFetch("/admin/payment-gateway/config", {
+      const res = await apiFetch("/admin/payment-gateway/config", {
         method: "POST",
         body: JSON.stringify({
           provider_name: "razorpay",
@@ -101,19 +101,26 @@ export default function AdminPaymentGatewayPage() {
           amount: amount
         })
       });
+      if (res?.data && res.data.is_enabled !== undefined) {
+        setIsEnabled(res.data.is_enabled);
+      }
       setMsg({
         type: "success",
         text: `Payment Gateway is now ${newVal ? "ENABLED (Payment Required for Stages)" : "DISABLED (Free Access to All Stages)"} in Database!`
       });
     } catch (err: any) {
-      console.warn("Failed to toggle gateway:", err);
+      setIsEnabled(!newVal);
+      setMsg({
+        type: "error",
+        text: `Failed to update toggle: ${err.message || 'Unknown error'}`
+      });
     }
   };
 
   const handleToggleTestMode = async (newVal: boolean) => {
     setIsTestMode(newVal);
     try {
-      await apiFetch("/admin/payment-gateway/config", {
+      const res = await apiFetch("/admin/payment-gateway/config", {
         method: "POST",
         body: JSON.stringify({
           provider_name: "razorpay",
@@ -125,12 +132,19 @@ export default function AdminPaymentGatewayPage() {
           amount: amount
         })
       });
+      if (res?.data && res.data.is_test_mode !== undefined) {
+        setIsTestMode(res.data.is_test_mode);
+      }
       setMsg({
         type: "success",
         text: `Environment mode updated to ${newVal ? "Sandbox Test Mode" : "Production Live Mode"} in Database!`
       });
     } catch (err: any) {
-      console.warn("Failed to toggle mode:", err);
+      setIsTestMode(!newVal);
+      setMsg({
+        type: "error",
+        text: `Failed to update environment mode: ${err.message || 'Unknown error'}`
+      });
     }
   };
 

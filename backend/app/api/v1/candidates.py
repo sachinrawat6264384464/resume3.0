@@ -515,7 +515,7 @@ async def get_dashboard_metrics(
     cfg_stmt = select(PaymentGatewayConfig).order_by(PaymentGatewayConfig.updated_at.desc()).limit(1)
     cfg_res = await db.execute(cfg_stmt)
     payment_cfg = cfg_res.scalar_one_or_none()
-    payment_gateway_enabled = payment_cfg.is_enabled if payment_cfg else True
+    payment_gateway_enabled = payment_cfg.is_enabled if payment_cfg else False
 
     if not payment_gateway_enabled:
         # If Payment Gateway is DISABLED by Admin, ALL STAGES ARE UNLOCKED FOR ALL CANDIDATES!
