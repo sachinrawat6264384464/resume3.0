@@ -51,6 +51,7 @@ class SendOTPRequest(BaseModel):
     email: Optional[str] = None
     phone_number: Optional[str] = None
     channel: Optional[str] = "email"
+    mode: Optional[str] = "signin"
 
 class VerifyOTPRequest(BaseModel):
     email: Optional[str] = None
@@ -58,3 +59,4 @@ class VerifyOTPRequest(BaseModel):
     otp: str
     full_name: Optional[str] = None
     password: Optional[str] = None
+    mode: Optional[str] = "signin"

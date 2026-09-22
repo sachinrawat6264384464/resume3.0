@@ -27,19 +27,32 @@ async def send_otp(req: SendOTPRequest, db: AsyncSession = Depends(get_db)):
             detail="Email address or Phone number is required to receive OTP."
         )
 
-    # 1. STRICT DUPLICATE USER CHECK
+    # 1. STRICT DUPLICATE USER CHECK & MODE VALIDATION
     conditions = []
     if target_email:
         conditions.append(User.email == target_email)
     if target_phone:
         conditions.append(User.phone_number == target_phone)
 
+    existing_user = None
     if conditions:
         stmt = select(User).where(or_(*conditions))
         res = await db.execute(stmt)
         existing_user = res.scalar_one_or_none()
-        # Track if user exists for login vs registration message
-        pass
+
+    mode = (req.mode or "signin").lower()
+    if mode in ["signin", "login"]:
+        if not existing_user:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Account does not exist! You don't have an account yet. Please click 'Create Account' tab to register first."
+            )
+    elif mode in ["signup", "register"]:
+        if existing_user:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="An account with this Email/Phone is already registered! Please switch to 'Sign In' to access your portal."
+            )
 
     # 2. GENERATE CRYPTOGRAPHICALLY SECURE 6-DIGIT RANDOM OTP CODE
     code = str(secrets.randbelow(900000) + 100000)
@@ -105,18 +118,20 @@ async def verify_otp(req: VerifyOTPRequest, db: AsyncSession = Depends(get_db)):
 
     service = AuthService(db)
 
-    # 1. STRICT DUPLICATE USER CHECK
-    conditions = []
-    if target_email:
-        conditions.append(User.email == target_email)
-    if target_phone:
-        conditions.append(User.phone_number == target_phone)
-
+    mode = (req.mode or "signin").lower()
+    existing_user = None
     if conditions:
         stmt = select(User).where(or_(*conditions))
         res = await db.execute(stmt)
         existing_user = res.scalar_one_or_none()
-        if existing_user:
+
+    if mode in ["signin", "login"] and not existing_user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Account does not exist! You don't have an account yet. Please click 'Create Account' tab to register first."
+        )
+
+    if existing_user:
             # Update user full_name if provided during verification
             if req.full_name and req.full_name.strip():
                 existing_user.full_name = req.full_name.strip()

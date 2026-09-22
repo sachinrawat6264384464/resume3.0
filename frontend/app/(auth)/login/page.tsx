@@ -103,22 +103,15 @@ export default function LoginPage() {
       const fullFormattedPhone = cleanPhone.startsWith("91") ? `+${cleanPhone}` : `+91${cleanPhone}`;
 
       try {
-        // Always register OTP with Backend API for instant verification & SMS dispatch
-        let backendOtpCode = "";
-        try {
-          const res = await apiFetch("/auth/send-otp", {
-            method: "POST",
-            body: JSON.stringify({
-              phone_number: fullFormattedPhone,
-              full_name: fullName.trim()
-            })
-          });
-          if (res?.data?.otp_preview) {
-            backendOtpCode = res.data.otp_preview;
-          }
-        } catch (bErr) {
-          console.warn("Backend send-otp notice:", bErr);
-        }
+        // Always register OTP with Backend API for mode & account existence verification
+        const res = await apiFetch("/auth/send-otp", {
+          method: "POST",
+          body: JSON.stringify({
+            phone_number: fullFormattedPhone,
+            full_name: fullName.trim(),
+            mode: authMode
+          })
+        });
 
         // 1. Firebase Phone Auth (Client Side)
         if (auth && typeof window !== "undefined") {
@@ -156,15 +149,12 @@ export default function LoginPage() {
         }
 
         // 2. Direct Backend OTP Dispatch
-        setInfoMsg(`📲 6-Digit OTP verification code sent to ${fullFormattedPhone} successfully via SMS!`);
+        setInfoMsg(res?.message || `📲 6-Digit OTP verification code sent to ${fullFormattedPhone} successfully via SMS!`);
         setOtpStep(2);
         setTimer(60);
         setIsTimerActive(true);
       } catch (err: any) {
-        setInfoMsg(`📲 6-Digit OTP verification code sent to ${fullFormattedPhone} successfully!`);
-        setOtpStep(2);
-        setTimer(60);
-        setIsTimerActive(true);
+        setError(err.message || "Account not found or invalid mobile number.");
       } finally {
         setIsLoading(false);
       }
@@ -181,7 +171,8 @@ export default function LoginPage() {
           method: "POST",
           body: JSON.stringify({
             email: cleanEmail,
-            full_name: fullName.trim()
+            full_name: fullName.trim(),
+            mode: authMode
           })
         });
         setInfoMsg(res?.message || `6-digit verification code sent to email: ${cleanEmail}`);
@@ -189,10 +180,7 @@ export default function LoginPage() {
         setTimer(60);
         setIsTimerActive(true);
       } catch (err: any) {
-        setInfoMsg(`Verification OTP code sent to ${cleanEmail}. (Use test code 123456)`);
-        setOtpStep(2);
-        setTimer(60);
-        setIsTimerActive(true);
+        setError(err.message || "Account not found or invalid email.");
       } finally {
         setIsLoading(false);
       }
@@ -250,7 +238,8 @@ export default function LoginPage() {
           email: cleanEmail,
           phone_number: fullFormattedPhone,
           full_name: fullName.trim(),
-          otp: cleanCode
+          otp: cleanCode,
+          mode: authMode
         })
       });
 
