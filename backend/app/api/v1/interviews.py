@@ -19,25 +19,15 @@ async def get_candidate_payment_config(
     payload: Optional[dict] = Depends(verify_auth_token),
     db: AsyncSession = Depends(get_db)
 ):
-    from app.models.payment_gateway import PaymentGatewayConfig
-    stmt = select(PaymentGatewayConfig).order_by(PaymentGatewayConfig.updated_at.desc(), PaymentGatewayConfig.id.desc())
-    res = await db.execute(stmt)
-    config = res.scalars().first()
-
-    if not config:
-        return StandardResponse(
-            message="Payment gateway configuration retrieved",
-            data={
-                "is_enabled": False,
-                "amount": "499"
-            }
-        )
+    from app.api.v1.payment_gateway import get_or_create_singleton_config
+    config = await get_or_create_singleton_config(db)
 
     return StandardResponse(
         message="Payment gateway configuration fetched for candidate",
         data={
             "is_enabled": config.is_enabled,
-            "amount": getattr(config, "amount", "499") or "499"
+            "amount": getattr(config, "amount", "499") or "499",
+            "publishable_key": config.publishable_key or ""
         }
     )
 

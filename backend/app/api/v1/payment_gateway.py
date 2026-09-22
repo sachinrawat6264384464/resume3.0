@@ -40,6 +40,46 @@ class VerifySubscribeRequest(BaseModel):
     amount: str = "499"
     coupon_code: Optional[str] = None
 
+SINGLETON_CONFIG_ID = "default_config"
+
+async def get_or_create_singleton_config(db: AsyncSession) -> PaymentGatewayConfig:
+    stmt = select(PaymentGatewayConfig)
+    res = await db.execute(stmt)
+    configs = res.scalars().all()
+
+    config = None
+    if configs:
+        for c in configs:
+            if c.id == SINGLETON_CONFIG_ID:
+                config = c
+                break
+        if not config:
+            config = configs[0]
+            
+        for c in configs:
+            if c.id != config.id:
+                await db.delete(c)
+        await db.commit()
+    else:
+        now = datetime.now(timezone.utc)
+        config = PaymentGatewayConfig(
+            id=SINGLETON_CONFIG_ID,
+            provider_name="razorpay",
+            is_enabled=False,
+            is_test_mode=True,
+            publishable_key="rzp_test_sampleKey123",
+            encrypted_secret_key=None,
+            webhook_secret="",
+            currency="INR",
+            amount="499",
+            updated_at=now
+        )
+        db.add(config)
+        await db.commit()
+        await db.refresh(config)
+
+    return config
+
 @router.get("/config", response_model=StandardResponse[dict])
 async def get_payment_config(
     payload: dict = Depends(verify_auth_token),
@@ -51,31 +91,7 @@ async def get_payment_config(
     except Exception:
         await db.rollback()
 
-    stmt = select(PaymentGatewayConfig).order_by(PaymentGatewayConfig.updated_at.desc(), PaymentGatewayConfig.id.desc())
-    res = await db.execute(stmt)
-    configs = res.scalars().all()
-
-    if not configs:
-        return StandardResponse(
-            message="Payment gateway configuration retrieved",
-            data={
-                "provider_name": "razorpay",
-                "is_enabled": False,
-                "is_test_mode": True,
-                "publishable_key": "rzp_test_sampleKey123",
-                "webhook_secret": "",
-                "has_secret_key": False,
-                "currency": "INR",
-                "amount": "499"
-            }
-        )
-
-    config = configs[0]
-    if len(configs) > 1:
-        for stale in configs[1:]:
-            await db.delete(stale)
-        await db.commit()
-
+    config = await get_or_create_singleton_config(db)
     has_secret = bool(config.encrypted_secret_key and len(config.encrypted_secret_key) > 3)
 
     return StandardResponse(
@@ -105,45 +121,28 @@ async def update_payment_config(
     except Exception:
         await db.rollback()
 
-    stmt = select(PaymentGatewayConfig).order_by(PaymentGatewayConfig.updated_at.desc(), PaymentGatewayConfig.id.desc())
-    res = await db.execute(stmt)
-    configs = res.scalars().all()
-
+    config = await get_or_create_singleton_config(db)
     now = datetime.now(timezone.utc)
-    if not configs:
-        config = PaymentGatewayConfig(
-            provider_name=req.provider_name,
-            is_enabled=req.is_enabled,
-            is_test_mode=req.is_test_mode,
-            publishable_key=req.publishable_key,
-            encrypted_secret_key=req.secret_key if req.secret_key else None,
-            webhook_secret=req.webhook_secret,
-            currency=req.currency,
-            amount=req.amount or "499",
-            updated_at=now
-        )
-        db.add(config)
-    else:
-        config = configs[0]
-        config.is_enabled = req.is_enabled
-        config.is_test_mode = req.is_test_mode
-        if req.publishable_key is not None:
-            config.publishable_key = req.publishable_key
-        if req.secret_key and req.secret_key.strip() and not req.secret_key.startswith("***"):
-            config.encrypted_secret_key = req.secret_key
-        if req.webhook_secret is not None:
-            config.webhook_secret = req.webhook_secret
-        if req.currency:
-            config.currency = req.currency
-        if req.amount:
-            config.amount = req.amount
-        config.updated_at = now
 
-        for stale in configs[1:]:
-            await db.delete(stale)
+    config.is_enabled = req.is_enabled
+    config.is_test_mode = req.is_test_mode
+    
+    if req.publishable_key is not None and req.publishable_key.strip():
+        config.publishable_key = req.publishable_key.strip()
+    if req.secret_key and req.secret_key.strip() and not req.secret_key.startswith("***"):
+        config.encrypted_secret_key = req.secret_key.strip()
+    if req.webhook_secret is not None and req.webhook_secret.strip():
+        config.webhook_secret = req.webhook_secret.strip()
+    if req.currency:
+        config.currency = req.currency
+    if req.amount:
+        config.amount = req.amount
+    config.updated_at = now
 
     await db.commit()
     await db.refresh(config)
+
+    has_secret = bool(config.encrypted_secret_key and len(config.encrypted_secret_key) > 3)
 
     return StandardResponse(
         message="Payment Gateway configuration saved securely to backend database.",
@@ -154,7 +153,7 @@ async def update_payment_config(
             "is_test_mode": config.is_test_mode,
             "publishable_key": config.publishable_key or "",
             "webhook_secret": config.webhook_secret or "",
-            "has_secret_key": bool(config.encrypted_secret_key),
+            "has_secret_key": has_secret,
             "currency": config.currency or "INR",
             "amount": getattr(config, "amount", "499") or "499"
         }
