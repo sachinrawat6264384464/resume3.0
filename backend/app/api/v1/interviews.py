@@ -220,6 +220,15 @@ async def list_templates(
     
     interview_svc = InterviewService(db)
     templates = await interview_svc.list_templates(user.organization_id)
+
+    if not templates or (templates and len(templates[0].stages) < 10):
+        try:
+            from app.seeds.initial_data import seed_database
+            await seed_database()
+            templates = await interview_svc.list_templates(user.organization_id)
+        except Exception as e:
+            print(f"Auto-seed warning on list_templates: {e}")
+
     return StandardResponse(
         data=[TemplateAdminOut.model_validate(t) for t in templates]
     )
