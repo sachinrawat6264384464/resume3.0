@@ -14,6 +14,33 @@ from app.schemas.common import StandardResponse
 
 router = APIRouter(prefix="/interviews", tags=["Interviews & Templates"])
 
+@router.get("/payment-config", response_model=StandardResponse[dict])
+async def get_candidate_payment_config(
+    payload: Optional[dict] = Depends(verify_auth_token),
+    db: AsyncSession = Depends(get_db)
+):
+    from app.models.payment_gateway import PaymentGatewayConfig
+    stmt = select(PaymentGatewayConfig).order_by(PaymentGatewayConfig.updated_at.desc(), PaymentGatewayConfig.id.desc())
+    res = await db.execute(stmt)
+    config = res.scalars().first()
+
+    if not config:
+        return StandardResponse(
+            message="Payment gateway configuration retrieved",
+            data={
+                "is_enabled": False,
+                "amount": "499"
+            }
+        )
+
+    return StandardResponse(
+        message="Payment gateway configuration fetched for candidate",
+        data={
+            "is_enabled": config.is_enabled,
+            "amount": getattr(config, "amount", "499") or "499"
+        }
+    )
+
 @router.get("/stages", response_model=StandardResponse[List[dict]])
 async def get_candidate_stages(
     payload: Optional[dict] = Depends(verify_auth_token),

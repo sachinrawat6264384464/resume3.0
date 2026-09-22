@@ -3,7 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, text
 from typing import List, Optional
 from pydantic import BaseModel
-from datetime import datetime
+from datetime import datetime, timezone
 import uuid
 
 from app.core.database import get_db
@@ -51,11 +51,11 @@ async def get_payment_config(
     except Exception:
         await db.rollback()
 
-    stmt = select(PaymentGatewayConfig).order_by(PaymentGatewayConfig.updated_at.desc())
+    stmt = select(PaymentGatewayConfig).order_by(PaymentGatewayConfig.updated_at.desc(), PaymentGatewayConfig.id.desc())
     res = await db.execute(stmt)
-    config = res.scalars().first()
+    configs = res.scalars().all()
 
-    if not config:
+    if not configs:
         return StandardResponse(
             message="Payment gateway configuration retrieved",
             data={
@@ -69,6 +69,12 @@ async def get_payment_config(
                 "amount": "499"
             }
         )
+
+    config = configs[0]
+    if len(configs) > 1:
+        for stale in configs[1:]:
+            await db.delete(stale)
+        await db.commit()
 
     has_secret = bool(config.encrypted_secret_key and len(config.encrypted_secret_key) > 3)
 
@@ -99,11 +105,11 @@ async def update_payment_config(
     except Exception:
         await db.rollback()
 
-    stmt = select(PaymentGatewayConfig).order_by(PaymentGatewayConfig.updated_at.desc())
+    stmt = select(PaymentGatewayConfig).order_by(PaymentGatewayConfig.updated_at.desc(), PaymentGatewayConfig.id.desc())
     res = await db.execute(stmt)
     configs = res.scalars().all()
 
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc)
     if not configs:
         config = PaymentGatewayConfig(
             provider_name=req.provider_name,

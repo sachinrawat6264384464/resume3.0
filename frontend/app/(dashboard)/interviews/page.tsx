@@ -97,7 +97,7 @@ export default function InterviewsPage() {
       const [resDbStages, resMetrics, resGatewayCfg] = await Promise.all([
         apiFetch("/interviews/stages").catch(() => null),
         apiFetch("/candidates/me/dashboard-metrics").catch(() => null),
-        apiFetch("/admin/payment-gateway/config").catch(() => null)
+        apiFetch("/interviews/payment-config").catch(() => null)
       ]);
 
       const gatewayEnabled = resGatewayCfg?.data?.is_enabled ?? false;
@@ -380,7 +380,7 @@ export default function InterviewsPage() {
     let keyId = "";
     let feeStr = configuredFee || "499";
     try {
-      const cfg = await apiFetch("/admin/payment-gateway/config");
+      const cfg = await apiFetch("/interviews/payment-config");
       if (cfg?.data) {
         if (cfg.data.publishable_key) keyId = cfg.data.publishable_key.trim();
         if (cfg.data.amount) feeStr = cfg.data.amount.toString().replace(/[^0-9]/g, "");
