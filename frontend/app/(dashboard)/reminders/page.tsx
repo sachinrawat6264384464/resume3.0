@@ -142,14 +142,6 @@ export default function SmartRemindersPage() {
             Stay on track with automated alerts for study tasks, streak risks, interview re-attempts, and AI recommendations.
           </p>
         </div>
-
-        <button
-          onClick={() => setIsAddModalOpen(true)}
-          className="py-2.5 px-4 rounded-xl text-xs font-black text-slate-900 bg-gradient-to-r from-[#FF9900] to-amber-400 hover:from-amber-400 hover:to-orange-500 shadow-md shadow-[#FF9900]/20 flex items-center gap-1.5 transition-all self-start md:self-auto shrink-0"
-        >
-          <Plus className="w-4 h-4" />
-          <span>Create Reminder</span>
-        </button>
       </div>
 
       {/* SUMMARY CARDS (DB BACKED) */}
@@ -253,8 +245,16 @@ export default function SmartRemindersPage() {
                       {rem.type}
                     </span>
 
+                    {/* RED HEARTBEAT SPOT DOT ANIMATION */}
+                    {!isCompleted && (
+                      <span className="relative flex h-3 w-3" title="Active Alert">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                        <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
+                      </span>
+                    )}
+
                     {rem.priority === "HIGH" && (
-                      <span className="px-2 py-0.5 rounded-full text-[9px] font-extrabold bg-red-100 text-red-600 dark:bg-red-950 dark:text-red-400">
+                      <span className="px-2 py-0.5 rounded-full text-[9px] font-extrabold bg-red-100 text-red-600 dark:bg-red-950 dark:text-red-400 flex items-center gap-1">
                         HIGH PRIORITY
                       </span>
                     )}
@@ -373,91 +373,6 @@ export default function SmartRemindersPage() {
             >
               Cancel
             </button>
-          </div>
-        </div>
-      )}
-
-      {/* CREATE REMINDER MODAL */}
-      {isAddModalOpen && (
-        <div className="fixed inset-0 bg-slate-950/70 backdrop-blur-xs z-50 flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-[28px] max-w-lg w-full p-6 shadow-2xl flex flex-col gap-4">
-            <div className="flex items-center justify-between">
-              <h3 className="text-base font-black text-slate-900 dark:text-white flex items-center gap-2">
-                <Bell className="w-4 h-4 text-[#FF9900]" />
-                Create Custom Reminder
-              </h3>
-              <button onClick={() => setIsAddModalOpen(false)} className="p-1 text-slate-400 hover:text-slate-900 dark:hover:text-white">
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-
-            <form onSubmit={handleCreateReminder} className="flex flex-col gap-3">
-              {modalError && (
-                <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/30 text-red-500 text-xs font-bold flex items-center gap-2">
-                  <AlertCircle className="w-4 h-4 shrink-0 text-red-500" />
-                  <span>{modalError}</span>
-                </div>
-              )}
-              <div>
-                <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1">Title</label>
-                <input
-                  type="text"
-                  placeholder="e.g. Complete Kubernetes Cluster Lab"
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                  className="w-full p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-900 dark:text-white"
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1">Message</label>
-                <textarea
-                  placeholder="Describe your preparation target..."
-                  value={message}
-                  onChange={(e) => setMessage(e.target.value)}
-                  className="w-full p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-900 dark:text-white h-20"
-                  required
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1">Type</label>
-                  <select
-                    value={remType}
-                    onChange={(e) => setRemType(e.target.value)}
-                    className="w-full p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-900 dark:text-white"
-                  >
-                    <option value="STUDY">Study</option>
-                    <option value="INTERVIEW">Interview</option>
-                    <option value="ROADMAP">Roadmap</option>
-                    <option value="STREAK">Streak</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1">Priority</label>
-                  <select
-                    value={priority}
-                    onChange={(e) => setPriority(e.target.value)}
-                    className="w-full p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-900 dark:text-white"
-                  >
-                    <option value="LOW">Low</option>
-                    <option value="MEDIUM">Medium</option>
-                    <option value="HIGH">High</option>
-                  </select>
-                </div>
-              </div>
-
-              <button
-                type="submit"
-                disabled={isSubmitting}
-                className="w-full py-3 rounded-xl font-black text-xs text-slate-950 bg-gradient-to-r from-[#FF9900] to-amber-400 hover:from-amber-400 hover:to-orange-500 shadow-md shadow-[#FF9900]/20 flex items-center justify-center gap-2 mt-2"
-              >
-                {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : "Save Reminder to Database"}
-              </button>
-            </form>
           </div>
         </div>
       )}

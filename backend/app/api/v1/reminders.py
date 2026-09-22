@@ -2,6 +2,8 @@ from fastapi import APIRouter, Depends, status, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from typing import List, Optional
 
+from pydantic import BaseModel
+
 from app.core.database import get_db
 from app.core.security import verify_auth_token
 from app.services.auth_service import AuthService
@@ -14,6 +16,13 @@ from app.schemas.reminder import (
 from app.schemas.common import StandardResponse
 
 router = APIRouter(prefix="/reminders", tags=["Smart Reminders"])
+
+class AdminBroadcastRequest(BaseModel):
+    title: str
+    message: str
+    type: Optional[str] = "SYSTEM"
+    priority: Optional[str] = "HIGH"
+    target_candidate_id: Optional[str] = None
 
 async def get_current_candidate_id(payload: dict = Depends(verify_auth_token), db: AsyncSession = Depends(get_db)) -> str:
     from sqlalchemy import select
@@ -135,3 +144,48 @@ async def dismiss_reminder(
     if not success:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Reminder not found")
     return StandardResponse(message="Reminder dismissed in database", data={"dismissed": True})
+
+@router.post("/broadcast", response_model=StandardResponse[dict])
+async def broadcast_admin_reminder(
+    req: AdminBroadcastRequest,
+    payload: dict = Depends(verify_auth_token),
+    db: AsyncSession = Depends(get_db)
+):
+    svc = ReminderService(db)
+    created = await svc.broadcast_admin_reminder(
+        title=req.title,
+        message=req.message,
+        rem_type=req.type or "SYSTEM",
+        priority=req.priority or "HIGH",
+        target_candidate_id=req.target_candidate_id
+    )
+    return StandardResponse(
+        message=f"Smart Reminder broadcasted to {len(created)} candidate(s) successfully!",
+        data={"count": len(created)}
+    )
+
+@router.get("/admin/all", response_model=StandardResponse[List[ReminderOut]])
+async def get_admin_reminders(
+    payload: dict = Depends(verify_auth_token),
+    db: AsyncSession = Depends(get_db)
+):
+    svc = ReminderService(db)
+    reminders = await svc.get_admin_all_reminders()
+    return StandardResponse(data=[ReminderOut.model_validate(r) for r in reminders])
+
+@router.delete("/admin/{reminder_id}", response_model=StandardResponse[dict])
+async def delete_admin_reminder(
+    reminder_id: str,
+    payload: dict = Depends(verify_auth_token),
+    db: AsyncSession = Depends(get_db)
+):
+    from sqlalchemy import select
+    from app.models.reminder import Reminder
+    stmt = select(Reminder).where(Reminder.id == reminder_id)
+    res = await db.execute(stmt)
+    rem = res.scalar_one_or_none()
+    if not rem:
+        raise HTTPException(status_code=404, detail="Reminder not found")
+    await db.delete(rem)
+    await db.commit()
+    return StandardResponse(message="Reminder deleted from database", data={"deleted": True})

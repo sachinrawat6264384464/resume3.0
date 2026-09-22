@@ -100,6 +100,7 @@ export function Sidebar({ isOpenMobile = false, onCloseMobile }: SidebarProps) {
   const adminNavItems = [
     { label: "Dashboard", href: "/admin", icon: LayoutDashboard },
     { label: "Users & Candidates", href: "/admin/candidates", icon: Users },
+    { label: "Smart Reminders", href: "/admin/reminders", icon: Bell },
     { label: "Live Sessions", href: "/admin/live-sessions", icon: Calendar },
     { label: "Payment Gateway", href: "/admin/payment-gateway", icon: CreditCard },
     { label: "Assessments & Blueprints", href: "/admin/templates", icon: CheckSquare },
@@ -216,6 +217,12 @@ export function Sidebar({ isOpenMobile = false, onCloseMobile }: SidebarProps) {
                 {isInterviewLink && hasActiveInterview && (
                   <span className="px-2 py-0.5 rounded-full text-[9px] font-mono font-black bg-rose-500 text-white animate-pulse shadow-sm">
                     LIVE 🔴
+                  </span>
+                )}
+                {item.href === "/reminders" && !isAdminMode && (
+                  <span className="relative flex h-2.5 w-2.5 ml-auto">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-500"></span>
                   </span>
                 )}
               </Link>

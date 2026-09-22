@@ -136,6 +136,49 @@ class ReminderService:
         await self.db.refresh(reminder)
         return reminder
 
+    async def broadcast_admin_reminder(
+        self,
+        title: str,
+        message: str,
+        rem_type: str = "SYSTEM",
+        priority: str = "HIGH",
+        target_candidate_id: Optional[str] = None
+    ) -> List[Reminder]:
+        now = datetime.now(timezone.utc)
+        target_cand_ids = []
+
+        if target_candidate_id and target_candidate_id != "ALL":
+            target_cand_ids = [target_candidate_id]
+        else:
+            stmt = select(Candidate.id)
+            res = await self.db.execute(stmt)
+            target_cand_ids = list(res.scalars().all())
+
+        created = []
+        for c_id in target_cand_ids:
+            rem = Reminder(
+                id=str(uuid.uuid4()),
+                candidate_id=c_id,
+                type=rem_type or "SYSTEM",
+                title=title.strip(),
+                message=message.strip(),
+                priority=priority or "HIGH",
+                status="ACTIVE",
+                scheduled_at=now,
+                due_at=now + timedelta(days=7),
+                created_by="ADMIN"
+            )
+            self.db.add(rem)
+            created.append(rem)
+
+        await self.db.commit()
+        return created
+
+    async def get_admin_all_reminders(self) -> List[Reminder]:
+        stmt = select(Reminder).order_by(Reminder.created_at.desc()).limit(200)
+        res = await self.db.execute(stmt)
+        return list(res.scalars().all())
+
     async def mark_read(self, candidate_id: str, reminder_id: str) -> Optional[Reminder]:
         stmt = select(Reminder).where(and_(Reminder.id == reminder_id, Reminder.candidate_id == candidate_id))
         reminder = (await self.db.execute(stmt)).scalar_one_or_none()
