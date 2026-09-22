@@ -418,44 +418,6 @@ Learn Today. Implement Today. Build Your Career for a Lifetime.
             <Trophy className="w-4 h-4 text-purple-500" />
             <span>{userXp.toLocaleString()} XP</span>
           </div>
-
-          {/* CANDIDATE SHARE & AUDIT TOOLKIT */}
-          <div className="flex items-center gap-1.5 bg-white dark:bg-slate-900 p-1 rounded-2xl border-2 border-slate-200 dark:border-slate-800 shadow-sm">
-            {/* LinkedIn Share */}
-            <button
-              onClick={handleShareLinkedIn}
-              className="w-8 h-8 rounded-xl bg-blue-600 hover:bg-blue-700 text-white flex items-center justify-center transition-all cursor-pointer shadow-xs"
-              title="Share Profile & Achievements on LinkedIn"
-            >
-              <Linkedin className="w-4 h-4 fill-white" />
-            </button>
-
-            {/* WhatsApp Share */}
-            <button
-              onClick={handleShareWhatsApp}
-              className="w-8 h-8 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white flex items-center justify-center transition-all cursor-pointer shadow-xs"
-              title="Share Progress on WhatsApp"
-            >
-              <MessageCircle className="w-4 h-4 fill-white" />
-            </button>
-
-            {/* X / Twitter Share */}
-            <button
-              onClick={handleShareX}
-              className="w-8 h-8 rounded-xl bg-slate-900 hover:bg-slate-950 dark:bg-slate-800 dark:hover:bg-slate-700 text-white flex items-center justify-center transition-all cursor-pointer shadow-xs font-black text-xs"
-              title="Share Progress on X (Twitter)"
-            >
-              ✕
-            </button>
-
-            {/* Candidate Audit Button */}
-            <button
-              onClick={handleOpenAuditModal}
-              className="px-3.5 py-1.5 rounded-xl bg-slate-950 text-white dark:bg-slate-100 dark:text-slate-950 hover:bg-slate-800 dark:hover:bg-white text-xs font-black transition-all cursor-pointer shadow-xs uppercase tracking-wider"
-            >
-              Audit
-            </button>
-          </div>
         </div>
       </div>
 
