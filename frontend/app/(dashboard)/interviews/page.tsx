@@ -979,6 +979,158 @@ export default function InterviewsPage() {
         </div>
       )}
 
+      {/* STAGE 0 PROFILE SETUP FORM MODAL */}
+      {isStage0ModalOpen && (
+        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 flex items-center justify-center p-4 animate-fadeIn">
+          <div className="bg-white dark:bg-slate-900 border-2 border-[#FF6B00]/40 rounded-[32px] max-w-lg w-full p-6 sm:p-8 shadow-2xl flex flex-col gap-5 relative overflow-hidden">
+            
+            {/* Decorative Glow */}
+            <div className="absolute top-0 right-0 w-64 h-64 bg-[#FF6B00]/10 rounded-full blur-3xl pointer-events-none" />
+
+            {/* Modal Header */}
+            <div className="flex items-start justify-between gap-4 relative z-10">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-2xl bg-[#FF6B00]/20 text-[#FF6B00] border border-[#FF6B00]/40 flex items-center justify-center font-black text-xl shrink-0">
+                  <Trophy className="w-6 h-6 text-[#FF6B00]" />
+                </div>
+                <div className="flex flex-col">
+                  <div className="flex items-center gap-2">
+                    <span className="px-2.5 py-0.5 rounded-full text-[9px] font-mono font-black bg-[#FF6B00] text-white uppercase tracking-widest">
+                      STAGE 0 • FOUNDATION
+                    </span>
+                    <span className="text-[10px] text-amber-500 font-mono font-black">+200 XP REWARD</span>
+                  </div>
+                  <h3 className="text-lg sm:text-xl font-black text-slate-900 dark:text-white tracking-tight uppercase mt-0.5">
+                    Setup Candidate Profile & Target Role
+                  </h3>
+                </div>
+              </div>
+
+              <button
+                onClick={() => setIsStage0ModalOpen(false)}
+                className="p-2 rounded-xl text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <p className="text-xs text-slate-600 dark:text-slate-400 z-10 font-medium">
+              Complete your profile details below to earn <strong>+200 XP</strong> and unlock <strong>Stage 1: Self Introduction</strong>! Stage 0 is profile configuration only (no video/room required).
+            </p>
+
+            <form onSubmit={handleSaveStage0Profile} className="flex flex-col gap-4 z-10">
+              
+              <div className="flex flex-col gap-1">
+                <label className="text-xs font-bold text-slate-700 dark:text-slate-300">Full Name *</label>
+                <input
+                  type="text"
+                  required
+                  value={stage0Form.fullName}
+                  onChange={(e) => setStage0Form({ ...stage0Form, fullName: e.target.value })}
+                  placeholder="e.g. Alex Vance"
+                  className="px-4 py-2.5 rounded-xl text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:border-[#FF6B00]"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300">Current Designation</label>
+                  <input
+                    type="text"
+                    value={stage0Form.designation}
+                    onChange={(e) => setStage0Form({ ...stage0Form, designation: e.target.value })}
+                    placeholder="e.g. DevOps Engineer"
+                    className="px-4 py-2.5 rounded-xl text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:border-[#FF6B00]"
+                  />
+                </div>
+
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300">Target Role *</label>
+                  <input
+                    type="text"
+                    required
+                    value={stage0Form.targetRole}
+                    onChange={(e) => setStage0Form({ ...stage0Form, targetRole: e.target.value })}
+                    placeholder="e.g. Senior DevOps Specialist"
+                    className="px-4 py-2.5 rounded-xl text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:border-[#FF6B00]"
+                  />
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-1">
+                <label className="text-xs font-bold text-slate-700 dark:text-slate-300">LinkedIn Profile URL</label>
+                <input
+                  type="url"
+                  value={stage0Form.linkedinUrl}
+                  onChange={(e) => setStage0Form({ ...stage0Form, linkedinUrl: e.target.value })}
+                  placeholder="https://linkedin.com/in/yourprofile"
+                  className="px-4 py-2.5 rounded-xl text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white font-mono focus:outline-none focus:border-[#FF6B00]"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300">Experience Level</label>
+                  <select
+                    value={stage0Form.experienceLevel}
+                    onChange={(e) => setStage0Form({ ...stage0Form, experienceLevel: e.target.value })}
+                    className="px-3 py-2.5 rounded-xl text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:border-[#FF6B00]"
+                  >
+                    <option value="ENTRY">Entry Level (0-2 Yrs)</option>
+                    <option value="MID">Mid Level (2-5 Yrs)</option>
+                    <option value="SENIOR">Senior Level (5-8 Yrs)</option>
+                    <option value="LEAD">Staff / Lead (8+ Yrs)</option>
+                  </select>
+                </div>
+
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300">Target Salary Band</label>
+                  <select
+                    value={stage0Form.targetSalaryBand}
+                    onChange={(e) => setStage0Form({ ...stage0Form, targetSalaryBand: e.target.value })}
+                    className="px-3 py-2.5 rounded-xl text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:border-[#FF6B00]"
+                  >
+                    <option value="₹8–15 LPA">₹8 – ₹15 LPA</option>
+                    <option value="₹18–40 LPA">₹18 – ₹40 LPA</option>
+                    <option value="₹40–60 LPA">₹40 – ₹60 LPA</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-200 dark:border-slate-800">
+                <button
+                  type="button"
+                  onClick={() => setIsStage0ModalOpen(false)}
+                  className="px-4 py-2.5 rounded-xl text-xs font-bold text-slate-500 hover:text-slate-700 dark:hover:text-white cursor-pointer"
+                >
+                  Cancel
+                </button>
+
+                <button
+                  type="submit"
+                  disabled={isSavingStage0}
+                  className="px-6 py-3 rounded-xl font-black text-xs text-white bg-gradient-to-r from-[#FF6B00] to-amber-500 hover:from-orange-500 hover:to-amber-600 shadow-md shadow-[#FF6B00]/25 flex items-center gap-2 cursor-pointer disabled:opacity-50"
+                >
+                  {isSavingStage0 ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <span>Saving Profile...</span>
+                    </>
+                  ) : (
+                    <>
+                      <CheckCircle2 className="w-4 h-4" />
+                      <span>Save Profile & Complete Stage 0 (+200 XP) 🚀</span>
+                    </>
+                  )}
+                </button>
+              </div>
+
+            </form>
+
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }
