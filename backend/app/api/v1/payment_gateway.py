@@ -21,7 +21,7 @@ class GatewayConfigRequest(BaseModel):
     secret_key: Optional[str] = None
     webhook_secret: Optional[str] = None
     currency: str = "INR"
-    amount: Optional[str] = "499"
+    amount: Optional[str] = None
 
 class CreateTransactionRequest(BaseModel):
     candidate_name: str
@@ -37,7 +37,7 @@ class CreateTransactionRequest(BaseModel):
 class VerifySubscribeRequest(BaseModel):
     transaction_id: Optional[str] = None
     payment_method: Optional[str] = "Razorpay / UPI"
-    amount: str = "499"
+    amount: str = "1"
     coupon_code: Optional[str] = None
 
 SINGLETON_CONFIG_ID = "default_config"
@@ -64,7 +64,7 @@ async def get_or_create_singleton_config(db: AsyncSession) -> PaymentGatewayConf
                 encrypted_secret_key=old.encrypted_secret_key,
                 webhook_secret=old.webhook_secret,
                 currency=old.currency or "INR",
-                amount=getattr(old, "amount", "499") or "499",
+                amount=getattr(old, "amount", "1") or "1",
                 updated_at=datetime.now(timezone.utc)
             )
             db.add(config)
@@ -83,7 +83,7 @@ async def get_or_create_singleton_config(db: AsyncSession) -> PaymentGatewayConf
                 encrypted_secret_key=None,
                 webhook_secret="",
                 currency="INR",
-                amount="499",
+                amount="1",
                 updated_at=now
             )
             db.add(config)
@@ -107,7 +107,7 @@ async def get_payment_config(
     db: AsyncSession = Depends(get_db)
 ):
     try:
-        await db.execute(text("ALTER TABLE payment_gateway_configs ADD COLUMN IF NOT EXISTS amount VARCHAR(50) DEFAULT '499';"))
+        await db.execute(text("ALTER TABLE payment_gateway_configs ADD COLUMN IF NOT EXISTS amount VARCHAR(50) DEFAULT '1';"))
         await db.commit()
     except Exception:
         await db.rollback()
@@ -128,7 +128,7 @@ async def get_payment_config(
             "webhook_secret": config.webhook_secret or "",
             "has_secret_key": has_secret,
             "currency": config.currency or "INR",
-            "amount": getattr(config, "amount", "499") or "499"
+            "amount": getattr(config, "amount", "1") or "1"
         }
     )
 
@@ -139,7 +139,7 @@ async def update_payment_config(
     db: AsyncSession = Depends(get_db)
 ):
     try:
-        await db.execute(text("ALTER TABLE payment_gateway_configs ADD COLUMN IF NOT EXISTS amount VARCHAR(50) DEFAULT '499';"))
+        await db.execute(text("ALTER TABLE payment_gateway_configs ADD COLUMN IF NOT EXISTS amount VARCHAR(50) DEFAULT '1';"))
         await db.commit()
     except Exception:
         await db.rollback()
@@ -158,8 +158,8 @@ async def update_payment_config(
         config.webhook_secret = req.webhook_secret.strip()
     if req.currency:
         config.currency = req.currency
-    if req.amount:
-        config.amount = req.amount
+    if req.amount is not None and req.amount.strip() != "":
+        config.amount = req.amount.strip()
     config.updated_at = now
 
     await db.commit()
@@ -178,7 +178,7 @@ async def update_payment_config(
             "webhook_secret": config.webhook_secret or "",
             "has_secret_key": has_secret,
             "currency": config.currency or "INR",
-            "amount": getattr(config, "amount", "499") or "499"
+            "amount": getattr(config, "amount", "1") or "1"
         }
     )
 

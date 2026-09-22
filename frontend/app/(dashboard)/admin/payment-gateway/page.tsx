@@ -33,7 +33,7 @@ export default function AdminPaymentGatewayPage() {
   const [secretKey, setSecretKey] = useState("");
   const [webhookSecret, setWebhookSecret] = useState("");
   const [currency, setCurrency] = useState("INR");
-  const [amount, setAmount] = useState("499");
+  const [amount, setAmount] = useState("1");
   const [hasSecretKey, setHasSecretKey] = useState(false);
 
   const [showSecret, setShowSecret] = useState(false);
@@ -70,7 +70,7 @@ export default function AdminPaymentGatewayPage() {
         setPublishableKey(cfgRes.data.publishable_key || "");
         setHasSecretKey(cfgRes.data.has_secret_key ?? false);
         setCurrency(cfgRes.data.currency || "INR");
-        setAmount(cfgRes.data.amount || "499");
+        setAmount(cfgRes.data.amount || "1");
       }
       if (txRes?.data) {
         setTransactions(Array.isArray(txRes.data) ? txRes.data : []);
@@ -355,7 +355,7 @@ export default function AdminPaymentGatewayPage() {
                 Candidate Prep Fee / Stage Access Price (INR ₹):
               </label>
               <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-black bg-[#FF6B00]/15 text-[#FF6B00] border border-[#FF6B00]/30">
-                ₹{amount || "499"} per Candidate
+                ₹{amount || "1"} per Candidate
               </span>
             </div>
             <div className="relative">
@@ -364,7 +364,7 @@ export default function AdminPaymentGatewayPage() {
                 type="text"
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
-                placeholder="499"
+                placeholder="1"
                 className="w-full pl-8 pr-4 py-2.5 rounded-xl text-xs font-mono font-bold bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:border-[#FF6B00]"
               />
             </div>

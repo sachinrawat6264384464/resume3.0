@@ -64,7 +64,7 @@ export default function InterviewsPage() {
   // Subscription & Razorpay Payment Modal States
   const [isSubscribed, setIsSubscribed] = useState<boolean>(false);
   const [isPaymentEnabled, setIsPaymentEnabled] = useState<boolean>(false);
-  const [configuredFee, setConfiguredFee] = useState<string>("499");
+  const [configuredFee, setConfiguredFee] = useState<string>("1");
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
 
   // Stage 0 Setup Profile Modal State
@@ -381,7 +381,7 @@ export default function InterviewsPage() {
     setPaymentSuccessMsg(null);
 
     let keyId = "";
-    let feeStr = configuredFee || "499";
+    let feeStr = configuredFee || "1";
     try {
       const cfg = await apiFetch("/interviews/payment-config");
       if (cfg?.data) {
@@ -392,7 +392,8 @@ export default function InterviewsPage() {
       console.warn("Could not fetch gateway config");
     }
 
-    const numFee = parseInt(feeStr, 10) || 499;
+    const parsedNum = parseInt(feeStr, 10);
+    const numFee = isNaN(parsedNum) ? 1 : parsedNum;
 
     // Check if key is dummy/placeholder
     const isDummyKey = !keyId || keyId.includes("sampleKey") || keyId === "rzp_test_sampleKey123";
@@ -953,7 +954,7 @@ export default function InterviewsPage() {
             <div className="flex flex-col gap-2.5 z-10 text-xs text-slate-700 dark:text-slate-300">
               <div className="flex items-center gap-2">
                 <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
-                <span><strong>Single ₹50 Payment Unlocks Stages 6 to 30</strong> (No per-stage fee)</span>
+                <span><strong>Single ₹{configuredFee || "1"} Payment Unlocks Stages 6 to 30</strong> (No per-stage fee)</span>
               </div>
               <div className="flex items-center gap-2">
                 <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />

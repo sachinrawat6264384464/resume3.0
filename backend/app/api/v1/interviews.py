@@ -26,7 +26,7 @@ async def get_candidate_payment_config(
         message="Payment gateway configuration fetched for candidate",
         data={
             "is_enabled": config.is_enabled,
-            "amount": getattr(config, "amount", "499") or "499",
+            "amount": getattr(config, "amount", "1") or "1",
             "publishable_key": config.publishable_key or ""
         }
     )
