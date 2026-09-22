@@ -26,34 +26,6 @@ export function FloatingWhatsAppCommunity() {
     } catch (e) {}
   }, []);
 
-  // Hide widget completely on admin routes or before mounting
-  if (!mounted || !pathname || pathname.startsWith("/admin")) {
-    return null;
-  }
-
-  const handleMouseDown = (e: React.MouseEvent) => {
-    setIsDragging(true);
-    setHasMoved(false);
-    dragStartRef.current = {
-      startX: e.clientX,
-      startY: e.clientY,
-      initialX: pos.x,
-      initialY: pos.y
-    };
-  };
-
-  const handleTouchStart = (e: React.TouchEvent) => {
-    if (e.touches.length !== 1) return;
-    setIsDragging(true);
-    setHasMoved(false);
-    dragStartRef.current = {
-      startX: e.touches[0].clientX,
-      startY: e.touches[0].clientY,
-      initialX: pos.x,
-      initialY: pos.y
-    };
-  };
-
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
       if (!isDragging || !dragStartRef.current) return;
@@ -108,6 +80,34 @@ export function FloatingWhatsAppCommunity() {
       window.removeEventListener("touchend", handleMouseUp);
     };
   }, [isDragging, pos]);
+
+  // Hide widget completely on admin routes or before mounting (AFTER all hooks!)
+  if (!mounted || !pathname || pathname.startsWith("/admin")) {
+    return null;
+  }
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    setIsDragging(true);
+    setHasMoved(false);
+    dragStartRef.current = {
+      startX: e.clientX,
+      startY: e.clientY,
+      initialX: pos.x,
+      initialY: pos.y
+    };
+  };
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (e.touches.length !== 1) return;
+    setIsDragging(true);
+    setHasMoved(false);
+    dragStartRef.current = {
+      startX: e.touches[0].clientX,
+      startY: e.touches[0].clientY,
+      initialX: pos.x,
+      initialY: pos.y
+    };
+  };
 
   const handleClick = (e: React.MouseEvent) => {
     if (hasMoved) {

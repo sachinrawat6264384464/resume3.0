@@ -43,40 +43,60 @@ class VerifySubscribeRequest(BaseModel):
 SINGLETON_CONFIG_ID = "default_config"
 
 async def get_or_create_singleton_config(db: AsyncSession) -> PaymentGatewayConfig:
-    stmt = select(PaymentGatewayConfig)
+    stmt = select(PaymentGatewayConfig).where(PaymentGatewayConfig.id == SINGLETON_CONFIG_ID)
     res = await db.execute(stmt)
-    configs = res.scalars().all()
+    config = res.scalar_one_or_none()
 
-    config = None
-    if configs:
-        for c in configs:
-            if c.id == SINGLETON_CONFIG_ID:
-                config = c
-                break
-        if not config:
-            config = configs[0]
-            
-        for c in configs:
-            if c.id != config.id:
-                await db.delete(c)
-        await db.commit()
+    if not config:
+        all_stmt = select(PaymentGatewayConfig)
+        all_res = await db.execute(all_stmt)
+        old_configs = all_res.scalars().all()
+
+        if old_configs:
+            old_configs.sort(key=lambda x: x.updated_at if x.updated_at else datetime.min, reverse=True)
+            old = old_configs[0]
+            config = PaymentGatewayConfig(
+                id=SINGLETON_CONFIG_ID,
+                provider_name=old.provider_name or "razorpay",
+                is_enabled=old.is_enabled,
+                is_test_mode=old.is_test_mode,
+                publishable_key=old.publishable_key,
+                encrypted_secret_key=old.encrypted_secret_key,
+                webhook_secret=old.webhook_secret,
+                currency=old.currency or "INR",
+                amount=getattr(old, "amount", "499") or "499",
+                updated_at=datetime.now(timezone.utc)
+            )
+            db.add(config)
+            for o in old_configs:
+                await db.delete(o)
+            await db.commit()
+            await db.refresh(config)
+        else:
+            now = datetime.now(timezone.utc)
+            config = PaymentGatewayConfig(
+                id=SINGLETON_CONFIG_ID,
+                provider_name="razorpay",
+                is_enabled=False,
+                is_test_mode=True,
+                publishable_key="rzp_test_sampleKey123",
+                encrypted_secret_key=None,
+                webhook_secret="",
+                currency="INR",
+                amount="499",
+                updated_at=now
+            )
+            db.add(config)
+            await db.commit()
+            await db.refresh(config)
     else:
-        now = datetime.now(timezone.utc)
-        config = PaymentGatewayConfig(
-            id=SINGLETON_CONFIG_ID,
-            provider_name="razorpay",
-            is_enabled=False,
-            is_test_mode=True,
-            publishable_key="rzp_test_sampleKey123",
-            encrypted_secret_key=None,
-            webhook_secret="",
-            currency="INR",
-            amount="499",
-            updated_at=now
-        )
-        db.add(config)
-        await db.commit()
-        await db.refresh(config)
+        all_stmt = select(PaymentGatewayConfig).where(PaymentGatewayConfig.id != SINGLETON_CONFIG_ID)
+        all_res = await db.execute(all_stmt)
+        stale_configs = all_res.scalars().all()
+        if stale_configs:
+            for s in stale_configs:
+                await db.delete(s)
+            await db.commit()
 
     return config
 
