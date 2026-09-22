@@ -470,21 +470,20 @@ export default function AdminLeaderboardPage() {
                 <th className="py-4 px-3 text-center bg-slate-50/95 dark:bg-slate-900/95">POSTS</th>
                 <th className="py-4 px-3 text-center bg-slate-50/95 dark:bg-slate-900/95">TOTAL PTS / XP</th>
                 <th className="py-4 px-3 text-center bg-slate-50/95 dark:bg-slate-900/95">READINESS SCORE</th>
-                <th className="py-4 pr-6 pl-3 text-right bg-slate-50/95 dark:bg-slate-900/95 min-w-[180px]">ACTIONS</th>
               </tr>
             </thead>
 
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60 font-bold">
               {isLoading ? (
                 <tr>
-                  <td colSpan={8} className="py-12 text-center text-slate-400">
+                  <td colSpan={7} className="py-12 text-center text-slate-400">
                     <Loader2 className="w-6 h-6 animate-spin mx-auto text-[#FF6B00] mb-2" />
                     <span>Loading real database leaderboard entries...</span>
                   </td>
                 </tr>
               ) : filteredMembers.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="py-12 text-center text-slate-400 italic">
+                  <td colSpan={7} className="py-12 text-center text-slate-400 italic">
                     No leaderboard candidates found matching your search.
                   </td>
                 </tr>
@@ -583,48 +582,6 @@ export default function AdminLeaderboardPage() {
                         <span className="text-[10px] text-slate-600 dark:text-slate-300 font-bold bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-md border border-slate-200 dark:border-slate-700/80 whitespace-nowrap">
                           {m.salaryBand}
                         </span>
-                      </div>
-                    </td>
-
-                    {/* Actions */}
-                    <td className="py-4 pr-6 pl-3 text-right whitespace-nowrap min-w-[180px]">
-                      <div className="flex items-center justify-end gap-1.5">
-                        
-                        {/* LinkedIn Share Button */}
-                        <button
-                          onClick={() => handleShareLinkedIn(m)}
-                          className="w-7 h-7 rounded-lg bg-blue-600 hover:bg-blue-700 text-white flex items-center justify-center transition-all cursor-pointer shadow-sm"
-                          title="Share Candidate on LinkedIn"
-                        >
-                          <Linkedin className="w-3.5 h-3.5 fill-white" />
-                        </button>
-
-                        {/* WhatsApp Share Button */}
-                        <button
-                          onClick={() => handleShareWhatsApp(m)}
-                          className="w-7 h-7 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white flex items-center justify-center transition-all cursor-pointer shadow-sm"
-                          title="Share on WhatsApp"
-                        >
-                          <MessageCircle className="w-3.5 h-3.5 fill-white" />
-                        </button>
-
-                        {/* X (Twitter) Share Button */}
-                        <button
-                          onClick={() => handleShareX(m)}
-                          className="w-7 h-7 rounded-lg bg-slate-900 hover:bg-slate-950 dark:bg-slate-800 dark:hover:bg-slate-700 text-white flex items-center justify-center transition-all cursor-pointer shadow-sm"
-                          title="Share on X (Twitter)"
-                        >
-                          <XIcon className="w-3.5 h-3.5 text-white" />
-                        </button>
-
-                        {/* Audit Button */}
-                        <button
-                          onClick={() => handleOpenAuditModal(m)}
-                          className="px-3 py-1.5 rounded-xl bg-[#FF6B00] hover:bg-orange-600 text-white text-[11px] font-black transition-all cursor-pointer shadow-md uppercase tracking-wider ml-1 border border-orange-400/40"
-                        >
-                          Audit
-                        </button>
-
                       </div>
                     </td>
 
