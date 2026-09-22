@@ -409,21 +409,20 @@ export default function LeaderboardPage() {
                 <th className="py-4 px-6 text-center bg-slate-50/95 dark:bg-slate-900/95">CURRICULUM BADGES</th>
                 <th className="py-4 px-6 text-center bg-slate-50/95 dark:bg-slate-900/95">POSTS</th>
                 <th className="py-4 px-6 text-center bg-slate-50/95 dark:bg-slate-900/95">TOTAL PTS</th>
-                <th className="py-4 px-6 text-right bg-slate-50/95 dark:bg-slate-900/95">SHARE & VIEW</th>
               </tr>
             </thead>
 
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60 font-bold">
               {isLoading ? (
                 <tr>
-                  <td colSpan={7} className="py-12 text-center text-slate-400">
+                  <td colSpan={6} className="py-12 text-center text-slate-400">
                     <Loader2 className="w-6 h-6 animate-spin mx-auto text-[#FF6B00] mb-2" />
                     <span>Loading real database leaderboard entries...</span>
                   </td>
                 </tr>
               ) : filteredMembers.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="py-12 text-center text-slate-400 italic">
+                  <td colSpan={6} className="py-12 text-center text-slate-400 italic">
                     No leaderboard members found matching your search.
                   </td>
                 </tr>
@@ -456,15 +455,6 @@ export default function LeaderboardPage() {
                           <span className="font-black text-slate-900 dark:text-white text-sm">
                             {m.name}
                           </span>
-                          <a
-                            href={m.linkedinUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-[11px] font-bold text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1"
-                          >
-                            <span>LinkedIn Profile</span>
-                            <ExternalLink className="w-3 h-3" />
-                          </a>
                         </div>
                       </div>
                     </td>
@@ -504,48 +494,6 @@ export default function LeaderboardPage() {
                           {m.pts.toLocaleString()}
                         </span>
                         <span className="text-[10px] text-slate-400 uppercase font-mono">total pts</span>
-                      </div>
-                    </td>
-
-                    {/* Share & View Actions */}
-                    <td className="py-4 px-6 text-right">
-                      <div className="flex items-center justify-end gap-1.5">
-                        
-                        {/* LinkedIn Share Button (Triggers LinkedIn Post Compose Modal with Pre-filled Text) */}
-                        <button
-                          onClick={() => handleShareLinkedIn(m)}
-                          className="w-8 h-8 rounded-lg bg-blue-600 hover:bg-blue-700 text-white flex items-center justify-center transition-all cursor-pointer shadow-sm"
-                          title="Share Post on LinkedIn (Auto-Populates Post Compose Box)"
-                        >
-                          <Linkedin className="w-4 h-4 fill-white" />
-                        </button>
-
-                        {/* WhatsApp Share Button */}
-                        <button
-                          onClick={() => handleShareWhatsApp(m)}
-                          className="w-8 h-8 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white flex items-center justify-center transition-all cursor-pointer shadow-sm"
-                          title="Share on WhatsApp"
-                        >
-                          <MessageCircle className="w-4 h-4 fill-white" />
-                        </button>
-
-                        {/* X (Twitter) Share Button */}
-                        <button
-                          onClick={() => handleShareX(m)}
-                          className="w-8 h-8 rounded-lg bg-slate-900 hover:bg-slate-950 dark:bg-slate-800 dark:hover:bg-slate-700 text-white flex items-center justify-center transition-all cursor-pointer shadow-sm"
-                          title="Share on X (Twitter)"
-                        >
-                          <XIcon className="w-4 h-4 text-white" />
-                        </button>
-
-                        {/* Audit Button */}
-                        <button
-                          onClick={() => handleOpenAuditModal(m)}
-                          className="px-3 py-1.5 rounded-lg bg-slate-950 text-white dark:bg-slate-100 dark:text-slate-950 hover:bg-slate-800 dark:hover:bg-white text-xs font-black transition-all cursor-pointer shadow-sm uppercase tracking-wider"
-                        >
-                          Audit
-                        </button>
-
                       </div>
                     </td>
 
