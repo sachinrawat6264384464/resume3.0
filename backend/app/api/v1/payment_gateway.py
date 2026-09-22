@@ -55,6 +55,7 @@ async def get_payment_config(
                 "is_enabled": True,
                 "is_test_mode": True,
                 "publishable_key": "rzp_test_sampleKey123",
+                "webhook_secret": "",
                 "has_secret_key": False,
                 "currency": "INR"
             }
@@ -69,9 +70,10 @@ async def get_payment_config(
             "provider_name": config.provider_name,
             "is_enabled": config.is_enabled,
             "is_test_mode": config.is_test_mode,
-            "publishable_key": config.publishable_key,
+            "publishable_key": config.publishable_key or "",
+            "webhook_secret": config.webhook_secret or "",
             "has_secret_key": has_secret,
-            "currency": config.currency
+            "currency": config.currency or "INR"
         }
     )
 
@@ -99,12 +101,14 @@ async def update_payment_config(
     else:
         config.is_enabled = req.is_enabled
         config.is_test_mode = req.is_test_mode
-        config.publishable_key = req.publishable_key
+        if req.publishable_key is not None:
+            config.publishable_key = req.publishable_key
         if req.secret_key and req.secret_key.strip() and not req.secret_key.startswith("***"):
             config.encrypted_secret_key = req.secret_key
-        if req.webhook_secret:
+        if req.webhook_secret is not None:
             config.webhook_secret = req.webhook_secret
-        config.currency = req.currency
+        if req.currency:
+            config.currency = req.currency
 
     await db.commit()
     await db.refresh(config)
@@ -116,7 +120,8 @@ async def update_payment_config(
             "provider_name": config.provider_name,
             "is_enabled": config.is_enabled,
             "is_test_mode": config.is_test_mode,
-            "publishable_key": config.publishable_key,
+            "publishable_key": config.publishable_key or "",
+            "webhook_secret": config.webhook_secret or "",
             "has_secret_key": bool(config.encrypted_secret_key),
             "currency": config.currency
         }
