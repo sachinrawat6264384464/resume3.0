@@ -14,7 +14,7 @@ router = APIRouter(prefix="/admin/payment-gateway", tags=["Admin Payment Gateway
 
 class GatewayConfigRequest(BaseModel):
     provider_name: str = "razorpay"
-    is_enabled: bool = True
+    is_enabled: bool = False
     is_test_mode: bool = True
     publishable_key: Optional[str] = None
     secret_key: Optional[str] = None
@@ -59,7 +59,7 @@ async def get_payment_config(
             message="Payment gateway configuration retrieved",
             data={
                 "provider_name": "razorpay",
-                "is_enabled": True,
+                "is_enabled": False,
                 "is_test_mode": True,
                 "publishable_key": "rzp_test_sampleKey123",
                 "webhook_secret": "",
@@ -98,9 +98,9 @@ async def update_payment_config(
     except Exception:
         await db.rollback()
 
-    stmt = select(PaymentGatewayConfig).where(PaymentGatewayConfig.provider_name == req.provider_name)
+    stmt = select(PaymentGatewayConfig).order_by(PaymentGatewayConfig.updated_at.desc())
     res = await db.execute(stmt)
-    config = res.scalar_one_or_none()
+    config = res.scalars().first()
 
     if not config:
         config = PaymentGatewayConfig(

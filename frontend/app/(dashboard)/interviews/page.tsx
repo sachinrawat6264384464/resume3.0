@@ -63,7 +63,7 @@ export default function InterviewsPage() {
 
   // Subscription & Razorpay Payment Modal States
   const [isSubscribed, setIsSubscribed] = useState<boolean>(false);
-  const [isPaymentEnabled, setIsPaymentEnabled] = useState<boolean>(true);
+  const [isPaymentEnabled, setIsPaymentEnabled] = useState<boolean>(false);
   const [configuredFee, setConfiguredFee] = useState<string>("499");
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
 
@@ -100,14 +100,17 @@ export default function InterviewsPage() {
         apiFetch("/admin/payment-gateway/config").catch(() => null)
       ]);
 
-      const gatewayEnabled = resGatewayCfg?.data?.is_enabled ?? true;
+      const gatewayEnabled = resGatewayCfg?.data?.is_enabled ?? false;
       setIsPaymentEnabled(gatewayEnabled);
       if (resGatewayCfg?.data?.amount) {
         setConfiguredFee(resGatewayCfg.data.amount.toString());
       }
 
+      const candSubscribed = Boolean(resMetrics?.data?.is_subscribed || resMetrics?.data?.candidate?.resume_data_json?.is_pro);
+      setIsSubscribed(candSubscribed);
+
       // If Payment Gateway is disabled globally by Admin, treat as effective free unlock for all stages!
-      const effectiveSubscribed = !gatewayEnabled || userSubscribed;
+      const effectiveSubscribed = !gatewayEnabled || candSubscribed;
 
       const dbStageMap = new Map();
       if (resDbStages?.data && Array.isArray(resDbStages.data)) {
@@ -253,7 +256,7 @@ export default function InterviewsPage() {
     if (activeSession) {
       setAlertMsg(`⚠️ You have an active live interview running (${activeSession.stageTitle || 'Stage Interview'}). Please 'Resume Ongoing Interview 🚀' or 'Drop Out 🚪' before launching a new stage.`);
     }
-    if (s.status === "pro_locked" || (!isSubscribed && s.id >= 6)) {
+    if (isPaymentEnabled && (s.status === "pro_locked" || (!isSubscribed && s.id >= 6))) {
       setSelectedStageForPayment(s);
       setIsPaymentModalOpen(true);
       return;
@@ -646,7 +649,7 @@ export default function InterviewsPage() {
               const isSelected = selectedStage?.id === s.id;
               const isCompleted = s.status === "completed";
               const isInProgress = s.status === "in_progress";
-              const isProLocked = s.status === "pro_locked" || (!isSubscribed && s.id >= 6);
+              const isProLocked = isPaymentEnabled && (s.status === "pro_locked" || (!isSubscribed && s.id >= 6));
               const isLocked = s.status === "locked" && !isProLocked;
               const isBoss = s.id === 30 || s.diff === "Boss" || s.diff === "Legendary";
 

@@ -7,7 +7,7 @@ class PaymentGatewayConfig(TimeStampedModel):
     __tablename__ = "payment_gateway_configs"
 
     provider_name = Column(String(50), nullable=False, default="razorpay") # razorpay
-    is_enabled = Column(Boolean, default=True, nullable=False)
+    is_enabled = Column(Boolean, default=False, nullable=False)
     is_test_mode = Column(Boolean, default=True, nullable=False)
     
     publishable_key = Column(String(255), nullable=True)

@@ -27,7 +27,7 @@ interface PaymentTx {
 
 export default function AdminPaymentGatewayPage() {
   const [provider, setProvider] = useState("razorpay");
-  const [isEnabled, setIsEnabled] = useState(true);
+  const [isEnabled, setIsEnabled] = useState(false);
   const [isTestMode, setIsTestMode] = useState(true);
   const [publishableKey, setPublishableKey] = useState("");
   const [secretKey, setSecretKey] = useState("");
@@ -65,7 +65,7 @@ export default function AdminPaymentGatewayPage() {
 
       if (cfgRes?.data) {
         setProvider(cfgRes.data.provider_name || "razorpay");
-        setIsEnabled(cfgRes.data.is_enabled ?? true);
+        setIsEnabled(cfgRes.data.is_enabled ?? false);
         setIsTestMode(cfgRes.data.is_test_mode ?? true);
         setPublishableKey(cfgRes.data.publishable_key || "");
         setHasSecretKey(cfgRes.data.has_secret_key ?? false);
