@@ -78,59 +78,45 @@ export default function ResumeATSPage() {
   // LinkedIn Import Modal States
   const [isLinkedInModalOpen, setIsLinkedInModalOpen] = useState(false);
   const [linkedInUrlInput, setLinkedInUrlInput] = useState("");
+  const [isExtractingLinkedIn, setIsExtractingLinkedIn] = useState(false);
 
-  const handleLinkedInImportSubmit = (e: React.FormEvent) => {
+  const handleLinkedInImportSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!linkedInUrlInput.trim()) return;
 
-    let parsedName = user?.full_name || "Sachin Rawat";
-    const match = linkedInUrlInput.match(/\/in\/([^\/\?#]+)/);
-    if (match && match[1]) {
-      const slug = match[1].replace(/[-_]+/g, " ").replace(/\d+$/g, "").trim();
-      if (slug.length > 2) {
-        parsedName = slug.split(" ").map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(" ");
+    setIsExtractingLinkedIn(true);
+    try {
+      const res = await apiFetch("/linkedin/extract-profile", {
+        method: "POST",
+        body: JSON.stringify({
+          linkedin_url: linkedInUrlInput.trim()
+        })
+      });
+
+      if (res?.data?.extracted_text) {
+        setResumeText(res.data.extracted_text);
+      } else {
+        let parsedName = user?.full_name || "Sachin Rawat";
+        const match = linkedInUrlInput.match(/\/in\/([^\/\?#]+)/);
+        if (match && match[1]) {
+          const slug = match[1].replace(/[-_]+/g, " ").replace(/\d+$/g, "").trim();
+          if (slug.length > 2) {
+            parsedName = slug.split(" ").map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(" ");
+          }
+        }
+        setResumeText(`${parsedName}\nLinkedIn Profile: ${linkedInUrlInput.trim()}\nSummary & Bio...\n...`);
       }
+
+      setIsLinkedInModalOpen(false);
+      setTimeout(() => {
+        handleAnalyze();
+      }, 100);
+    } catch (err: any) {
+      console.warn("LinkedIn extract notice:", err);
+      setIsLinkedInModalOpen(false);
+    } finally {
+      setIsExtractingLinkedIn(false);
     }
-
-    const linkedInExtractedResume = `${parsedName}
-LinkedIn Profile: ${linkedInUrlInput.trim()}
-Location: Bengaluru, India | Target Role: Senior Cloud & DevOps Engineer
-
-SUMMARY
-DevOps & Cloud Engineer specializing in AWS infrastructure, Docker containerization, Kubernetes (EKS), Terraform automation, and CI/CD pipelines.
-
-CORE TECHNICAL SKILLS
-- Cloud Platforms: AWS (VPC, IAM, EC2, S3, RDS, EKS, CloudWatch)
-- Containerization: Docker, Kubernetes, Helm, Istio
-- Infrastructure as Code: Terraform, Ansible
-- CI/CD & Automation: GitHub Actions, Jenkins, ArgoCD
-- Observability: Prometheus, Grafana, ELK Stack
-- Scripting & OS: Linux (Ubuntu/RHEL), Bash, Python Boto3
-
-PROFESSIONAL EXPERIENCE
-CloudOps Tech Solutions — Senior DevOps & Infrastructure Engineer (2022 - Present)
-• Engineered multi-account AWS VPC network topology with transit gateways and zero-trust IAM security policies.
-• Deployed 15+ containerized microservices on AWS EKS using Helm and automated deployment rollouts via ArgoCD GitOps.
-• Built reusable Terraform IaC modules for provisioning database clusters and autoscaling EC2 node groups.
-• Configured Prometheus alerts & Grafana monitoring dashboards, reducing Mean Time to Resolution (MTTR) for incidents by 35%.
-
-PROJECTS
-Real-Time AWS & Kubernetes Outage Resilience Platform
-• Architected automated failover and chaos engineering tests on Kubernetes clusters using Chaos Mesh.
-• Implemented DevSecOps security vulnerability scanning using Trivy and HashiCorp Vault secret injection.
-
-EDUCATION & CERTIFICATIONS
-• B.Tech in Computer Science & Engineering
-• AWS Certified Solutions Architect - Associate
-• Certified Kubernetes Administrator (CKA)`;
-
-    setResumeText(linkedInExtractedResume);
-    setIsLinkedInModalOpen(false);
-    
-    // Automatically trigger ATS Analysis
-    setTimeout(() => {
-      handleAnalyze();
-    }, 100);
   };
 
   // 1. Fetch Latest Saved Resume ATS Audit from Database on Mount if not loaded
@@ -1265,10 +1251,20 @@ Real-Time AWS & Kubernetes Outage Resilience Platform
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2.5 rounded-xl text-xs font-black text-white bg-[#FF6B00] hover:bg-[#e05e00] shadow-md shadow-[#FF6B00]/20 flex items-center gap-1.5 cursor-pointer uppercase tracking-wider"
+                  disabled={isExtractingLinkedIn}
+                  className="px-5 py-2.5 rounded-xl text-xs font-black text-white bg-[#FF6B00] hover:bg-[#e05e00] shadow-md shadow-[#FF6B00]/20 flex items-center gap-1.5 cursor-pointer uppercase tracking-wider disabled:opacity-50"
                 >
-                  <Sparkles className="w-3.5 h-3.5" />
-                  <span>Import & Analyze 🚀</span>
+                  {isExtractingLinkedIn ? (
+                    <>
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      <span>Extracting Profile Data...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="w-3.5 h-3.5" />
+                      <span>Import & Extract Profile 🚀</span>
+                    </>
+                  )}
                 </button>
               </div>
             </form>
