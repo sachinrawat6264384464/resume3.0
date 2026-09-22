@@ -6,7 +6,7 @@ import {
   Users, Calendar, Star, CheckCircle2, CreditCard, TrendingUp, 
   Search, Bell, ChevronDown, UserPlus, Megaphone, Download, 
   Settings, Database, Cpu, Mic, Cloud, Mail, ShieldCheck, 
-  Sparkles, Trash2, Layers, Activity, Server, FileText, Check
+  Sparkles, Trash2, Layers, Activity, Server, FileText, Check, Loader2
 } from "lucide-react";
 import { apiFetch } from "@/lib/api";
 import { AdminDashboardMetrics } from "@/types";
