@@ -508,17 +508,14 @@ async def get_dashboard_metrics(
     unread_reminders_count = (await db.execute(stmt_rem)).scalar() or 0
 
     # 8. Real PRO Subscription Check from PostgreSQL DB
-    from app.models.payment_gateway import PaymentTransaction, PaymentGatewayConfig
+    from app.models.payment_gateway import PaymentTransaction
+    from app.api.v1.payment_gateway import get_or_create_singleton_config
     from sqlalchemy import or_
 
-    # Check if Payment Gateway is enabled globally by Admin in DB!
-    cfg_stmt = select(PaymentGatewayConfig).order_by(PaymentGatewayConfig.updated_at.desc()).limit(1)
-    cfg_res = await db.execute(cfg_stmt)
-    payment_cfg = cfg_res.scalar_one_or_none()
-    payment_gateway_enabled = payment_cfg.is_enabled if payment_cfg else False
+    payment_cfg = await get_or_create_singleton_config(db)
+    payment_gateway_enabled = payment_cfg.is_enabled
 
     if not payment_gateway_enabled:
-        # If Payment Gateway is DISABLED by Admin, ALL STAGES ARE UNLOCKED FOR ALL CANDIDATES!
         is_subscribed = True
     else:
         stmt_tx = select(func.count(PaymentTransaction.id)).where(
@@ -529,7 +526,7 @@ async def get_dashboard_metrics(
         )
         has_paid_tx = (await db.execute(stmt_tx)).scalar() or 0
         is_pro_json = bool(cand.resume_data_json and cand.resume_data_json.get("is_pro"))
-        is_subscribed = bool(user.role == "ADMIN" or is_pro_json or has_paid_tx > 0)
+        is_subscribed = bool(is_pro_json or has_paid_tx > 0)
 
     # Return 100% DB-driven metrics
     metrics = {
