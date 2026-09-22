@@ -41,7 +41,31 @@ export default function CandidateDashboardPage() {
   const [isPublishingLinkedIn, setIsPublishingLinkedIn] = useState(false);
   const [linkedInSuccessMsg, setLinkedInSuccessMsg] = useState<string | null>(null);
 
-  const [mounted, setMounted] = useState(false);
+  const [countdown, setCountdown] = useState({ days: "02", hours: "14", minutes: "35", seconds: "10" });
+
+  useEffect(() => {
+    const target = new Date("2026-09-25T20:15:00+05:30").getTime();
+    const updateCountdown = () => {
+      const now = Date.now();
+      const diff = Math.max(0, target - now);
+      
+      const d = Math.floor(diff / (1000 * 60 * 60 * 24));
+      const h = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+      const s = Math.floor((diff % (1000 * 60)) / 1000);
+
+      setCountdown({
+        days: String(d).padStart(2, "0"),
+        hours: String(h).padStart(2, "0"),
+        minutes: String(m).padStart(2, "0"),
+        seconds: String(s).padStart(2, "0")
+      });
+    };
+
+    updateCountdown();
+    const interval = setInterval(updateCountdown, 1000);
+    return () => clearInterval(interval);
+  }, []);
 
   useEffect(() => {
     setMounted(true);
@@ -421,146 +445,144 @@ Learn Today. Implement Today. Build Your Career for a Lifetime.
         </div>
       </div>
 
-      {/* ACTIVE LIVE MOCK INTERVIEW BANNER (PREMIUM CLIENT DESIGN) */}
+      {/* HERO EVENT CARD WITH LIVE COUNTDOWN CLOCK */}
       {activeLiveSession && (
-        <div className="relative z-10 p-6 sm:p-8 rounded-[32px] bg-gradient-to-br from-[#0B1728] via-[#0F223D] to-[#081220] border-2 border-amber-500/30 shadow-2xl shadow-amber-500/10 overflow-hidden flex flex-col gap-6 text-white backdrop-blur-xl">
+        <div className="relative z-10 p-6 sm:p-8 rounded-[32px] bg-gradient-to-br from-[#0B1528] via-[#0F1E36] to-[#070D18] border-2 border-[#FF6B00]/40 shadow-2xl shadow-[#FF6B00]/15 overflow-hidden flex flex-col gap-6 text-white backdrop-blur-xl">
           
-          {/* Ambient Glow Orbs */}
-          <div className="absolute -right-16 -top-16 w-64 h-64 bg-amber-500/15 rounded-full blur-3xl pointer-events-none" />
-          <div className="absolute -left-16 -bottom-16 w-64 h-64 bg-blue-500/15 rounded-full blur-3xl pointer-events-none" />
+          {/* Ambient Glows */}
+          <div className="absolute -top-24 -right-24 w-72 h-72 bg-[#FF6B00]/15 rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute -bottom-24 -left-24 w-72 h-72 bg-blue-500/15 rounded-full blur-3xl pointer-events-none" />
 
-          {/* Top Header Badge & Session Details */}
-          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-5 relative z-10">
-            <div className="flex flex-col gap-2.5 max-w-3xl">
-              
-              <div className="flex items-center gap-2.5 flex-wrap">
-                <span className="px-3.5 py-1 rounded-full text-[11px] font-black bg-gradient-to-r from-rose-600 to-red-500 text-white uppercase tracking-wider flex items-center gap-2 shadow-lg shadow-rose-600/30">
-                  <span className="relative flex h-2 w-2">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
-                    <span className="relative inline-flex rounded-full h-2 w-2 bg-white"></span>
-                  </span>
-                  LIVE MASTERCLASS
+          {/* Top Row: Live Beacon Badge & Event Date */}
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 relative z-10">
+            <div className="flex items-center gap-2.5 flex-wrap">
+              <span className="px-3.5 py-1 rounded-full text-[11px] font-black bg-gradient-to-r from-rose-600 via-red-500 to-orange-500 text-white uppercase tracking-wider flex items-center gap-2 shadow-md shadow-rose-600/30">
+                <span className="relative flex h-2.5 w-2.5">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-white"></span>
                 </span>
-
-                <span className="px-3.5 py-1 rounded-full text-[11px] font-mono font-black bg-amber-500/15 text-amber-400 border border-amber-500/40">
-                  📅 {activeLiveSession.session_date}
-                </span>
-
-                <span className="px-3 py-1 rounded-full text-[10.5px] font-black bg-blue-500/15 text-blue-300 border border-blue-500/30 flex items-center gap-1">
-                  <Laptop className="w-3.5 h-3.5 text-blue-400" />
-                  Host: {activeLiveSession.host_name || "Vikas Sir & Sachin Rawat"}
-                </span>
-              </div>
-
-              <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black tracking-tight text-white uppercase leading-snug drop-shadow-md">
-                {activeLiveSession.title.startsWith("👑") ? activeLiveSession.title : `👑 ${activeLiveSession.title}`}
-              </h2>
-
-              <p className="text-xs sm:text-sm font-medium text-slate-300 leading-relaxed max-w-2xl">
-                {activeLiveSession.description || "Live Q&A, mock interview feedback & ATS resume review session with Vikas Sir and Sachin Rawat."}
-              </p>
-
-            </div>
-
-            {/* Quote Pill */}
-            <div className="hidden lg:flex flex-col items-end gap-1 p-4 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-md shrink-0 self-start">
-              <span className="text-xs font-black text-amber-400 flex items-center gap-1.5">
-                <Sparkles className="w-4 h-4 text-amber-400" />
-                "Let's Crack It Together! 🚀"
+                LIVE MASTERCLASS
               </span>
-              <span className="text-[10.5px] text-slate-400 font-medium">Practice • Expert Feedback • Get Hired</span>
+
+              <span className="px-3.5 py-1 rounded-full text-[11px] font-mono font-black bg-white/10 text-amber-300 border border-amber-400/30">
+                📅 {activeLiveSession.session_date}
+              </span>
             </div>
 
+            <div className="flex items-center gap-2 px-3.5 py-1 rounded-full bg-blue-500/15 text-blue-300 border border-blue-400/30 text-[11px] font-black">
+              <Laptop className="w-3.5 h-3.5 text-blue-400" />
+              <span>Host: {activeLiveSession.host_name || "Vikas Sir & Sachin Rawat"}</span>
+            </div>
           </div>
 
-          {/* TWO HIGH-IMPACT PREMIUM ACTION BUTTON CARDS */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 relative z-10 pt-2">
-            
-            {/* Zoom Live Button Card */}
-            <button
-              type="button"
-              onClick={() => {
-                const url = activeLiveSession.meeting_url || "https://meet.google.com/xyz-cloudops-live";
-                try {
-                  apiFetch("/live-sessions/track-click", {
-                    method: "POST",
-                    body: JSON.stringify({
-                      live_session_id: activeLiveSession?.id || "live-default-001",
-                      session_title: activeLiveSession?.title || "👑 40 LPA DevOps Architecture Masterclass",
-                      candidate_name: candidateName,
-                      candidate_email: (user as any)?.email || "candidate@cloudops.internal",
-                      platform_clicked: "ZOOM"
-                    })
-                  }).catch(() => {});
-                } catch {}
-                if (typeof window !== "undefined") window.open(url, "_blank");
-              }}
-              className="group relative p-4 rounded-2xl bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 hover:from-blue-500 hover:to-indigo-600 text-white shadow-xl shadow-blue-900/30 border border-blue-400/30 hover:border-blue-300 transition-all duration-200 cursor-pointer flex items-center justify-between gap-4 text-left overflow-hidden"
-            >
-              <div className="flex items-center gap-3.5">
-                <div className="w-12 h-12 rounded-xl bg-white/15 border border-white/20 flex items-center justify-center text-white shrink-0 shadow-inner group-hover:scale-110 transition-transform">
-                  <Video className="w-6 h-6 text-white" />
-                </div>
-                <div className="flex flex-col">
-                  <span className="text-sm font-black tracking-tight uppercase flex items-center gap-1.5 text-white">
-                    Registered for Zoom Live
-                    <ChevronRight className="w-4 h-4 text-white/80 group-hover:translate-x-1 transition-transform" />
-                  </span>
-                  <span className="text-[10.5px] font-bold text-blue-100/90 font-mono">
-                    JOIN THE LIVE INTERACTIVE SESSION ON ZOOM
-                  </span>
-                </div>
-              </div>
-            </button>
+          {/* Main Title & Subtitle */}
+          <div className="flex flex-col gap-2 relative z-10">
+            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black tracking-tight text-white uppercase leading-snug drop-shadow-md">
+              👑 40 LPA DevOps Architecture & Outage Troubleshooting Masterclass
+            </h2>
+            <p className="text-xs sm:text-sm text-slate-300 font-semibold leading-relaxed max-w-3xl">
+              {activeLiveSession.description || "Live Q&A, mock interview feedback & ATS resume review session with Vikas Sir and Sachin Rawat."}
+            </p>
+          </div>
 
-            {/* WhatsApp Community Button Card */}
-            <button
-              type="button"
-              onClick={() => {
-                const url = "https://chat.whatsapp.com/LOxsACQwbGgAudjaC3qhOJ";
-                try {
-                  apiFetch("/live-sessions/track-click", {
-                    method: "POST",
-                    body: JSON.stringify({
-                      live_session_id: activeLiveSession?.id || "live-default-001",
-                      session_title: activeLiveSession?.title || "👑 40 LPA DevOps Architecture Masterclass",
-                      candidate_name: candidateName,
-                      candidate_email: (user as any)?.email || "candidate@cloudops.internal",
-                      platform_clicked: "WHATSAPP"
-                    })
-                  }).catch(() => {});
-                } catch {}
-                if (typeof window !== "undefined") window.open(url, "_blank");
-              }}
-              className="group relative p-4 rounded-2xl bg-gradient-to-r from-emerald-600 via-emerald-500 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white shadow-xl shadow-emerald-900/30 border border-emerald-400/30 hover:border-emerald-300 transition-all duration-200 cursor-pointer flex items-center justify-between gap-4 text-left overflow-hidden"
-            >
-              <div className="flex items-center gap-3.5">
-                <div className="w-12 h-12 rounded-xl bg-white/15 border border-white/20 flex items-center justify-center text-white shrink-0 shadow-inner group-hover:scale-110 transition-transform">
-                  <MessageSquare className="w-6 h-6 text-white fill-white/20" />
+          {/* COUNTDOWN CLOCK & DIRECT ACTION BUTTONS GRID */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center relative z-10 pt-2 border-t border-white/10">
+            
+            {/* Countdown Timer Block (6 cols) */}
+            <div className="lg:col-span-6 flex flex-col gap-2">
+              <span className="text-[11px] font-black text-amber-400 uppercase tracking-widest flex items-center gap-1.5">
+                <Clock className="w-4 h-4 text-amber-400 animate-spin" />
+                EVENT STARTS IN (LIVE COUNTDOWN):
+              </span>
+              
+              <div className="grid grid-cols-4 gap-2.5 text-center">
+                <div className="flex flex-col items-center justify-center p-3 rounded-2xl bg-white/10 border border-white/15 backdrop-blur-md">
+                  <span className="text-2xl sm:text-3xl font-black font-mono text-white tracking-tight">{countdown.days}</span>
+                  <span className="text-[9px] font-black text-slate-400 uppercase tracking-wider">DAYS</span>
                 </div>
-                <div className="flex flex-col">
-                  <span className="text-sm font-black tracking-tight uppercase flex items-center gap-1.5 text-white">
-                    Join WhatsApp Community
-                    <ChevronRight className="w-4 h-4 text-white/80 group-hover:translate-x-1 transition-transform" />
-                  </span>
-                  <span className="text-[10.5px] font-bold text-emerald-100/90 font-mono">
-                    GET INSTANT UPDATES, LINKS & ANNOUNCEMENTS
-                  </span>
+                <div className="flex flex-col items-center justify-center p-3 rounded-2xl bg-white/10 border border-white/15 backdrop-blur-md">
+                  <span className="text-2xl sm:text-3xl font-black font-mono text-white tracking-tight">{countdown.hours}</span>
+                  <span className="text-[9px] font-black text-slate-400 uppercase tracking-wider">HOURS</span>
+                </div>
+                <div className="flex flex-col items-center justify-center p-3 rounded-2xl bg-white/10 border border-white/15 backdrop-blur-md">
+                  <span className="text-2xl sm:text-3xl font-black font-mono text-amber-300 tracking-tight">{countdown.minutes}</span>
+                  <span className="text-[9px] font-black text-slate-400 uppercase tracking-wider">MINS</span>
+                </div>
+                <div className="flex flex-col items-center justify-center p-3 rounded-2xl bg-[#FF6B00]/25 border border-[#FF6B00]/50 backdrop-blur-md">
+                  <span className="text-2xl sm:text-3xl font-black font-mono text-[#FF6B00] tracking-tight">{countdown.seconds}</span>
+                  <span className="text-[9px] font-black text-orange-300 uppercase tracking-wider">SECS</span>
                 </div>
               </div>
-            </button>
+            </div>
+
+            {/* Direct Action Buttons Block (6 cols) */}
+            <div className="lg:col-span-6 flex flex-col sm:flex-row gap-3">
+              
+              {/* Zoom Button */}
+              <button
+                type="button"
+                onClick={() => {
+                  const url = activeLiveSession.meeting_url || "https://meet.google.com/xyz-cloudops-live";
+                  try {
+                    apiFetch("/live-sessions/track-click", {
+                      method: "POST",
+                      body: JSON.stringify({
+                        live_session_id: activeLiveSession?.id || "live-default-001",
+                        session_title: activeLiveSession?.title || "👑 40 LPA DevOps Architecture Masterclass",
+                        candidate_name: candidateName,
+                        candidate_email: (user as any)?.email || "candidate@cloudops.internal",
+                        platform_clicked: "ZOOM"
+                      })
+                    }).catch(() => {});
+                  } catch {}
+                  if (typeof window !== "undefined") window.open(url, "_blank");
+                }}
+                className="flex-1 py-4 px-5 rounded-2xl bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 hover:from-blue-500 hover:to-indigo-600 text-white font-black text-xs sm:text-sm tracking-wide shadow-xl shadow-blue-900/40 border border-blue-400/40 transition-all flex items-center justify-center gap-2.5 cursor-pointer uppercase group"
+              >
+                <Video className="w-5 h-5 text-white" />
+                <span>Zoom Live Room</span>
+                <ChevronRight className="w-4 h-4 text-white/80 group-hover:translate-x-1 transition-transform" />
+              </button>
+
+              {/* WhatsApp Button */}
+              <button
+                type="button"
+                onClick={() => {
+                  const url = "https://chat.whatsapp.com/LOxsACQwbGgAudjaC3qhOJ";
+                  try {
+                    apiFetch("/live-sessions/track-click", {
+                      method: "POST",
+                      body: JSON.stringify({
+                        live_session_id: activeLiveSession?.id || "live-default-001",
+                        session_title: activeLiveSession?.title || "👑 40 LPA DevOps Architecture Masterclass",
+                        candidate_name: candidateName,
+                        candidate_email: (user as any)?.email || "candidate@cloudops.internal",
+                        platform_clicked: "WHATSAPP"
+                      })
+                    }).catch(() => {});
+                  } catch {}
+                  if (typeof window !== "undefined") window.open(url, "_blank");
+                }}
+                className="flex-1 py-4 px-5 rounded-2xl bg-gradient-to-r from-emerald-600 via-emerald-500 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black text-xs sm:text-sm tracking-wide shadow-xl shadow-emerald-900/40 border border-emerald-400/40 transition-all flex items-center justify-center gap-2.5 cursor-pointer uppercase group"
+              >
+                <MessageSquare className="w-5 h-5 text-white fill-white/20" />
+                <span>WhatsApp Group</span>
+                <ChevronRight className="w-4 h-4 text-white/80 group-hover:translate-x-1 transition-transform" />
+              </button>
+
+            </div>
 
           </div>
 
           {/* Footer Bar */}
-          <div className="flex items-center justify-center gap-4 pt-3 border-t border-white/10 text-[10.5px] font-black text-slate-400 uppercase tracking-widest relative z-10">
-            <span className="text-slate-300">LEARN</span>
-            <span className="text-amber-500">•</span>
-            <span className="text-slate-300">PRACTICE</span>
-            <span className="text-amber-500">•</span>
-            <span className="text-slate-300">GROW</span>
-            <span className="text-amber-500">•</span>
-            <span className="text-[#FF6B00] font-black">GET PLACED</span>
+          <div className="flex items-center justify-between gap-4 pt-3 border-t border-white/10 text-[10.5px] font-black text-slate-400 uppercase tracking-widest relative z-10 flex-wrap">
+            <span className="flex items-center gap-1.5 text-slate-300">
+              <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+              PRACTICE • EXPERT FEEDBACK • GET PLACED
+            </span>
+            <span className="text-[#FF6B00] font-mono font-black">
+              LIVE INTERACTIVE MOCK SESSIONS & ATS RESUME REVIEWS
+            </span>
           </div>
 
         </div>
