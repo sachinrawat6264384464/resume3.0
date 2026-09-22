@@ -117,6 +117,8 @@ export function FloatingWhatsAppCommunity() {
     window.open("https://chat.whatsapp.com/LOxsACQwbGgAudjaC3qhOJ", "_blank", "noopener,noreferrer");
   };
 
+  const isNearLeftEdge = typeof window !== "undefined" ? pos.x > window.innerWidth / 2 : false;
+
   return (
     <div
       style={{ right: `${pos.x}px`, bottom: `${pos.y}px` }}
@@ -129,11 +131,21 @@ export function FloatingWhatsAppCommunity() {
       {/* Dynamic Pulse Aura Ring */}
       <div className="absolute -inset-1.5 rounded-full bg-gradient-to-r from-[#25D366] via-emerald-400 to-[#128C7E] opacity-80 blur-sm animate-pulse" />
 
-      {/* Floating Hover Tooltip */}
-      <div className="absolute right-20 top-1/2 -translate-y-1/2 bg-slate-900/95 dark:bg-slate-950/95 text-white text-xs font-black py-2 px-4 rounded-2xl shadow-2xl border border-[#25D366]/50 backdrop-blur-md opacity-0 group-hover:opacity-100 transition-all duration-200 pointer-events-none whitespace-nowrap flex items-center gap-2 shrink-0 z-50">
+      {/* Floating Hover Tooltip - Dynamically positioned left or right based on button position */}
+      <div 
+        className={`absolute top-1/2 -translate-y-1/2 bg-slate-900/95 dark:bg-slate-950/95 text-white text-xs font-black py-2 px-4 rounded-2xl shadow-2xl border border-[#25D366]/50 backdrop-blur-md opacity-0 group-hover:opacity-100 transition-all duration-200 pointer-events-none whitespace-nowrap flex items-center gap-2 shrink-0 z-50 ${
+          isNearLeftEdge ? "left-20" : "right-20"
+        }`}
+      >
         <span className="text-[#25D366] text-sm">💬</span>
         <span>Join WhatsApp Community 🚀</span>
-        <div className="w-2.5 h-2.5 bg-slate-900 rotate-45 absolute -right-1.2 top-1/2 -translate-y-1/2 border-r border-t border-[#25D366]/50" />
+        <div 
+          className={`w-2.5 h-2.5 bg-slate-900 rotate-45 absolute top-1/2 -translate-y-1/2 ${
+            isNearLeftEdge 
+              ? "-left-1.2 border-l border-b border-[#25D366]/50" 
+              : "-right-1.2 border-r border-t border-[#25D366]/50"
+          }`} 
+        />
       </div>
 
       {/* Round Circular Movable Button */}
