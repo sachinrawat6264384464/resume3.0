@@ -309,29 +309,22 @@ export default function AdminPaymentGatewayPage() {
             </div>
           )}
 
-          {/* Enable & Mode Toggles */}
+          {/* Active Status Badge & Mode Toggle */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             
-            <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 flex items-center justify-between">
+            <div className="p-4 rounded-2xl bg-emerald-50/60 dark:bg-emerald-950/40 border border-emerald-300 dark:border-emerald-800 flex items-center justify-between">
               <div className="flex flex-col">
-                <span className="text-xs font-bold text-slate-900 dark:text-white">Enable Payment Gateway</span>
-                <span className={`text-[10px] font-bold ${isEnabled ? "text-emerald-600 dark:text-emerald-400" : "text-amber-500"}`}>
-                  {isEnabled ? "● Payment Required for Stages" : "○ Disabled (Free All Stages)"}
+                <span className="text-xs font-black text-emerald-900 dark:text-emerald-200 uppercase tracking-wider flex items-center gap-1.5">
+                  <ShieldCheck className="w-4 h-4 text-emerald-600" />
+                  Payment Gateway Status
+                </span>
+                <span className="text-[10.5px] font-bold text-emerald-700 dark:text-emerald-300">
+                  ● ALWAYS ACTIVE (PRO Pass Required for Stages 6-30)
                 </span>
               </div>
-              <button
-                type="button"
-                onClick={() => handleToggleEnabled(!isEnabled)}
-                className={`relative inline-flex h-7 w-14 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
-                  isEnabled ? "bg-[#FF6B00]" : "bg-slate-300 dark:bg-slate-700"
-                }`}
-              >
-                <span
-                  className={`pointer-events-none inline-block h-6 w-6 transform rounded-full bg-white shadow-lg ring-0 transition duration-200 ease-in-out ${
-                    isEnabled ? "translate-x-7" : "translate-x-0"
-                  }`}
-                />
-              </button>
+              <span className="px-3 py-1 rounded-full text-[10px] font-black uppercase bg-emerald-600 text-white shadow-xs">
+                ACTIVE
+              </span>
             </div>
 
             <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 flex items-center justify-between">
