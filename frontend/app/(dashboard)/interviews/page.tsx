@@ -106,7 +106,8 @@ export default function InterviewsPage() {
         setConfiguredFee(resGatewayCfg.data.amount.toString());
       }
 
-      const candSubscribed = Boolean(resMetrics?.data?.is_subscribed || resMetrics?.data?.candidate?.resume_data_json?.is_pro);
+      const isExplicitPro = Boolean(resMetrics?.data?.candidate?.resume_data_json?.is_pro);
+      const candSubscribed = isExplicitPro;
       setIsSubscribed(candSubscribed);
 
       // If Payment Gateway is disabled globally by Admin, treat as effective free unlock for all stages!
@@ -158,18 +159,16 @@ export default function InterviewsPage() {
             computedStatus = "locked";
           }
         } else {
-          // Track 2+ (Stages 6 to 30) - PRO Subscription Required ONLY if Payment Gateway is ENABLED!
-          if (!effectiveSubscribed) {
+          // Track 2+ (Stages 6 to 30) - PRO Subscription Required if Payment Gateway is ENABLED!
+          if (isCompleted) {
+            computedStatus = "completed";
+          } else if (!effectiveSubscribed) {
             computedStatus = "pro_locked";
+          } else if (completedSet.has(stg.id - 1)) {
+            computedStatus = "in_progress";
+            computedScore = "Active";
           } else {
-            if (isCompleted) {
-              computedStatus = "completed";
-            } else if (completedSet.has(stg.id - 1)) {
-              computedStatus = "in_progress";
-              computedScore = "Active";
-            } else {
-              computedStatus = "locked";
-            }
+            computedStatus = "locked";
           }
         }
 
