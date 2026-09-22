@@ -41,6 +41,7 @@ export default function CandidateDashboardPage() {
   const [isPublishingLinkedIn, setIsPublishingLinkedIn] = useState(false);
   const [linkedInSuccessMsg, setLinkedInSuccessMsg] = useState<string | null>(null);
 
+  const [mounted, setMounted] = useState(false);
   const [countdown, setCountdown] = useState({ days: "02", hours: "14", minutes: "35", seconds: "10" });
 
   useEffect(() => {
