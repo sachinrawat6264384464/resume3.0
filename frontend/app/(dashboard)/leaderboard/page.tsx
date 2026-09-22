@@ -68,11 +68,11 @@ const HexagonBadge = ({ badge }: { badge: CurriculumBadge }) => {
           opacity="0.95" 
         />
       </svg>
-      <div className="relative z-10 flex flex-col items-center justify-center text-white px-0.5 leading-tight">
-        <span className="text-[6.5px] font-mono font-black uppercase tracking-tighter text-slate-100 opacity-90">{badge.modNum}</span>
-        <span className="text-[8px] font-black uppercase tracking-tight text-white leading-tight font-sans mt-0.5 drop-shadow-sm">{badge.title}</span>
-        <span className="text-[6px] font-mono font-bold opacity-85 uppercase tracking-tighter text-slate-200">{badge.sub}</span>
-        <div className="flex items-center gap-0.5 mt-0.5 text-amber-300 text-[6.5px]">
+      <div className="relative z-10 flex flex-col items-center justify-center text-white w-full max-w-[44px] px-0.5 leading-none overflow-hidden text-center">
+        <span className="text-[6px] font-mono font-black uppercase tracking-tighter text-slate-100 opacity-90 truncate max-w-full">{badge.modNum}</span>
+        <span className="text-[7px] font-black uppercase tracking-tight text-white leading-tight font-sans mt-0.5 drop-shadow-sm text-center break-words line-clamp-2 max-w-full">{badge.title}</span>
+        <span className="text-[5.5px] font-mono font-bold opacity-85 uppercase tracking-tighter text-slate-200 truncate max-w-full mt-0.5">{badge.sub}</span>
+        <div className="flex items-center justify-center gap-0.5 mt-0.5 text-amber-300 text-[6px]">
           ★ ★ ★
         </div>
       </div>

@@ -1,7 +1,7 @@
 from typing import List, Dict, Any, Optional
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func, desc
-from sqlalchemy.orm import selectinload
+from sqlalchemy.orm import selectinload, defer
 from app.models.candidate import Candidate
 from app.models.user import User
 from app.models.interview_attempt import InterviewAttempt
@@ -17,24 +17,44 @@ class AdminService:
         self.db = db
 
     async def get_dashboard_analytics(self, org_id: str) -> AdminDashboardMetrics:
-        # Total candidates count across org or all candidates
-        from sqlalchemy import or_
         cand_stmt = select(func.count(Candidate.id))
         total_candidates = (await self.db.execute(cand_stmt)).scalar() or 0
 
-        # Fetch all interview attempts in organization
         att_stmt = (
             select(InterviewAttempt)
-            .where(InterviewAttempt.organization_id == org_id)
             .options(
                 selectinload(InterviewAttempt.candidate).selectinload(Candidate.user),
-                selectinload(InterviewAttempt.template),
-                selectinload(InterviewAttempt.stage_attempts).selectinload(StageAttempt.stage)
+                selectinload(InterviewAttempt.template)
             )
             .order_by(desc(InterviewAttempt.created_at))
+            .limit(100)
         )
+        if org_id and org_id != "default-org":
+            att_stmt = att_stmt.where(InterviewAttempt.organization_id == org_id)
+
         att_res = await self.db.execute(att_stmt)
         attempts = att_res.scalars().all()
+
+        stg_stmt = select(InterviewStage).order_by(InterviewStage.stage_number)
+        stg_res = await self.db.execute(stg_stmt)
+        all_db_stages = stg_res.scalars().all()
+
+        sa_stmt = select(StageAttempt.stage_number, StageAttempt.status, StageAttempt.score)
+        sa_res = await self.db.execute(sa_stmt)
+        all_stage_attempts = sa_res.all()
+
+        top_att_stmt = (
+            select(
+                InterviewAttempt.candidate_id,
+                func.max(InterviewAttempt.overall_score).label("max_score")
+            )
+            .where(InterviewAttempt.overall_score.isnot(None))
+            .group_by(InterviewAttempt.candidate_id)
+            .order_by(desc("max_score"))
+            .limit(10)
+        )
+        top_att_res = await self.db.execute(top_att_stmt)
+        top_att_rows = top_att_res.all()
 
         completed_attempts = [a for a in attempts if a.status == "COMPLETED" or a.decision is not None]
         in_progress_attempts = [a for a in attempts if a.status == "IN_PROGRESS" and a.decision is None]
@@ -45,19 +65,13 @@ class AdminService:
         scores = [a.overall_score for a in attempts if a.overall_score is not None]
         avg_score = round(sum(scores) / len(scores), 1) if scores else 0.0
 
-        # Query all stages from DB (Stage 0 to Stage 30)
-        stg_stmt = select(InterviewStage).order_by(InterviewStage.stage_number)
-        stg_res = await self.db.execute(stg_stmt)
-        all_db_stages = stg_res.scalars().all()
-
         # Map attempts per stage
-        stage_attempts_map: Dict[int, List[StageAttempt]] = {}
-        for a in attempts:
-            for sa in a.stage_attempts:
-                s_num = sa.stage_number
-                if s_num not in stage_attempts_map:
-                    stage_attempts_map[s_num] = []
-                stage_attempts_map[s_num].append(sa)
+        stage_attempts_map: Dict[int, List[Dict[str, Any]]] = {}
+        for row in all_stage_attempts:
+            s_num = row.stage_number
+            if s_num not in stage_attempts_map:
+                stage_attempts_map[s_num] = []
+            stage_attempts_map[s_num].append({"status": row.status, "score": row.score})
 
         stage_pass_rates: List[StagePassRateMetric] = []
 
@@ -65,12 +79,12 @@ class AdminService:
             for st in all_db_stages:
                 s_num = st.stage_number
                 s_attempts = stage_attempts_map.get(s_num, [])
-                eval_attempts = [sa for sa in s_attempts if sa.status in ("PASSED", "FAILED") or sa.score is not None]
-                s_passed = [sa for sa in eval_attempts if sa.status == "PASSED" or (sa.score or 0) >= 70.0]
+                eval_attempts = [sa for sa in s_attempts if sa["status"] in ("PASSED", "FAILED") or sa["score"] is not None]
+                s_passed = [sa for sa in eval_attempts if sa["status"] == "PASSED" or (sa["score"] or 0) >= 70.0]
                 s_total = len(s_attempts)
                 
                 s_rate = round((len(s_passed) / len(eval_attempts)) * 100, 1) if eval_attempts else 0.0
-                s_scores = [sa.score for sa in eval_attempts if sa.score is not None]
+                s_scores = [sa["score"] for sa in eval_attempts if sa["score"] is not None]
                 s_avg = round(sum(s_scores) / len(s_scores), 1) if s_scores else 0.0
 
                 stage_pass_rates.append(StagePassRateMetric(
@@ -165,33 +179,106 @@ class AdminService:
             if a.decision in ("NEEDS_IMPROVEMENT", "FAILED") or (a.overall_score is not None and a.overall_score < 80.0):
                 attention_items.append(item)
 
-        # Query top performing candidates dynamically
-        top_cand_stmt = (
-            select(Candidate)
-            .options(selectinload(Candidate.user))
-            .order_by(desc(Candidate.readiness_score))
-            .limit(5)
+        # Filter out dummy seeded test accounts from recent items
+        recent_items = [item for item in recent_items if not (item.candidate_email and "@cloudops.internal" in item.candidate_email)]
+
+        # Query top performing candidates dynamically based on real interview attempts in Neon PostgreSQL DB
+        top_att_stmt = (
+            select(
+                InterviewAttempt.candidate_id,
+                func.max(InterviewAttempt.overall_score).label("max_score")
+            )
+            .where(InterviewAttempt.overall_score.isnot(None))
+            .group_by(InterviewAttempt.candidate_id)
+            .order_by(desc("max_score"))
+            .limit(10)
         )
-        top_cand_res = await self.db.execute(top_cand_stmt)
-        top_cands = top_cand_res.scalars().all()
+        top_att_res = await self.db.execute(top_att_stmt)
+        top_att_rows = top_att_res.all()
 
         top_candidates_list = []
         medals = ["🥇", "🥈", "🥉"]
-        for idx, tc in enumerate(top_cands, 1):
-            cand_u = tc.user
-            c_name = cand_u.full_name if cand_u else "Candidate"
-            c_email = cand_u.email if cand_u else "candidate@cloudops.internal"
-            r_score = tc.readiness_score or 0.0
-            medal = medals[idx - 1] if idx <= 3 else f"#{idx}"
-            top_candidates_list.append({
-                "rank": idx,
-                "name": c_name,
-                "email": c_email,
-                "score": f"{r_score:.1f}%",
-                "stage": tc.target_role or "Senior DevOps Engineer",
-                "date": "Active",
-                "medal": medal
-            })
+
+        if top_att_rows:
+            cand_ids = [row.candidate_id for row in top_att_rows if row.candidate_id]
+            cand_stmt = (
+                select(Candidate)
+                .where(Candidate.id.in_(cand_ids))
+                .options(
+                    selectinload(Candidate.user),
+                    selectinload(Candidate.attempts).selectinload(InterviewAttempt.template)
+                )
+            )
+            c_res = await self.db.execute(cand_stmt)
+            cand_map = {c.id: c for c in c_res.scalars().all()}
+
+            for row in top_att_rows:
+                cand_id = row.candidate_id
+                max_score = row.max_score or 0.0
+                tc = cand_map.get(cand_id)
+                if not tc:
+                    continue
+
+                cand_u = tc.user
+                c_name = cand_u.full_name if (cand_u and cand_u.full_name) else "Candidate"
+                c_email = cand_u.email if cand_u else ""
+
+                # Skip dummy seeded test accounts if email contains @cloudops.internal
+                if "@cloudops.internal" in c_email:
+                    continue
+
+                # Find latest attempt for stage title
+                latest_att = tc.attempts[0] if tc.attempts else None
+                stg_title = latest_att.template.target_role if (latest_att and latest_att.template) else (tc.target_role or "CloudOps Engineer")
+                date_str = latest_att.created_at.strftime("%b %d, %Y") if (latest_att and latest_att.created_at) else "Active"
+
+                rank_idx = len(top_candidates_list) + 1
+                medal = medals[rank_idx - 1] if rank_idx <= 3 else f"#{rank_idx}"
+                top_candidates_list.append({
+                    "rank": rank_idx,
+                    "name": c_name,
+                    "email": c_email,
+                    "score": f"{max_score:.1f}%",
+                    "stage": stg_title,
+                    "date": date_str,
+                    "medal": medal
+                })
+                if len(top_candidates_list) >= 5:
+                    break
+
+        if not top_candidates_list:
+            # Fallback to registered candidates in DB ordered by readiness_score, excluding @cloudops.internal
+            top_cand_stmt = (
+                select(Candidate)
+                .options(selectinload(Candidate.user))
+                .order_by(desc(Candidate.readiness_score))
+                .limit(10)
+            )
+            top_cand_res = await self.db.execute(top_cand_stmt)
+            top_cands = top_cand_res.scalars().all()
+
+            for tc in top_cands:
+                cand_u = tc.user
+                c_name = cand_u.full_name if (cand_u and cand_u.full_name) else "Candidate"
+                c_email = cand_u.email if cand_u else ""
+
+                if "@cloudops.internal" in c_email:
+                    continue
+
+                r_score = tc.readiness_score or 0.0
+                rank_idx = len(top_candidates_list) + 1
+                medal = medals[rank_idx - 1] if rank_idx <= 3 else f"#{rank_idx}"
+                top_candidates_list.append({
+                    "rank": rank_idx,
+                    "name": c_name,
+                    "email": c_email,
+                    "score": f"{r_score:.1f}%",
+                    "stage": tc.target_role or "Senior DevOps Engineer",
+                    "date": "Active",
+                    "medal": medal
+                })
+                if len(top_candidates_list) >= 5:
+                    break
 
         return AdminDashboardMetrics(
             total_candidates=total_candidates,

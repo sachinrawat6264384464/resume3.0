@@ -26,14 +26,15 @@ async def get_leaderboard(
     limit: int = Query(20, ge=1, le=100),
     db: AsyncSession = Depends(get_db)
 ):
-    # Query candidates registered in database
+    # Query candidates registered in database excluding dummy test accounts
     stmt = (
         select(Candidate)
         .options(selectinload(Candidate.user))
         .join(User, Candidate.user_id == User.id)
         .where(
             User.email.not_like("%example.com%"),
-            User.email.not_like("%dummy%")
+            User.email.not_like("%dummy%"),
+            User.email.not_like("%@cloudops.internal%")
         )
         .order_by(desc(Candidate.xp), desc(Candidate.readiness_score))
         .limit(limit)
@@ -41,11 +42,13 @@ async def get_leaderboard(
     res = await db.execute(stmt)
     candidates = res.scalars().all()
 
-    # Fallback if no non-example user exists yet: query all real candidates
+    # Fallback query if no candidate matches: query all real registered candidates excluding @cloudops.internal
     if not candidates:
         stmt_all = (
             select(Candidate)
             .options(selectinload(Candidate.user))
+            .join(User, Candidate.user_id == User.id)
+            .where(User.email.not_like("%@cloudops.internal%"))
             .order_by(desc(Candidate.xp), desc(Candidate.readiness_score))
             .limit(limit)
         )
