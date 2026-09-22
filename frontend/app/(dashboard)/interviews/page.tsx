@@ -106,8 +106,7 @@ export default function InterviewsPage() {
         setConfiguredFee(resGatewayCfg.data.amount.toString());
       }
 
-      const isExplicitPro = Boolean(resMetrics?.data?.candidate?.resume_data_json?.is_pro);
-      const candSubscribed = isExplicitPro;
+      const candSubscribed = Boolean(resMetrics?.data?.is_subscribed || resMetrics?.data?.candidate?.resume_data_json?.is_pro);
       setIsSubscribed(candSubscribed);
 
       // If Payment Gateway is disabled globally by Admin, treat as effective free unlock for all stages!
