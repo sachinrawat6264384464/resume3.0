@@ -118,11 +118,17 @@ async def update_my_profile(
         except Exception:
             notes_dict = {"notes": cand.notes}
     
+    res_data = dict(cand.resume_data_json or {})
+
     if req.get("designation"):
         notes_dict["designation"] = req["designation"]
+        res_data["designation"] = req["designation"]
     if req.get("linkedin_url"):
         notes_dict["linkedin_url"] = req["linkedin_url"]
+        res_data["linkedin_url"] = req["linkedin_url"]
+
     cand.notes = json.dumps(notes_dict)
+    cand.resume_data_json = res_data
 
     if req.get("mark_stage_0_complete"):
         s_stmt = select(InterviewStage).where(InterviewStage.stage_number == 0)
@@ -452,10 +458,22 @@ async def get_dashboard_metrics(
     leaderboard_data = []
     for rank, c in enumerate(top_3_candidates, 1):
         name = (c.user.full_name if (c.user and c.user.full_name) else c.full_name) or f"Candidate {c.id[:6]}"
+        c_res = c.resume_data_json or {}
+        c_notes = {}
+        if c.notes and c.notes.startswith("{"):
+            try:
+                c_notes = json.loads(c.notes)
+            except Exception:
+                pass
+        
+        linkedin_link = c_res.get("linkedin_url") or c_notes.get("linkedin_url")
+        designation_title = c_res.get("designation") or c_notes.get("designation") or c.target_role or "Cloud Engineer"
+
         leaderboard_data.append({
             "rank": rank,
             "name": name,
-            "role": c.target_role or "Cloud Engineer",
+            "role": designation_title,
+            "linkedin_url": linkedin_link,
             "xp": f"{c.xp or 0} XP",
             "is_me": c.id == cand.id
         })

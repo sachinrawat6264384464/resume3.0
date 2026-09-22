@@ -151,7 +151,7 @@ export default function InterviewsPage() {
           // Track 1 (Free Sequential Unlock)
           if (isCompleted) {
             computedStatus = "completed";
-          } else if (completedSet.has(stg.id - 1) || (stg.id === 1 && (completedSet.has(0) || true))) {
+          } else if (completedSet.has(stg.id - 1)) {
             computedStatus = "in_progress";
             computedScore = "Active";
           } else {
@@ -771,53 +771,69 @@ export default function InterviewsPage() {
                   {selectedStage.desc}
                 </p>
 
-                {/* Stage Metrics Grid */}
-                <div className="grid grid-cols-2 gap-2.5 py-2">
-                  <div className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700/80 flex flex-col gap-0.5">
-                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider flex items-center gap-1">
-                      <Flame className="w-3 h-3 text-orange-500" /> DIFFICULTY
-                    </span>
-                    <span className="text-xs font-black text-[#FF6B00]">{selectedStage.diff}</span>
+                {/* Stage Metrics Grid / Stage 0 Info Banner */}
+                {selectedStage.id === 0 ? (
+                  <div className="p-4 rounded-2xl bg-gradient-to-r from-amber-500/10 via-orange-500/10 to-amber-500/10 border-2 border-[#FF6B00]/40 flex items-start gap-3 text-xs my-2">
+                    <Trophy className="w-5 h-5 text-[#FF6B00] shrink-0 mt-0.5" />
+                    <div className="flex flex-col gap-1">
+                      <span className="font-black text-slate-900 dark:text-white uppercase tracking-wider">
+                        Candidate Profile Baseline Setup (+200 XP)
+                      </span>
+                      <span className="text-slate-600 dark:text-slate-300 font-medium leading-relaxed">
+                        Configure your target role, salary band, designation, and LinkedIn profile link. No video/audio room required for Stage 0. Completing this unlocks <strong>Stage 1: Self Introduction</strong>!
+                      </span>
+                    </div>
                   </div>
+                ) : (
+                  <>
+                    <div className="grid grid-cols-2 gap-2.5 py-2">
+                      <div className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700/80 flex flex-col gap-0.5">
+                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider flex items-center gap-1">
+                          <Flame className="w-3 h-3 text-orange-500" /> DIFFICULTY
+                        </span>
+                        <span className="text-xs font-black text-[#FF6B00]">{selectedStage.diff}</span>
+                      </div>
 
-                  <div className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700/80 flex flex-col gap-0.5">
-                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider flex items-center gap-1">
-                      <Trophy className="w-3 h-3 text-emerald-500" /> XP REWARD
-                    </span>
-                    <span className="text-xs font-black text-emerald-600 dark:text-emerald-400 font-mono">
-                      {selectedStage.xp}
-                    </span>
-                  </div>
+                      <div className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700/80 flex flex-col gap-0.5">
+                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider flex items-center gap-1">
+                          <Trophy className="w-3 h-3 text-emerald-500" /> XP REWARD
+                        </span>
+                        <span className="text-xs font-black text-emerald-600 dark:text-emerald-400 font-mono">
+                          {selectedStage.xp}
+                        </span>
+                      </div>
 
-                  <div className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700/80 flex flex-col gap-0.5">
-                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider flex items-center gap-1">
-                      <Clock className="w-3 h-3 text-blue-500" /> EST. DURATION
-                    </span>
-                    <span className="text-xs font-black text-slate-900 dark:text-white font-mono">
-                      {selectedStage.duration}
-                    </span>
-                  </div>
+                      <div className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700/80 flex flex-col gap-0.5">
+                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider flex items-center gap-1">
+                          <Clock className="w-3 h-3 text-blue-500" /> EST. DURATION
+                        </span>
+                        <span className="text-xs font-black text-slate-900 dark:text-white font-mono">
+                          {selectedStage.duration}
+                        </span>
+                      </div>
 
-                  <div className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700/80 flex flex-col gap-0.5">
-                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider flex items-center gap-1">
-                      <Mic className="w-3 h-3 text-purple-500" /> SCENARIOS
-                    </span>
-                    <span className="text-xs font-black text-slate-900 dark:text-white font-mono">
-                      {selectedStage.questions_count ?? selectedStage.questions} Questions
-                    </span>
-                  </div>
-                </div>
+                      <div className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700/80 flex flex-col gap-0.5">
+                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider flex items-center gap-1">
+                          <Mic className="w-3 h-3 text-purple-500" /> SCENARIOS
+                        </span>
+                        <span className="text-xs font-black text-slate-900 dark:text-white font-mono">
+                          {selectedStage.questions_count ?? selectedStage.questions} Questions
+                        </span>
+                      </div>
+                    </div>
 
-                {/* STAR Tip Banner */}
-                <div className="p-3.5 rounded-2xl bg-gradient-to-r from-orange-50 to-amber-50 dark:from-slate-800/60 dark:to-slate-900/60 border border-[#FF6B00]/30 flex items-start gap-2.5">
-                  <Sparkles className="w-4 h-4 text-[#FF6B00] shrink-0 mt-0.5" />
-                  <div className="flex flex-col text-xs">
-                    <span className="font-black text-slate-900 dark:text-white">STAR Pitch Formula + 3-Level Hints</span>
-                    <span className="text-[11px] text-slate-600 dark:text-slate-400 font-medium">
-                      Practice with Teleprompter or AI hints before evaluating.
-                    </span>
-                  </div>
-                </div>
+                    {/* STAR Tip Banner */}
+                    <div className="p-3.5 rounded-2xl bg-gradient-to-r from-orange-50 to-amber-50 dark:from-slate-800/60 dark:to-slate-900/60 border border-[#FF6B00]/30 flex items-start gap-2.5">
+                      <Sparkles className="w-4 h-4 text-[#FF6B00] shrink-0 mt-0.5" />
+                      <div className="flex flex-col text-xs">
+                        <span className="font-black text-slate-900 dark:text-white">STAR Pitch Formula + 3-Level Hints</span>
+                        <span className="text-[11px] text-slate-600 dark:text-slate-400 font-medium">
+                          Practice with Teleprompter or AI hints before evaluating.
+                        </span>
+                      </div>
+                    </div>
+                  </>
+                )}
 
               </div>
 
