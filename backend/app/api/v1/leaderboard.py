@@ -23,37 +23,19 @@ def compute_salary_band(score: float) -> str:
 
 @router.get("", response_model=StandardResponse[LeaderboardResponse])
 async def get_leaderboard(
-    limit: int = Query(20, ge=1, le=100),
+    limit: int = Query(100, ge=1, le=500),
     db: AsyncSession = Depends(get_db)
 ):
-    # Query candidates registered in database excluding dummy test accounts
+    # Query candidates registered in database
     stmt = (
         select(Candidate)
         .options(selectinload(Candidate.user))
         .join(User, Candidate.user_id == User.id)
-        .where(
-            User.email.not_like("%example.com%"),
-            User.email.not_like("%dummy%"),
-            User.email.not_like("%@cloudops.internal%")
-        )
         .order_by(desc(Candidate.xp), desc(Candidate.readiness_score))
         .limit(limit)
     )
     res = await db.execute(stmt)
     candidates = res.scalars().all()
-
-    # Fallback query if no candidate matches: query all real registered candidates excluding @cloudops.internal
-    if not candidates:
-        stmt_all = (
-            select(Candidate)
-            .options(selectinload(Candidate.user))
-            .join(User, Candidate.user_id == User.id)
-            .where(User.email.not_like("%@cloudops.internal%"))
-            .order_by(desc(Candidate.xp), desc(Candidate.readiness_score))
-            .limit(limit)
-        )
-        res_all = await db.execute(stmt_all)
-        candidates = res_all.scalars().all()
 
     global_ranking: List[LeaderboardEntry] = []
     for idx, cand in enumerate(candidates, start=1):

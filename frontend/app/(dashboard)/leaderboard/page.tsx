@@ -170,7 +170,7 @@ export default function LeaderboardPage() {
   useEffect(() => {
     async function loadLeaderboardData() {
       try {
-        const res: any = await apiFetch("/leaderboard");
+        const res: any = await apiFetch("/leaderboard?limit=100");
         const list = res?.data?.global_ranking || res?.global_ranking;
 
         if (Array.isArray(list) && list.length > 0) {
