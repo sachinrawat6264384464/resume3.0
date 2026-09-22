@@ -63,8 +63,21 @@ export default function InterviewsPage() {
 
   // Subscription & Razorpay Payment Modal States
   const [isSubscribed, setIsSubscribed] = useState<boolean>(false);
+  const [isPaymentEnabled, setIsPaymentEnabled] = useState<boolean>(true);
   const [configuredFee, setConfiguredFee] = useState<string>("499");
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
+
+  // Stage 0 Setup Profile Modal State
+  const [isStage0ModalOpen, setIsStage0ModalOpen] = useState(false);
+  const [isSavingStage0, setIsSavingStage0] = useState(false);
+  const [stage0Form, setStage0Form] = useState({
+    fullName: "",
+    targetRole: "Senior DevOps Engineer",
+    designation: "DevOps Specialist",
+    linkedinUrl: "",
+    experienceLevel: "MID",
+    targetSalaryBand: "₹18–40 LPA"
+  });
   const [selectedStageForPayment, setSelectedStageForPayment] = useState<any | null>(null);
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
   const [paymentSuccessMsg, setPaymentSuccessMsg] = useState<string | null>(null);
@@ -87,11 +100,14 @@ export default function InterviewsPage() {
         apiFetch("/admin/payment-gateway/config").catch(() => null)
       ]);
 
-      const userSubscribed = Boolean(resMetrics?.data?.is_subscribed);
-      setIsSubscribed(userSubscribed);
+      const gatewayEnabled = resGatewayCfg?.data?.is_enabled ?? true;
+      setIsPaymentEnabled(gatewayEnabled);
       if (resGatewayCfg?.data?.amount) {
         setConfiguredFee(resGatewayCfg.data.amount.toString());
       }
+
+      // If Payment Gateway is disabled globally by Admin, treat as effective free unlock for all stages!
+      const effectiveSubscribed = !gatewayEnabled || userSubscribed;
 
       const dbStageMap = new Map();
       if (resDbStages?.data && Array.isArray(resDbStages.data)) {
@@ -105,7 +121,6 @@ export default function InterviewsPage() {
 
       // Track completed stages for sequential unlocking
       const completedSet = new Set<number>();
-      completedSet.add(0); // Setup Stage 0 always unlocked/done
 
       ALL_30_STAGES.forEach((stg) => {
         const att = attemptMap.get(stg.id);
@@ -118,27 +133,30 @@ export default function InterviewsPage() {
         const dbStg = dbStageMap.get(stg.id);
         const att = attemptMap.get(stg.id);
         const qCount = dbStg?.questions_count !== undefined ? dbStg.questions_count : stg.questions;
-        const isCompleted = completedSet.has(stg.id) && stg.id > 0;
+        const isCompleted = completedSet.has(stg.id);
 
         let computedStatus = "locked";
         let computedScore = att ? att.score : "--";
 
-        if (stg.id === 0 || stg.id === 1) {
-          computedStatus = isCompleted ? "completed" : "in_progress";
-          if (!att && stg.id <= 1) computedScore = "Active";
-        } else if (stg.id >= 2 && stg.id <= 5) {
+        if (stg.id === 0) {
+          const stg0Att = attemptMap.get(0);
+          const isStg0Completed = isCompleted || (stg0Att && (stg0Att.status === "completed" || stg0Att.status === "PASSED"));
+          computedStatus = isStg0Completed ? "completed" : "in_progress";
+          computedScore = isStg0Completed ? "100%" : "Active";
+          if (isStg0Completed) completedSet.add(0);
+        } else if (stg.id >= 1 && stg.id <= 5) {
           // Track 1 (Free Sequential Unlock)
           if (isCompleted) {
             computedStatus = "completed";
-          } else if (completedSet.has(stg.id - 1)) {
+          } else if (completedSet.has(stg.id - 1) || (stg.id === 1 && (completedSet.has(0) || true))) {
             computedStatus = "in_progress";
             computedScore = "Active";
           } else {
             computedStatus = "locked";
           }
         } else {
-          // Track 2+ (Stages 6 to 30) - PRO Subscription Required!
-          if (!userSubscribed) {
+          // Track 2+ (Stages 6 to 30) - PRO Subscription Required ONLY if Payment Gateway is ENABLED!
+          if (!effectiveSubscribed) {
             computedStatus = "pro_locked";
           } else {
             if (isCompleted) {
@@ -245,8 +263,40 @@ export default function InterviewsPage() {
     }
   };
 
+  const handleSaveStage0Profile = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSavingStage0(true);
+    try {
+      await apiFetch("/candidates/me/profile", {
+        method: "PUT",
+        body: JSON.stringify({
+          full_name: stage0Form.fullName,
+          target_role: stage0Form.targetRole,
+          designation: stage0Form.designation,
+          linkedin_url: stage0Form.linkedinUrl,
+          experience_level: stage0Form.experienceLevel,
+          target_salary_band: stage0Form.targetSalaryBand,
+          mark_stage_0_complete: true
+        })
+      });
+
+      setIsStage0ModalOpen(false);
+      setPaymentSuccessMsg("🎉 Stage 0 Profile Setup Completed! +200 XP Awarded & Stage 1 Unlocked.");
+      await fetchStagesData();
+    } catch (err: any) {
+      alert("Failed to complete profile: " + (err?.message || "Unknown error"));
+    } finally {
+      setIsSavingStage0(false);
+    }
+  };
+
   const handleStartStage = async (stageId: number) => {
     setAlertMsg(null);
+
+    if (stageId === 0) {
+      setIsStage0ModalOpen(true);
+      return;
+    }
 
     // If an active session is currently running, prompt candidate to resume or drop out
     if (activeSession) {
@@ -256,7 +306,7 @@ export default function InterviewsPage() {
 
     const targetStg = stages.find((st) => st.id === stageId) || ALL_30_STAGES[stageId];
 
-    if (targetStg?.status === "pro_locked" || (!isSubscribed && stageId >= 6)) {
+    if (targetStg?.status === "pro_locked" || (isPaymentEnabled && !isSubscribed && stageId >= 6)) {
       setSelectedStageForPayment(targetStg);
       setIsPaymentModalOpen(true);
       return;
@@ -776,15 +826,29 @@ export default function InterviewsPage() {
                   onClick={() => handleStartStage(selectedStage.id)}
                   disabled={isStarting}
                   className={`w-full py-4 rounded-2xl font-black text-xs text-white shadow-lg flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer uppercase tracking-wider ${
-                    selectedStage.status === "pro_locked" || (!isSubscribed && selectedStage.id >= 6)
+                    selectedStage.id === 0
+                      ? "bg-gradient-to-r from-[#FF6B00] to-amber-500 hover:from-orange-500 hover:to-amber-600 shadow-[#FF6B00]/30"
+                      : selectedStage.status === "pro_locked" || (isPaymentEnabled && !isSubscribed && selectedStage.id >= 6)
                       ? "bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 font-black shadow-amber-500/30"
                       : "bg-[#FF6B00] hover:bg-[#e05e00] shadow-[#FF6B00]/30"
                   }`}
                 >
-                  {selectedStage.status === "pro_locked" || (!isSubscribed && selectedStage.id >= 6) ? (
+                  {selectedStage.id === 0 ? (
+                    selectedStage.status === "completed" ? (
+                      <>
+                        <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                        <span>✓ Stage 0 Profile Completed (+200 XP)</span>
+                      </>
+                    ) : (
+                      <>
+                        <Trophy className="w-4 h-4 text-amber-300" />
+                        <span>Setup Profile & Complete Stage 0 (+200 XP) 🚀</span>
+                      </>
+                    )
+                  ) : selectedStage.status === "pro_locked" || (isPaymentEnabled && !isSubscribed && selectedStage.id >= 6) ? (
                     <>
                       <Crown className="w-4 h-4 text-slate-950" />
-                      <span>Unlock All Stages 6-30 (One-Time ₹50 Pass) 🚀</span>
+                      <span>Unlock All Stages (Pay ₹{configuredFee}) 🚀</span>
                     </>
                   ) : selectedStage.status === "locked" ? (
                     <>

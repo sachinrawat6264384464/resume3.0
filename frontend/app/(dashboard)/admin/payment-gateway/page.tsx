@@ -86,6 +86,54 @@ export default function AdminPaymentGatewayPage() {
     fetchConfig();
   }, []);
 
+  const handleToggleEnabled = async (newVal: boolean) => {
+    setIsEnabled(newVal);
+    try {
+      await apiFetch("/admin/payment-gateway/config", {
+        method: "POST",
+        body: JSON.stringify({
+          provider_name: "razorpay",
+          is_enabled: newVal,
+          is_test_mode: isTestMode,
+          publishable_key: publishableKey,
+          webhook_secret: webhookSecret,
+          currency: currency,
+          amount: amount
+        })
+      });
+      setMsg({
+        type: "success",
+        text: `Payment Gateway is now ${newVal ? "ENABLED (Payment Required for Stages)" : "DISABLED (Free Access to All Stages)"} in Database!`
+      });
+    } catch (err: any) {
+      console.warn("Failed to toggle gateway:", err);
+    }
+  };
+
+  const handleToggleTestMode = async (newVal: boolean) => {
+    setIsTestMode(newVal);
+    try {
+      await apiFetch("/admin/payment-gateway/config", {
+        method: "POST",
+        body: JSON.stringify({
+          provider_name: "razorpay",
+          is_enabled: isEnabled,
+          is_test_mode: newVal,
+          publishable_key: publishableKey,
+          webhook_secret: webhookSecret,
+          currency: currency,
+          amount: amount
+        })
+      });
+      setMsg({
+        type: "success",
+        text: `Environment mode updated to ${newVal ? "Sandbox Test Mode" : "Production Live Mode"} in Database!`
+      });
+    } catch (err: any) {
+      console.warn("Failed to toggle mode:", err);
+    }
+  };
+
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
@@ -259,7 +307,7 @@ export default function AdminPaymentGatewayPage() {
               </div>
               <button
                 type="button"
-                onClick={() => setIsEnabled(!isEnabled)}
+                onClick={() => handleToggleEnabled(!isEnabled)}
                 className={`relative inline-flex h-7 w-14 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
                   isEnabled ? "bg-[#FF6B00]" : "bg-slate-300 dark:bg-slate-700"
                 }`}
@@ -279,7 +327,7 @@ export default function AdminPaymentGatewayPage() {
               </div>
               <button
                 type="button"
-                onClick={() => setIsTestMode(!isTestMode)}
+                onClick={() => handleToggleTestMode(!isTestMode)}
                 className={`px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider cursor-pointer border transition-all ${
                   isTestMode 
                     ? "bg-amber-100 text-amber-900 border-amber-300 dark:bg-amber-950 dark:text-amber-200 dark:border-amber-800 hover:bg-amber-200"
