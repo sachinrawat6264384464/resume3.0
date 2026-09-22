@@ -421,63 +421,66 @@ Learn Today. Implement Today. Build Your Career for a Lifetime.
         </div>
       </div>
 
-      {/* ACTIVE LIVE MOCK INTERVIEW BANNER (MATCHED EXACTLY TO MOCKUP DESIGN) */}
+      {/* ACTIVE LIVE MOCK INTERVIEW BANNER (PREMIUM CLIENT DESIGN) */}
       {activeLiveSession && (
-        <div className="relative z-10 p-6 sm:p-8 rounded-[32px] bg-gradient-to-br from-blue-50 via-white to-sky-50 dark:from-slate-900 dark:via-slate-900 dark:to-slate-950 border-2 border-blue-400/30 dark:border-blue-700/40 shadow-xl overflow-hidden flex flex-col gap-6">
+        <div className="relative z-10 p-6 sm:p-8 rounded-[32px] bg-gradient-to-br from-[#0B1728] via-[#0F223D] to-[#081220] border-2 border-amber-500/30 shadow-2xl shadow-amber-500/10 overflow-hidden flex flex-col gap-6 text-white backdrop-blur-xl">
           
-          {/* Top Header Badge & Tagline */}
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-            <div className="flex flex-col gap-1.5">
-              <div className="flex items-center gap-2 flex-wrap">
-                <span className="px-3 py-1 rounded-full text-xs font-black bg-rose-600 text-white uppercase tracking-wider flex items-center gap-1.5 shadow-md shadow-rose-500/25 animate-pulse">
-                  <span className="w-2 h-2 rounded-full bg-white animate-ping" />
-                  ((•)) NEXT LIVE MOCK INTERVIEW
+          {/* Ambient Glow Orbs */}
+          <div className="absolute -right-16 -top-16 w-64 h-64 bg-amber-500/15 rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute -left-16 -bottom-16 w-64 h-64 bg-blue-500/15 rounded-full blur-3xl pointer-events-none" />
+
+          {/* Top Header Badge & Session Details */}
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-5 relative z-10">
+            <div className="flex flex-col gap-2.5 max-w-3xl">
+              
+              <div className="flex items-center gap-2.5 flex-wrap">
+                <span className="px-3.5 py-1 rounded-full text-[11px] font-black bg-gradient-to-r from-rose-600 to-red-500 text-white uppercase tracking-wider flex items-center gap-2 shadow-lg shadow-rose-600/30">
+                  <span className="relative flex h-2 w-2">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-white"></span>
+                  </span>
+                  LIVE MASTERCLASS
                 </span>
-                <span className="px-3 py-1 rounded-full text-xs font-bold bg-blue-100 dark:bg-blue-950/70 text-blue-700 dark:text-blue-300 border border-blue-300/50">
-                  {activeLiveSession.session_date}
+
+                <span className="px-3.5 py-1 rounded-full text-[11px] font-mono font-black bg-amber-500/15 text-amber-400 border border-amber-500/40">
+                  📅 {activeLiveSession.session_date}
+                </span>
+
+                <span className="px-3 py-1 rounded-full text-[10.5px] font-black bg-blue-500/15 text-blue-300 border border-blue-500/30 flex items-center gap-1">
+                  <Laptop className="w-3.5 h-3.5 text-blue-400" />
+                  Host: {activeLiveSession.host_name || "Vikas Sir & Sachin Rawat"}
                 </span>
               </div>
-              
-              <h2 className="text-xl sm:text-2xl font-black tracking-tight text-slate-900 dark:text-white uppercase leading-tight">
-                {activeLiveSession.title}
+
+              <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black tracking-tight text-white uppercase leading-snug drop-shadow-md">
+                {activeLiveSession.title.startsWith("👑") ? activeLiveSession.title : `👑 ${activeLiveSession.title}`}
               </h2>
-              
-              <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 flex items-center gap-2">
-                <span>Practice</span>
-                <span>|</span>
-                <span>Get Expert Feedback</span>
-                <span>|</span>
-                <span className="text-[#FF6B00]">Be Job Ready</span>
+
+              <p className="text-xs sm:text-sm font-medium text-slate-300 leading-relaxed max-w-2xl">
+                {activeLiveSession.description || "Live Q&A, mock interview feedback & ATS resume review session with Vikas Sir and Sachin Rawat."}
               </p>
+
             </div>
 
-            {/* Side Illustration Badge */}
-            <div className="hidden lg:flex items-center gap-3 p-3 rounded-2xl bg-white/80 dark:bg-slate-800/80 border border-blue-200 dark:border-slate-700 shadow-sm shrink-0">
-              <div className="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center font-black">
-                <Laptop className="w-5 h-5 text-white" />
-              </div>
-              <div className="flex flex-col">
-                <span className="text-[11px] font-black text-blue-600 dark:text-blue-400">Host: {activeLiveSession.host_name || "Vikas Sir & Sachin Rawat"}</span>
-                <span className="text-[10px] font-bold text-slate-400 italic">"Let's Crack It Together! 🚀"</span>
-              </div>
+            {/* Quote Pill */}
+            <div className="hidden lg:flex flex-col items-end gap-1 p-4 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-md shrink-0 self-start">
+              <span className="text-xs font-black text-amber-400 flex items-center gap-1.5">
+                <Sparkles className="w-4 h-4 text-amber-400" />
+                "Let's Crack It Together! 🚀"
+              </span>
+              <span className="text-[10.5px] text-slate-400 font-medium">Practice • Expert Feedback • Get Hired</span>
             </div>
+
           </div>
 
-          {/* Description line if any */}
-          {activeLiveSession.description && (
-            <p className="text-xs font-medium text-slate-600 dark:text-slate-300 bg-white/60 dark:bg-slate-800/40 p-3 rounded-xl border border-slate-200/60 dark:border-slate-800">
-              {activeLiveSession.description}
-            </p>
-          )}
-
-          {/* TWO Side-by-Side Action Pill Buttons (Zoom & WhatsApp) */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-1">
+          {/* TWO HIGH-IMPACT PREMIUM ACTION BUTTON CARDS */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 relative z-10 pt-2">
             
-            {/* Zoom Button */}
+            {/* Zoom Live Button Card */}
             <button
               type="button"
               onClick={() => {
-                const url = activeLiveSession.meeting_url || "https://zoom.us/j/123456789";
+                const url = activeLiveSession.meeting_url || "https://meet.google.com/xyz-cloudops-live";
                 try {
                   apiFetch("/live-sessions/track-click", {
                     method: "POST",
@@ -492,27 +495,29 @@ Learn Today. Implement Today. Build Your Career for a Lifetime.
                 } catch {}
                 if (typeof window !== "undefined") window.open(url, "_blank");
               }}
-              className="flex flex-col items-center gap-1.5 p-4 rounded-2xl bg-white dark:bg-slate-800/90 border-2 border-blue-500/40 hover:border-blue-600 shadow-md hover:shadow-xl transition-all group cursor-pointer text-left w-full"
+              className="group relative p-4 rounded-2xl bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 hover:from-blue-500 hover:to-indigo-600 text-white shadow-xl shadow-blue-900/30 border border-blue-400/30 hover:border-blue-300 transition-all duration-200 cursor-pointer flex items-center justify-between gap-4 text-left overflow-hidden"
             >
-              <div className="w-full py-3 px-4 rounded-full bg-gradient-to-r from-blue-600 via-blue-500 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-black text-xs sm:text-sm tracking-wide flex items-center justify-between shadow-md shadow-blue-500/25 transition-transform group-hover:scale-[1.02]">
-                <div className="flex items-center gap-2">
-                  <Video className="w-5 h-5 fill-white text-white" />
-                  <span>Registered for Zoom</span>
+              <div className="flex items-center gap-3.5">
+                <div className="w-12 h-12 rounded-xl bg-white/15 border border-white/20 flex items-center justify-center text-white shrink-0 shadow-inner group-hover:scale-110 transition-transform">
+                  <Video className="w-6 h-6 text-white" />
                 </div>
-                <div className="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center">
-                  <ChevronRight className="w-4 h-4 text-white" />
+                <div className="flex flex-col">
+                  <span className="text-sm font-black tracking-tight uppercase flex items-center gap-1.5 text-white">
+                    Registered for Zoom Live
+                    <ChevronRight className="w-4 h-4 text-white/80 group-hover:translate-x-1 transition-transform" />
+                  </span>
+                  <span className="text-[10.5px] font-bold text-blue-100/90 font-mono">
+                    JOIN THE LIVE INTERACTIVE SESSION ON ZOOM
+                  </span>
                 </div>
               </div>
-              <span className="text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                Join the Live Mock Interview on Zoom
-              </span>
             </button>
 
-            {/* WhatsApp Community Button */}
+            {/* WhatsApp Community Button Card */}
             <button
               type="button"
               onClick={() => {
-                const url = activeLiveSession.whatsapp_group_url || "https://chat.whatsapp.com/AIInterviewCommunity";
+                const url = "https://chat.whatsapp.com/LOxsACQwbGgAudjaC3qhOJ";
                 try {
                   apiFetch("/live-sessions/track-click", {
                     method: "POST",
@@ -527,27 +532,35 @@ Learn Today. Implement Today. Build Your Career for a Lifetime.
                 } catch {}
                 if (typeof window !== "undefined") window.open(url, "_blank");
               }}
-              className="flex flex-col items-center gap-1.5 p-4 rounded-2xl bg-white dark:bg-slate-800/90 border-2 border-emerald-500/40 hover:border-emerald-600 shadow-md hover:shadow-xl transition-all group cursor-pointer text-left w-full"
+              className="group relative p-4 rounded-2xl bg-gradient-to-r from-emerald-600 via-emerald-500 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white shadow-xl shadow-emerald-900/30 border border-emerald-400/30 hover:border-emerald-300 transition-all duration-200 cursor-pointer flex items-center justify-between gap-4 text-left overflow-hidden"
             >
-              <div className="w-full py-3 px-4 rounded-full bg-gradient-to-r from-emerald-600 via-emerald-500 to-green-600 hover:from-emerald-700 hover:to-green-700 text-white font-black text-xs sm:text-sm tracking-wide flex items-center justify-between shadow-md shadow-emerald-500/25 transition-transform group-hover:scale-[1.02]">
-                <div className="flex items-center gap-2">
-                  <MessageSquare className="w-5 h-5 fill-white text-white" />
-                  <span>Join WhatsApp Community</span>
+              <div className="flex items-center gap-3.5">
+                <div className="w-12 h-12 rounded-xl bg-white/15 border border-white/20 flex items-center justify-center text-white shrink-0 shadow-inner group-hover:scale-110 transition-transform">
+                  <MessageSquare className="w-6 h-6 text-white fill-white/20" />
                 </div>
-                <div className="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center">
-                  <ChevronRight className="w-4 h-4 text-white" />
+                <div className="flex flex-col">
+                  <span className="text-sm font-black tracking-tight uppercase flex items-center gap-1.5 text-white">
+                    Join WhatsApp Community
+                    <ChevronRight className="w-4 h-4 text-white/80 group-hover:translate-x-1 transition-transform" />
+                  </span>
+                  <span className="text-[10.5px] font-bold text-emerald-100/90 font-mono">
+                    GET INSTANT UPDATES, LINKS & ANNOUNCEMENTS
+                  </span>
                 </div>
               </div>
-              <span className="text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                Get Updates, Links, and Announcements
-              </span>
             </button>
 
           </div>
 
-          {/* Footer tagline */}
-          <div className="flex items-center justify-center gap-3 pt-2 border-t border-slate-200/60 dark:border-slate-800 text-[10px] font-black text-slate-400 uppercase tracking-widest">
-            <span>Learn</span> • <span>Practice</span> • <span>Grow</span> • <span className="text-[#FF6B00]">Get Placed</span>
+          {/* Footer Bar */}
+          <div className="flex items-center justify-center gap-4 pt-3 border-t border-white/10 text-[10.5px] font-black text-slate-400 uppercase tracking-widest relative z-10">
+            <span className="text-slate-300">LEARN</span>
+            <span className="text-amber-500">•</span>
+            <span className="text-slate-300">PRACTICE</span>
+            <span className="text-amber-500">•</span>
+            <span className="text-slate-300">GROW</span>
+            <span className="text-amber-500">•</span>
+            <span className="text-[#FF6B00] font-black">GET PLACED</span>
           </div>
 
         </div>
