@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Sparkles, Loader2, X, Plus, Layers, CheckCircle2 } from "lucide-react";
 import { apiFetch } from "@/lib/api";
+import { AlertModal } from "@/components/ui/AlertModal";
 
 interface JDParserModalProps {
   isOpen: boolean;
@@ -17,12 +18,14 @@ export function JDParserModal({ isOpen, onClose, onSuccess }: JDParserModalProps
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [analysisResult, setAnalysisResult] = useState<any>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   if (!isOpen) return null;
 
   const handleAnalyze = async () => {
     if (!rawText.trim()) return;
     setIsAnalyzing(true);
+    setErrorMessage(null);
     try {
       const res = await apiFetch("/job-descriptions/analyze", {
         method: "POST",
@@ -34,7 +37,7 @@ export function JDParserModal({ isOpen, onClose, onSuccess }: JDParserModalProps
       });
       setAnalysisResult(res.data);
     } catch (err: any) {
-      alert(err.message || "Failed to analyze Job Description");
+      setErrorMessage(err.message || "Failed to analyze Job Description");
     } finally {
       setIsAnalyzing(false);
     }
@@ -43,6 +46,7 @@ export function JDParserModal({ isOpen, onClose, onSuccess }: JDParserModalProps
   const handleCreateTemplate = async () => {
     if (!analysisResult) return;
     setIsGenerating(true);
+    setErrorMessage(null);
     try {
       // 1. Create JD
       const jdRes = await apiFetch("/job-descriptions", {
@@ -66,7 +70,7 @@ export function JDParserModal({ isOpen, onClose, onSuccess }: JDParserModalProps
       onSuccess();
       onClose();
     } catch (err: any) {
-      alert(err.message || "Failed to generate interview blueprint");
+      setErrorMessage(err.message || "Failed to generate interview blueprint");
     } finally {
       setIsGenerating(false);
     }
@@ -212,6 +216,14 @@ export function JDParserModal({ isOpen, onClose, onSuccess }: JDParserModalProps
           </div>
         )}
       </div>
+
+      <AlertModal
+        isOpen={!!errorMessage}
+        title="Blueprint Error"
+        message={errorMessage || ""}
+        type="error"
+        onClose={() => setErrorMessage(null)}
+      />
     </div>
   );
 }

@@ -8,6 +8,7 @@ import {
   ArrowLeft, Edit3, Save, X, Play, Loader2, BookOpen, Clock, FileText 
 } from "lucide-react";
 import { apiFetch } from "@/lib/api";
+import { AlertModal } from "@/components/ui/AlertModal";
 
 export default function AdminAttemptReviewPage() {
   const params = useParams();
@@ -15,6 +16,27 @@ export default function AdminAttemptReviewPage() {
 
   const [report, setReport] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
+
+  // Alert Modal state
+  const [alertState, setAlertState] = useState<{
+    isOpen: boolean;
+    title?: string;
+    message: string;
+    type?: "success" | "error" | "warning" | "info";
+  }>({
+    isOpen: false,
+    message: "",
+    type: "info"
+  });
+
+  const showAlert = (message: string, type: "success" | "error" | "warning" | "info" = "info", title?: string) => {
+    setAlertState({
+      isOpen: true,
+      message: typeof message === "string" ? message : JSON.stringify(message),
+      type,
+      title
+    });
+  };
 
   // Override Modal state
   const [overrideStageId, setOverrideStageId] = useState<string | null>(null);
@@ -28,7 +50,7 @@ export default function AdminAttemptReviewPage() {
       const res = await apiFetch(`/reports/${attemptId}/admin`);
       setReport(res.data);
     } catch (e: any) {
-      alert(e.message || "Failed to load audit report");
+      showAlert(e.message || "Failed to load audit report", "error", "Load Error");
     } finally {
       setIsLoading(false);
     }
@@ -54,11 +76,11 @@ export default function AdminAttemptReviewPage() {
           override_reason: overrideReason
         })
       });
-      alert("Stage decision override applied successfully!");
+      showAlert("Stage decision override applied successfully!", "success", "Override Applied");
       setOverrideStageId(null);
       loadReport();
     } catch (err: any) {
-      alert(err.message || "Failed to apply override");
+      showAlert(err.message || "Failed to apply override", "error", "Override Failed");
     } finally {
       setIsSubmittingOverride(false);
     }
@@ -301,7 +323,14 @@ export default function AdminAttemptReviewPage() {
             </form>
           </div>
         </div>
-      )}
+      {/* Alert Modal */}
+      <AlertModal
+        isOpen={alertState.isOpen}
+        title={alertState.title}
+        message={alertState.message}
+        type={alertState.type}
+        onClose={() => setAlertState((prev) => ({ ...prev, isOpen: false }))}
+      />
     </div>
   );
 }

@@ -11,6 +11,7 @@ import {
 import { apiFetch } from "@/lib/api";
 import { AdminDashboardMetrics } from "@/types";
 import { JDParserModal } from "@/components/admin/JDParserModal";
+import { AlertModal } from "@/components/ui/AlertModal";
 
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/lib/store";
@@ -24,6 +25,27 @@ export default function AdminAnalyticsPage() {
   const [isCleaning, setIsCleaning] = useState(false);
   const [isJDModalOpen, setIsJDModalOpen] = useState(false);
   const [timeRange, setTimeRange] = useState("This Week");
+
+  // Alert Modal state
+  const [alertState, setAlertState] = useState<{
+    isOpen: boolean;
+    title?: string;
+    message: string;
+    type?: "success" | "error" | "warning" | "info";
+  }>({
+    isOpen: false,
+    message: "",
+    type: "info"
+  });
+
+  const showAlert = (message: string, type: "success" | "error" | "warning" | "info" = "info", title?: string) => {
+    setAlertState({
+      isOpen: true,
+      message: typeof message === "string" ? message : JSON.stringify(message),
+      type,
+      title
+    });
+  };
 
   const loadAnalytics = async () => {
     try {
@@ -55,13 +77,12 @@ export default function AdminAnalyticsPage() {
   }, [router, user]);
 
   const handleRetentionCleanup = async () => {
-    if (!confirm("Run 90-day recording retention cleanup? This will permanently purge recordings older than 90 days.")) return;
     setIsCleaning(true);
     try {
       const res = await apiFetch("/admin/recordings/trigger-cleanup", { method: "POST" });
-      alert(`Retention cleanup complete: ${res.data.purged_count} expired recordings purged (${(res.data.freed_bytes / 1024 / 1024).toFixed(2)} MB freed).`);
+      showAlert(`Retention cleanup complete: ${res.data.purged_count || 0} expired recordings purged (${((res.data.freed_bytes || 0) / 1024 / 1024).toFixed(2)} MB freed).`, "success", "Cleanup Complete");
     } catch (err: any) {
-      alert(err.message || "Retention cleanup failed");
+      showAlert(err.message || "Retention cleanup failed", "error", "Cleanup Failed");
     } finally {
       setIsCleaning(false);
     }

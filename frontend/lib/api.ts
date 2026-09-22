@@ -82,7 +82,21 @@ export async function apiFetch<T = any>(
         if (responseText && responseText.trim()) {
           try {
             const errJson = JSON.parse(responseText);
-            errorMsg = errJson.detail || errJson.message || errorMsg;
+            if (errJson.detail) {
+              if (typeof errJson.detail === "string") {
+                errorMsg = errJson.detail;
+              } else if (Array.isArray(errJson.detail)) {
+                errorMsg = errJson.detail
+                  .map((d: any) => (typeof d === "string" ? d : d.msg || d.detail || JSON.stringify(d)))
+                  .join("; ");
+              } else if (typeof errJson.detail === "object") {
+                errorMsg = errJson.detail.msg || errJson.detail.message || JSON.stringify(errJson.detail);
+              }
+            } else if (errJson.message) {
+              errorMsg = typeof errJson.message === "string" ? errJson.message : JSON.stringify(errJson.message);
+            } else {
+              errorMsg = typeof errJson === "string" ? errJson : JSON.stringify(errJson);
+            }
           } catch {
             errorMsg = responseText;
           }

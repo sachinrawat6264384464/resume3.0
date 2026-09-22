@@ -17,10 +17,10 @@ class InterviewService:
     def __init__(self, db: AsyncSession):
         self.db = db
 
-    async def list_templates(self, org_id: str) -> List[InterviewTemplate]:
+    async def list_templates(self, org_id: Optional[str] = None) -> List[InterviewTemplate]:
         stmt = (
             select(InterviewTemplate)
-            .where(InterviewTemplate.organization_id == org_id, InterviewTemplate.status != "ARCHIVED")
+            .where(InterviewTemplate.status != "ARCHIVED")
             .options(selectinload(InterviewTemplate.stages).selectinload(InterviewStage.questions))
             .order_by(desc(InterviewTemplate.created_at))
         )

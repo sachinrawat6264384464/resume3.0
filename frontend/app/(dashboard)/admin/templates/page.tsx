@@ -11,6 +11,7 @@ import {
 import { apiFetch } from "@/lib/api";
 import { InterviewTemplate } from "@/types";
 import { JDParserModal } from "@/components/admin/JDParserModal";
+import { AlertModal } from "@/components/ui/AlertModal";
 
 export default function AdminTemplatesPage() {
   const [templates, setTemplates] = useState<InterviewTemplate[]>([]);
@@ -54,6 +55,27 @@ export default function AdminTemplatesPage() {
     hint_level_2: "",
     hint_level_3: ""
   });
+
+  // Custom In-Page Alert Modal State
+  const [alertState, setAlertState] = useState<{
+    isOpen: boolean;
+    title?: string;
+    message: string;
+    type?: "success" | "error" | "warning" | "info";
+  }>({
+    isOpen: false,
+    message: "",
+    type: "info"
+  });
+
+  const showAlert = (message: string, type: "success" | "error" | "warning" | "info" = "info", title?: string) => {
+    setAlertState({
+      isOpen: true,
+      message: typeof message === "string" ? message : JSON.stringify(message),
+      type,
+      title
+    });
+  };
 
   const loadTemplates = async () => {
     try {
@@ -122,7 +144,7 @@ export default function AdminTemplatesPage() {
     setTemplates((prevTemplates) => {
       if (!prevTemplates.length) return prevTemplates;
       const updatedStages = prevTemplates[0].stages.map((s: any) => {
-        if (s.id === stage.id || s.stage_number === stage.stage_number) {
+        if (s.id === stage.id || s.stage_number === stage.stage_number || (stage.stage_id && s.stage_id === stage.stage_id)) {
           return { ...s, ...updates };
         }
         return s;
@@ -134,8 +156,9 @@ export default function AdminTemplatesPage() {
 
     // Save to backend API
     try {
-      if (stage.id) {
-        await apiFetch(`/interviews/stages/${stage.id}`, {
+      const targetId = stage.stage_id || stage.id || stage.stage_number;
+      if (targetId) {
+        await apiFetch(`/interviews/stages/${targetId}`, {
           method: "PUT",
           body: JSON.stringify({
             title: stage.title,
@@ -149,6 +172,7 @@ export default function AdminTemplatesPage() {
             ...updates
           })
         });
+        await loadTemplates();
       }
     } catch (e: any) {
       console.warn("Backend update notice:", e);
@@ -156,14 +180,14 @@ export default function AdminTemplatesPage() {
   };
 
   const handleSaveStageSettings = async () => {
-    if (!editingStage?.id) return;
+    if (!editingStage) return;
     setIsSavingStage(true);
     
     // Optimistic update
     setTemplates((prevTemplates) => {
       if (!prevTemplates.length) return prevTemplates;
       const updatedStages = prevTemplates[0].stages.map((s: any) => {
-        if (s.id === editingStage.id) {
+        if (s.id === editingStage.id || s.stage_number === editingStage.stage_number || (editingStage.stage_id && s.stage_id === editingStage.stage_id)) {
           return { ...s, ...stageForm };
         }
         return s;
@@ -172,14 +196,16 @@ export default function AdminTemplatesPage() {
     });
 
     try {
-      await apiFetch(`/interviews/stages/${editingStage.id}`, {
+      const targetId = editingStage.stage_id || editingStage.id || editingStage.stage_number;
+      await apiFetch(`/interviews/stages/${targetId}`, {
         method: "PUT",
         body: JSON.stringify(stageForm)
       });
       await loadTemplates();
       setIsStageModalOpen(false);
+      showAlert("Stage configuration saved successfully to Database!", "success", "Stage Saved");
     } catch (e: any) {
-      alert(e?.message || "Failed to update stage settings in Database");
+      showAlert(e?.message || "Failed to update stage settings in Database", "error", "Save Failed");
     } finally {
       setIsSavingStage(false);
     }
@@ -259,8 +285,9 @@ export default function AdminTemplatesPage() {
 
       await loadTemplates();
       setIsQuestionModalOpen(false);
+      showAlert("Question details saved successfully!", "success", "Question Saved");
     } catch (e: any) {
-      alert(e?.message || "Saved to stage view successfully!");
+      showAlert(e?.message || "Question saved to current stage view.", "success", "Question Saved");
       setIsQuestionModalOpen(false);
     } finally {
       setIsSavingQuestion(false);
@@ -1077,6 +1104,15 @@ export default function AdminTemplatesPage() {
           onSuccess={() => loadTemplates()}
         />
       )}
+
+      {/* IN-PAGE ALERT MODAL (Replaces browser alert popup) */}
+      <AlertModal
+        isOpen={alertState.isOpen}
+        title={alertState.title}
+        message={alertState.message}
+        type={alertState.type}
+        onClose={() => setAlertState((prev) => ({ ...prev, isOpen: false }))}
+      />
 
     </motion.div>
   );

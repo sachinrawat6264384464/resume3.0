@@ -735,13 +735,8 @@ async def seed_database():
                 )
                 db.add(stage)
                 await db.flush()
-            else:
-                stage.title = f"Stage {s_num}: {s_info['title']}"
-                stage.category = s_info["category"]
-                stage.description = s_info["description"]
-                await db.flush()
 
-            # Insert or update Questions for this stage
+            # Insert Questions for this stage if not already existing
             for q_idx, q_info in enumerate(s_info["questions"], 1):
                 q_stmt = select(Question).where(
                     Question.interview_stage_id == stage.id,
@@ -767,15 +762,6 @@ async def seed_database():
                         is_active="ACTIVE"
                     )
                     db.add(q_obj)
-                else:
-                    q_obj.question_text = q_info["question_text"]
-                    q_obj.question_type = q_info.get("question_type", "CONCEPTUAL")
-                    q_obj.difficulty = q_info.get("difficulty", "INTERMEDIATE")
-                    q_obj.expected_topics = q_info["expected_topics"]
-                    q_obj.reference_answer = q_info["reference_answer"]
-                    q_obj.hint_level_1 = q_info.get("hint_level_1")
-                    q_obj.hint_level_2 = q_info.get("hint_level_2")
-                    q_obj.hint_level_3 = q_info.get("hint_level_3")
 
             await db.flush()
 
