@@ -129,6 +129,43 @@ async def update_stage(
         }
     )
 
+@router.delete("/stages/{stage_id}", response_model=StandardResponse[dict])
+async def delete_stage(
+    stage_id: str,
+    payload: dict = Depends(verify_auth_token),
+    db: AsyncSession = Depends(get_db)
+):
+    stmt = select(InterviewStage).where(InterviewStage.id == stage_id)
+    res = await db.execute(stmt)
+    stage = res.scalar_one_or_none()
+
+    if not stage:
+        # Fallback search by stage_number
+        num_str = stage_id.replace("stage-new-", "").replace("stage-", "")
+        if num_str.isdigit():
+            stmt = select(InterviewStage).where(InterviewStage.stage_number == int(num_str))
+            res = await db.execute(stmt)
+            stage = res.scalar_one_or_none()
+
+    if not stage:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Interview stage not found")
+
+    # Delete related stage attempts first to prevent FK constraint issues
+    from app.models.stage_attempt import StageAttempt
+    sa_stmt = select(StageAttempt).where(StageAttempt.interview_stage_id == stage.id)
+    sa_res = await db.execute(sa_stmt)
+    stage_attempts = sa_res.scalars().all()
+    for sa in stage_attempts:
+        await db.delete(sa)
+
+    await db.delete(stage)
+    await db.commit()
+
+    return StandardResponse(
+        message="Interview stage deleted successfully from database",
+        data={"id": stage_id}
+    )
+
 @router.post("/stages", response_model=StandardResponse[dict], status_code=status.HTTP_201_CREATED)
 async def create_stage(
     s_in: StageCreate,
