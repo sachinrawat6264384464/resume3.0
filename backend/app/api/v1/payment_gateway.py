@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, status, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
+from sqlalchemy import select, text
 from typing import List, Optional
 from pydantic import BaseModel
 import uuid
@@ -20,6 +20,7 @@ class GatewayConfigRequest(BaseModel):
     secret_key: Optional[str] = None
     webhook_secret: Optional[str] = None
     currency: str = "INR"
+    amount: Optional[str] = "499"
 
 class CreateTransactionRequest(BaseModel):
     candidate_name: str
@@ -35,7 +36,7 @@ class CreateTransactionRequest(BaseModel):
 class VerifySubscribeRequest(BaseModel):
     transaction_id: Optional[str] = None
     payment_method: Optional[str] = "Razorpay / UPI"
-    amount: str = "50"
+    amount: str = "499"
     coupon_code: Optional[str] = None
 
 @router.get("/config", response_model=StandardResponse[dict])
@@ -43,6 +44,12 @@ async def get_payment_config(
     payload: dict = Depends(verify_auth_token),
     db: AsyncSession = Depends(get_db)
 ):
+    try:
+        await db.execute(text("ALTER TABLE payment_gateway_configs ADD COLUMN IF NOT EXISTS amount VARCHAR(50) DEFAULT '499';"))
+        await db.commit()
+    except Exception:
+        await db.rollback()
+
     stmt = select(PaymentGatewayConfig).order_by(PaymentGatewayConfig.updated_at.desc())
     res = await db.execute(stmt)
     config = res.scalars().first()
@@ -57,7 +64,8 @@ async def get_payment_config(
                 "publishable_key": "rzp_test_sampleKey123",
                 "webhook_secret": "",
                 "has_secret_key": False,
-                "currency": "INR"
+                "currency": "INR",
+                "amount": "499"
             }
         )
 
@@ -73,7 +81,8 @@ async def get_payment_config(
             "publishable_key": config.publishable_key or "",
             "webhook_secret": config.webhook_secret or "",
             "has_secret_key": has_secret,
-            "currency": config.currency or "INR"
+            "currency": config.currency or "INR",
+            "amount": getattr(config, "amount", "499") or "499"
         }
     )
 
@@ -83,6 +92,12 @@ async def update_payment_config(
     payload: dict = Depends(verify_auth_token),
     db: AsyncSession = Depends(get_db)
 ):
+    try:
+        await db.execute(text("ALTER TABLE payment_gateway_configs ADD COLUMN IF NOT EXISTS amount VARCHAR(50) DEFAULT '499';"))
+        await db.commit()
+    except Exception:
+        await db.rollback()
+
     stmt = select(PaymentGatewayConfig).where(PaymentGatewayConfig.provider_name == req.provider_name)
     res = await db.execute(stmt)
     config = res.scalar_one_or_none()
@@ -95,7 +110,8 @@ async def update_payment_config(
             publishable_key=req.publishable_key,
             encrypted_secret_key=req.secret_key if req.secret_key else None,
             webhook_secret=req.webhook_secret,
-            currency=req.currency
+            currency=req.currency,
+            amount=req.amount or "499"
         )
         db.add(config)
     else:
@@ -109,6 +125,8 @@ async def update_payment_config(
             config.webhook_secret = req.webhook_secret
         if req.currency:
             config.currency = req.currency
+        if req.amount:
+            config.amount = req.amount
 
     await db.commit()
     await db.refresh(config)
@@ -123,7 +141,8 @@ async def update_payment_config(
             "publishable_key": config.publishable_key or "",
             "webhook_secret": config.webhook_secret or "",
             "has_secret_key": bool(config.encrypted_secret_key),
-            "currency": config.currency
+            "currency": config.currency or "INR",
+            "amount": getattr(config, "amount", "499") or "499"
         }
     )
 

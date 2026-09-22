@@ -63,6 +63,7 @@ export default function InterviewsPage() {
 
   // Subscription & Razorpay Payment Modal States
   const [isSubscribed, setIsSubscribed] = useState<boolean>(false);
+  const [configuredFee, setConfiguredFee] = useState<string>("499");
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
   const [selectedStageForPayment, setSelectedStageForPayment] = useState<any | null>(null);
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
@@ -80,13 +81,17 @@ export default function InterviewsPage() {
 
   const fetchStagesData = async () => {
     try {
-      const [resDbStages, resMetrics] = await Promise.all([
+      const [resDbStages, resMetrics, resGatewayCfg] = await Promise.all([
         apiFetch("/interviews/stages").catch(() => null),
-        apiFetch("/candidates/me/dashboard-metrics").catch(() => null)
+        apiFetch("/candidates/me/dashboard-metrics").catch(() => null),
+        apiFetch("/admin/payment-gateway/config").catch(() => null)
       ]);
 
       const userSubscribed = Boolean(resMetrics?.data?.is_subscribed);
       setIsSubscribed(userSubscribed);
+      if (resGatewayCfg?.data?.amount) {
+        setConfiguredFee(resGatewayCfg.data.amount.toString());
+      }
 
       const dbStageMap = new Map();
       if (resDbStages?.data && Array.isArray(resDbStages.data)) {
@@ -320,14 +325,18 @@ export default function InterviewsPage() {
     setPaymentSuccessMsg(null);
 
     let keyId = "";
+    let feeStr = configuredFee || "499";
     try {
       const cfg = await apiFetch("/admin/payment-gateway/config");
-      if (cfg?.data?.publishable_key) {
-        keyId = cfg.data.publishable_key.trim();
+      if (cfg?.data) {
+        if (cfg.data.publishable_key) keyId = cfg.data.publishable_key.trim();
+        if (cfg.data.amount) feeStr = cfg.data.amount.toString().replace(/[^0-9]/g, "");
       }
     } catch (e) {
       console.warn("Could not fetch gateway config");
     }
+
+    const numFee = parseInt(feeStr, 10) || 499;
 
     // Check if key is dummy/placeholder
     const isDummyKey = !keyId || keyId.includes("sampleKey") || keyId === "rzp_test_sampleKey123";
@@ -338,10 +347,10 @@ export default function InterviewsPage() {
       if (scriptLoaded && (window as any).Razorpay) {
         const options = {
           key: keyId,
-          amount: 5000, // ₹50 in paise
+          amount: numFee * 100, // in paise
           currency: "INR",
           name: "CloudOps AI Interview Prep",
-          description: "One-Time ₹50 Pass: Unlock All 30 Stages & Tracks",
+          description: `One-Time ₹${numFee} Pass: Unlock All 30 Stages & Tracks`,
           image: "https://razorpay.com/favicon.ico",
           handler: async function (response: any) {
             try {
@@ -349,7 +358,7 @@ export default function InterviewsPage() {
                 method: "POST",
                 body: JSON.stringify({
                   transaction_id: response.razorpay_payment_id || `pay_rzp_${Date.now()}`,
-                  amount: "50",
+                  amount: `${numFee}`,
                   payment_method: "Razorpay Checkout (UPI/Card)"
                 })
               });
@@ -844,9 +853,9 @@ export default function InterviewsPage() {
               <div className="flex flex-col">
                 <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">ONE-TIME PAYMENT PRICE</span>
                 <div className="flex items-baseline gap-2">
-                  <span className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white font-mono">₹50</span>
+                  <span className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white font-mono">₹{configuredFee}</span>
                   <span className="text-xs text-slate-400 line-through font-mono">₹1,499</span>
-                  <span className="text-[10px] font-black text-emerald-500 bg-emerald-500/10 px-2 py-0.5 rounded-full">97% OFF</span>
+                  <span className="text-[10px] font-black text-emerald-500 bg-emerald-500/10 px-2 py-0.5 rounded-full">SPECIAL OFFER</span>
                 </div>
               </div>
               <span className="text-xs font-black text-[#FF9900] bg-[#FF9900]/10 border border-[#FF9900]/30 px-3 py-1.5 rounded-xl uppercase">

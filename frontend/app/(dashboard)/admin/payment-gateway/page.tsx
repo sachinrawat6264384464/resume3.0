@@ -33,6 +33,7 @@ export default function AdminPaymentGatewayPage() {
   const [secretKey, setSecretKey] = useState("");
   const [webhookSecret, setWebhookSecret] = useState("");
   const [currency, setCurrency] = useState("INR");
+  const [amount, setAmount] = useState("499");
   const [hasSecretKey, setHasSecretKey] = useState(false);
 
   const [showSecret, setShowSecret] = useState(false);
@@ -69,6 +70,7 @@ export default function AdminPaymentGatewayPage() {
         setPublishableKey(cfgRes.data.publishable_key || "");
         setHasSecretKey(cfgRes.data.has_secret_key ?? false);
         setCurrency(cfgRes.data.currency || "INR");
+        setAmount(cfgRes.data.amount || "499");
       }
       if (txRes?.data) {
         setTransactions(Array.isArray(txRes.data) ? txRes.data : []);
@@ -99,13 +101,14 @@ export default function AdminPaymentGatewayPage() {
           publishable_key: publishableKey,
           secret_key: secretKey,
           webhook_secret: webhookSecret,
-          currency: currency
+          currency: currency,
+          amount: amount
         })
       });
 
       setMsg({
         type: "success",
-        text: res?.message || "Razorpay Gateway credentials saved successfully to database."
+        text: res?.message || "Razorpay Gateway credentials & assessment fee saved successfully to database."
       });
       setHasSecretKey(true);
       setSecretKey("");
@@ -250,18 +253,22 @@ export default function AdminPaymentGatewayPage() {
             <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 flex items-center justify-between">
               <div className="flex flex-col">
                 <span className="text-xs font-bold text-slate-900 dark:text-white">Enable Payment Gateway</span>
-                <span className="text-[10px] text-slate-400">Accept candidate prep payments</span>
+                <span className={`text-[10px] font-bold ${isEnabled ? "text-emerald-600 dark:text-emerald-400" : "text-amber-500"}`}>
+                  {isEnabled ? "● Payment Required for Stages" : "○ Disabled (Free All Stages)"}
+                </span>
               </div>
               <button
                 type="button"
                 onClick={() => setIsEnabled(!isEnabled)}
-                className={`w-12 h-6 rounded-full transition-colors relative cursor-pointer ${
+                className={`relative inline-flex h-7 w-14 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
                   isEnabled ? "bg-[#FF6B00]" : "bg-slate-300 dark:bg-slate-700"
                 }`}
               >
-                <div className={`w-5 h-5 rounded-full bg-white absolute top-0.5 transition-transform ${
-                  isEnabled ? "left-6.5" : "left-0.5"
-                }`} />
+                <span
+                  className={`pointer-events-none inline-block h-6 w-6 transform rounded-full bg-white shadow-lg ring-0 transition duration-200 ease-in-out ${
+                    isEnabled ? "translate-x-7" : "translate-x-0"
+                  }`}
+                />
               </button>
             </div>
 
@@ -273,16 +280,42 @@ export default function AdminPaymentGatewayPage() {
               <button
                 type="button"
                 onClick={() => setIsTestMode(!isTestMode)}
-                className={`px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider cursor-pointer border ${
+                className={`px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider cursor-pointer border transition-all ${
                   isTestMode 
-                    ? "bg-amber-100 text-amber-900 border-amber-300 dark:bg-amber-950 dark:text-amber-200 dark:border-amber-800"
-                    : "bg-emerald-100 text-emerald-900 border-emerald-300 dark:bg-emerald-950 dark:text-emerald-200 dark:border-emerald-800"
+                    ? "bg-amber-100 text-amber-900 border-amber-300 dark:bg-amber-950 dark:text-amber-200 dark:border-amber-800 hover:bg-amber-200"
+                    : "bg-emerald-100 text-emerald-900 border-emerald-300 dark:bg-emerald-950 dark:text-emerald-200 dark:border-emerald-800 hover:bg-emerald-200"
                 }`}
               >
                 {isTestMode ? "🧪 Test Mode" : "⚡ Live Mode"}
               </button>
             </div>
 
+          </div>
+
+          {/* Candidate Assessment Prep Fee Input */}
+          <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 flex flex-col gap-2">
+            <div className="flex items-center justify-between">
+              <label className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-1.5">
+                <Tag className="w-3.5 h-3.5 text-[#FF6B00]" />
+                Candidate Prep Fee / Stage Access Price (INR ₹):
+              </label>
+              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-black bg-[#FF6B00]/15 text-[#FF6B00] border border-[#FF6B00]/30">
+                ₹{amount || "499"} per Candidate
+              </span>
+            </div>
+            <div className="relative">
+              <span className="absolute left-3.5 top-2.5 text-xs font-black text-[#FF6B00] font-mono">₹</span>
+              <input
+                type="text"
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
+                placeholder="499"
+                className="w-full pl-8 pr-4 py-2.5 rounded-xl text-xs font-mono font-bold bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:border-[#FF6B00]"
+              />
+            </div>
+            <span className="text-[10px] text-slate-400 font-medium">
+              Specify the payment amount (in ₹ INR) candidates must pay to unlock stages when payment gateway is enabled.
+            </span>
           </div>
 
           {/* Active Provider Card */}

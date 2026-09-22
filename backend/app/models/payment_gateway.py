@@ -15,6 +15,7 @@ class PaymentGatewayConfig(TimeStampedModel):
     webhook_secret = Column(Text, nullable=True)
     
     currency = Column(String(10), default="INR", nullable=False)
+    amount = Column(String(50), default="499", nullable=False) # Candidate Assessment Prep Fee in INR
     additional_settings = Column(JSON, nullable=True)
     
     last_updated_by = Column(String(255), nullable=True)
