@@ -12,12 +12,12 @@ import { apiFetch } from "@/lib/api";
 
 const ALL_30_STAGES = [
   // LEVEL 1 — FOUNDATION (TRACK 1)
-  { id: 0, level: "Level 1", levelName: "Foundation", title: "Setup Your Interview Profile", xp: "+100 XP", duration: "10 Mins", questions: 2, questions_count: 2, icon: "🏆", diff: "Easy", desc: "Configure your target role, salary band, and initial baseline skills profile." },
-  { id: 1, level: "Level 1", levelName: "Foundation", title: "Self Introduction", xp: "+150 XP", duration: "12 Mins", questions: 2, questions_count: 2, icon: "🏆", diff: "Easy", desc: "Master your 60-second pitch, STAR background intro, and career story." },
-  { id: 2, level: "Level 1", levelName: "Foundation", title: "Technical Introduction", xp: "+200 XP", duration: "15 Mins", questions: 2, questions_count: 2, icon: "🏆", diff: "Easy", desc: "Explain your daily technical workflow, tool stack, and architecture experience." },
-  { id: 3, level: "Level 1", levelName: "Foundation", title: "Linux for Cloud Engineers", xp: "+250 XP", duration: "18 Mins", questions: 2, questions_count: 2, icon: "🐧", diff: "Medium", desc: "Process signals, memory triage, top/htop/iotop, and bash scripting." },
-  { id: 4, level: "Level 1", levelName: "Foundation", title: "Linux for DevOps Engineers", xp: "+300 XP", duration: "20 Mins", questions: 2, questions_count: 2, icon: "🐧", diff: "Medium", desc: "Systemd service units, kernel tuning, disk I/O bottlenecks, and cron automation." },
-  { id: 5, level: "Level 1", levelName: "Foundation", title: "Cloud + DevOps Fundamentals", xp: "+350 XP", duration: "20 Mins", questions: 2, questions_count: 2, icon: "☁️", diff: "Medium", desc: "Core cloud models, virtualization vs containerization, and IaC basics." },
+  { id: 0, level: "Level 1", levelName: "Foundation", title: "STAGE 0: SETUP YOUR INTERVIEW PROFILE", xp: "+200 XP", duration: "10 Mins", questions: 2, questions_count: 2, icon: "🏆", diff: "Easy", desc: "Configure your target role, salary band, and initial baseline skills profile." },
+  { id: 1, level: "Level 1", levelName: "Foundation", title: "🏆 CHALLENGE 01 — INTRODUCE YOURSELF & PROFILE", xp: "+70 XP", duration: "12 Mins", questions: 2, questions_count: 2, icon: "🏆", diff: "Easy", desc: "Master your 60-second pitch, STAR background intro, and career story." },
+  { id: 2, level: "Level 1", levelName: "Foundation", title: "STAGE 2: TECHNICAL INTRODUCTION", xp: "+200 XP", duration: "15 Mins", questions: 2, questions_count: 2, icon: "🏆", diff: "Easy", desc: "Explain your daily technical workflow, tool stack, and architecture experience." },
+  { id: 3, level: "Level 1", levelName: "Foundation", title: "☁️ CHALLENGE 03 — CLOUD INFRASTRUCTURE ENGINEER", xp: "+200 XP", duration: "18 Mins", questions: 2, questions_count: 2, icon: "☁️", diff: "Medium", desc: "Process signals, memory triage, top/htop/iotop, and bash scripting." },
+  { id: 4, level: "Level 1", levelName: "Foundation", title: "STAGE 4: LINUX FOR DEVOPS ENGINEERS", xp: "+200 XP", duration: "20 Mins", questions: 2, questions_count: 2, icon: "🐧", diff: "Medium", desc: "Systemd service units, kernel tuning, disk I/O bottlenecks, and cron automation." },
+  { id: 5, level: "Level 1", levelName: "Foundation", title: "STAGE 5: CLOUD + DEVOPS FUNDAMENTALS", xp: "+200 XP", duration: "20 Mins", questions: 2, questions_count: 2, icon: "☁️", diff: "Medium", desc: "Core cloud models, virtualization vs containerization, and IaC basics." },
 
   // LEVEL 2 — CLOUD (TRACK 2)
   { id: 6, level: "Level 2", levelName: "Cloud", title: "AWS Cloud Engineer", xp: "+400 XP", duration: "22 Mins", questions: 2, questions_count: 2, icon: "☁️", diff: "Medium", desc: "VPC networking, subnets, NAT Gateways, IAM policies, and S3 lifecycle." },
@@ -55,9 +55,10 @@ const ALL_30_STAGES = [
 
 export default function InterviewsPage() {
   const router = useRouter();
-  const [stages, setStages] = useState<any[]>(ALL_30_STAGES);
+  const [stages, setStages] = useState<any[]>([]);
+  const [isLoadingStages, setIsLoadingStages] = useState<boolean>(true);
   const [activeTab, setActiveTab] = useState<string>("ALL");
-  const [selectedStage, setSelectedStage] = useState<any | null>(ALL_30_STAGES[0]);
+  const [selectedStage, setSelectedStage] = useState<any | null>(null);
   const [isStarting, setIsStarting] = useState(false);
 
   // Subscription & Razorpay Payment Modal States
@@ -171,6 +172,10 @@ export default function InterviewsPage() {
       });
     } catch (e) {
       console.warn("Interview stages fetch error:", e);
+      setStages(ALL_30_STAGES);
+      if (!selectedStage) setSelectedStage(ALL_30_STAGES[0]);
+    } finally {
+      setIsLoadingStages(false);
     }
   };
 
@@ -572,99 +577,106 @@ export default function InterviewsPage() {
         {/* LEFT: STAGE LIST */}
         <div className="lg:col-span-7 flex flex-col gap-3.5 max-h-[550px] sm:max-h-[650px] lg:max-h-[750px] overflow-y-auto pr-1 sm:pr-2">
           
-          {filteredStages.map((s) => {
-            const isSelected = selectedStage?.id === s.id;
-            const isCompleted = s.status === "completed";
-            const isInProgress = s.status === "in_progress";
-            const isProLocked = s.status === "pro_locked" || (!isSubscribed && s.id >= 6);
-            const isLocked = s.status === "locked" && !isProLocked;
-            const isBoss = s.id === 30 || s.diff === "Boss" || s.diff === "Legendary";
+          {isLoadingStages ? (
+            <div className="flex flex-col gap-3 p-8 items-center justify-center min-h-[320px] rounded-2xl bg-slate-900/40 border border-white/5">
+              <Loader2 className="w-8 h-8 text-[#FF6B00] animate-spin mb-2" />
+              <span className="text-xs font-mono font-bold text-slate-300">Loading Stage Challenges from Database...</span>
+            </div>
+          ) : (
+            filteredStages.map((s) => {
+              const isSelected = selectedStage?.id === s.id;
+              const isCompleted = s.status === "completed";
+              const isInProgress = s.status === "in_progress";
+              const isProLocked = s.status === "pro_locked" || (!isSubscribed && s.id >= 6);
+              const isLocked = s.status === "locked" && !isProLocked;
+              const isBoss = s.id === 30 || s.diff === "Boss" || s.diff === "Legendary";
 
-            return (
-              <div
-                key={s.id}
-                onClick={() => handleSelectStage(s)}
-                className={`p-3.5 sm:p-4 rounded-2xl border-2 transition-all cursor-pointer relative overflow-hidden flex items-center justify-between gap-3 shrink-0 ${
-                  isSelected
-                    ? "bg-white dark:bg-slate-900 border-[#FF6B00] shadow-xl shadow-[#FF6B00]/15 ring-2 ring-[#FF6B00]/20"
-                    : isCompleted
-                    ? "bg-emerald-50/40 dark:bg-emerald-950/20 border-emerald-500/40 hover:border-emerald-500"
-                    : isInProgress
-                    ? "bg-amber-50/60 dark:bg-amber-950/30 border-[#FF6B00]"
-                    : isProLocked
-                    ? "bg-slate-50/80 dark:bg-slate-900/60 border-amber-500/40 hover:border-amber-500"
-                    : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 opacity-80"
-                }`}
-              >
-                {/* Active selection accent bar */}
-                {isSelected && (
-                  <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-[#FF6B00] rounded-l-2xl" />
-                )}
-
-                <div className="flex items-center gap-3.5 min-w-0 pl-1">
-                  <div className={`w-11 h-11 rounded-xl font-black text-base flex items-center justify-center shrink-0 transition-transform ${
-                    isBoss
-                      ? "bg-amber-500 text-slate-950 shadow-md shadow-amber-500/30"
+              return (
+                <div
+                  key={s.id}
+                  onClick={() => handleSelectStage(s)}
+                  className={`p-3.5 sm:p-4 rounded-2xl border-2 transition-all cursor-pointer relative overflow-hidden flex items-center justify-between gap-3 shrink-0 ${
+                    isSelected
+                      ? "bg-white dark:bg-slate-900 border-[#FF6B00] shadow-xl shadow-[#FF6B00]/15 ring-2 ring-[#FF6B00]/20"
                       : isCompleted
-                      ? "bg-emerald-500 text-white shadow-md shadow-emerald-500/20"
+                      ? "bg-emerald-50/40 dark:bg-emerald-950/20 border-emerald-500/40 hover:border-emerald-500"
                       : isInProgress
-                      ? "bg-[#FF6B00] text-white shadow-md shadow-[#FF6B00]/30 scale-105"
+                      ? "bg-amber-50/60 dark:bg-amber-950/30 border-[#FF6B00]"
                       : isProLocked
-                      ? "bg-amber-500/20 text-[#FF9900] border border-[#FF9900]/40"
-                      : "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700"
-                  }`}>
-                    {isCompleted ? <CheckCircle2 className="w-6 h-6" /> : isProLocked ? <Crown className="w-5 h-5 text-[#FF9900]" /> : <span>{s.icon}</span>}
-                  </div>
+                      ? "bg-slate-50/80 dark:bg-slate-900/60 border-amber-500/40 hover:border-amber-500"
+                      : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 opacity-80"
+                  }`}
+                >
+                  {/* Active selection accent bar */}
+                  {isSelected && (
+                    <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-[#FF6B00] rounded-l-2xl" />
+                  )}
 
-                  <div className="flex flex-col min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-black text-[#FF6B00] bg-orange-50 dark:bg-orange-950/60 border border-[#FF6B00]/30 uppercase">
-                        STAGE {s.id} • {s.levelName}
-                      </span>
-                      <span className="px-2 py-0.5 rounded-full text-[9.5px] font-mono font-black text-amber-700 dark:text-amber-300 bg-amber-100 dark:bg-amber-950/80 border border-amber-300/60 dark:border-amber-700/60">
-                        {s.xp}
-                      </span>
+                  <div className="flex items-center gap-3.5 min-w-0 pl-1">
+                    <div className={`w-11 h-11 rounded-xl font-black text-base flex items-center justify-center shrink-0 transition-transform ${
+                      isBoss
+                        ? "bg-amber-500 text-slate-950 shadow-md shadow-amber-500/30"
+                        : isCompleted
+                        ? "bg-emerald-500 text-white shadow-md shadow-emerald-500/20"
+                        : isInProgress
+                        ? "bg-[#FF6B00] text-white shadow-md shadow-[#FF6B00]/30 scale-105"
+                        : isProLocked
+                        ? "bg-amber-500/20 text-[#FF9900] border border-[#FF9900]/40"
+                        : "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700"
+                    }`}>
+                      {isCompleted ? <CheckCircle2 className="w-6 h-6" /> : isProLocked ? <Crown className="w-5 h-5 text-[#FF9900]" /> : <span>{s.icon}</span>}
                     </div>
-                    <h3 className="text-sm font-black text-slate-900 dark:text-white truncate mt-1 tracking-tight">
-                      {s.title}
-                    </h3>
+
+                    <div className="flex flex-col min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-black text-[#FF6B00] bg-orange-50 dark:bg-orange-950/60 border border-[#FF6B00]/30 uppercase">
+                          STAGE {s.id} • {s.levelName}
+                        </span>
+                        <span className="px-2 py-0.5 rounded-full text-[9.5px] font-mono font-black text-amber-700 dark:text-amber-300 bg-amber-100 dark:bg-amber-950/80 border border-amber-300/60 dark:border-amber-700/60">
+                          {s.xp}
+                        </span>
+                      </div>
+                      <h3 className="text-sm font-black text-slate-900 dark:text-white truncate mt-1 tracking-tight">
+                        {s.title}
+                      </h3>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2 shrink-0">
+                    {isCompleted && (
+                      <span className="px-3 py-1 rounded-xl bg-emerald-100 dark:bg-emerald-950/80 border border-emerald-500/50 text-emerald-700 dark:text-emerald-300 text-xs font-black">
+                        {s.score}
+                      </span>
+                    )}
+                    {isInProgress && (
+                      <span className="px-3 py-1 rounded-xl bg-amber-100 dark:bg-amber-950/80 border border-[#FF6B00] text-[#FF6B00] text-xs font-black animate-pulse">
+                        Active
+                      </span>
+                    )}
+                    {isProLocked && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedStageForPayment(s);
+                          setIsPaymentModalOpen(true);
+                        }}
+                        className="px-3 py-1.5 rounded-xl bg-[#FF9900] text-slate-950 text-xs font-black flex items-center gap-1 shadow-sm hover:bg-amber-400 transition-all cursor-pointer"
+                        title="One-Time ₹50 Pass Unlocks All Stages 6-30"
+                      >
+                        <Crown className="w-3.5 h-3.5 text-slate-950" />
+                        <span>PRO PASS</span>
+                      </button>
+                    )}
+                    {isLocked && (
+                      <span className="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-400 border border-slate-200 dark:border-slate-700" title={`Complete Stage ${s.id - 1} first`}>
+                        <Lock className="w-4 h-4" />
+                      </span>
+                    )}
                   </div>
                 </div>
-
-                <div className="flex items-center gap-2 shrink-0">
-                  {isCompleted && (
-                    <span className="px-3 py-1 rounded-xl bg-emerald-100 dark:bg-emerald-950/80 border border-emerald-500/50 text-emerald-700 dark:text-emerald-300 text-xs font-black">
-                      {s.score}
-                    </span>
-                  )}
-                  {isInProgress && (
-                    <span className="px-3 py-1 rounded-xl bg-amber-100 dark:bg-amber-950/80 border border-[#FF6B00] text-[#FF6B00] text-xs font-black animate-pulse">
-                      Active
-                    </span>
-                  )}
-                  {isProLocked && (
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setSelectedStageForPayment(s);
-                        setIsPaymentModalOpen(true);
-                      }}
-                      className="px-3 py-1.5 rounded-xl bg-[#FF9900] text-slate-950 text-xs font-black flex items-center gap-1 shadow-sm hover:bg-amber-400 transition-all cursor-pointer"
-                      title="One-Time ₹50 Pass Unlocks All Stages 6-30"
-                    >
-                      <Crown className="w-3.5 h-3.5 text-slate-950" />
-                      <span>PRO PASS</span>
-                    </button>
-                  )}
-                  {isLocked && (
-                    <span className="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-400 border border-slate-200 dark:border-slate-700" title={`Complete Stage ${s.id - 1} first`}>
-                      <Lock className="w-4 h-4" />
-                    </span>
-                  )}
-                </div>
-              </div>
-            );
-          })}
+              );
+            })
+          )}
 
         </div>
 
