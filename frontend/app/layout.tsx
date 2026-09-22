@@ -28,6 +28,8 @@ export const metadata: Metadata = {
   authors: [{ name: "Botmartz AI Solutions Pvt Ltd" }],
 };
 
+import { FloatingWhatsAppCommunity } from "@/components/FloatingWhatsAppCommunity";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -60,6 +62,7 @@ export default function RootLayout({
         <main className="flex-1 flex flex-col">
           {children}
         </main>
+        <FloatingWhatsAppCommunity />
       </body>
     </html>
   );
