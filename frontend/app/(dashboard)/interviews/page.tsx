@@ -132,6 +132,11 @@ export default function InterviewsPage() {
         }
       });
 
+      const stg0AttCheck = attemptMap.get(0);
+      if (stg0AttCheck && (stg0AttCheck.status === "completed" || stg0AttCheck.status === "PASSED")) {
+        completedSet.add(0);
+      }
+
       const merged = ALL_30_STAGES.map((stg) => {
         const dbStg = dbStageMap.get(stg.id);
         const att = attemptMap.get(stg.id);

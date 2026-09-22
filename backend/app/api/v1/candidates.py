@@ -303,9 +303,9 @@ async def get_dashboard_metrics(
             })
         else:
             prev_att = attempts_by_stage.get(idx - 1)
-            prev_passed = (idx == 1) or (prev_att and (prev_att.status in ["PASSED", "COMPLETED"] or (prev_att.score and prev_att.score >= 80.0)))
+            prev_passed = bool(prev_att and (prev_att.status in ["PASSED", "COMPLETED"] or (prev_att.score and prev_att.score >= 70.0)))
             status_str = "in_progress" if prev_passed else "locked"
-            score_str = f"{int(att.score)}%" if (att and att.score and att.score > 0) else ("0%" if prev_passed else "--")
+            score_str = f"{int(att.score)}%" if (att and att.score and att.score > 0) else ("Active" if prev_passed else "--")
             stages_progress.append({
                 "id": stage["id"],
                 "name": stage["name"],
