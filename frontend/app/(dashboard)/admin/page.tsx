@@ -88,31 +88,34 @@ export default function AdminAnalyticsPage() {
     }
   };
 
-  const defaultMetrics: AdminDashboardMetrics = {
-    total_candidates: 1,
+  if (isLoading) {
+    return (
+      <div className="flex-1 flex flex-col items-center justify-center min-h-[65vh] gap-3">
+        <Loader2 className="w-9 h-9 text-[#FF6B00] animate-spin" />
+        <span className="text-xs font-mono font-bold text-slate-300">Loading Real Database Analytics...</span>
+      </div>
+    );
+  }
+
+  const emptyMetrics: AdminDashboardMetrics = {
+    total_candidates: 0,
     active_candidates: 0,
     interviews_completed: 0,
     interviews_in_progress: 0,
     overall_pass_rate: 0.0,
     average_score: 0.0,
-    stage_pass_rates: [
-      { stage_number: 1, stage_title: "Profile & Pitch", total_attempts: 0, passed_attempts: 0, pass_rate_percentage: 0.0 },
-      { stage_number: 2, stage_title: "Linux Warrior", total_attempts: 0, passed_attempts: 0, pass_rate_percentage: 0.0 },
-      { stage_number: 3, stage_title: "Multi-Cloud", total_attempts: 0, passed_attempts: 0, pass_rate_percentage: 0.0 },
-      { stage_number: 4, stage_title: "DevOps & Containers", total_attempts: 0, passed_attempts: 0, pass_rate_percentage: 0.0 },
-      { stage_number: 5, stage_title: "Incident Boss", total_attempts: 0, passed_attempts: 0, pass_rate_percentage: 0.0 }
-    ],
+    stage_pass_rates: [],
     most_common_weak_topics: [],
     candidates_requiring_attention: [],
     recent_interviews: []
   };
 
-  const displayMetrics = metrics || defaultMetrics;
+  const displayMetrics = metrics || emptyMetrics;
 
   const topKPIs = [
     {
       title: "Total Candidates",
-      value: (displayMetrics.total_candidates ?? 1).toLocaleString(),
+      value: (displayMetrics.total_candidates ?? 0).toLocaleString(),
       change: "Real Database Count",
       icon: Users,
       bgColor: "bg-orange-50 dark:bg-orange-950/40 text-[#FF6B00]",
@@ -171,16 +174,11 @@ export default function AdminAnalyticsPage() {
     ? displayMetrics.recent_interviews.slice(0, 4).map((item) => ({
         icon: Users,
         color: "text-[#FF6B00] bg-orange-50 dark:bg-orange-950/60",
-        title: `${item.candidate_name} interview`,
-        desc: `${item.template_title} (${item.overall_score ?? 0}%)`,
+        title: `${item.candidate_name || 'Candidate'} interview`,
+        desc: `${item.template_title || 'Interview Stage'} (${item.overall_score ?? 0}%)`,
         time: item.created_at ? new Date(item.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "Just now"
       }))
-    : [
-        { icon: Users, color: "text-[#FF6B00] bg-orange-50 dark:bg-orange-950", title: "New candidate registered", desc: "Sachin Rawat (sachin@cloudops.internal)", time: "Just now" },
-        { icon: Sparkles, color: "text-amber-500 bg-amber-50 dark:bg-amber-950", title: "5 Core Challenge Stages", desc: "Blueprints Initialized", time: "10 mins ago" },
-        { icon: Mail, color: "text-rose-500 bg-rose-50 dark:bg-rose-950", title: "Support Ticket #TCK-8942", desc: "Microphone Audio Stream Check", time: "1 hour ago" },
-        { icon: Server, color: "text-teal-500 bg-teal-50 dark:bg-teal-950", title: "Retention Cleaner Worker", desc: "90-Day Auto Purge Ready", time: "2 hours ago" },
-      ];
+    : [];
 
   const topCandidates = (displayMetrics as any).top_candidates && (displayMetrics as any).top_candidates.length > 0
     ? (displayMetrics as any).top_candidates
@@ -194,9 +192,7 @@ export default function AdminAnalyticsPage() {
         date: item.created_at ? new Date(item.created_at).toLocaleDateString() : "Active",
         medal: idx === 0 ? "🥇" : idx === 1 ? "🥈" : idx === 2 ? "🥉" : `#${idx + 1}`
       }))
-    : [
-        { rank: 1, name: "Sachin Rawat", email: "sachin@cloudops.internal", score: `${displayMetrics.average_score ?? 0}%`, stage: "Stage 1", date: "Registered", medal: "🥇" },
-      ];
+    : [];
 
   const systemHealth = [
     { service: "Neon Cloud PostgreSQL", status: "Operational", icon: Database },
