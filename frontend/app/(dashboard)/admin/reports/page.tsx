@@ -82,7 +82,7 @@ export default function AdminReportsPage() {
     try {
       const [resOverview, resCand] = await Promise.all([
         apiFetch("/admin/analytics/overview"),
-        apiFetch("/candidates")
+        apiFetch("/candidates?size=1000")
       ]);
 
       if (resOverview?.data) {
@@ -366,7 +366,7 @@ export default function AdminReportsPage() {
           </div>
           <div className="flex items-baseline gap-2 mt-3">
             <span className="text-3xl font-black text-blue-600 dark:text-blue-400 font-mono tracking-tight">
-              {candidates.length}
+              {metrics?.total_candidates !== undefined && metrics.total_candidates > 0 ? metrics.total_candidates : candidates.length}
             </span>
             <span className="text-xs font-medium text-slate-400">accounts</span>
           </div>
