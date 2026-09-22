@@ -92,7 +92,7 @@ export default function AdminTemplatesPage() {
     loadTemplates();
   }, []);
 
-  const activeTemplate = templates[0];
+  const activeTemplate = templates.find((t: any) => t.stages && t.stages.length >= 20) || templates[0];
   const allStages = activeTemplate?.stages || [];
 
   // Filter stages based on level tab & search query
