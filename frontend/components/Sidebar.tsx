@@ -23,8 +23,8 @@ export function Sidebar({ isOpenMobile = false, onCloseMobile }: SidebarProps) {
   const { user, isAuthenticated, logout } = useAuthStore();
   const isAnalyzing = useATSStore((s) => s.isAnalyzing);
   const [mounted, setMounted] = useState(false);
-
   const [dbUser, setDbUser] = useState<any>(null);
+  const [hasActiveInterview, setHasActiveInterview] = useState(false);
 
   useEffect(() => {
     setMounted(true);
@@ -33,6 +33,13 @@ export function Sidebar({ isOpenMobile = false, onCloseMobile }: SidebarProps) {
         const cached = localStorage.getItem("cached_user_profile");
         if (cached) setDbUser(JSON.parse(cached));
       } catch {}
+
+      const checkActive = () => {
+        setHasActiveInterview(!!localStorage.getItem("active_interview_session"));
+      };
+      checkActive();
+      const interval = setInterval(checkActive, 1000);
+      return () => clearInterval(interval);
     }
   }, []);
 
@@ -143,8 +150,8 @@ export function Sidebar({ isOpenMobile = false, onCloseMobile }: SidebarProps) {
 
       <aside className={`
         w-[260px] h-screen border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-[#080d1a] 
-        flex flex-col overflow-y-auto shrink-0 z-50 font-sans transition-transform duration-300
-        fixed lg:sticky top-0 left-0
+        flex flex-col overflow-y-auto shrink-0 z-40 font-sans transition-transform duration-300
+        fixed top-0 left-0
         ${isOpenMobile ? "translate-x-0 shadow-2xl" : "-translate-x-full lg:translate-x-0"}
       `}>
         
@@ -190,19 +197,27 @@ export function Sidebar({ isOpenMobile = false, onCloseMobile }: SidebarProps) {
         <nav className="flex-1 px-3 py-2 flex flex-col gap-1 overflow-y-auto">
           {navItems.map((item) => {
             const isActive = pathname === item.href;
+            const isInterviewLink = item.href === "/interviews";
             return (
               <Link prefetch={false}
                 key={item.label}
                 href={item.href}
                 onClick={onCloseMobile}
-                className={`flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-black transition-all ${
+                className={`flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-black transition-all ${
                   isActive
                     ? "bg-gradient-to-r from-[#FF6B00] via-amber-500 to-orange-500 text-white shadow-md shadow-[#FF6B00]/20 font-extrabold"
                     : "text-slate-600 dark:text-slate-400 hover:text-[#FF6B00] hover:bg-orange-50 dark:hover:bg-[#FF6B00]/10"
                 }`}
               >
-                <item.icon className={`w-4 h-4 ${isActive ? "text-white" : "text-slate-400"}`} />
-                <span>{item.label}</span>
+                <div className="flex items-center gap-3">
+                  <item.icon className={`w-4 h-4 ${isActive ? "text-white" : "text-slate-400"}`} />
+                  <span>{item.label}</span>
+                </div>
+                {isInterviewLink && hasActiveInterview && (
+                  <span className="px-2 py-0.5 rounded-full text-[9px] font-mono font-black bg-rose-500 text-white animate-pulse shadow-sm">
+                    LIVE 🔴
+                  </span>
+                )}
               </Link>
             );
           })}

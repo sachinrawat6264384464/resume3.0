@@ -112,6 +112,14 @@ async def create_live_session(
     payload: dict = Depends(verify_auth_token),
     db: AsyncSession = Depends(get_db)
 ):
+    # Enforce Single Active Live Session Logic: Demote previous LIVE_NOW sessions
+    if req.status in ["LIVE_NOW", "LIVE_STREAMING"]:
+        prev_stmt = select(LiveSession).where(LiveSession.status.in_(["LIVE_NOW", "LIVE_STREAMING"]))
+        prev_res = await db.execute(prev_stmt)
+        for prev_s in prev_res.scalars().all():
+            prev_s.status = "UPCOMING"
+            prev_s.is_active = False
+
     session = LiveSession(
         title=req.title,
         description=req.description,
@@ -171,6 +179,17 @@ async def update_live_session(
 
     if not session:
         raise HTTPException(status_code=404, detail="Live session not found")
+
+    # Enforce Single Active Live Session Logic: Demote all other LIVE_NOW sessions
+    if req.status in ["LIVE_NOW", "LIVE_STREAMING"]:
+        prev_stmt = select(LiveSession).where(
+            LiveSession.status.in_(["LIVE_NOW", "LIVE_STREAMING"]),
+            LiveSession.id != session_id
+        )
+        prev_res = await db.execute(prev_stmt)
+        for prev_s in prev_res.scalars().all():
+            prev_s.status = "UPCOMING"
+            prev_s.is_active = False
 
     session.title = req.title
     session.description = req.description

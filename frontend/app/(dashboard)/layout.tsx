@@ -36,8 +36,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         isOpenMobile={isMobileSidebarOpen} 
         onCloseMobile={() => setIsMobileSidebarOpen(false)} 
       />
-      <div className="flex-1 flex flex-col min-w-0 overflow-hidden w-full max-w-full">
-        <main className="flex-1 overflow-y-auto px-2.5 sm:px-6 lg:px-8 xl:px-10 py-3 sm:py-6 pb-20 w-full max-w-full">
+      <div className="flex-1 flex flex-col min-w-0 lg:pl-[260px] w-full max-w-full min-h-screen">
+        <main className="flex-1 px-2.5 sm:px-6 lg:px-8 xl:px-10 py-3 sm:py-6 pb-20 w-full max-w-full">
           <Header onToggleMobileSidebar={() => setIsMobileSidebarOpen(prev => !prev)} />
           {children}
         </main>

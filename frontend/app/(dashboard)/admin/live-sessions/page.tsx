@@ -1,9 +1,10 @@
 "use client";
+// Updated: 2026-09-22 Single Active Live Session Logic Enforcement
 
 import { useEffect, useState } from "react";
 import { 
   Calendar, Video, Plus, Edit2, Trash2, Eye, CheckCircle2, 
-  Clock, Link as LinkIcon, Users, Sparkles, RefreshCw, Loader2, X, Play
+  Clock, Link as LinkIcon, Users, Sparkles, RefreshCw, Loader2, X, Play, Radio, StopCircle
 } from "lucide-react";
 import { apiFetch } from "@/lib/api";
 
@@ -29,12 +30,30 @@ export default function AdminLiveSessionsPage() {
 
   const [saving, setSaving] = useState(false);
 
+  // Sanitize sessions on fetch to enforce single active live session in UI
+  const sanitizeSingleLiveSession = (rawSessions: any[]) => {
+    let hasLiveNow = false;
+    return rawSessions.map((s) => {
+      const isLive = s.status === "LIVE_NOW" || s.status === "LIVE_STREAMING";
+      if (isLive) {
+        if (!hasLiveNow) {
+          hasLiveNow = true;
+          return { ...s, status: "LIVE_NOW", is_active: true };
+        } else {
+          // Revert any subsequent "live" session to UPCOMING so only ONE stays live!
+          return { ...s, status: "UPCOMING", is_active: false };
+        }
+      }
+      return s;
+    });
+  };
+
   const fetchSessions = async () => {
     setLoading(true);
     try {
       const res = await apiFetch("/live-sessions/admin/list");
       if (res?.data && Array.isArray(res.data) && res.data.length > 0) {
-        setSessions(res.data);
+        setSessions(sanitizeSingleLiveSession(res.data));
       } else {
         // Fallback session
         setSessions([{
@@ -131,9 +150,47 @@ export default function AdminLiveSessionsPage() {
     setIsModalOpen(true);
   };
 
+  // 1-Click "Go Live Now" / "End Stream" Toggle Logic (Enforces Single Active Live Session)
+  const handleToggleLiveStatus = async (targetSession: any) => {
+    const isCurrentlyLive = targetSession.status === "LIVE_NOW" || targetSession.status === "LIVE_STREAMING";
+    const nextStatus = isCurrentlyLive ? "COMPLETED" : "LIVE_NOW";
+    const nextActive = !isCurrentlyLive;
+
+    // Single Active Live Session Logic: Revert all other sessions to UPCOMING if going live
+    setSessions((prev) =>
+      prev.map((s) => {
+        if (s.id === targetSession.id) {
+          return { ...s, status: nextStatus, is_active: nextActive };
+        }
+        if (nextStatus === "LIVE_NOW" && (s.status === "LIVE_NOW" || s.status === "LIVE_STREAMING")) {
+          return { ...s, status: "UPCOMING", is_active: false };
+        }
+        return s;
+      })
+    );
+
+    const updatedObj = {
+      ...targetSession,
+      status: nextStatus,
+      is_active: nextActive
+    };
+
+    try {
+      await apiFetch(`/live-sessions/admin/${targetSession.id}`, {
+        method: "PUT",
+        body: JSON.stringify(updatedObj)
+      });
+    } catch (e) {
+      console.warn("API toggle live notice:", e);
+    }
+  };
+
   const handleSaveSession = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
+
+    const isGoingLive = status === "LIVE_NOW" || status === "LIVE_STREAMING";
+
     const newSessionObj = {
       id: editingSession ? editingSession.id : `live-${Date.now()}`,
       title,
@@ -142,8 +199,8 @@ export default function AdminLiveSessionsPage() {
       meeting_url: meetingUrl,
       whatsapp_group_url: whatsappGroupUrl,
       banner_url: bannerUrl,
-      is_active: isActive,
-      status,
+      is_active: isGoingLive ? true : isActive,
+      status: isGoingLive ? "LIVE_NOW" : status,
       host_name: hostName
     };
 
@@ -163,13 +220,21 @@ export default function AdminLiveSessionsPage() {
       console.warn("API save warning, updating local state:", err);
     }
 
-    // Always update local state so user gets instant confirmation!
+    // Single Active Live Session Logic Enforcement for local state
     setSessions((prev) => {
-      if (editingSession) {
-        return prev.map((item) => (item.id === editingSession.id ? newSessionObj : item));
-      } else {
-        return [newSessionObj, ...prev];
+      let list = editingSession
+        ? prev.map((item) => (item.id === editingSession.id ? newSessionObj : item))
+        : [newSessionObj, ...prev];
+
+      if (isGoingLive) {
+        list = list.map((item) => {
+          if (item.id !== newSessionObj.id && (item.status === "LIVE_NOW" || item.status === "LIVE_STREAMING")) {
+            return { ...item, status: "UPCOMING", is_active: false };
+          }
+          return item;
+        });
       }
+      return list;
     });
 
     setSaving(false);
@@ -202,7 +267,7 @@ export default function AdminLiveSessionsPage() {
               Live Session Management Suite
             </h1>
             <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
-              Schedule webinars, live mock interviews, configure candidate banners, and manage meeting URLs.
+              Schedule webinars, live mock interviews, configure candidate banners, and manage meeting URLs. (Strictly 1 Active Live Stream)
             </p>
           </div>
         </div>
@@ -240,77 +305,108 @@ export default function AdminLiveSessionsPage() {
             <span className="text-xs">Click "Create Live Session" above to add your first live webinar session.</span>
           </div>
         ) : (
-          sessions.map((s) => (
-            <div key={s.id} className="p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-xs flex flex-col justify-between gap-4 relative group">
-              
-              <div className="flex flex-col gap-3">
-                <div className="flex items-center justify-between">
-                  <span className={`px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider ${
-                    s.status === "LIVE_NOW" 
-                      ? "bg-rose-100 text-rose-700 dark:bg-rose-950 dark:text-rose-300 border border-rose-500/40 animate-pulse"
-                      : "bg-amber-100 text-amber-900 dark:bg-amber-950 dark:text-amber-200 border border-amber-500/40"
-                  }`}>
-                    {s.status === "LIVE_NOW" ? "● Live Streaming" : "📅 Scheduled Session"}
-                  </span>
+          sessions.map((s) => {
+            const isLive = s.status === "LIVE_NOW" || s.status === "LIVE_STREAMING";
+            return (
+              <div key={s.id} className={`p-6 rounded-3xl bg-white dark:bg-slate-900 border-2 ${isLive ? "border-rose-500/60 dark:border-rose-500/80 shadow-rose-500/10 shadow-lg" : "border-slate-200/80 dark:border-slate-800 shadow-xs"} flex flex-col justify-between gap-4 relative group transition-all`}>
+                
+                <div className="flex flex-col gap-3">
+                  <div className="flex items-center justify-between">
+                    <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider flex items-center gap-1.5 ${
+                      isLive 
+                        ? "bg-rose-100 text-rose-700 dark:bg-rose-950 dark:text-rose-300 border border-rose-500/40 animate-pulse"
+                        : s.status === "COMPLETED"
+                        ? "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400 border border-slate-300 dark:border-slate-700"
+                        : "bg-amber-100 text-amber-900 dark:bg-amber-950 dark:text-amber-200 border border-amber-500/40"
+                    }`}>
+                      <Radio className={`w-3 h-3 ${isLive ? "text-rose-500 animate-spin" : ""}`} />
+                      <span>{isLive ? "● LIVE STREAMING" : (s.status === "COMPLETED" ? "✓ COMPLETED" : "📅 SCHEDULED SESSION")}</span>
+                    </span>
 
-                  <span className={`text-[10px] font-bold ${s.is_active ? "text-emerald-600" : "text-slate-400"}`}>
-                    {s.is_active ? "Banner Visible to Candidates" : "Banner Hidden"}
-                  </span>
+                    <span className={`text-[10px] font-bold ${s.is_active ? "text-emerald-600 dark:text-emerald-400" : "text-slate-400"}`}>
+                      {s.is_active ? "Banner Visible to Candidates" : "Banner Hidden"}
+                    </span>
+                  </div>
+
+                  <h3 className="text-base font-black text-slate-900 dark:text-white leading-tight">
+                    {s.title}
+                  </h3>
+
+                  <p className="text-xs text-slate-500 font-medium leading-relaxed line-clamp-2">
+                    {s.description || "No description provided."}
+                  </p>
+
+                  <div className="flex flex-col gap-1.5 pt-2 border-t border-slate-100 dark:border-slate-800 text-xs font-semibold text-slate-600 dark:text-slate-300">
+                    <div className="flex items-center gap-2">
+                      <Clock className="w-3.5 h-3.5 text-[#FF6B00]" />
+                      <span>{s.session_date}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Users className="w-3.5 h-3.5 text-[#FF6B00]" />
+                      <span>Host: {s.host_name || "Vikas Sir & Sachin Rawat"}</span>
+                    </div>
+                  </div>
                 </div>
 
-                <h3 className="text-base font-black text-slate-900 dark:text-white leading-tight">
-                  {s.title}
-                </h3>
-
-                <p className="text-xs text-slate-500 font-medium leading-relaxed line-clamp-2">
-                  {s.description || "No description provided."}
-                </p>
-
-                <div className="flex flex-col gap-1.5 pt-2 border-t border-slate-100 dark:border-slate-800 text-xs font-semibold text-slate-600 dark:text-slate-300">
-                  <div className="flex items-center gap-2">
-                    <Clock className="w-3.5 h-3.5 text-[#FF6B00]" />
-                    <span>{s.session_date}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Users className="w-3.5 h-3.5 text-[#FF6B00]" />
-                    <span>Host: {s.host_name || "Vikas Sir & Sachin Rawat"}</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Action buttons */}
-              <div className="flex items-center justify-between pt-3 border-t border-slate-100 dark:border-slate-800">
-                <a
-                  href={s.meeting_url || "#"}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="text-xs font-bold text-[#FF6B00] hover:underline flex items-center gap-1"
-                >
-                  <LinkIcon className="w-3.5 h-3.5" />
-                  <span>Join Meeting</span>
-                </a>
-
-                <div className="flex items-center gap-2">
+                {/* 1-Click "Go Live Now" / "End Stream" Toggle Action Bar */}
+                <div className="flex flex-col gap-2.5 pt-3 border-t border-slate-100 dark:border-slate-800">
+                  
                   <button
-                    onClick={() => handleOpenEditModal(s)}
-                    className="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-[#FF6B00] hover:text-white transition-all cursor-pointer"
-                    title="Edit Session"
+                    onClick={() => handleToggleLiveStatus(s)}
+                    className={`w-full py-2.5 rounded-xl font-black text-xs transition-all flex items-center justify-center gap-2 cursor-pointer uppercase tracking-wider ${
+                      isLive
+                        ? "bg-rose-600 hover:bg-rose-700 text-white shadow-md shadow-rose-600/30"
+                        : "bg-emerald-600 hover:bg-emerald-700 text-white shadow-md shadow-emerald-600/30"
+                    }`}
                   >
-                    <Edit2 className="w-3.5 h-3.5" />
+                    {isLive ? (
+                      <>
+                        <StopCircle className="w-4 h-4" />
+                        <span>⏹ End Live Stream</span>
+                      </>
+                    ) : (
+                      <>
+                        <Radio className="w-4 h-4 text-white animate-pulse" />
+                        <span>⚡ Go Live Now (Demotes Others)</span>
+                      </>
+                    )}
                   </button>
 
-                  <button
-                    onClick={() => handleDeleteSession(s.id)}
-                    className="p-2 rounded-xl bg-rose-50 dark:bg-rose-950 text-rose-600 dark:text-rose-300 hover:bg-rose-600 hover:text-white transition-all cursor-pointer"
-                    title="Delete Session"
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </button>
-                </div>
-              </div>
+                  <div className="flex items-center justify-between">
+                    <a
+                      href={s.meeting_url || "#"}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-xs font-bold text-[#FF6B00] hover:underline flex items-center gap-1"
+                    >
+                      <LinkIcon className="w-3.5 h-3.5" />
+                      <span>Join Meeting</span>
+                    </a>
 
-            </div>
-          ))
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => handleOpenEditModal(s)}
+                        className="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-[#FF6B00] hover:text-white transition-all cursor-pointer"
+                        title="Edit Session"
+                      >
+                        <Edit2 className="w-3.5 h-3.5" />
+                      </button>
+
+                      <button
+                        onClick={() => handleDeleteSession(s.id)}
+                        className="p-2 rounded-xl bg-rose-50 dark:bg-rose-950 text-rose-600 dark:text-rose-300 hover:bg-rose-600 hover:text-white transition-all cursor-pointer"
+                        title="Delete Session"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
+
+                </div>
+
+              </div>
+            );
+          })
         )}
       </div>
 
@@ -506,7 +602,7 @@ export default function AdminLiveSessionsPage() {
                     className="px-3 py-1.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white font-bold focus:outline-none"
                   >
                     <option value="UPCOMING">UPCOMING</option>
-                    <option value="LIVE_NOW">LIVE NOW</option>
+                    <option value="LIVE_NOW">LIVE NOW (Demotes Others)</option>
                     <option value="COMPLETED">COMPLETED</option>
                   </select>
                 </div>

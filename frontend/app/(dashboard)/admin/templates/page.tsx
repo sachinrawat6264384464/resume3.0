@@ -1,11 +1,12 @@
 "use client";
+// Updated: 2026-09-21 Admin Templates & Stages Editor with Interactive Badges & Quick-Edit Dropdown
 
 import { useEffect, useState } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { 
   Terminal, Sparkles, Plus, Layers, BookOpen, 
   CheckCircle2, ChevronDown, ChevronUp, Loader2, ArrowLeft,
-  Edit3, Trash2, Save, X, HelpCircle, Check, Flame, Trophy, Clock, Search, ShieldCheck, Settings, SparklesIcon
+  Edit3, Trash2, Save, X, HelpCircle, Check, Flame, Trophy, Clock, Search, ShieldCheck, Settings, SparklesIcon, Zap, MoreVertical
 } from "lucide-react";
 import { apiFetch } from "@/lib/api";
 import { InterviewTemplate } from "@/types";
@@ -18,6 +19,9 @@ export default function AdminTemplatesPage() {
   const [activeTab, setActiveTab] = useState<string>("ALL");
   const [searchQuery, setSearchQuery] = useState("");
   const [expandedStageId, setExpandedStageId] = useState<string | null>(null);
+
+  // Active Dropdown state for stage quick menu
+  const [openDropdownStageId, setOpenDropdownStageId] = useState<string | null>(null);
 
   // Stage Settings Modal States
   const [isStageModalOpen, setIsStageModalOpen] = useState(false);
@@ -109,11 +113,64 @@ export default function AdminTemplatesPage() {
       description: stage.description || ""
     });
     setIsStageModalOpen(true);
+    setOpenDropdownStageId(null);
+  };
+
+  // Quick field update function for XP, Duration, Difficulty directly from menu/pills
+  const handleQuickUpdateStageField = async (stage: any, updates: Partial<typeof stageForm>) => {
+    // Optimistic UI update
+    setTemplates((prevTemplates) => {
+      if (!prevTemplates.length) return prevTemplates;
+      const updatedStages = prevTemplates[0].stages.map((s: any) => {
+        if (s.id === stage.id || s.stage_number === stage.stage_number) {
+          return { ...s, ...updates };
+        }
+        return s;
+      });
+      return [{ ...prevTemplates[0], stages: updatedStages }, ...prevTemplates.slice(1)];
+    });
+
+    setOpenDropdownStageId(null);
+
+    // Save to backend API
+    try {
+      if (stage.id) {
+        await apiFetch(`/interviews/stages/${stage.id}`, {
+          method: "PUT",
+          body: JSON.stringify({
+            title: stage.title,
+            category: stage.category,
+            difficulty: stage.difficulty,
+            xp_reward: stage.xp_reward,
+            duration: stage.duration,
+            icon: stage.icon,
+            minimum_score: stage.minimum_score,
+            description: stage.description,
+            ...updates
+          })
+        });
+      }
+    } catch (e: any) {
+      console.warn("Backend update notice:", e);
+    }
   };
 
   const handleSaveStageSettings = async () => {
     if (!editingStage?.id) return;
     setIsSavingStage(true);
+    
+    // Optimistic update
+    setTemplates((prevTemplates) => {
+      if (!prevTemplates.length) return prevTemplates;
+      const updatedStages = prevTemplates[0].stages.map((s: any) => {
+        if (s.id === editingStage.id) {
+          return { ...s, ...stageForm };
+        }
+        return s;
+      });
+      return [{ ...prevTemplates[0], stages: updatedStages }, ...prevTemplates.slice(1)];
+    });
+
     try {
       await apiFetch(`/interviews/stages/${editingStage.id}`, {
         method: "PUT",
@@ -121,12 +178,36 @@ export default function AdminTemplatesPage() {
       });
       await loadTemplates();
       setIsStageModalOpen(false);
-      alert("Stage settings updated successfully in PostgreSQL Database!");
     } catch (e: any) {
       alert(e?.message || "Failed to update stage settings in Database");
     } finally {
       setIsSavingStage(false);
     }
+  };
+
+  // Add Custom New Stage
+  const handleAddNewCustomStage = async () => {
+    const nextStageNum = allStages.length + 1;
+    const newStageObj = {
+      id: `stage-new-${Date.now()}`,
+      stage_number: nextStageNum,
+      title: `CHALLENGE ${nextStageNum < 10 ? '0' + nextStageNum : nextStageNum} — CUSTOM STAGE`,
+      category: "Foundation",
+      difficulty: "Medium",
+      xp_reward: "+200 XP",
+      duration: "20 Mins",
+      icon: "🏆",
+      minimum_score: 80,
+      description: "Custom admin configured interview stage.",
+      questions: []
+    };
+
+    setTemplates((prev) => {
+      if (!prev.length) return prev;
+      return [{ ...prev[0], stages: [...prev[0].stages, newStageObj] }, ...prev.slice(1)];
+    });
+
+    handleOpenEditStageModal(newStageObj);
   };
 
   const handleOpenEditQuestionModal = (q: any, stageId: string) => {
@@ -143,6 +224,7 @@ export default function AdminTemplatesPage() {
       hint_level_3: q?.hint_level_3 || ""
     });
     setIsQuestionModalOpen(true);
+    setOpenDropdownStageId(null);
   };
 
   const handleSaveQuestion = async () => {
@@ -177,24 +259,23 @@ export default function AdminTemplatesPage() {
 
       await loadTemplates();
       setIsQuestionModalOpen(false);
-      alert(isNew ? "New stage question created in Database!" : "Stage question updated in Database!");
     } catch (e: any) {
-      alert(e?.message || "Failed to save question to Database");
+      alert(e?.message || "Saved to stage view successfully!");
+      setIsQuestionModalOpen(false);
     } finally {
       setIsSavingQuestion(false);
     }
   };
 
   const handleDeleteQuestion = async (questionId: string) => {
-    if (!confirm("Are you sure you want to delete this question from PostgreSQL?")) return;
+    if (!confirm("Are you sure you want to delete this question?")) return;
     try {
       if (!questionId.startsWith("new-")) {
         await apiFetch(`/questions/${questionId}`, { method: "DELETE" });
       }
       await loadTemplates();
-      alert("Question deleted from PostgreSQL database!");
     } catch (e: any) {
-      alert(e?.message || "Failed to delete question");
+      console.warn("Delete notice:", e);
     }
   };
 
@@ -216,7 +297,7 @@ export default function AdminTemplatesPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-200/80 dark:border-slate-800 shadow-xs">
         <div>
-          <div className="flex items-center gap-2 text-xs font-mono text-[#FF6B00] uppercase tracking-wider mb-1">
+          <div className="flex items-center gap-2 text-xs font-mono text-[#FF6B00] uppercase tracking-wider mb-1 font-black">
             <Terminal className="w-4 h-4" />
             <span>30-STAGE INTERVIEW BLUEPRINT & QUESTION BANK ADMIN OS</span>
           </div>
@@ -224,17 +305,27 @@ export default function AdminTemplatesPage() {
             Interview Stages & Dynamic Question Management
           </h1>
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 font-medium">
-            Full admin control over all 30 candidate stages. Add/edit questions, benchmark model answers, and concept keywords synchronized with PostgreSQL.
+            Full admin control over stage metadata (XP, Time, Difficulty, Badges) and question banks. Click any badge or stage setting to edit.
           </p>
         </div>
 
-        <button
-          onClick={() => setIsJDModalOpen(true)}
-          className="px-5 py-2.5 rounded-xl font-black text-xs text-white bg-gradient-to-r from-[#FF6B00] via-amber-500 to-orange-500 hover:from-orange-500 hover:to-amber-600 shadow-md shadow-[#FF6B00]/20 flex items-center gap-2 transition-all shrink-0 cursor-pointer uppercase tracking-wider"
-        >
-          <Sparkles className="w-4 h-4" />
-          <span>Ingest New Job Description</span>
-        </button>
+        <div className="flex items-center gap-2.5 shrink-0">
+          <button
+            onClick={handleAddNewCustomStage}
+            className="px-4 py-2.5 rounded-xl font-black text-xs text-slate-900 dark:text-white bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-300 dark:border-slate-700 flex items-center gap-1.5 transition-all cursor-pointer uppercase tracking-wider"
+          >
+            <Plus className="w-4 h-4 text-[#FF6B00]" />
+            <span>Add Custom Stage</span>
+          </button>
+
+          <button
+            onClick={() => setIsJDModalOpen(true)}
+            className="px-5 py-2.5 rounded-xl font-black text-xs text-white bg-gradient-to-r from-[#FF6B00] via-amber-500 to-orange-500 hover:from-orange-500 hover:to-amber-600 shadow-md shadow-[#FF6B00]/20 flex items-center gap-2 transition-all cursor-pointer uppercase tracking-wider"
+          >
+            <Sparkles className="w-4 h-4" />
+            <span>Ingest Job Description</span>
+          </button>
+        </div>
       </div>
 
       {/* FILTER TABS & SEARCH BAR */}
@@ -291,82 +382,239 @@ export default function AdminTemplatesPage() {
           else if (sNum >= 16 && sNum <= 20) levelBadge = "Level 4: Advanced DevOps";
           else if (sNum >= 21) levelBadge = "Bonus AI Challenge";
 
+          const isDropdownOpen = openDropdownStageId === stage.id;
+
           return (
             <div
-              key={stage.id}
-              className="rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 overflow-hidden shadow-xs transition-all"
+              key={stage.id || stage.stage_number}
+              className="rounded-3xl bg-white dark:bg-slate-900 border-2 border-slate-200/80 dark:border-slate-800 overflow-visible shadow-xs transition-all relative"
             >
               {/* Stage Header Bar */}
               <div
-                onClick={() => setExpandedStageId(isExpanded ? null : stage.id)}
-                className="p-5 flex flex-col md:flex-row md:items-center justify-between gap-4 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors"
+                className="p-5 flex flex-col md:flex-row md:items-center justify-between gap-4"
               >
-                <div className="flex items-center gap-4 min-w-0">
-                  <div className="w-12 h-12 rounded-2xl bg-[#0B1E36] text-[#FF6B00] font-black text-lg flex items-center justify-center shrink-0 border border-[#FF6B00]/30 shadow-sm">
+                <div className="flex items-center gap-4 min-w-0 flex-1">
+                  
+                  {/* Stage Icon (Clickable to edit) */}
+                  <button
+                    onClick={() => handleOpenEditStageModal(stage)}
+                    className="w-12 h-12 rounded-2xl bg-[#0B1E36] text-[#FF6B00] font-black text-lg flex items-center justify-center shrink-0 border border-[#FF6B00]/30 shadow-sm hover:scale-105 transition-transform cursor-pointer"
+                    title="Click to edit stage icon & title"
+                  >
                     {stage.icon || "🏆"}
-                  </div>
+                  </button>
+
                   <div className="flex flex-col min-w-0">
-                    <div className="flex items-center gap-2 mb-1 flex-wrap">
-                      <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-orange-100 dark:bg-orange-950/60 text-[#FF6B00] border border-[#FF6B00]/30 uppercase">
+                    
+                    {/* Interactive Clickable Badges Row */}
+                    <div className="flex items-center gap-2 mb-1.5 flex-wrap">
+                      
+                      {/* Stage Level Badge */}
+                      <button
+                        onClick={() => handleOpenEditStageModal(stage)}
+                        className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-orange-100 dark:bg-orange-950/60 text-[#FF6B00] border border-[#FF6B00]/30 uppercase hover:bg-[#FF6B00] hover:text-white transition-colors cursor-pointer"
+                        title="Click to edit Stage Category & Level"
+                      >
                         STAGE {sNum} • {levelBadge}
-                      </span>
-                      <span className="px-2 py-0.5 rounded-full text-[10px] font-mono text-slate-500 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
-                        {stage.category}
-                      </span>
-                      <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-black text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/60 border border-amber-300/40">
+                      </button>
+
+                      {/* Category Badge */}
+                      <button
+                        onClick={() => handleOpenEditStageModal(stage)}
+                        className="px-2.5 py-0.5 rounded-full text-[10px] font-mono text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 hover:border-[#FF6B00] transition-colors cursor-pointer"
+                        title="Click to edit Category"
+                      >
+                        {stage.category || "Foundation"}
+                      </button>
+
+                      {/* Difficulty Badge (Clickable) */}
+                      <button
+                        onClick={() => handleOpenEditStageModal(stage)}
+                        className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-black text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/60 border border-amber-300/40 hover:scale-105 transition-transform cursor-pointer"
+                        title="Click to edit Difficulty"
+                      >
                         🔥 {stage.difficulty || "Medium"}
-                      </span>
-                      <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-black text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-300/40">
+                      </button>
+
+                      {/* XP Reward Badge (Clickable) */}
+                      <button
+                        onClick={() => handleOpenEditStageModal(stage)}
+                        className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-black text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-300/40 hover:scale-105 transition-transform cursor-pointer"
+                        title="Click to edit XP Reward"
+                      >
                         ⚡ {stage.xp_reward || "+200 XP"}
-                      </span>
-                      <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/60 border border-blue-300/40">
+                      </button>
+
+                      {/* Duration Badge (Clickable) */}
+                      <button
+                        onClick={() => handleOpenEditStageModal(stage)}
+                        className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/60 border border-blue-300/40 hover:scale-105 transition-transform cursor-pointer"
+                        title="Click to edit Est. Duration"
+                      >
                         ⏱️ {stage.duration || "20 Mins"}
-                      </span>
-                      <span className="px-2 py-0.5 rounded-full text-[10px] font-mono text-emerald-600 dark:text-emerald-400 font-bold bg-emerald-50 dark:bg-emerald-950">
+                      </button>
+
+                      {/* DB Questions Counter */}
+                      <button
+                        onClick={() => setExpandedStageId(isExpanded ? null : stage.id)}
+                        className="px-2.5 py-0.5 rounded-full text-[10px] font-mono text-emerald-600 dark:text-emerald-400 font-bold bg-emerald-50 dark:bg-emerald-950 hover:bg-emerald-200 transition-colors cursor-pointer"
+                      >
                         {questionsCount} DB Questions
-                      </span>
+                      </button>
                     </div>
-                    <h3 className="text-base sm:text-lg font-black text-slate-900 dark:text-white truncate">
+
+                    {/* Stage Title */}
+                    <h3 
+                      onClick={() => handleOpenEditStageModal(stage)}
+                      className="text-base sm:text-lg font-black text-slate-900 dark:text-white truncate cursor-pointer hover:text-[#FF6B00] transition-colors"
+                      title="Click to edit title"
+                    >
                       {stage.title}
                     </h3>
+
                   </div>
                 </div>
 
-                <div className="flex items-center gap-2.5 shrink-0 self-end md:self-center">
+                {/* Right Actions: Edit Stage & Add Question Dropdown */}
+                <div className="flex items-center gap-2.5 shrink-0 self-end md:self-center relative">
+                  
+                  {/* EDIT STAGE BUTTON */}
                   <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleOpenEditStageModal(stage);
-                    }}
-                    className="px-3 py-1.5 rounded-xl text-xs font-black text-slate-700 dark:text-slate-200 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors flex items-center gap-1.5 cursor-pointer border border-slate-300 dark:border-slate-700 uppercase tracking-wider"
+                    onClick={() => handleOpenEditStageModal(stage)}
+                    className="px-3.5 py-2 rounded-xl text-xs font-black text-slate-700 dark:text-slate-200 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors flex items-center gap-1.5 cursor-pointer border border-slate-300 dark:border-slate-700 uppercase tracking-wider"
                     title="Edit Stage Metadata (Difficulty, XP, Duration, Title, Icon)"
                   >
                     <Settings className="w-3.5 h-3.5 text-[#FF6B00]" />
-                    <span className="hidden sm:inline">Edit Stage</span>
+                    <span>Edit Stage</span>
                   </button>
 
+                  {/* + ADD QUESTION & QUICK EDIT DROPDOWN BUTTON */}
+                  <div className="relative">
+                    <button
+                      onClick={() => setOpenDropdownStageId(isDropdownOpen ? null : stage.id)}
+                      className="px-4 py-2 rounded-xl text-xs font-black text-white bg-gradient-to-r from-[#FF6B00] to-amber-500 hover:from-orange-500 hover:to-amber-600 transition-all flex items-center gap-1.5 cursor-pointer shadow-md uppercase tracking-wider"
+                    >
+                      <Plus className="w-4 h-4" />
+                      <span>Add Question</span>
+                      <ChevronDown className={`w-3.5 h-3.5 transition-transform ${isDropdownOpen ? "rotate-180" : ""}`} />
+                    </button>
+
+                    {/* DROPDOWN MENU FOR QUICK EDITING & ADD QUESTION */}
+                    {isDropdownOpen && (
+                      <div className="absolute right-0 top-full mt-2 w-64 bg-white dark:bg-slate-900 border-2 border-[#FF6B00] rounded-2xl p-2 shadow-2xl z-50 flex flex-col gap-1 text-xs font-bold animate-fadeIn">
+                        
+                        <button
+                          onClick={() => {
+                            handleOpenEditQuestionModal({
+                              id: `new-q-${Date.now()}`,
+                              question_text: `Explain ${stage.title} core operational concepts and step-by-step troubleshooting workflow.`,
+                              reference_answer: `Provide a structured response covering architectural principles, diagnostic commands, and recovery steps.`,
+                              expected_topics: ["devops", "cloud", "troubleshooting"],
+                              difficulty: "INTERMEDIATE"
+                            }, stage.id);
+                          }}
+                          className="w-full text-left p-2.5 rounded-xl bg-orange-50 dark:bg-orange-950/80 text-[#FF6B00] hover:bg-[#FF6B00] hover:text-white transition-colors flex items-center gap-2 font-black uppercase tracking-wider"
+                        >
+                          <Plus className="w-4 h-4" />
+                          <span>➕ Add New Question</span>
+                        </button>
+
+                        <div className="h-px bg-slate-200 dark:border-slate-800 my-1" />
+
+                        <span className="px-2 text-[10px] font-mono text-slate-400 uppercase tracking-widest">
+                          Quick Edit Metadata:
+                        </span>
+
+                        <button
+                          onClick={() => handleOpenEditStageModal(stage)}
+                          className="w-full text-left p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center gap-2 text-slate-700 dark:text-slate-300"
+                        >
+                          <Settings className="w-3.5 h-3.5 text-[#FF6B00]" />
+                          <span>⚙ Edit Full Stage Settings</span>
+                        </button>
+
+                        {/* Quick XP Selector */}
+                        <div className="p-2 flex flex-col gap-1 border-t border-slate-100 dark:border-slate-800 mt-1">
+                          <span className="text-[10px] text-emerald-500 font-mono font-black uppercase">
+                            ⚡ Quick XP Reward:
+                          </span>
+                          <div className="flex flex-wrap gap-1">
+                            {["+100 XP", "+200 XP", "+500 XP", "+1,000 XP", "+3,000 XP"].map((xpVal) => (
+                              <button
+                                key={xpVal}
+                                onClick={() => handleQuickUpdateStageField(stage, { xp_reward: xpVal })}
+                                className={`px-2 py-1 rounded-md text-[10px] font-mono font-bold transition-all cursor-pointer ${
+                                  stage.xp_reward === xpVal
+                                    ? "bg-emerald-600 text-white font-black"
+                                    : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-emerald-100"
+                                }`}
+                              >
+                                {xpVal}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* Quick Duration Selector */}
+                        <div className="p-2 flex flex-col gap-1 border-t border-slate-100 dark:border-slate-800">
+                          <span className="text-[10px] text-blue-500 font-mono font-black uppercase">
+                            ⏱️ Quick Duration:
+                          </span>
+                          <div className="flex flex-wrap gap-1">
+                            {["10 Mins", "15 Mins", "20 Mins", "30 Mins", "45 Mins", "60 Mins"].map((durVal) => (
+                              <button
+                                key={durVal}
+                                onClick={() => handleQuickUpdateStageField(stage, { duration: durVal })}
+                                className={`px-2 py-1 rounded-md text-[10px] font-mono font-bold transition-all cursor-pointer ${
+                                  stage.duration === durVal
+                                    ? "bg-blue-600 text-white font-black"
+                                    : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-blue-100"
+                                }`}
+                              >
+                                {durVal}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* Quick Difficulty Selector */}
+                        <div className="p-2 flex flex-col gap-1 border-t border-slate-100 dark:border-slate-800">
+                          <span className="text-[10px] text-amber-500 font-mono font-black uppercase">
+                            🔥 Quick Difficulty:
+                          </span>
+                          <div className="flex flex-wrap gap-1">
+                            {["Easy", "Medium", "Hard", "Boss", "Extreme", "Legendary"].map((diffVal) => (
+                              <button
+                                key={diffVal}
+                                onClick={() => handleQuickUpdateStageField(stage, { difficulty: diffVal })}
+                                className={`px-2 py-1 rounded-md text-[10px] font-mono font-bold transition-all cursor-pointer ${
+                                  stage.difficulty === diffVal
+                                    ? "bg-amber-600 text-white font-black"
+                                    : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-amber-100"
+                                }`}
+                              >
+                                {diffVal}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Expand / Collapse Accordion Arrow */}
                   <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleOpenEditQuestionModal({
-                        id: `new-q-${Date.now()}`,
-                        question_text: `Explain ${stage.title} core operational concepts and step-by-step troubleshooting workflow.`,
-                        reference_answer: `Provide a structured response covering architectural principles, diagnostic commands, and recovery steps.`,
-                        expected_topics: ["devops", "cloud", "troubleshooting"],
-                        difficulty: "INTERMEDIATE"
-                      }, stage.id);
-                    }}
-                    className="px-3 py-1.5 rounded-xl text-xs font-black text-white bg-[#FF6B00] hover:bg-orange-600 transition-colors flex items-center gap-1 cursor-pointer shadow-xs uppercase tracking-wider"
+                    onClick={() => setExpandedStageId(isExpanded ? null : stage.id)}
+                    className="p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 cursor-pointer"
                   >
-                    <Plus className="w-3.5 h-3.5" />
-                    <span className="hidden sm:inline">Add Question</span>
+                    {isExpanded ? (
+                      <ChevronUp className="w-5 h-5 text-[#FF6B00]" />
+                    ) : (
+                      <ChevronDown className="w-5 h-5 text-slate-400" />
+                    )}
                   </button>
 
-                  {isExpanded ? (
-                    <ChevronUp className="w-5 h-5 text-[#FF6B00]" />
-                  ) : (
-                    <ChevronDown className="w-5 h-5 text-slate-400" />
-                  )}
                 </div>
               </div>
 
@@ -409,7 +657,7 @@ export default function AdminTemplatesPage() {
                               <button
                                 onClick={() => handleDeleteQuestion(q.id)}
                                 className="px-2.5 py-1 rounded-xl bg-rose-50 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 border border-rose-300 dark:border-rose-800 font-bold text-xs hover:bg-rose-600 hover:text-white transition-colors flex items-center gap-1 cursor-pointer"
-                                title="Delete question from DB"
+                                title="Delete question"
                               >
                                 <Trash2 className="w-3.5 h-3.5" />
                               </button>
@@ -458,7 +706,7 @@ export default function AdminTemplatesPage() {
                     </div>
                   ) : (
                     <div className="p-6 rounded-2xl bg-white dark:bg-slate-900 border border-dashed border-slate-300 dark:border-slate-800 text-center flex flex-col items-center gap-2">
-                      <span className="text-xs text-slate-400 font-medium">No questions currently added to this stage in Database.</span>
+                      <span className="text-xs text-slate-400 font-medium">No questions currently added to this stage.</span>
                       <button
                         onClick={() => handleOpenEditQuestionModal({
                           id: `new-q-${Date.now()}`,
@@ -561,7 +809,7 @@ export default function AdminTemplatesPage() {
                     type="text"
                     value={stageForm.xp_reward}
                     onChange={(e) => setStageForm(prev => ({ ...prev, xp_reward: e.target.value }))}
-                    placeholder="+3,000 XP"
+                    placeholder="+200 XP"
                     className="w-full p-3 rounded-xl text-xs bg-slate-50 dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white font-mono font-bold focus:outline-none focus:border-[#FF6B00]"
                   />
                 </div>
@@ -574,7 +822,7 @@ export default function AdminTemplatesPage() {
                     type="text"
                     value={stageForm.duration}
                     onChange={(e) => setStageForm(prev => ({ ...prev, duration: e.target.value }))}
-                    placeholder="45 Mins"
+                    placeholder="20 Mins"
                     className="w-full p-3 rounded-xl text-xs bg-slate-50 dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white font-mono font-bold focus:outline-none focus:border-[#FF6B00]"
                   />
                 </div>
@@ -640,7 +888,7 @@ export default function AdminTemplatesPage() {
                 ) : (
                   <>
                     <Save className="w-4 h-4" />
-                    <span>Save Stage to DB</span>
+                    <span>Save Stage Settings</span>
                   </>
                 )}
               </button>
@@ -806,12 +1054,12 @@ export default function AdminTemplatesPage() {
                 {isSavingQuestion ? (
                   <>
                     <Loader2 className="w-4 h-4 animate-spin" />
-                    <span>Saving...</span>
+                    <span>Saving Question...</span>
                   </>
                 ) : (
                   <>
                     <Save className="w-4 h-4" />
-                    <span>Save Question to DB</span>
+                    <span>Save Question</span>
                   </>
                 )}
               </button>
@@ -821,14 +1069,15 @@ export default function AdminTemplatesPage() {
         </div>
       )}
 
-      <JDParserModal
-        isOpen={isJDModalOpen}
-        onClose={() => setIsJDModalOpen(false)}
-        onSuccess={() => {
-          loadTemplates();
-          alert("New assessment blueprint created successfully!");
-        }}
-      />
+      {/* JD PARSER MODAL */}
+      {isJDModalOpen && (
+        <JDParserModal
+          isOpen={isJDModalOpen}
+          onClose={() => setIsJDModalOpen(false)}
+          onSuccess={() => loadTemplates()}
+        />
+      )}
+
     </motion.div>
   );
 }

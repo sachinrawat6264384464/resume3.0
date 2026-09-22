@@ -1,24 +1,38 @@
 from typing import Optional, List, Dict, Any
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 from app.schemas.common import BaseSchema
 
 class ResumeExperienceItem(BaseSchema):
-    company: str
-    role: str
+    company: Optional[str] = "Company"
+    role: Optional[str] = "DevOps Engineer"
     duration: Optional[str] = None
     bullet_points: List[str] = []
 
+    @field_validator("company", "role", mode="before")
+    @classmethod
+    def sanitize_experience_strings(cls, v: Any) -> str:
+        if not v or v is None:
+            return "N/A"
+        return str(v)
+
 class ResumeProjectItem(BaseSchema):
-    title: str
+    title: Optional[str] = "Project"
     description: Optional[str] = None
     technologies: List[str] = []
 
+    @field_validator("title", mode="before")
+    @classmethod
+    def sanitize_title(cls, v: Any) -> str:
+        if not v or v is None:
+            return "Project"
+        return str(v)
+
 class ResumeProfile(BaseSchema):
-    candidate_name: str = "Candidate"
+    candidate_name: Optional[str] = "Candidate"
     email: Optional[str] = None
     phone: Optional[str] = None
     current_designation: Optional[str] = "Cloud / DevOps Engineer"
-    years_of_experience: float = 0.0
+    years_of_experience: Optional[float] = 0.0
     summary: Optional[str] = None
     primary_skills: List[str] = []
     cloud_platforms: List[str] = []
@@ -29,6 +43,36 @@ class ResumeProfile(BaseSchema):
     education: List[str] = []
     experience: List[ResumeExperienceItem] = []
     projects: List[ResumeProjectItem] = []
+
+    @field_validator("candidate_name", mode="before")
+    @classmethod
+    def sanitize_candidate_name(cls, v: Any) -> str:
+        if not v or v is None:
+            return "Candidate"
+        return str(v)
+
+    @field_validator("years_of_experience", mode="before")
+    @classmethod
+    def sanitize_yoe(cls, v: Any) -> float:
+        if v is None:
+            return 0.0
+        try:
+            return float(v)
+        except (ValueError, TypeError):
+            return 0.0
+
+    @field_validator(
+        "primary_skills", "cloud_platforms", "devops_tools", "devsecops_tools", 
+        "ai_skills", "certifications", "education", "experience", "projects", 
+        mode="before"
+    )
+    @classmethod
+    def sanitize_lists(cls, v: Any) -> list:
+        if v is None:
+            return []
+        if isinstance(v, list):
+            return v
+        return [v]
 
 class ATSScoreBreakdown(BaseSchema):
     skills_match: float = 0.0

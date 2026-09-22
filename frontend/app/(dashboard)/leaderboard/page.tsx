@@ -395,21 +395,21 @@ export default function LeaderboardPage() {
 
       </div>
 
-      {/* LEADERBOARD AUDIT TABLE */}
-      <div className="w-full rounded-[32px] bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-800 shadow-xl overflow-hidden">
+      {/* LEADERBOARD AUDIT TABLE WITH INTERNAL SCROLLING & STICKY HEADER */}
+      <div className="w-full rounded-[32px] bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-800 shadow-xl overflow-hidden relative">
         
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs font-sans border-collapse">
+        <div className="overflow-x-auto max-h-[580px] sm:max-h-[650px] overflow-y-auto scroll-smooth">
+          <table className="w-full min-w-[880px] text-left text-xs font-sans border-collapse relative">
             
-            <thead>
-              <tr className="border-b-2 border-slate-100 dark:border-slate-800/80 text-slate-400 uppercase text-[10px] font-black tracking-wider bg-slate-50/50 dark:bg-slate-800/40">
-                <th className="py-4 px-6">RANK</th>
-                <th className="py-4 px-6">MEMBER</th>
-                <th className="py-4 px-6 text-center">BATCH</th>
-                <th className="py-4 px-6 text-center">CURRICULUM BADGES</th>
-                <th className="py-4 px-6 text-center">POSTS</th>
-                <th className="py-4 px-6 text-center">TOTAL PTS</th>
-                <th className="py-4 px-6 text-right">SHARE & VIEW</th>
+            <thead className="sticky top-0 z-20 bg-slate-50/95 dark:bg-slate-900/95 backdrop-blur-md shadow-xs">
+              <tr className="border-b-2 border-slate-200 dark:border-slate-800 text-slate-400 uppercase text-[10px] font-black tracking-wider">
+                <th className="py-4 px-6 bg-slate-50/95 dark:bg-slate-900/95">RANK</th>
+                <th className="py-4 px-6 bg-slate-50/95 dark:bg-slate-900/95">MEMBER</th>
+                <th className="py-4 px-6 text-center bg-slate-50/95 dark:bg-slate-900/95">BATCH</th>
+                <th className="py-4 px-6 text-center bg-slate-50/95 dark:bg-slate-900/95">CURRICULUM BADGES</th>
+                <th className="py-4 px-6 text-center bg-slate-50/95 dark:bg-slate-900/95">POSTS</th>
+                <th className="py-4 px-6 text-center bg-slate-50/95 dark:bg-slate-900/95">TOTAL PTS</th>
+                <th className="py-4 px-6 text-right bg-slate-50/95 dark:bg-slate-900/95">SHARE & VIEW</th>
               </tr>
             </thead>
 

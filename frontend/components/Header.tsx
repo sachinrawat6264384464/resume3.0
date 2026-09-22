@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { 
   Bell, Sun, Moon, LogOut, User, Settings, 
   BarChart3, CheckCircle2, Sparkles, Trophy, FileText, ChevronDown, Check, X,
@@ -45,6 +45,8 @@ function formatRelativeTime(dateString?: string): string {
 
 export function Header({ onToggleMobileSidebar }: HeaderProps) {
   const router = useRouter();
+  const pathname = usePathname();
+  const isAdminRoute = pathname?.startsWith("/admin");
   const { user, isAuthenticated, logout } = useAuthStore();
   const [theme, setTheme] = useState<"light" | "dark">("light");
   const [mounted, setMounted] = useState(false);
@@ -212,104 +214,108 @@ export function Header({ onToggleMobileSidebar }: HeaderProps) {
       <div className="flex items-center gap-1 sm:gap-3.5 relative shrink-0">
         
         {/* 🪙 TOP CANDIDATE XP WALLET WIDGET */}
-        <Link
-          href="/performance"
-          className="flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-1.5 rounded-2xl bg-gradient-to-r from-amber-500/15 via-orange-500/10 to-amber-500/15 border border-[#FF9900]/40 shadow-xs hover:border-[#FF9900] transition-all cursor-pointer group shrink-0"
-          title="Candidate XP Wallet Balance - Click to Manage Badges & Rewards"
-        >
-          <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-amber-500 text-slate-950 flex items-center justify-center font-black text-xs shrink-0 shadow-xs group-hover:scale-110 transition-transform">
-            🪙
-          </div>
-          <div className="flex flex-col text-left leading-none">
-            <span className="text-[8px] sm:text-[9px] font-extrabold text-slate-400 uppercase tracking-widest hidden xs:inline">XP WALLET</span>
-            <span className="text-[11px] sm:text-xs font-black text-[#FF9900] font-mono mt-0.5">
-              {((candProfile?.xp ?? 2450)).toLocaleString()} XP
-            </span>
-          </div>
-        </Link>
+        {!isAdminRoute && (
+          <Link
+            href="/performance"
+            className="flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-1.5 rounded-2xl bg-gradient-to-r from-amber-500/15 via-orange-500/10 to-amber-500/15 border border-[#FF9900]/40 shadow-xs hover:border-[#FF9900] transition-all cursor-pointer group shrink-0"
+            title="Candidate XP Wallet Balance - Click to Manage Badges & Rewards"
+          >
+            <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-amber-500 text-slate-950 flex items-center justify-center font-black text-xs shrink-0 shadow-xs group-hover:scale-110 transition-transform">
+              🪙
+            </div>
+            <div className="flex flex-col text-left leading-none">
+              <span className="text-[8px] sm:text-[9px] font-extrabold text-slate-400 uppercase tracking-widest hidden xs:inline">XP WALLET</span>
+              <span className="text-[11px] sm:text-xs font-black text-[#FF9900] font-mono mt-0.5">
+                {((candProfile?.xp ?? 2450)).toLocaleString()} XP
+              </span>
+            </div>
+          </Link>
+        )}
 
         {/* Theme Toggle Button */}
         <ThemeToggle />
 
         {/* 🔔 Live Smart Reminders Bell Dropdown */}
-        <div className="relative" ref={notificationRef}>
-          <button
-            onClick={() => {
-              const nextState = !showNotifications;
-              setShowNotifications(nextState);
-              if (nextState) fetchNotifications();
-            }}
-            className="relative p-2.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-200 hover:text-[#FF9900] shadow-sm hover:shadow-md transition-all cursor-pointer"
-            title="Smart Reminders & Alerts"
-          >
-            <Bell className="w-5 h-5 text-slate-700 dark:text-slate-200 hover:text-[#FF9900]" />
-            {unreadCount > 0 && (
-              <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-red-500 text-white font-mono text-[10px] font-black flex items-center justify-center border-2 border-white dark:border-slate-900 animate-pulse">
-                {unreadCount}
-              </span>
-            )}
-          </button>
+        {!isAdminRoute && (
+          <div className="relative" ref={notificationRef}>
+            <button
+              onClick={() => {
+                const nextState = !showNotifications;
+                setShowNotifications(nextState);
+                if (nextState) fetchNotifications();
+              }}
+              className="relative p-2.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-200 hover:text-[#FF9900] shadow-sm hover:shadow-md transition-all cursor-pointer"
+              title="Smart Reminders & Alerts"
+            >
+              <Bell className="w-5 h-5 text-slate-700 dark:text-slate-200 hover:text-[#FF9900]" />
+              {unreadCount > 0 && (
+                <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-red-500 text-white font-mono text-[10px] font-black flex items-center justify-center border-2 border-white dark:border-slate-900 animate-pulse">
+                  {unreadCount}
+                </span>
+              )}
+            </button>
 
-          {showNotifications && (
-            <div className="absolute right-0 mt-3 w-80 sm:w-96 max-w-[calc(100vw-2rem)] rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl z-50 overflow-hidden animate-fadeIn">
-              <div className="p-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Bell className="w-4 h-4 text-[#FF9900]" />
-                  <span className="text-sm font-black text-slate-900 dark:text-white">Smart Reminders</span>
+            {showNotifications && (
+              <div className="absolute right-0 mt-3 w-80 sm:w-96 max-w-[calc(100vw-2rem)] rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl z-50 overflow-hidden animate-fadeIn">
+                <div className="p-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Bell className="w-4 h-4 text-[#FF9900]" />
+                    <span className="text-sm font-black text-slate-900 dark:text-white">Smart Reminders</span>
+                  </div>
+                  {unreadCount > 0 && (
+                    <button onClick={markAllAsRead} className="text-[11px] font-bold text-[#FF9900] hover:underline cursor-pointer">
+                      Mark all read
+                    </button>
+                  )}
                 </div>
-                {unreadCount > 0 && (
-                  <button onClick={markAllAsRead} className="text-[11px] font-bold text-[#FF9900] hover:underline cursor-pointer">
-                    Mark all read
-                  </button>
-                )}
-              </div>
 
-              <div className="max-h-80 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-800/60">
-                {notifications.length === 0 ? (
-                  <div className="p-6 text-center text-xs text-slate-400">No new reminders</div>
-                ) : (
-                  notifications.map((n) => (
-                    <div
-                      key={n.id}
-                      className={`p-3.5 flex items-start gap-3 transition-colors ${
-                        !n.read ? "bg-amber-50/50 dark:bg-amber-950/20" : "hover:bg-slate-50 dark:hover:bg-slate-800/40"
-                      }`}
-                    >
-                      <div className="p-2 rounded-xl bg-amber-100 dark:bg-amber-950 text-[#FF9900] shrink-0 mt-0.5">
-                        <Sparkles className="w-3.5 h-3.5" />
-                      </div>
-                      <div className="flex flex-col min-w-0 flex-1 cursor-pointer" onClick={() => markAsRead(n.id)}>
-                        <span className="text-xs font-black text-slate-900 dark:text-white truncate">{n.title}</span>
-                        <span className="text-[11px] font-medium text-slate-500 line-clamp-2">{n.desc}</span>
-                        <span className="text-[10px] text-slate-400 font-mono mt-1">{n.time}</span>
-                      </div>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleDeleteNotification(n.id);
-                        }}
-                        className="p-1 rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/40 transition-colors shrink-0 mt-0.5 cursor-pointer"
-                        title="Delete Notification from DB"
+                <div className="max-h-80 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-800/60">
+                  {notifications.length === 0 ? (
+                    <div className="p-6 text-center text-xs text-slate-400">No new reminders</div>
+                  ) : (
+                    notifications.map((n) => (
+                      <div
+                        key={n.id}
+                        className={`p-3.5 flex items-start gap-3 transition-colors ${
+                          !n.read ? "bg-amber-50/50 dark:bg-amber-950/20" : "hover:bg-slate-50 dark:hover:bg-slate-800/40"
+                        }`}
                       >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
-                  ))
-                )}
-              </div>
+                        <div className="p-2 rounded-xl bg-amber-100 dark:bg-amber-950 text-[#FF9900] shrink-0 mt-0.5">
+                          <Sparkles className="w-3.5 h-3.5" />
+                        </div>
+                        <div className="flex flex-col min-w-0 flex-1 cursor-pointer" onClick={() => markAsRead(n.id)}>
+                          <span className="text-xs font-black text-slate-900 dark:text-white truncate">{n.title}</span>
+                          <span className="text-[11px] font-medium text-slate-500 line-clamp-2">{n.desc}</span>
+                          <span className="text-[10px] text-slate-400 font-mono mt-1">{n.time}</span>
+                        </div>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDeleteNotification(n.id);
+                          }}
+                          className="p-1 rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/40 transition-colors shrink-0 mt-0.5 cursor-pointer"
+                          title="Delete Notification from DB"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    ))
+                  )}
+                </div>
 
-              <div className="p-3 bg-slate-50 dark:bg-slate-900/80 border-t border-slate-100 dark:border-slate-800 text-center">
-                <Link
-                  href="/reminders"
-                  onClick={() => setShowNotifications(false)}
-                  className="text-xs font-extrabold text-[#FF9900] hover:underline flex items-center justify-center gap-1"
-                >
-                  <span>View All Reminders & Preparation Alerts →</span>
-                </Link>
+                <div className="p-3 bg-slate-50 dark:bg-slate-900/80 border-t border-slate-100 dark:border-slate-800 text-center">
+                  <Link
+                    href="/reminders"
+                    onClick={() => setShowNotifications(false)}
+                    className="text-xs font-extrabold text-[#FF9900] hover:underline flex items-center justify-center gap-1"
+                  >
+                    <span>View All Reminders & Preparation Alerts →</span>
+                  </Link>
+                </div>
               </div>
-            </div>
-          )}
-        </div>
+            )}
+          </div>
+        )}
 
 
 

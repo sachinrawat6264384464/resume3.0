@@ -92,13 +92,29 @@ class ResumeService:
         job_description: Optional[str] = None
     ) -> ResumeATSResponse:
         import asyncio
-        jd_text = (job_description.strip() if (job_description and job_description.strip()) else DEFAULT_CLOUDOPS_JD)
-
-        # OPTIMIZED: Run AI Profile Extraction + LangChain ATS Match CONCURRENTLY (parallel)
-        # This alone cuts latency by ~40% vs sequential calls
         import concurrent.futures
+
+        jd_text = (job_description.strip() if (job_description and job_description.strip()) else DEFAULT_CLOUDOPS_JD)
         loop = asyncio.get_event_loop()
 
+        # 1. Extract sample bullet points directly from raw text instantly (0ms)
+        sample_bullets = []
+        raw_lines = [l.strip().lstrip("-•*").strip() for l in resume_text.split("\n") if len(l.strip()) > 20]
+        for l in raw_lines:
+            if not any(header in l.lower() for header in ["summary", "skills", "experience", "education", "projects", "certifications", "target role", "http", "gmail", "linkedin"]):
+                if l not in sample_bullets:
+                    sample_bullets.append(l)
+                if len(sample_bullets) >= 3:
+                    break
+
+        if not sample_bullets:
+            sample_bullets = [
+                "Managed cloud infrastructure and deployed application updates across environments.",
+                "Configured CI/CD deployment pipelines for containerized microservices.",
+                "Handled server troubleshooting and infrastructure monitoring."
+            ]
+
+        # 2. RUN ALL AI & SEMANTIC WORK IN A SINGLE PARALLEL GATHER (Eliminates 3 sequential network hops!)
         def _langchain_sync():
             return LangChainMatcher.run_semantic_ats_match(
                 resume_text=resume_text,
@@ -106,23 +122,32 @@ class ResumeService:
                 job_description=jd_text
             )
 
-        # Run LangChain (sync, CPU-bound) in thread + AI profile extraction (async IO) concurrently
         lc_future = loop.run_in_executor(None, _langchain_sync)
         profile_data_task = self.ai.extract_resume_profile(resume_text)
+        bullet_tasks = [
+            self.ai.improve_resume_bullet(role=job_title, current_bullet=b)
+            for b in sample_bullets[:3]
+        ]
 
-        profile_data, lc_match = await asyncio.gather(
+        all_results = await asyncio.gather(
             profile_data_task,
             lc_future,
-            return_exceptions=False
+            *bullet_tasks,
+            return_exceptions=True
         )
-        candidate_profile = ResumeProfile.model_validate(profile_data)
 
-        # ATS match_resume_ats — run immediately after profile is ready
-        match_data = await self.ai.match_resume_ats(
-            job_title=job_title,
-            job_description=jd_text,
-            resume_profile=profile_data
-        )
+        profile_data = all_results[0] if isinstance(all_results[0], dict) else {}
+        lc_match = all_results[1] if isinstance(all_results[1], dict) else {}
+        bullet_results = all_results[2:]
+
+        if not isinstance(profile_data, dict):
+            profile_data = {}
+        if not profile_data.get("candidate_name"):
+            profile_data["candidate_name"] = "Candidate"
+        if profile_data.get("years_of_experience") is None:
+            profile_data["years_of_experience"] = 0.0
+
+        candidate_profile = ResumeProfile.model_validate(profile_data)
 
         # LangChain Semantic Output is authoritative
         breakdown_data = lc_match.get("breakdown", {})
@@ -139,59 +164,15 @@ class ResumeService:
             job_role_match=float(breakdown_data.get("job_role_match", 75.0))
         )
 
-        stages_data = match_data.get("recommended_interview_stages", [])
-        if not stages_data:
-            stages_data = [
-                {"stage_id": 1, "title": "Profile & Career Pitch", "reason": "Assess candidate self-introduction and career journey."},
-                {"stage_id": 2, "title": "Linux Systems Warrior", "reason": "Evaluate core Linux diagnostics, systemd, and memory triage."},
-                {"stage_id": 3, "title": "Multi-Cloud Architecture", "reason": "Deep dive into AWS VPC networking, IAM IRSA, and cloud architecture."}
-            ]
-
         recommended_stages = [
-            RecommendedInterviewStage(
-                stage_id=int(s.get("stage_id", idx)),
-                title=s.get("title", f"Stage {idx}"),
-                reason=s.get("reason", "Target core skills required by the JD")
-            )
-            for idx, s in enumerate(stages_data, start=1)
+            RecommendedInterviewStage(stage_id=1, title="Profile & Career Pitch", reason=f"Validate career experience and alignment for {job_title}."),
+            RecommendedInterviewStage(stage_id=2, title="Linux & Systems Diagnostics", reason="Evaluate core OS triage, process memory, and system logs."),
+            RecommendedInterviewStage(stage_id=3, title="Cloud & Container Architecture", reason="Deep dive into multi-cloud networking, Kubernetes, and IaC pipelines.")
         ]
-
-        # 3. Extract real candidate bullet points directly from uploaded document text
-        sample_bullets = []
-        for exp in candidate_profile.experience:
-            for bp in exp.bullet_points:
-                clean_bp = bp.strip().lstrip("-•*").strip()
-                if len(clean_bp) > 15:
-                    sample_bullets.append(clean_bp)
-                if len(sample_bullets) >= 3:
-                    break
-
-        if len(sample_bullets) < 3:
-            raw_lines = [l.strip().lstrip("-•*").strip() for l in resume_text.split("\n") if len(l.strip()) > 20]
-            for l in raw_lines:
-                if not any(header in l.lower() for header in ["summary", "skills", "experience", "education", "projects", "certifications", "target role"]):
-                    if l not in sample_bullets:
-                        sample_bullets.append(l)
-                    if len(sample_bullets) >= 3:
-                        break
-
-        if not sample_bullets:
-            sample_bullets = [
-                "Managed cloud infrastructure and deployed application updates across environments.",
-                "Configured CI/CD deployment pipelines for containerized microservices.",
-                "Handled server troubleshooting and infrastructure monitoring."
-            ]
-
-        # 3. Parallel Async AI Bullet Point Improvement (already optimized with gather)
-        tasks = [
-            self.ai.improve_resume_bullet(role=job_title, current_bullet=b)
-            for b in sample_bullets[:3]
-        ]
-        bullet_results = await asyncio.gather(*tasks, return_exceptions=True)
 
         bullet_suggestions = []
         for idx, b in enumerate(sample_bullets[:3]):
-            res = bullet_results[idx]
+            res = bullet_results[idx] if idx < len(bullet_results) else {}
             if isinstance(res, Exception) or not isinstance(res, dict):
                 res = {}
             bullet_suggestions.append(

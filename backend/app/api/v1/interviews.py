@@ -30,7 +30,7 @@ async def get_candidate_stages(
     for s in stages:
         active_q = [q for q in (s.questions or []) if q.is_active != "INACTIVE"]
         lvl_num = 1 if s.stage_number <= 5 else (2 if s.stage_number <= 10 else (3 if s.stage_number <= 15 else (4 if s.stage_number <= 20 else "Bonus")))
-        lvl_name = s.level_name or (f"Level {lvl_num}: Foundation" if lvl_num == 1 else (f"Level {lvl_num}: Cloud" if lvl_num == 2 else (f"Level {lvl_num}: DevOps" if lvl_num == 3 else (f"Level {lvl_num}: Advanced" if lvl_num == 4 else "Bonus Challenge"))))
+        lvl_name = getattr(s, "level_name", None) or (f"Level {lvl_num}: Foundation" if lvl_num == 1 else (f"Level {lvl_num}: Cloud" if lvl_num == 2 else (f"Level {lvl_num}: DevOps" if lvl_num == 3 else (f"Level {lvl_num}: Advanced" if lvl_num == 4 else "Bonus Challenge"))))
         
         data.append({
             "id": s.stage_number,

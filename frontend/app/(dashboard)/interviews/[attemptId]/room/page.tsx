@@ -180,10 +180,31 @@ export default function InterviewRoomPage() {
 
           const current = att.stage_attempts?.find((s) => s.status === "IN_PROGRESS") || att.stage_attempts?.[0];
           if (current) setActiveStage(current);
+
+          if (typeof window !== "undefined") {
+            const sessionData = {
+              attemptId,
+              stageId: current?.stage_number ?? 1,
+              stageTitle: att.template?.title || current?.stage?.title || `Stage ${current?.stage_number || 1} Assessment`,
+              roomUrl: `/interviews/${attemptId}/room`,
+              startedAt: Date.now()
+            };
+            localStorage.setItem("active_interview_session", JSON.stringify(sessionData));
+          }
         }
       }
     } catch (err: any) {
       console.warn("Attempt load fallback notice:", err);
+      if (typeof window !== "undefined" && attemptId) {
+        const fallbackObj = {
+          attemptId,
+          stageId: 1,
+          stageTitle: "Live Mock Interview",
+          roomUrl: `/interviews/${attemptId}/room`,
+          startedAt: Date.now()
+        };
+        localStorage.setItem("active_interview_session", JSON.stringify(fallbackObj));
+      }
     } finally {
       setIsLoading(false);
     }
@@ -392,6 +413,10 @@ export default function InterviewRoomPage() {
     setIsProcessing(true);
     stopCameraCompletely();
     forceStopAllWebcams();
+
+    if (typeof window !== "undefined") {
+      localStorage.removeItem("active_interview_session");
+    }
 
     try {
       // Send abort notice to backend DB
@@ -950,6 +975,9 @@ export default function InterviewRoomPage() {
               <button
                 onClick={() => {
                   stopCameraCompletely();
+                  if (typeof window !== "undefined") {
+                    localStorage.removeItem("active_interview_session");
+                  }
                   router.push("/performance");
                 }}
                 className="w-full sm:flex-1 py-3 px-4 rounded-xl font-bold text-xs text-slate-300 bg-slate-800 hover:bg-slate-700 transition-colors flex items-center justify-center gap-2"
@@ -960,6 +988,9 @@ export default function InterviewRoomPage() {
               <button
                 onClick={() => {
                   stopCameraCompletely();
+                  if (typeof window !== "undefined") {
+                    localStorage.removeItem("active_interview_session");
+                  }
                   router.push("/interviews");
                 }}
                 className="w-full sm:flex-1 py-3 px-4 rounded-xl font-black text-xs text-slate-950 bg-gradient-to-r from-emerald-400 via-teal-300 to-emerald-500 hover:from-emerald-300 hover:to-teal-400 shadow-xl shadow-emerald-500/20 flex items-center justify-center gap-2 transition-all"

@@ -55,6 +55,9 @@ export default function StageResultPage() {
     }
 
     if (attemptId) {
+      if (typeof window !== "undefined") {
+        localStorage.removeItem("active_interview_session");
+      }
       loadResult();
     }
   }, [attemptId]);

@@ -104,12 +104,7 @@ interface ATSAnalysisState {
 
 export const useATSStore = create<ATSAnalysisState>((set) => ({
   isAnalyzing: false,
-  atsResult: typeof window !== "undefined" && localStorage.getItem("ats_result")
-    ? (() => {
-        try { return JSON.parse(localStorage.getItem("ats_result")!); }
-        catch { return null; }
-      })()
-    : null,
+  atsResult: null,
   analysisError: null,
   activeFileName: null,
   setIsAnalyzing: (isAnalyzing) => set({ isAnalyzing }),

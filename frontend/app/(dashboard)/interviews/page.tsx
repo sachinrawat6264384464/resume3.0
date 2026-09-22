@@ -5,7 +5,8 @@ import { useRouter } from "next/navigation";
 import { 
   Play, CheckCircle2, Lock, Sparkles, Trophy, Clock, 
   ArrowRight, ShieldCheck, Cpu, Mic, FileText, ChevronRight,
-  Flame, Award, AlertCircle, RefreshCw, Loader2, Star, Zap, Crown, X
+  Flame, Award, AlertCircle, RefreshCw, Loader2, Star, Zap, Crown, X,
+  Video, LogOut
 } from "lucide-react";
 import { apiFetch } from "@/lib/api";
 
@@ -66,6 +67,15 @@ export default function InterviewsPage() {
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
   const [paymentSuccessMsg, setPaymentSuccessMsg] = useState<string | null>(null);
   const [alertMsg, setAlertMsg] = useState<string | null>(null);
+
+  // Active Running Interview Session State
+  const [activeSession, setActiveSession] = useState<{
+    attemptId: string;
+    stageId?: number;
+    stageTitle?: string;
+    roomUrl: string;
+    startedAt?: number;
+  } | null>(null);
 
   const fetchStagesData = async () => {
     try {
@@ -164,9 +174,40 @@ export default function InterviewsPage() {
     }
   };
 
+  const checkActiveSession = () => {
+    if (typeof window !== "undefined") {
+      try {
+        const raw = localStorage.getItem("active_interview_session");
+        if (raw) {
+          setActiveSession(JSON.parse(raw));
+        } else {
+          setActiveSession(null);
+        }
+      } catch (e) {
+        setActiveSession(null);
+      }
+    }
+  };
+
   useEffect(() => {
+    checkActiveSession();
     fetchStagesData();
   }, []);
+
+  const handleDropOutActiveSession = async () => {
+    if (!activeSession) return;
+    try {
+      await apiFetch(`/attempts/${activeSession.attemptId}/abort`, { method: "POST" }).catch(() => null);
+    } catch (e) {
+      console.warn("Abort session error:", e);
+    }
+    if (typeof window !== "undefined") {
+      localStorage.removeItem("active_interview_session");
+    }
+    setActiveSession(null);
+    setAlertMsg("Active interview session cancelled. You can now launch any unlocked stage.");
+    fetchStagesData();
+  };
 
   const filteredStages = stages.filter((stg) => {
     if (activeTab === "ALL") return true;
@@ -181,6 +222,9 @@ export default function InterviewsPage() {
   const handleSelectStage = (s: any) => {
     setSelectedStage(s);
     setAlertMsg(null);
+    if (activeSession) {
+      setAlertMsg(`⚠️ You have an active live interview running (${activeSession.stageTitle || 'Stage Interview'}). Please 'Resume Ongoing Interview 🚀' or 'Drop Out 🚪' before launching a new stage.`);
+    }
     if (s.status === "pro_locked" || (!isSubscribed && s.id >= 6)) {
       setSelectedStageForPayment(s);
       setIsPaymentModalOpen(true);
@@ -193,6 +237,13 @@ export default function InterviewsPage() {
 
   const handleStartStage = async (stageId: number) => {
     setAlertMsg(null);
+
+    // If an active session is currently running, prompt candidate to resume or drop out
+    if (activeSession) {
+      setAlertMsg(`⚠️ Active session in progress: "${activeSession.stageTitle || 'Live Interview'}". Click 'Resume Ongoing Interview 🚀' above or 'Drop Out 🚪' to proceed.`);
+      return;
+    }
+
     const targetStg = stages.find((st) => st.id === stageId) || ALL_30_STAGES[stageId];
 
     if (targetStg?.status === "pro_locked" || (!isSubscribed && stageId >= 6)) {
@@ -214,12 +265,31 @@ export default function InterviewsPage() {
           interview_template_id: `stage-${stageId}-template`
         })
       });
-      if (res?.data?.id) {
-        router.push(`/interviews/${res.data.id}/pre-check`);
-      } else {
-        router.push(`/interviews/${stageId}/pre-check`);
+      const newAttemptId = res?.data?.id || stageId;
+      const sessionObj = {
+        attemptId: String(newAttemptId),
+        stageId: stageId,
+        stageTitle: targetStg?.title || `Stage ${stageId} Assessment`,
+        roomUrl: `/interviews/${newAttemptId}/room`,
+        startedAt: Date.now()
+      };
+      if (typeof window !== "undefined") {
+        localStorage.setItem("active_interview_session", JSON.stringify(sessionObj));
       }
+      setActiveSession(sessionObj);
+      router.push(`/interviews/${newAttemptId}/pre-check`);
     } catch (e) {
+      const sessionObj = {
+        attemptId: String(stageId),
+        stageId: stageId,
+        stageTitle: targetStg?.title || `Stage ${stageId} Assessment`,
+        roomUrl: `/interviews/${stageId}/room`,
+        startedAt: Date.now()
+      };
+      if (typeof window !== "undefined") {
+        localStorage.setItem("active_interview_session", JSON.stringify(sessionObj));
+      }
+      setActiveSession(sessionObj);
       router.push(`/interviews/${stageId}/pre-check`);
     } finally {
       setIsStarting(false);
@@ -400,6 +470,50 @@ export default function InterviewsPage() {
 
       </div>
 
+      {/* 🎥 ACTIVE LIVE INTERVIEW SESSION BANNER */}
+      {activeSession && (
+        <div className="relative z-20 p-6 sm:p-7 rounded-[30px] bg-gradient-to-r from-rose-950/95 via-slate-900 to-amber-950/95 border-2 border-rose-500/70 shadow-2xl backdrop-blur-xl flex flex-col md:flex-row items-center justify-between gap-6 animate-pulse ring-4 ring-rose-500/30">
+          <div className="flex items-center gap-4">
+            <div className="w-14 h-14 rounded-2xl bg-rose-500/20 border-2 border-rose-500/60 flex items-center justify-center text-rose-400 shrink-0 shadow-lg">
+              <Video className="w-7 h-7 animate-bounce" />
+            </div>
+            <div className="flex flex-col gap-1 text-left">
+              <div className="flex items-center gap-2">
+                <span className="w-2.5 h-2.5 rounded-full bg-rose-500 animate-ping" />
+                <span className="px-3 py-0.5 rounded-full text-[10px] font-mono font-black bg-rose-500 text-white uppercase tracking-widest">
+                  LIVE INTERVIEW IN PROGRESS
+                </span>
+              </div>
+              <h2 className="text-xl sm:text-2xl font-black text-white tracking-tight uppercase">
+                {activeSession.stageTitle || `Stage ${activeSession.stageId || 1} Session`}
+              </h2>
+              <p className="text-xs text-slate-300 font-medium">
+                You have an active interview room running. You must resume or drop out before starting a new stage.
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3 shrink-0 w-full md:w-auto">
+            <button
+              onClick={() => router.push(activeSession.roomUrl || `/interviews/${activeSession.attemptId}/room`)}
+              className="flex-1 md:flex-none px-6 py-3.5 rounded-2xl font-black text-xs text-white bg-gradient-to-r from-rose-500 via-orange-500 to-amber-500 hover:from-rose-400 hover:to-amber-400 shadow-xl shadow-rose-500/30 flex items-center justify-center gap-2 transition-all cursor-pointer uppercase tracking-wider scale-105"
+            >
+              <Video className="w-4 h-4" />
+              <span>Resume Ongoing Interview 🚀</span>
+            </button>
+
+            <button
+              onClick={handleDropOutActiveSession}
+              className="px-4 py-3.5 rounded-2xl font-black text-xs text-rose-300 bg-rose-950/80 hover:bg-rose-900 border border-rose-500/50 flex items-center justify-center gap-1.5 transition-all cursor-pointer"
+              title="Drop Out & Abort Active Interview Session"
+            >
+              <LogOut className="w-4 h-4 text-rose-400" />
+              <span>Drop Out 🚪</span>
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* ALERT / SUCCESS MESSAGES */}
       {paymentSuccessMsg && (
         <div className="relative z-10 p-4 rounded-2xl bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-300 dark:border-emerald-800 text-xs font-black text-emerald-700 dark:text-emerald-300 flex items-center gap-2">
@@ -415,8 +529,8 @@ export default function InterviewsPage() {
         </div>
       )}
 
-      {/* AGENCY FILTER PILLS */}
-      <div className="relative z-10 p-1.5 sm:p-2 rounded-2xl bg-white/90 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 shadow-md backdrop-blur-xl flex items-center gap-1.5 sm:gap-2 overflow-x-auto no-scrollbar scroll-smooth">
+      {/* AGENCY FILTER PILLS WITH HORIZONTAL SCROLLING */}
+      <div className="relative z-10 p-2 sm:p-3 rounded-2xl bg-white/90 dark:bg-slate-900/90 border-2 border-slate-200 dark:border-slate-800 shadow-md backdrop-blur-xl flex items-center gap-2.5 overflow-x-auto w-full max-w-full scroll-smooth">
         {[
           { key: "ALL", icon: "🔥", title: "All 30 Stages", badge: "ALL", badgeClass: "bg-slate-200/70 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-300 dark:border-slate-700" },
           { key: "LEVEL1", icon: "🐧", title: "Track 1: Foundation", badge: "1-5 FREE", badgeClass: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30" },
@@ -430,10 +544,10 @@ export default function InterviewsPage() {
             <button
               key={tab.key}
               onClick={() => setActiveTab(tab.key)}
-              className={`flex items-center gap-2 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap shrink-0 ${
+              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap shrink-0 ${
                 isActive
                   ? "bg-gradient-to-r from-[#FF6B00] to-[#FF8533] text-white shadow-md shadow-[#FF6B00]/30 scale-[1.02]"
-                  : "bg-transparent text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800/70 hover:text-slate-900 dark:hover:text-white"
+                  : "bg-slate-100 dark:bg-slate-800/80 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 hover:text-slate-900 dark:hover:text-white"
               }`}
             >
               <span className="text-sm">{tab.icon}</span>
