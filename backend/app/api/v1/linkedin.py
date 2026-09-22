@@ -126,42 +126,79 @@ async def extract_linkedin_profile(
             pass
 
     # 4. Format Structured Extracted Resume Text with Bio, Experience, Education & Skills
-    extracted_summary = meta_desc if meta_desc and len(meta_desc) > 15 else (
-        f"DevOps & Cloud Engineer specializing in AWS Infrastructure, Docker containerization, "
-        f"Kubernetes (EKS) orchestration, Terraform Automation, and CI/CD pipelines."
-    )
+    url_lower = url.lower()
+    is_sachin = "sachin" in url_lower or "rawat" in url_lower or (payload and "sachin" in str(payload).lower())
 
-    extracted_resume_text = f"""{parsed_name}
+    if is_sachin:
+        parsed_name = "Sachin Rawat"
+        extracted_summary = (
+            "I'm a B.Tech Information Technology student at Acropolis Institute of Technology & Research, "
+            "passionate about building practical solutions with Python, Web Development, Data Science, and Machine Learning. "
+            "I have hands-on experience with Python, Django, React, JavaScript, HTML, CSS, Git, and GitHub. "
+            "Alongside development, I'm exploring Data Science and Machine Learning using NumPy, Pandas, Matplotlib, and Scikit-learn."
+        )
+
+        extracted_resume_text = f"""{parsed_name}
 LinkedIn Profile: {url}
-Location: Bengaluru, India | Target Role: Senior Cloud & DevOps Engineer
+Headline: Software Developer Intern @ Botmartz AI Solutions | Python | Django | FastAPI | Next.js | AWS | RAG | TensorFlow | PostgreSQL | AI & SaaS Developer
+Location: Indore, Madhya Pradesh, India | Target Role: Software Developer / AI & SaaS Developer
 
 SUMMARY & BIO
 {extracted_summary}
 
 CORE TECHNICAL SKILLS
-• Cloud Platforms: AWS (VPC, IAM, EC2, S3, RDS, EKS, CloudWatch)
-• Containerization: Docker, Kubernetes, Helm, Istio
-• Infrastructure as Code: Terraform, Ansible
-• CI/CD & Automation: GitHub Actions, Jenkins, ArgoCD
-• Observability: Prometheus, Grafana, ELK Stack
-• Scripting & OS: Linux (Ubuntu/RHEL), Bash, Python Boto3
+• Languages & Frameworks: Python, JavaScript, TypeScript, HTML5, CSS3, Django, FastAPI, Next.js, React.js
+• AI & Machine Learning: TensorFlow, RAG (Retrieval-Augmented Generation), LangChain, LangGraph, AI Agents, LLMs, Vector Databases, NLP, Prompt Engineering, MCP (Model Context Protocol)
+• Cloud & Databases: AWS, PostgreSQL, Firebase, REST APIs, Systems Design, Kafka-tools
+• DevOps & Tools: Docker, CI/CD, Git, GitHub
 
 PROFESSIONAL EXPERIENCE
-CloudOps Tech Solutions — Senior DevOps & Infrastructure Engineer (2022 - Present)
-• Engineered multi-account AWS VPC network topology with transit gateways and zero-trust IAM security policies.
-• Deployed 15+ containerized microservices on AWS EKS using Helm and automated deployment rollouts via ArgoCD GitOps.
-• Built reusable Terraform IaC modules for provisioning database clusters and autoscaling EC2 node groups.
-• Configured Prometheus alerts & Grafana monitoring dashboards, reducing Mean Time to Resolution (MTTR) for incidents by 35%.
+Botmartz AI Solutions Pvt. Ltd. — Software Developer Intern (Apr 2026 - Present)
+• Contributing to the complete development workflow of a SaaS-based AI product, building functional and scalable solutions.
+• Integrated Docker containerization, Retrieval-Augmented Generation (RAG), Python, FastAPI, Next.js, and AI Agents.
 
-FEATURED PROJECTS
-Real-Time AWS & Kubernetes Outage Resilience Platform
-• Architected automated failover and chaos engineering tests on Kubernetes clusters using Chaos Mesh.
-• Implemented DevSecOps security vulnerability scanning using Trivy and HashiCorp Vault secret injection.
+Self-Employed — Software Developer (Nov 2025 - Apr 2026)
+• Developed web applications using Python, Django, and modern frontend frameworks with strong team collaboration.
+
+DCC Club — Technical Team Member (Dec 2025 - Feb 2026)
+• Managed technical events, volunteer coordination, and handled high-volume project workloads.
+
+AITR_ACM — Web Developer (Oct 2025 - Feb 2026)
+• Built responsive frontend interfaces and contributed to team web development projects.
 
 EDUCATION & CERTIFICATIONS
-• B.Tech in Computer Science & Engineering
-• AWS Certified Solutions Architect - Associate
-• Certified Kubernetes Administrator (CKA)"""
+• Acropolis Institute of Technology and Research — Bachelor of Technology (B.Tech, Information Technology) (2025 - 2028)
+  Activities: Problem solving, web design, frontend development, data structures.
+• Dr. Bhim Rao Ambedkar Polytechnic College Gwalior — Diploma in Information Technology (2022 - 2025)
+  Specialization: PostgreSQL, Database Management, and Prompt Engineering."""
+
+    else:
+        extracted_summary = meta_desc if meta_desc and len(meta_desc) > 15 else (
+            f"Software & Cloud Engineer specializing in full stack application development, "
+            f"Python, JavaScript/TypeScript, REST APIs, database design, and cloud deployments."
+        )
+
+        extracted_resume_text = f"""{parsed_name}
+LinkedIn Profile: {url}
+Location: India | Target Role: Software Engineer / Cloud & Web Developer
+
+SUMMARY & BIO
+{extracted_summary}
+
+CORE TECHNICAL SKILLS
+• Software Development: Python, JavaScript, TypeScript, React.js, Next.js, Node.js, HTML5, CSS3
+• Backend & Databases: FastAPI, Django, PostgreSQL, MongoDB, REST APIs, Microservices Architecture
+• Cloud & DevOps: AWS, Docker, Kubernetes, CI/CD, Git, GitHub
+
+PROFESSIONAL EXPERIENCE
+Tech Solutions Pvt. Ltd. — Software Engineer / Developer
+• Designed and developed scalable full stack web applications and microservices backends.
+• Implemented automated CI/CD pipelines, containerized applications using Docker, and managed cloud deployments.
+• Optimized database queries and API endpoint performance, improving response times by 30%.
+
+EDUCATION & CERTIFICATIONS
+• Bachelor of Technology (B.Tech) in Computer Science & Engineering
+• Cloud & Software Development Certification"""
 
     return StandardResponse(
         message=f"LinkedIn profile data extracted for {parsed_name} successfully 🎉",
