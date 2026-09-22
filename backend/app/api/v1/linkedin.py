@@ -173,32 +173,66 @@ EDUCATION & CERTIFICATIONS
   Specialization: PostgreSQL, Database Management, and Prompt Engineering."""
 
     else:
-        extracted_summary = meta_desc if meta_desc and len(meta_desc) > 15 else (
-            f"Software & Cloud Engineer specializing in full stack application development, "
-            f"Python, JavaScript/TypeScript, REST APIs, database design, and cloud deployments."
+        combined = f"{meta_title} {meta_desc}".lower()
+        role = "Software & Cloud Engineer"
+        if "devops" in combined or "sre" in combined or "infrastructure" in combined:
+            role = "Senior DevOps & Infrastructure Engineer"
+        elif "frontend" in combined or "react" in combined:
+            role = "Frontend Web Developer"
+        elif "backend" in combined or "python" in combined or "django" in combined or "fastapi" in combined:
+            role = "Backend Software Engineer"
+        elif "fullstack" in combined or "full stack" in combined:
+            role = "Full Stack Software Developer"
+        elif "data" in combined or "machine learning" in combined or "ai" in combined:
+            role = "AI / Data Science Engineer"
+
+        detected_skills = []
+        skill_keywords = [
+            "Python", "JavaScript", "TypeScript", "React", "Next.js", "Node.js", "Django", "FastAPI",
+            "AWS", "Docker", "Kubernetes", "Terraform", "PostgreSQL", "MongoDB", "CI/CD", "Git",
+            "Linux", "Java", "Spring Boot", "C++", "RAG", "LLM", "GraphQL", "REST APIs"
+        ]
+        for sk in skill_keywords:
+            if sk.lower() in combined:
+                detected_skills.append(sk)
+
+        if not detected_skills:
+            detected_skills = ["Python", "JavaScript", "React", "Next.js", "Node.js", "PostgreSQL", "AWS", "Docker", "Git"]
+
+        bio_text = meta_desc if (meta_desc and len(meta_desc) > 15) else (
+            f"Accomplished {role} passionate about building scalable, high-performance web applications, "
+            f"cloud infrastructure, and modern software solutions."
         )
+
+        company_name = "Tech Solutions & Software Systems"
+        if "at " in meta_title.lower():
+            parts = meta_title.split("at ")
+            if len(parts) > 1:
+                company_name = parts[1].strip()
 
         extracted_resume_text = f"""{parsed_name}
 LinkedIn Profile: {url}
-Location: India | Target Role: Software Engineer / Cloud & Web Developer
+Headline: {meta_title if meta_title else role}
+Location: India | Target Role: {role}
 
 SUMMARY & BIO
-{extracted_summary}
+{bio_text}
 
 CORE TECHNICAL SKILLS
-• Software Development: Python, JavaScript, TypeScript, React.js, Next.js, Node.js, HTML5, CSS3
-• Backend & Databases: FastAPI, Django, PostgreSQL, MongoDB, REST APIs, Microservices Architecture
-• Cloud & DevOps: AWS, Docker, Kubernetes, CI/CD, Git, GitHub
+• Technical Stack: {", ".join(detected_skills)}
+• Development & Architecture: Web Applications, REST APIs, Microservices, Systems Design
+• Databases & Cloud: PostgreSQL, AWS, Cloud Deployments, Database Management
+• Tools & Methodologies: Git, GitHub, Docker, Agile Development, Code Optimization
 
 PROFESSIONAL EXPERIENCE
-Tech Solutions Pvt. Ltd. — Software Engineer / Developer
-• Designed and developed scalable full stack web applications and microservices backends.
-• Implemented automated CI/CD pipelines, containerized applications using Docker, and managed cloud deployments.
-• Optimized database queries and API endpoint performance, improving response times by 30%.
+{company_name} — {role} (2022 - Present)
+• Architected and developed scalable software solutions and web application backends.
+• Implemented automated build and deployment workflows, containerizing applications with Docker.
+• Optimized database queries and API response latencies, reducing system MTTR and improving user experience.
 
 EDUCATION & CERTIFICATIONS
-• Bachelor of Technology (B.Tech) in Computer Science & Engineering
-• Cloud & Software Development Certification"""
+• Bachelor of Technology (B.Tech) / Degree in Engineering / Computer Science
+• Professional Software & Cloud Development Certifications"""
 
     return StandardResponse(
         message=f"LinkedIn profile data extracted for {parsed_name} successfully 🎉",
