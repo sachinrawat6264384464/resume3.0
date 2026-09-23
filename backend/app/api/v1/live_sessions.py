@@ -42,9 +42,36 @@ class LiveSessionOut(BaseModel):
     host_name: Optional[str]
     created_at: Optional[str]
 
+def parse_session_datetime(date_str: Optional[str]) -> datetime:
+    if not date_str:
+        return datetime.min.replace(tzinfo=timezone.utc)
+    try:
+        return datetime.fromisoformat(date_str.replace("Z", "+00:00"))
+    except Exception:
+        pass
+
+    try:
+        clean_str = date_str.replace("•", "").replace("IST", "").strip()
+        for fmt in (
+            "%d %b %Y %I:%M %p",
+            "%d %B %Y %I:%M %p",
+            "%d %b %Y %H:%M",
+            "%Y-%m-%d %H:%M:%S",
+            "%Y-%m-%d %H:%M",
+            "%Y-%m-%d"
+        ):
+            try:
+                dt = datetime.strptime(clean_str, fmt)
+                return dt.replace(tzinfo=timezone.utc)
+            except ValueError:
+                continue
+    except Exception:
+        pass
+    return datetime.min.replace(tzinfo=timezone.utc)
+
 @router.get("/active", response_model=StandardResponse[List[dict]])
 async def get_active_live_sessions(db: AsyncSession = Depends(get_db)):
-    stmt = select(LiveSession).where(LiveSession.is_active == True).order_by(desc(LiveSession.created_at))
+    stmt = select(LiveSession).where(LiveSession.is_active == True)
     res = await db.execute(stmt)
     sessions = res.scalars().all()
 
@@ -59,7 +86,8 @@ async def get_active_live_sessions(db: AsyncSession = Depends(get_db)):
             "whatsapp_group_url": s.whatsapp_group_url or "https://chat.whatsapp.com/AIInterviewCommunity",
             "banner_url": s.banner_url,
             "status": s.status,
-            "host_name": s.host_name
+            "host_name": s.host_name,
+            "parsed_dt": parse_session_datetime(s.session_date).isoformat()
         })
 
     # Sample default session if none created yet
@@ -73,8 +101,16 @@ async def get_active_live_sessions(db: AsyncSession = Depends(get_db)):
             "whatsapp_group_url": "https://chat.whatsapp.com/AIInterviewCommunity",
             "banner_url": "/banner-live.png",
             "status": "UPCOMING",
-            "host_name": "Vikas Sir & Sachin Rawat"
+            "host_name": "Vikas Sir & Sachin Rawat",
+            "parsed_dt": "2026-09-25T20:15:00+00:00"
         }]
+    else:
+        # Sort items: LIVE_NOW / LIVE_STREAMING first, then chronological by session_date (ascending)
+        def sort_key(item):
+            is_live = item.get("status") in ["LIVE_NOW", "LIVE_STREAMING"]
+            dt = parse_session_datetime(item.get("session_date"))
+            return (0 if is_live else 1, dt)
+        items.sort(key=sort_key)
 
     return StandardResponse(data=items)
 

@@ -323,6 +323,7 @@ export default function AdminAttemptReviewPage() {
             </form>
           </div>
         </div>
+      )}
       {/* Alert Modal */}
       <AlertModal
         isOpen={alertState.isOpen}

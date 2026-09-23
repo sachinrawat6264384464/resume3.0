@@ -13,6 +13,39 @@ import {
 import { useAuthStore } from "@/lib/store";
 import { apiFetch } from "@/lib/api";
 
+function parseSessionDate(dateStr: string): Date {
+  if (!dateStr) return new Date(0);
+  const parsedDirect = new Date(dateStr);
+  if (!isNaN(parsedDirect.getTime())) return parsedDirect;
+
+  try {
+    const cleaned = dateStr.replace(/[•]/g, " ").replace(/\s+/g, " ").trim();
+    const match = cleaned.match(/(\d{1,2})\s+([A-Za-z]+)\s+(\d{4})(?:\s+(\d{1,2}):(\d{2})\s*(AM|PM)?)?/i);
+    if (match) {
+      const day = parseInt(match[1], 10);
+      const monthStr = match[2];
+      const year = parseInt(match[3], 10);
+      let hours = match[4] ? parseInt(match[4], 10) : 0;
+      const mins = match[5] ? parseInt(match[5], 10) : 0;
+      const ampm = match[6] ? match[6].toUpperCase() : null;
+
+      if (ampm === "PM" && hours < 12) hours += 12;
+      if (ampm === "AM" && hours === 12) hours = 0;
+
+      const monthsMap: Record<string, number> = {
+        jan: 0, january: 0, feb: 1, february: 1, mar: 2, march: 2,
+        apr: 3, april: 3, may: 4, jun: 5, june: 5, jul: 6, july: 6,
+        aug: 7, august: 7, sep: 8, sept: 8, september: 8, oct: 9, october: 9,
+        nov: 10, november: 10, dec: 11, december: 11
+      };
+      const mIndex = monthsMap[monthStr.toLowerCase()] ?? 0;
+      return new Date(year, mIndex, day, hours, mins);
+    }
+  } catch (e) {}
+
+  return new Date(0);
+}
+
 export default function CandidateDashboardPage() {
   const router = useRouter();
   const { user, setAuth } = useAuthStore();
@@ -31,8 +64,66 @@ export default function CandidateDashboardPage() {
 
   const [dbMetrics, setDbMetrics] = useState<any>(null);
   const [candProfile, setCandProfile] = useState<any>(null);
-  const [activeLiveSession, setActiveLiveSession] = useState<any>(defaultLiveSession);
+  const [allLiveSessions, setAllLiveSessions] = useState<any[]>([]);
+  const [activeLiveSession, setActiveLiveSession] = useState<any | null>(defaultLiveSession);
   const [selectedGroupTab, setSelectedGroupTab] = useState<string>("ALL");
+
+  // Helper to evaluate currently active session from array sorted by date/time
+  const evaluateCurrentActiveSession = (sessions: any[]) => {
+    if (!sessions || sessions.length === 0) {
+      setActiveLiveSession(null);
+      return;
+    }
+
+    // 1. Session explicitly marked LIVE_NOW or LIVE_STREAMING takes highest priority
+    const liveNow = sessions.find(s => s.status === "LIVE_NOW" || s.status === "LIVE_STREAMING");
+    if (liveNow) {
+      setActiveLiveSession(liveNow);
+      return;
+    }
+
+    const now = Date.now();
+    const SESSION_DURATION_MS = 2 * 60 * 60 * 1000; // 2 hour session window
+
+    // 2. Filter sessions whose end time (scheduled time + duration) is in the future
+    const upcomingOrCurrent = sessions.filter(s => {
+      if (s.status === "COMPLETED") return false;
+      const sTime = parseSessionDate(s.session_date).getTime();
+      if (sTime === 0) return true; // fallback if date couldn't be parsed
+      return (sTime + SESSION_DURATION_MS) > now;
+    });
+
+    if (upcomingOrCurrent.length > 0) {
+      // Pick the immediate next upcoming session
+      setActiveLiveSession(upcomingOrCurrent[0]);
+    } else {
+      // Array empty or all sessions have finished
+      setActiveLiveSession(null);
+    }
+  };
+
+  const processSessions = (rawItems: any[]) => {
+    if (!Array.isArray(rawItems) || rawItems.length === 0) {
+      setAllLiveSessions([]);
+      setActiveLiveSession(null);
+      return;
+    }
+
+    // Sort chronologically by session_date (earliest first)
+    const sorted = [...rawItems].sort((a, b) => {
+      const isLiveA = a.status === "LIVE_NOW" || a.status === "LIVE_STREAMING";
+      const isLiveB = b.status === "LIVE_NOW" || b.status === "LIVE_STREAMING";
+      if (isLiveA) return -1;
+      if (isLiveB) return 1;
+
+      const dtA = parseSessionDate(a.session_date).getTime();
+      const dtB = parseSessionDate(b.session_date).getTime();
+      return dtA - dtB;
+    });
+
+    setAllLiveSessions(sorted);
+    evaluateCurrentActiveSession(sorted);
+  };
 
   // LinkedIn Post Creator State
   const [linkedInText, setLinkedInText] = useState("");
@@ -42,13 +133,24 @@ export default function CandidateDashboardPage() {
   const [linkedInSuccessMsg, setLinkedInSuccessMsg] = useState<string | null>(null);
 
   const [mounted, setMounted] = useState(false);
-  const [countdown, setCountdown] = useState({ days: "02", hours: "14", minutes: "35", seconds: "10" });
+  const [countdown, setCountdown] = useState({ days: "00", hours: "00", minutes: "00", seconds: "00" });
 
   useEffect(() => {
-    const target = new Date("2026-09-25T20:15:00+05:30").getTime();
+    if (!activeLiveSession) return;
+
+    const targetDate = parseSessionDate(activeLiveSession.session_date);
+    const targetMs = targetDate.getTime();
+
     const updateCountdown = () => {
       const now = Date.now();
-      const diff = Math.max(0, target - now);
+
+      // Check if session date has passed (more than 2 hours ago)
+      if (targetMs > 0 && (now - targetMs > 2 * 60 * 60 * 1000) && activeLiveSession.status !== "LIVE_NOW") {
+        evaluateCurrentActiveSession(allLiveSessions);
+        return;
+      }
+
+      const diff = Math.max(0, targetMs - now);
       
       const d = Math.floor(diff / (1000 * 60 * 60 * 24));
       const h = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
@@ -66,7 +168,7 @@ export default function CandidateDashboardPage() {
     updateCountdown();
     const interval = setInterval(updateCountdown, 1000);
     return () => clearInterval(interval);
-  }, []);
+  }, [activeLiveSession, allLiveSessions]);
 
   useEffect(() => {
     setMounted(true);
@@ -81,14 +183,18 @@ export default function CandidateDashboardPage() {
   }, []);
 
   useEffect(() => {
-    // 1. Fetch Active Live Sessions immediately for zero latency update
+    // 1. Fetch Active Live Sessions immediately & sort chronologically
     apiFetch("/live-sessions/active")
       .then((res) => {
-        if (res?.data && Array.isArray(res.data) && res.data.length > 0) {
-          setActiveLiveSession(res.data[0]);
+        if (res?.data && Array.isArray(res.data)) {
+          processSessions(res.data);
+        } else {
+          processSessions([defaultLiveSession]);
         }
       })
-      .catch(() => {});
+      .catch(() => {
+        processSessions([defaultLiveSession]);
+      });
 
     // 2. Fetch Real User DB Metrics & Profile data
     const fetchUserData = async () => {
@@ -446,8 +552,8 @@ Learn Today. Implement Today. Build Your Career for a Lifetime.
         </div>
       </div>
 
-      {/* HERO EVENT CARD WITH LIVE COUNTDOWN CLOCK */}
-      {activeLiveSession && (
+      {/* HERO EVENT CARD WITH LIVE COUNTDOWN CLOCK OR COMING SOON FALLBACK */}
+      {activeLiveSession ? (
         <div className="relative z-10 p-6 sm:p-8 rounded-[32px] bg-gradient-to-br from-[#0B1528] via-[#0F1E36] to-[#070D18] border-2 border-[#FF6B00]/40 shadow-2xl shadow-[#FF6B00]/15 overflow-hidden flex flex-col gap-6 text-white backdrop-blur-xl">
           
           {/* Ambient Glows */}
@@ -457,12 +563,16 @@ Learn Today. Implement Today. Build Your Career for a Lifetime.
           {/* Top Row: Live Beacon Badge & Event Date */}
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 relative z-10">
             <div className="flex items-center gap-2.5 flex-wrap">
-              <span className="px-3.5 py-1 rounded-full text-[11px] font-black bg-gradient-to-r from-rose-600 via-red-500 to-orange-500 text-white uppercase tracking-wider flex items-center gap-2 shadow-md shadow-rose-600/30">
+              <span className={`px-3.5 py-1 rounded-full text-[11px] font-black uppercase tracking-wider flex items-center gap-2 shadow-md ${
+                activeLiveSession.status === "LIVE_NOW" || activeLiveSession.status === "LIVE_STREAMING"
+                  ? "bg-gradient-to-r from-rose-600 via-red-500 to-orange-500 text-white shadow-rose-600/30"
+                  : "bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 text-slate-950 shadow-amber-500/30"
+              }`}>
                 <span className="relative flex h-2.5 w-2.5">
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
                   <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-white"></span>
                 </span>
-                LIVE MASTERCLASS
+                {activeLiveSession.status === "LIVE_NOW" || activeLiveSession.status === "LIVE_STREAMING" ? "● LIVE STREAMING NOW" : "UPCOMING LIVE MASTERCLASS"}
               </span>
 
               <span className="px-3.5 py-1 rounded-full text-[11px] font-mono font-black bg-white/10 text-amber-300 border border-amber-400/30">
@@ -479,7 +589,7 @@ Learn Today. Implement Today. Build Your Career for a Lifetime.
           {/* Main Title & Subtitle */}
           <div className="flex flex-col gap-2 relative z-10">
             <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black tracking-tight text-white uppercase leading-snug drop-shadow-md">
-              👑 40 LPA DevOps Architecture & Outage Troubleshooting Masterclass
+              {activeLiveSession.title || "👑 40 LPA DevOps Architecture & Outage Masterclass"}
             </h2>
             <p className="text-xs sm:text-sm text-slate-300 font-semibold leading-relaxed max-w-3xl">
               {activeLiveSession.description || "Live Q&A, mock interview feedback & ATS resume review session with Vikas Sir and Sachin Rawat."}
@@ -549,7 +659,7 @@ Learn Today. Implement Today. Build Your Career for a Lifetime.
               <button
                 type="button"
                 onClick={() => {
-                  const url = "https://chat.whatsapp.com/LOxsACQwbGgAudjaC3qhOJ";
+                  const url = activeLiveSession.whatsapp_group_url || "https://chat.whatsapp.com/LOxsACQwbGgAudjaC3qhOJ";
                   try {
                     apiFetch("/live-sessions/track-click", {
                       method: "POST",
@@ -583,6 +693,82 @@ Learn Today. Implement Today. Build Your Career for a Lifetime.
             </span>
             <span className="text-[#FF6B00] font-mono font-black">
               LIVE INTERACTIVE MOCK SESSIONS & ATS RESUME REVIEWS
+            </span>
+          </div>
+
+        </div>
+      ) : (
+        /* UPCOMING SESSION COMING SOON FALLBACK BANNER */
+        <div className="relative z-10 p-6 sm:p-8 rounded-[32px] bg-gradient-to-br from-[#0B1528] via-[#0F1E36] to-[#070D18] border-2 border-amber-500/40 shadow-2xl shadow-amber-500/10 overflow-hidden flex flex-col gap-6 text-white backdrop-blur-xl">
+          
+          {/* Ambient Glows */}
+          <div className="absolute -top-24 -right-24 w-72 h-72 bg-amber-500/15 rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute -bottom-24 -left-24 w-72 h-72 bg-blue-500/15 rounded-full blur-3xl pointer-events-none" />
+
+          {/* Top Tag & Header */}
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 relative z-10">
+            <div className="flex items-center gap-2.5 flex-wrap">
+              <span className="px-3.5 py-1 rounded-full text-[11px] font-black bg-gradient-to-r from-amber-500 to-orange-500 text-slate-950 uppercase tracking-wider flex items-center gap-2 shadow-md shadow-amber-500/20">
+                <span className="relative flex h-2.5 w-2.5">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-slate-950 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-slate-950"></span>
+                </span>
+                SCHEDULE UPDATE
+              </span>
+
+              <span className="px-3.5 py-1 rounded-full text-[11px] font-mono font-black bg-white/10 text-amber-300 border border-amber-400/30">
+                ⏳ UPCOMING SESSIONS
+              </span>
+            </div>
+
+            <div className="flex items-center gap-2 px-3.5 py-1 rounded-full bg-blue-500/15 text-blue-300 border border-blue-400/30 text-[11px] font-black">
+              <Laptop className="w-3.5 h-3.5 text-blue-400" />
+              <span>Host: Vikas Sir & Sachin Rawat</span>
+            </div>
+          </div>
+
+          {/* Main Heading & Message */}
+          <div className="flex flex-col gap-2 relative z-10">
+            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black tracking-tight text-white uppercase leading-snug drop-shadow-md flex items-center gap-3">
+              <span>🚀 UPCOMING SESSION COMING SOON</span>
+            </h2>
+            <p className="text-xs sm:text-sm text-slate-300 font-semibold leading-relaxed max-w-3xl">
+              All previous live masterclasses & mock sessions are completed! New live webinars, ATS resume reviews, and 40 LPA DevOps architectural workshops will be scheduled soon. Join our WhatsApp community for instant alerts!
+            </p>
+          </div>
+
+          {/* Action Buttons & Info */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center relative z-10 pt-2 border-t border-white/10">
+            
+            <div className="lg:col-span-6 flex items-center gap-3 text-xs text-amber-400 font-bold">
+              <Sparkles className="w-5 h-5 text-amber-400 shrink-0 animate-pulse" />
+              <span>Stay ahead! Practice AI interview stages below while next live session schedule is being published.</span>
+            </div>
+
+            <div className="lg:col-span-6 flex flex-col sm:flex-row gap-3">
+              <button
+                type="button"
+                onClick={() => {
+                  if (typeof window !== "undefined") window.open("https://chat.whatsapp.com/LOxsACQwbGgAudjaC3qhOJ", "_blank");
+                }}
+                className="flex-1 py-4 px-5 rounded-2xl bg-gradient-to-r from-emerald-600 via-emerald-500 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black text-xs sm:text-sm tracking-wide shadow-xl shadow-emerald-900/40 border border-emerald-400/40 transition-all flex items-center justify-center gap-2.5 cursor-pointer uppercase group"
+              >
+                <MessageSquare className="w-5 h-5 text-white fill-white/20" />
+                <span>Join WhatsApp Group</span>
+                <ChevronRight className="w-4 h-4 text-white/80 group-hover:translate-x-1 transition-transform" />
+              </button>
+            </div>
+
+          </div>
+
+          {/* Footer Bar */}
+          <div className="flex items-center justify-between gap-4 pt-3 border-t border-white/10 text-[10.5px] font-black text-slate-400 uppercase tracking-widest relative z-10 flex-wrap">
+            <span className="flex items-center gap-1.5 text-slate-300">
+              <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+              PRACTICE • EXPERT FEEDBACK • GET PLACED
+            </span>
+            <span className="text-[#FF6B00] font-mono font-black">
+              SCHEDULE UPDATED AUTOMATICALLY IN REAL-TIME
             </span>
           </div>
 

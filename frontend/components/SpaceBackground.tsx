@@ -52,14 +52,14 @@ export function SpaceBackground() {
 
     const initStars = () => {
       stars = [];
-      const starCount = Math.floor((width * height) / 3500);
-      for (let i = 0; i < Math.max(180, starCount); i++) {
+      const starCount = Math.floor((width * height) / 3000);
+      for (let i = 0; i < Math.max(220, starCount); i++) {
         stars.push({
           x: (Math.random() - 0.5) * width * 2,
           y: (Math.random() - 0.5) * height * 2,
           z: Math.random() * maxDepth,
-          size: Math.random() * 0.3 + 0.1,
-          alpha: Math.random() * 0.7 + 0.3
+          size: Math.random() * 1.3 + 0.7,
+          alpha: Math.random() * 0.5 + 0.5
         });
       }
     };
@@ -69,17 +69,17 @@ export function SpaceBackground() {
       const startX = Math.random() * width * 0.8;
       const startY = Math.random() * (height * 0.4);
       const angle = Math.PI / 4 + (Math.random() - 0.5) * 0.2; // ~45 deg angle
-      const speed = Math.random() * 5 + 7;
+      const speed = Math.random() * 6 + 8;
 
       shootingStars.push({
         x: startX,
         y: startY,
         dx: Math.cos(angle) * speed,
         dy: Math.sin(angle) * speed,
-        length: Math.random() * 80 + 70,
+        length: Math.random() * 100 + 80,
         alpha: 1.0,
         decay: Math.random() * 0.015 + 0.012,
-        thickness: Math.random() * 1.5 + 1.2
+        thickness: Math.random() * 2 + 1.5
       });
     };
 
@@ -87,7 +87,7 @@ export function SpaceBackground() {
 
     // Spawn a shooting star every 2 to 4 seconds
     let lastShootingStarTime = Date.now();
-    const shootingStarInterval = 2800;
+    const shootingStarInterval = 2500;
 
     const render = () => {
       ctx.clearRect(0, 0, width, height);
@@ -99,8 +99,8 @@ export function SpaceBackground() {
       for (let i = 0; i < stars.length; i++) {
         const star = stars[i];
 
-        // Move star closer to the front camera (Z decreases slowly for ultra-smooth motion)
-        star.z -= 0.45;
+        // Move star closer to the front camera
+        star.z -= 0.5;
 
         // Reset star if it passes the viewer screen or moves off edges
         if (star.z <= 0) {
@@ -122,16 +122,21 @@ export function SpaceBackground() {
           continue;
         }
 
-        // Calculate size & opacity for ultra-micro fine stars
+        // Calculate size & opacity for crisp, clearly visible stars
         const distanceRatio = 1 - star.z / maxDepth;
-        const currentRadius = Math.max(0.15, distanceRatio * 0.45 * star.size);
-        const currentAlpha = Math.min(1.0, distanceRatio * 1.4 * star.alpha);
+        const currentRadius = Math.max(0.6, (distanceRatio * 1.0 + 0.4) * star.size);
+        const currentAlpha = Math.min(1.0, (distanceRatio * 0.7 + 0.4) * star.alpha);
 
-        // Draw 100% PURE WHITE Ultra-Micro Fine Star
+        // Draw 100% PURE WHITE Crisp Visible Star
         ctx.beginPath();
         ctx.arc(px, py, currentRadius, 0, Math.PI * 2);
         ctx.fillStyle = `rgba(255, 255, 255, ${currentAlpha})`;
-        ctx.shadowBlur = 0;
+        if (currentRadius > 1.2) {
+          ctx.shadowBlur = 4;
+          ctx.shadowColor = "rgba(255, 255, 255, 0.8)";
+        } else {
+          ctx.shadowBlur = 0;
+        }
         ctx.fill();
       }
 
