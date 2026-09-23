@@ -37,33 +37,33 @@ export function SpaceBackground() {
 
     window.addEventListener("resize", handleResize);
 
-    // Star Colors palette (white, cyan blue, subtle orange accent, soft purple)
+    // Clean, crisp space star colors: Pure white & soft icy silver-blue (No orange/purple hues)
     const starColors = [
       "rgba(255, 255, 255, ",
       "rgba(255, 255, 255, ",
       "rgba(255, 255, 255, ",
-      "rgba(96, 165, 250, ",   // Cyan-blue tint
-      "rgba(255, 165, 0, ",     // Orange tint
-      "rgba(168, 85, 247, "     // Soft purple tint
+      "rgba(241, 245, 249, ",
+      "rgba(224, 242, 254, ",
+      "rgba(186, 230, 253, "
     ];
 
     let stars: Star[] = [];
 
     const initStars = () => {
       stars = [];
-      // Create ~120 dynamic floating space stars
-      const starCount = Math.floor((width * height) / 9000);
-      for (let i = 0; i < Math.max(100, starCount); i++) {
+      // Create ~130 dynamic floating space stars
+      const starCount = Math.floor((width * height) / 8500);
+      for (let i = 0; i < Math.max(110, starCount); i++) {
         const baseAlpha = Math.random() * 0.7 + 0.3;
         stars.push({
           x: Math.random() * width,
           y: Math.random() * height,
-          size: Math.random() * 2.2 + 0.6,
+          size: Math.random() * 1.8 + 0.5,
           baseAlpha,
           alpha: baseAlpha,
-          twinkleSpeed: (Math.random() * 0.02 + 0.005) * (Math.random() > 0.5 ? 1 : -1),
-          speedY: -(Math.random() * 0.35 + 0.08), // Floating upwards like cosmic space dust
-          speedX: (Math.random() * 0.15 - 0.075), // Gentle sideways drift
+          twinkleSpeed: (Math.random() * 0.015 + 0.005) * (Math.random() > 0.5 ? 1 : -1),
+          speedY: -(Math.random() * 0.3 + 0.08), // Floating upwards like cosmic space dust
+          speedX: (Math.random() * 0.12 - 0.06), // Gentle sideways drift
           color: starColors[Math.floor(Math.random() * starColors.length)]
         });
       }
@@ -96,12 +96,16 @@ export function SpaceBackground() {
           star.twinkleSpeed = -star.twinkleSpeed;
         }
 
-        // Draw glowing particle star
+        // Draw crisp particle star
         ctx.beginPath();
         ctx.arc(star.x, star.y, star.size, 0, Math.PI * 2);
         ctx.fillStyle = `${star.color}${Math.max(0.1, Math.min(1, star.alpha))})`;
-        ctx.shadowBlur = star.size > 1.5 ? 8 : 0;
-        ctx.shadowColor = star.color.replace("rgba", "rgb").replace(", ", "(").split("(").slice(0, 2).join("(") + ")";
+        if (star.size > 1.4) {
+          ctx.shadowBlur = 4;
+          ctx.shadowColor = "rgba(255, 255, 255, 0.8)";
+        } else {
+          ctx.shadowBlur = 0;
+        }
         ctx.fill();
       }
 
@@ -117,19 +121,14 @@ export function SpaceBackground() {
   }, []);
 
   return (
-    <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
-      {/* Deep Space Background Layer with subtle cosmic radial glows */}
-      <div className="absolute inset-0 bg-[#070b14] dark:bg-[#070b14] transition-colors duration-300">
-        {/* Soft Radial Cosmic Nebulae Glows */}
-        <div className="absolute top-[-10%] left-[-10%] w-[50vw] h-[50vw] rounded-full bg-blue-600/10 dark:bg-blue-600/15 blur-[120px] pointer-events-none" />
-        <div className="absolute top-[30%] right-[-10%] w-[45vw] h-[45vw] rounded-full bg-purple-600/10 dark:bg-purple-600/15 blur-[130px] pointer-events-none" />
-        <div className="absolute bottom-[-10%] left-[20%] w-[55vw] h-[55vw] rounded-full bg-[#FF6B00]/10 dark:bg-[#FF6B00]/15 blur-[140px] pointer-events-none" />
-      </div>
+    <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden hidden dark:block">
+      {/* Pure Deep Pitch Dark Space Layer (No colorful hazes/nebulae) */}
+      <div className="absolute inset-0 bg-[#050811] transition-colors duration-300" />
 
       {/* Dynamic 60fps Starfield Canvas */}
       <canvas
         ref={canvasRef}
-        className="absolute inset-0 w-full h-full block opacity-85 dark:opacity-95"
+        className="absolute inset-0 w-full h-full block opacity-95"
       />
     </div>
   );
