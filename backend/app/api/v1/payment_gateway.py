@@ -58,7 +58,7 @@ async def get_or_create_singleton_config(db: AsyncSession) -> PaymentGatewayConf
             config = PaymentGatewayConfig(
                 id=SINGLETON_CONFIG_ID,
                 provider_name=old.provider_name or "razorpay",
-                is_enabled=True,
+                is_enabled=old.is_enabled if old.is_enabled is not None else True,
                 is_test_mode=old.is_test_mode,
                 publishable_key=old.publishable_key,
                 encrypted_secret_key=old.encrypted_secret_key,
@@ -90,7 +90,6 @@ async def get_or_create_singleton_config(db: AsyncSession) -> PaymentGatewayConf
             await db.commit()
             await db.refresh(config)
     else:
-        config.is_enabled = True
         all_stmt = select(PaymentGatewayConfig).where(PaymentGatewayConfig.id != SINGLETON_CONFIG_ID)
         all_res = await db.execute(all_stmt)
         stale_configs = all_res.scalars().all()
@@ -113,8 +112,6 @@ async def get_payment_config(
         await db.rollback()
 
     config = await get_or_create_singleton_config(db)
-    config.is_enabled = True
-    await db.commit()
     has_secret = bool(config.encrypted_secret_key and len(config.encrypted_secret_key) > 3)
 
     return StandardResponse(
@@ -122,7 +119,7 @@ async def get_payment_config(
         data={
             "id": config.id,
             "provider_name": config.provider_name,
-            "is_enabled": True,
+            "is_enabled": config.is_enabled,
             "is_test_mode": config.is_test_mode,
             "publishable_key": config.publishable_key or "",
             "webhook_secret": config.webhook_secret or "",
@@ -147,7 +144,7 @@ async def update_payment_config(
     config = await get_or_create_singleton_config(db)
     now = datetime.now(timezone.utc)
 
-    config.is_enabled = True
+    config.is_enabled = req.is_enabled
     config.is_test_mode = req.is_test_mode
     
     if req.publishable_key is not None and req.publishable_key.strip():
@@ -172,7 +169,7 @@ async def update_payment_config(
         data={
             "id": config.id,
             "provider_name": config.provider_name,
-            "is_enabled": True,
+            "is_enabled": config.is_enabled,
             "is_test_mode": config.is_test_mode,
             "publishable_key": config.publishable_key or "",
             "webhook_secret": config.webhook_secret or "",

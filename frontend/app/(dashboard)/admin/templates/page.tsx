@@ -9,7 +9,7 @@ import {
   Edit3, Trash2, Save, X, HelpCircle, Check, Flame, Trophy, Clock, Search, ShieldCheck, Settings, SparklesIcon, Zap, MoreVertical
 } from "lucide-react";
 import { apiFetch } from "@/lib/api";
-import { InterviewTemplate } from "@/types";
+import { InterviewTemplate, InterviewStage } from "@/types";
 import { JDParserModal } from "@/components/admin/JDParserModal";
 import { AlertModal } from "@/components/ui/AlertModal";
 
@@ -245,8 +245,9 @@ export default function AdminTemplatesPage() {
   // Add Custom New Stage
   const handleAddNewCustomStage = async () => {
     const nextStageNum = allStages.length + 1;
-    const newStageObj = {
+    const newStageObj: InterviewStage = {
       id: `stage-new-${Date.now()}`,
+      interview_template_id: templates[0]?.id || "template-001",
       stage_number: nextStageNum,
       title: `CHALLENGE ${nextStageNum < 10 ? '0' + nextStageNum : nextStageNum} — CUSTOM STAGE`,
       category: "Foundation",
@@ -256,8 +257,9 @@ export default function AdminTemplatesPage() {
       icon: "🏆",
       minimum_score: 80,
       description: "Custom admin configured interview stage.",
+      unlock_rule: "PASS_PREVIOUS",
       questions: []
-    };
+    } as any;
 
     setTemplates((prev) => {
       if (!prev.length) return prev;

@@ -9,7 +9,7 @@ import {
 } from "lucide-react";
 import { apiFetch } from "@/lib/api";
 
-export const FULL_DEVOPS_ROADMAP = [
+const FULL_DEVOPS_ROADMAP = [
   // MODULE 1
   {
     module: 1,
@@ -1050,9 +1050,9 @@ export default function StudyPlannerPage() {
                                     {d.day}
                                   </span>
 
-                                  {d.reel && (
+                                  {(d as any).reel && (
                                     <span className="px-2 py-0.5 rounded-full text-[9.5px] font-mono font-bold bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/30">
-                                      🎬 {d.reel}
+                                      🎬 {(d as any).reel}
                                     </span>
                                   )}
 
