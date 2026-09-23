@@ -28,7 +28,7 @@ export default function LandingPage() {
       "VOICE AI MOCKS",
       "ATS RESUME AUDIT",
       "CLOUDOPS SKILLS",
-      "40 LPA BOSS BATTLE"
+      "INTERVIEW READY"
     ];
     const currentPhrase = phrases[loopNum % phrases.length];
 
@@ -161,7 +161,7 @@ export default function LandingPage() {
             <div className="flex items-center gap-3 sm:gap-4 my-2 sm:my-3 flex-wrap">
               <ArrowUpRight className="w-8 h-8 sm:w-14 sm:h-14 lg:w-16 lg:h-16 text-[#FF6B00] stroke-[3.5] shrink-0 hover:scale-110 transition-transform duration-300 drop-shadow-[0_4px_20px_rgba(255,107,0,0.35)]" />
               <span className="text-3xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-black leading-[0.96] hollow-stroke tracking-tight inline-flex items-center">
-                {typedText || "REAL PRACTICE"}
+                {typedText || "\u00A0"}
                 <span className="animate-pulse text-[#FF6B00] font-normal border-r-4 sm:border-r-8 border-[#FF6B00] h-[0.75em] inline-block ml-1" />
               </span>
             </div>
