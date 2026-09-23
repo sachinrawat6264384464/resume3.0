@@ -10,6 +10,9 @@ import {
 
 export default function LandingPage() {
   const [mounted, setMounted] = useState(false);
+  const [typedText, setTypedText] = useState("");
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [loopNum, setLoopNum] = useState(0);
 
   useEffect(() => {
     setMounted(true);
@@ -17,6 +20,30 @@ export default function LandingPage() {
       window.location.href = "/login?admin=true";
     }
   }, []);
+
+  // Letter-by-letter Typewriter animation effect
+  useEffect(() => {
+    const phrases = ["REAL PRACTICE", "VOICE AI MOCKS", "REAL PRACTICE"];
+    const i = loopNum % phrases.length;
+    const fullText = phrases[i];
+
+    const timer = setTimeout(() => {
+      if (!isDeleting) {
+        setTypedText(fullText.substring(0, typedText.length + 1));
+        if (typedText === fullText) {
+          setTimeout(() => setIsDeleting(true), 2000);
+        }
+      } else {
+        setTypedText(fullText.substring(0, typedText.length - 1));
+        if (typedText === "") {
+          setIsDeleting(false);
+          setLoopNum(loopNum + 1);
+        }
+      }
+    }, isDeleting ? 70 : 130);
+
+    return () => clearTimeout(timer);
+  }, [typedText, isDeleting, loopNum]);
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] dark:bg-[#070b14] text-slate-900 dark:text-slate-100 font-sans selection:bg-[#FF6B00] selection:text-white overflow-x-hidden relative transition-colors duration-300 w-full">
@@ -115,11 +142,12 @@ export default function LandingPage() {
               NO SHORTCUT.
             </h1>
 
-            {/* LINE 2: ORANGE ARROW ICON + HOLLOW OUTLINED STROKE TEXT */}
+            {/* LINE 2: ORANGE ARROW ICON + HOLLOW OUTLINED STROKE TYPEWRITER TEXT */}
             <div className="flex items-center gap-3 sm:gap-4 my-2 sm:my-3 flex-wrap">
               <ArrowUpRight className="w-8 h-8 sm:w-14 sm:h-14 lg:w-16 lg:h-16 text-[#FF6B00] stroke-[3.5] shrink-0 hover:scale-110 transition-transform duration-300 drop-shadow-[0_4px_20px_rgba(255,107,0,0.35)]" />
-              <span className="text-3xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-black leading-[0.96] hollow-stroke tracking-tight">
-                REAL PRACTICE
+              <span className="text-3xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-black leading-[0.96] hollow-stroke tracking-tight inline-flex items-center">
+                {typedText || "REAL PRACTICE"}
+                <span className="animate-pulse text-[#FF6B00] font-normal border-r-4 sm:border-r-8 border-[#FF6B00] h-[0.75em] inline-block ml-1" />
               </span>
             </div>
 
