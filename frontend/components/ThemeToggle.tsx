@@ -50,16 +50,19 @@ export function ThemeToggle() {
       console.error(err);
     }
 
-    if (nextTheme === "dark") {
-      document.documentElement.classList.remove("light");
-      document.documentElement.classList.add("dark");
-    } else {
-      document.documentElement.classList.remove("dark");
-      document.documentElement.classList.add("light");
-    }
-
-    // Dispatch event to sync any other ThemeToggle component on screen
+    // Dispatch event to start cinematic transition overlay FIRST
     window.dispatchEvent(new CustomEvent("themeChange", { detail: { theme: nextTheme } }));
+
+    // Delay class switch so content doesn't flash before Sun covers the screen
+    setTimeout(() => {
+      if (nextTheme === "dark") {
+        document.documentElement.classList.remove("light");
+        document.documentElement.classList.add("dark");
+      } else {
+        document.documentElement.classList.remove("dark");
+        document.documentElement.classList.add("light");
+      }
+    }, 800);
   };
 
   // Render a fully styled button even before hydration to avoid empty box placeholder
