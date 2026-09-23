@@ -50,19 +50,16 @@ export function ThemeToggle() {
       console.error(err);
     }
 
-    // Dispatch event to start cinematic transition overlay FIRST
-    window.dispatchEvent(new CustomEvent("themeChange", { detail: { theme: nextTheme } }));
+    if (nextTheme === "dark") {
+      document.documentElement.classList.remove("light");
+      document.documentElement.classList.add("dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+      document.documentElement.classList.add("light");
+    }
 
-    // Delay class switch so content doesn't flash before Sun covers the screen
-    setTimeout(() => {
-      if (nextTheme === "dark") {
-        document.documentElement.classList.remove("light");
-        document.documentElement.classList.add("dark");
-      } else {
-        document.documentElement.classList.remove("dark");
-        document.documentElement.classList.add("light");
-      }
-    }, 800);
+    // Dispatch event to start rising wave transition animation
+    window.dispatchEvent(new CustomEvent("themeChange", { detail: { theme: nextTheme } }));
   };
 
   // Render a fully styled button even before hydration to avoid empty box placeholder
