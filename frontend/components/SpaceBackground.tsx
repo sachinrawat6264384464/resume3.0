@@ -52,13 +52,13 @@ export function SpaceBackground() {
 
     const initStars = () => {
       stars = [];
-      const starCount = Math.floor((width * height) / 4500);
-      for (let i = 0; i < Math.max(160, starCount); i++) {
+      const starCount = Math.floor((width * height) / 3500);
+      for (let i = 0; i < Math.max(180, starCount); i++) {
         stars.push({
           x: (Math.random() - 0.5) * width * 2,
           y: (Math.random() - 0.5) * height * 2,
           z: Math.random() * maxDepth,
-          size: Math.random() * 0.75 + 0.35,
+          size: Math.random() * 0.3 + 0.1,
           alpha: Math.random() * 0.7 + 0.3
         });
       }
@@ -122,12 +122,12 @@ export function SpaceBackground() {
           continue;
         }
 
-        // Calculate size & opacity for pin-point razor sharp stars
+        // Calculate size & opacity for ultra-micro fine stars
         const distanceRatio = 1 - star.z / maxDepth;
-        const currentRadius = Math.max(0.25, distanceRatio * 1.35 * star.size);
+        const currentRadius = Math.max(0.15, distanceRatio * 0.45 * star.size);
         const currentAlpha = Math.min(1.0, distanceRatio * 1.4 * star.alpha);
 
-        // Draw 100% PURE WHITE Crisp Sharp Star (No fuzzy shadow blur)
+        // Draw 100% PURE WHITE Ultra-Micro Fine Star
         ctx.beginPath();
         ctx.arc(px, py, currentRadius, 0, Math.PI * 2);
         ctx.fillStyle = `rgba(255, 255, 255, ${currentAlpha})`;
