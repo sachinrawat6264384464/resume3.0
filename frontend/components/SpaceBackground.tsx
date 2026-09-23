@@ -69,7 +69,7 @@ export function SpaceBackground() {
       const startX = Math.random() * width * 0.8;
       const startY = Math.random() * (height * 0.4);
       const angle = Math.PI / 4 + (Math.random() - 0.5) * 0.2; // ~45 deg angle
-      const speed = Math.random() * 10 + 12;
+      const speed = Math.random() * 5 + 7;
 
       shootingStars.push({
         x: startX,
@@ -99,8 +99,8 @@ export function SpaceBackground() {
       for (let i = 0; i < stars.length; i++) {
         const star = stars[i];
 
-        // Move star closer to the front camera (Z decreases)
-        star.z -= 1.8;
+        // Move star closer to the front camera (Z decreases slowly for ultra-smooth motion)
+        star.z -= 0.45;
 
         // Reset star if it passes the viewer screen or moves off edges
         if (star.z <= 0) {
