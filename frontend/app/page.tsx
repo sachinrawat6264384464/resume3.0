@@ -21,26 +21,41 @@ export default function LandingPage() {
     }
   }, []);
 
-  // Letter-by-letter Typewriter animation effect
+  // Ultra-Smooth 5-Heading Typewriter Animation Effect
   useEffect(() => {
-    const phrases = ["REAL PRACTICE", "VOICE AI MOCKS", "REAL PRACTICE"];
-    const i = loopNum % phrases.length;
-    const fullText = phrases[i];
+    const phrases = [
+      "REAL PRACTICE",
+      "VOICE AI MOCKS",
+      "ATS RESUME AUDIT",
+      "CLOUDOPS SKILLS",
+      "40 LPA BOSS BATTLE"
+    ];
+    const currentPhrase = phrases[loopNum % phrases.length];
 
-    const timer = setTimeout(() => {
-      if (!isDeleting) {
-        setTypedText(fullText.substring(0, typedText.length + 1));
-        if (typedText === fullText) {
-          setTimeout(() => setIsDeleting(true), 2000);
-        }
+    let timer: NodeJS.Timeout;
+
+    if (!isDeleting) {
+      if (typedText !== currentPhrase) {
+        timer = setTimeout(() => {
+          setTypedText(currentPhrase.slice(0, typedText.length + 1));
+        }, 150);
       } else {
-        setTypedText(fullText.substring(0, typedText.length - 1));
-        if (typedText === "") {
-          setIsDeleting(false);
-          setLoopNum(loopNum + 1);
-        }
+        timer = setTimeout(() => {
+          setIsDeleting(true);
+        }, 2800);
       }
-    }, isDeleting ? 70 : 130);
+    } else {
+      if (typedText !== "") {
+        timer = setTimeout(() => {
+          setTypedText(currentPhrase.slice(0, typedText.length - 1));
+        }, 80);
+      } else {
+        timer = setTimeout(() => {
+          setIsDeleting(false);
+          setLoopNum((prev) => prev + 1);
+        }, 500);
+      }
+    }
 
     return () => clearTimeout(timer);
   }, [typedText, isDeleting, loopNum]);
