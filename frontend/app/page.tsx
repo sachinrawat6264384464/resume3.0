@@ -256,7 +256,7 @@ export default function LandingPage() {
               </div>
 
               <Link prefetch={false}
-                href="/resume-ats"
+                href="/login?redirect=/resume-ats"
                 className="w-full py-3 rounded-xl font-black text-xs text-white bg-[#FF6B00] hover:bg-orange-500 shadow-md shadow-[#FF6B00]/25 flex items-center justify-center gap-2 transition-all z-10 uppercase tracking-widest mt-2"
               >
                 <Upload className="w-4 h-4" />
@@ -303,7 +303,7 @@ export default function LandingPage() {
               </div>
 
               <Link prefetch={false}
-                href="/interviews"
+                href="/login?redirect=/interviews"
                 className="w-full py-3 rounded-xl font-black text-xs text-white bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 shadow-md shadow-purple-600/25 flex items-center justify-center gap-2 transition-all z-10 uppercase tracking-widest mt-2"
               >
                 <Play className="w-4 h-4 fill-white" />

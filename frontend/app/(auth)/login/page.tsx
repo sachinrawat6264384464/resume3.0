@@ -205,6 +205,9 @@ export default function LoginPage() {
     const fullFormattedPhone = cleanPhone ? (cleanPhone.startsWith("91") ? `+${cleanPhone}` : `+91${cleanPhone}`) : undefined;
     const cleanEmail = email.trim().toLowerCase() || `${fullName.trim().toLowerCase().replace(/\s+/g, "")}@cloudops.internal`;
 
+    const urlParams = typeof window !== "undefined" ? new URLSearchParams(window.location.search) : null;
+    const destinationPath = urlParams?.get("redirect") || "/dashboard";
+
     try {
       if (confirmationResult && authMethod === "mobile_otp") {
         try {
@@ -220,7 +223,7 @@ export default function LoginPage() {
             })
           });
           setAuth(res.user, res.access_token);
-          router.push("/dashboard");
+          router.push(destinationPath);
           return;
         } catch (fbErr: any) {
           console.warn("Firebase confirm error, trying backend verify:", fbErr);
@@ -244,7 +247,7 @@ export default function LoginPage() {
       });
 
       setAuth(res.user, res.access_token);
-      router.push("/dashboard");
+      router.push(destinationPath);
     } catch (err: any) {
       if (cleanCode === "123456" || cleanCode === "622601" || cleanCode.length === 6) {
         setAuth({
@@ -257,7 +260,7 @@ export default function LoginPage() {
           is_active: true,
           created_at: new Date().toISOString()
         }, "candidate-otp-session");
-        router.push("/dashboard");
+        router.push(destinationPath);
       } else {
         setError(err.message || "Invalid OTP code. Please check your inbox/mobile and try again.");
       }
