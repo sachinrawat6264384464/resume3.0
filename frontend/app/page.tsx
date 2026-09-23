@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { SpaceBackground } from "@/components/SpaceBackground";
 import { 
   Cloud, Mic, Sparkles, Trophy, ArrowRight, CheckCircle2, 
   FileText, Upload, Play, Search, Award, ArrowUpRight
@@ -63,6 +64,9 @@ export default function LandingPage() {
   return (
     <div className="min-h-screen bg-[#F8FAFC] dark:bg-[#070b14] text-slate-900 dark:text-slate-100 font-sans selection:bg-[#FF6B00] selection:text-white overflow-x-hidden relative transition-colors duration-300 w-full">
       
+      {/* CONTINUOUS DYNAMIC SPACE ANIMATED STARFIELD & NEBULA BACKGROUND */}
+      <SpaceBackground />
+
       {/* Dynamic CSS for Theme Responsive Outlined Text */}
       <style jsx global>{`
         .hollow-stroke {
