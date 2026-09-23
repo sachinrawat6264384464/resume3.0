@@ -62,7 +62,7 @@ export default function LandingPage() {
   }, [typedText, isDeleting, loopNum]);
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] dark:bg-[#070b14] text-slate-900 dark:text-slate-100 font-sans selection:bg-[#FF6B00] selection:text-white overflow-x-hidden relative transition-colors duration-300 w-full">
+    <div className="min-h-screen bg-[#F8FAFC] dark:bg-[#050811] text-slate-900 dark:text-slate-100 font-sans selection:bg-[#FF6B00] selection:text-white overflow-x-hidden relative transition-colors duration-300 w-full">
       
       {/* CONTINUOUS DYNAMIC SPACE ANIMATED STARFIELD & NEBULA BACKGROUND */}
       <SpaceBackground />
@@ -209,7 +209,7 @@ export default function LandingPage() {
       </section>
 
       {/* SECTION 2: THE 2 PRIMARY JOURNEY CARDS (PUSHED DOWN BELOW THE FOLD) */}
-      <section className="relative z-10 py-16 sm:py-24 border-t border-slate-200/80 dark:border-slate-800/80 w-full bg-slate-50/50 dark:bg-slate-950/40">
+      <section className="relative z-10 py-16 sm:py-24 border-t border-slate-200/80 dark:border-slate-800/80 w-full bg-slate-50/50 dark:bg-transparent">
         <div className="w-full px-4 sm:px-8 lg:px-20">
           
           <div className="flex flex-col gap-1 mb-8 text-center sm:text-left">
@@ -222,7 +222,7 @@ export default function LandingPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8 lg:gap-10 w-full text-left">
             
             {/* OPTION 1: REVIEW MY RESUME */}
-            <div className="p-6 sm:p-8 rounded-[28px] bg-white dark:bg-slate-900/90 border-2 border-slate-200 dark:border-slate-800 hover:border-[#FF6B00] dark:hover:border-[#FF6B00] shadow-xl hover:shadow-[#FF6B00]/15 transition-all duration-300 flex flex-col justify-between gap-6 group relative overflow-hidden backdrop-blur-xl w-full">
+            <div className="p-6 sm:p-8 rounded-[28px] bg-white dark:bg-[#0b101d]/75 border-2 border-slate-200 dark:border-slate-800 hover:border-[#FF6B00] dark:hover:border-[#FF6B00] shadow-xl hover:shadow-[#FF6B00]/15 transition-all duration-300 flex flex-col justify-between gap-6 group relative overflow-hidden backdrop-blur-xl w-full">
               <div className="absolute top-0 right-0 p-4 text-slate-200 dark:text-slate-800/80 font-black text-5xl sm:text-7xl select-none group-hover:text-[#FF6B00]/20 transition-colors">
                 01
               </div>
@@ -269,7 +269,7 @@ export default function LandingPage() {
             </div>
 
             {/* OPTION 2: PREPARE FOR MY INTERVIEW */}
-            <div className="p-4 sm:p-6 rounded-[20px] sm:rounded-[24px] bg-white dark:bg-slate-900/80 border-2 border-slate-200 dark:border-slate-800 hover:border-purple-500 shadow-lg dark:shadow-xl hover:shadow-purple-500/15 transition-all duration-300 flex flex-col justify-between gap-4 group relative overflow-hidden backdrop-blur-xl w-full">
+            <div className="p-4 sm:p-6 rounded-[20px] sm:rounded-[24px] bg-white dark:bg-[#0b101d]/75 border-2 border-slate-200 dark:border-slate-800 hover:border-purple-500 shadow-lg dark:shadow-xl hover:shadow-purple-500/15 transition-all duration-300 flex flex-col justify-between gap-4 group relative overflow-hidden backdrop-blur-xl w-full">
               <div className="absolute top-0 right-0 p-4 text-slate-200 dark:text-slate-800/80 font-black text-5xl sm:text-7xl select-none group-hover:text-purple-500/20 transition-colors">
                 02
               </div>
@@ -320,8 +320,8 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* SECTION 2: HOW IT WORKS WORKFLOW - FULL WIDTH */}
-      <section className="relative z-10 py-20 bg-slate-100/80 dark:bg-slate-900/60 border-t border-slate-200 dark:border-slate-800/80 transition-colors w-full">
+      {/* SECTION 3: HOW IT WORKS WORKFLOW - FULL WIDTH */}
+      <section className="relative z-10 py-20 bg-slate-100/80 dark:bg-transparent border-t border-slate-200 dark:border-slate-800/80 transition-colors w-full">
         <div className="w-full px-6 sm:px-12 lg:px-20 flex flex-col gap-12">
           
           <div className="text-center max-w-4xl mx-auto">
@@ -348,9 +348,9 @@ export default function LandingPage() {
             ].map((step, idx) => {
               const IconComp = step.icon;
               return (
-                <div key={idx} className="p-8 rounded-3xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 shadow-md flex flex-col gap-4 relative hover:border-[#FF6B00] transition-all duration-300 group w-full">
+                <div key={idx} className="p-8 rounded-3xl bg-white dark:bg-[#0b101d]/75 border border-slate-200 dark:border-slate-800 shadow-md flex flex-col gap-4 relative hover:border-[#FF6B00] transition-all duration-300 group w-full backdrop-blur-xl">
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-mono font-black px-3.5 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 group-hover:bg-[#FF6B00] group-hover:text-white dark:group-hover:text-slate-950 transition-colors tracking-widest">
+                    <span className="text-xs font-mono font-black px-3.5 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800/80 text-slate-600 dark:text-slate-400 group-hover:bg-[#FF6B00] group-hover:text-white dark:group-hover:text-slate-950 transition-colors tracking-widest">
                       STEP {step.num}
                     </span>
                     <IconComp className={`w-7 h-7 ${step.color}`} />
@@ -370,7 +370,7 @@ export default function LandingPage() {
       </section>
 
       {/* FOOTER - FULL WIDTH */}
-      <footer className="relative z-10 py-10 bg-slate-950 dark:bg-[#070b14] text-white border-t border-slate-800/80 w-full">
+      <footer className="relative z-10 py-10 bg-slate-950 dark:bg-transparent text-white border-t border-slate-800/80 w-full backdrop-blur-md">
         <div className="w-full px-6 sm:px-12 lg:px-20 flex flex-col sm:flex-row items-center justify-between gap-6 text-xs font-semibold text-slate-400">
           <div className="flex items-center gap-2.5">
             <Cloud className="w-5 h-5 text-[#FF6B00]" />
