@@ -58,7 +58,7 @@ export function SpaceBackground() {
           x: (Math.random() - 0.5) * width * 2,
           y: (Math.random() - 0.5) * height * 2,
           z: Math.random() * maxDepth,
-          size: Math.random() * 1.6 + 0.4,
+          size: Math.random() * 0.75 + 0.35,
           alpha: Math.random() * 0.7 + 0.3
         });
       }
@@ -122,23 +122,16 @@ export function SpaceBackground() {
           continue;
         }
 
-        // Calculate size & opacity as star approaches the front viewer
+        // Calculate size & opacity for pin-point razor sharp stars
         const distanceRatio = 1 - star.z / maxDepth;
-        const currentRadius = Math.max(0.4, distanceRatio * 2.8 * star.size);
-        const currentAlpha = Math.min(1.0, distanceRatio * 1.3 * star.alpha);
+        const currentRadius = Math.max(0.25, distanceRatio * 1.35 * star.size);
+        const currentAlpha = Math.min(1.0, distanceRatio * 1.4 * star.alpha);
 
-        // Draw 100% PURE WHITE Star
+        // Draw 100% PURE WHITE Crisp Sharp Star (No fuzzy shadow blur)
         ctx.beginPath();
         ctx.arc(px, py, currentRadius, 0, Math.PI * 2);
         ctx.fillStyle = `rgba(255, 255, 255, ${currentAlpha})`;
-
-        if (currentRadius > 1.8) {
-          ctx.shadowBlur = 6;
-          ctx.shadowColor = "rgba(255, 255, 255, 0.9)";
-        } else {
-          ctx.shadowBlur = 0;
-        }
-
+        ctx.shadowBlur = 0;
         ctx.fill();
       }
 
