@@ -11,9 +11,10 @@ export function SunThemeTransition() {
       const newTheme = e.detail?.theme;
       if (newTheme === "light" || newTheme === "dark") {
         setAnimatingTheme(newTheme);
+        // Ultra slow-motion lifecycle timer (5 seconds)
         const timer = setTimeout(() => {
           setAnimatingTheme(null);
-        }, 2400);
+        }, 5000);
         return () => clearTimeout(timer);
       }
     };
@@ -30,13 +31,13 @@ export function SunThemeTransition() {
     <div className="fixed inset-0 pointer-events-none z-[99999] overflow-hidden">
       <AnimatePresence mode="wait">
         
-        {/* RISING WHITE HORIZON WAVE WITH SUN (DARK ➔ LIGHT) */}
+        {/* ULTRA SLOW MOTION RISING WHITE HORIZON WAVE WITH SUN (DARK ➔ LIGHT) */}
         {animatingTheme === "light" && (
           <motion.div
             key="sunrise-rising-wave"
             initial={{ y: "100%" }}
             animate={{ y: "-100%" }}
-            transition={{ duration: 2.2, ease: [0.25, 1, 0.5, 1] }}
+            transition={{ duration: 4.5, ease: [0.22, 1, 0.36, 1] }}
             className="absolute inset-0 bg-gradient-to-t from-[#F8FAFC] via-[#F8FAFC] to-[#F1F5F9] shadow-[0_-40px_100px_rgba(251,191,36,0.5)] flex flex-col items-center justify-start pointer-events-none"
           >
             {/* Glowing Sun Positioned at the Leading Top Edge of the Rising Wave */}
@@ -48,7 +49,7 @@ export function SunThemeTransition() {
               {/* Rotating Solar Corona Rays */}
               <motion.div
                 animate={{ rotate: 360 }}
-                transition={{ duration: 12, repeat: Infinity, ease: "linear" }}
+                transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
                 className="absolute inset-[-15px] rounded-full border-4 border-dashed border-amber-300 opacity-90"
               />
 
@@ -59,13 +60,13 @@ export function SunThemeTransition() {
           </motion.div>
         )}
 
-        {/* FALLING NIGHT SKY CURTAIN WITH SINKING SUN (LIGHT ➔ DARK) */}
+        {/* ULTRA SLOW MOTION FALLING NIGHT SKY CURTAIN WITH SINKING SUN (LIGHT ➔ DARK) */}
         {animatingTheme === "dark" && (
           <motion.div
             key="sunset-falling-wave"
             initial={{ y: "-100%" }}
             animate={{ y: "100%" }}
-            transition={{ duration: 2.2, ease: [0.25, 1, 0.5, 1] }}
+            transition={{ duration: 4.5, ease: [0.22, 1, 0.36, 1] }}
             className="absolute inset-0 bg-gradient-to-b from-[#050811] via-[#070b14] to-[#090e1a] shadow-[0_40px_100px_rgba(5,8,17,0.9)] flex flex-col items-center justify-end pointer-events-none"
           >
             {/* Sun Sinking at Bottom Edge of Night Sky Curtain */}
