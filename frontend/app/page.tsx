@@ -79,20 +79,8 @@ export default function LandingPage() {
         }
       `}</style>
 
-      {/* FULL-WIDTH BACKGROUND VERTICAL GRID LINES */}
-      <div className="fixed inset-0 pointer-events-none z-0 grid grid-cols-4 md:grid-cols-6 lg:grid-cols-8 w-full px-6 sm:px-12 lg:px-20 opacity-20 dark:opacity-25">
-        <div className="border-r border-slate-300 dark:border-slate-800/80 h-full"></div>
-        <div className="border-r border-slate-300 dark:border-slate-800/80 h-full hidden md:block"></div>
-        <div className="border-r border-slate-300 dark:border-slate-800/80 h-full"></div>
-        <div className="border-r border-slate-300 dark:border-slate-800/80 h-full"></div>
-        <div className="border-r border-slate-300 dark:border-slate-800/80 h-full hidden md:block"></div>
-        <div className="border-r border-slate-300 dark:border-slate-800/80 h-full hidden lg:block"></div>
-        <div className="border-r border-slate-300 dark:border-slate-800/80 h-full hidden lg:block"></div>
-        <div className="border-r border-slate-300 dark:border-slate-800/80 h-full"></div>
-      </div>
-
       {/* 1. TOP NAVBAR (FULL-WIDTH Ultra-Sleek Glassmorphism Header with Working ThemeToggle) */}
-      <header className="sticky top-0 z-50 backdrop-blur-2xl bg-white/90 dark:bg-[#070b14]/90 border-b border-slate-200/90 dark:border-slate-800/70 shadow-sm dark:shadow-2xl transition-all duration-300 w-full overflow-x-hidden">
+      <header className="sticky top-0 z-50 backdrop-blur-2xl bg-white/90 dark:bg-[#050811]/90 border-b border-slate-200/90 dark:border-transparent shadow-sm dark:shadow-2xl transition-all duration-300 w-full overflow-x-hidden">
         <div className="w-full px-2 sm:px-8 lg:px-20 h-14 sm:h-20 flex items-center justify-between gap-1 sm:gap-4 max-w-full">
           
           {/* Logo */}
@@ -178,7 +166,7 @@ export default function LandingPage() {
           </div>
 
           {/* SUBTEXT & GET STARTED ACTION BAR - FULL WIDTH GRID */}
-          <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-center mt-10 sm:mt-14 pt-8 border-t border-slate-200 dark:border-slate-800/80 w-full">
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-center mt-10 sm:mt-14 pt-8 border-t border-slate-200 dark:border-transparent w-full">
             
             {/* Left Narrative from Documentation */}
             <div className="md:col-span-8 flex flex-col gap-2">
@@ -209,7 +197,7 @@ export default function LandingPage() {
       </section>
 
       {/* SECTION 2: THE 2 PRIMARY JOURNEY CARDS (PUSHED DOWN BELOW THE FOLD) */}
-      <section className="relative z-10 py-16 sm:py-24 border-t border-slate-200/80 dark:border-slate-800/80 w-full bg-slate-50/50 dark:bg-transparent">
+      <section className="relative z-10 py-16 sm:py-24 border-t border-slate-200/80 dark:border-transparent w-full bg-slate-50/50 dark:bg-transparent">
         <div className="w-full px-4 sm:px-8 lg:px-20">
           
           <div className="flex flex-col gap-1 mb-8 text-center sm:text-left">
@@ -321,7 +309,7 @@ export default function LandingPage() {
       </section>
 
       {/* SECTION 3: HOW IT WORKS WORKFLOW - FULL WIDTH */}
-      <section className="relative z-10 py-20 bg-slate-100/80 dark:bg-transparent border-t border-slate-200 dark:border-slate-800/80 transition-colors w-full">
+      <section className="relative z-10 py-20 bg-slate-100/80 dark:bg-transparent border-t border-slate-200 dark:border-transparent transition-colors w-full">
         <div className="w-full px-6 sm:px-12 lg:px-20 flex flex-col gap-12">
           
           <div className="text-center max-w-4xl mx-auto">
@@ -370,7 +358,7 @@ export default function LandingPage() {
       </section>
 
       {/* FOOTER - FULL WIDTH */}
-      <footer className="relative z-10 py-10 bg-slate-950 dark:bg-transparent text-white border-t border-slate-800/80 w-full backdrop-blur-md">
+      <footer className="relative z-10 py-10 bg-slate-950 dark:bg-transparent text-white border-t border-slate-800/80 dark:border-transparent w-full backdrop-blur-md">
         <div className="w-full px-6 sm:px-12 lg:px-20 flex flex-col sm:flex-row items-center justify-between gap-6 text-xs font-semibold text-slate-400">
           <div className="flex items-center gap-2.5">
             <Cloud className="w-5 h-5 text-[#FF6B00]" />
