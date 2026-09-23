@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { SpaceBackground } from "@/components/SpaceBackground";
+import { SunThemeTransition } from "@/components/SunThemeTransition";
 import { 
   Cloud, Mic, Sparkles, Trophy, ArrowRight, CheckCircle2, 
   FileText, Upload, Play, Search, Award, ArrowUpRight
@@ -66,6 +67,9 @@ export default function LandingPage() {
       
       {/* CONTINUOUS DYNAMIC SPACE ANIMATED STARFIELD & NEBULA BACKGROUND */}
       <SpaceBackground />
+
+      {/* CINEMATIC SUNRISE & SUNSET THEME TRANSITION ANIMATION */}
+      <SunThemeTransition />
 
       {/* Dynamic CSS for Theme Responsive Outlined Text */}
       <style jsx global>{`
