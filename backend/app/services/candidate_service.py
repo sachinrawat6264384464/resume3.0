@@ -26,6 +26,7 @@ class CandidateService:
             select(Candidate)
             .join(User, Candidate.user_id == User.id)
             .where(Candidate.organization_id == org_id)
+            .where(~User.email.like("%@cloudops.internal%"))
             .options(selectinload(Candidate.user), selectinload(Candidate.attempts))
         )
 

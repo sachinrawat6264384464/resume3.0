@@ -655,21 +655,21 @@ async def seed_database():
             db.add(sachin_profile)
             await db.flush()
 
-        # Purge any old extra sample candidates
-        cleanup_emails = ["candidate@cloudops.internal", "priya@cloudops.internal", "amit@cloudops.internal", "sneha@cloudops.internal", "karan@cloudops.internal"]
-        for bad_email in cleanup_emails:
-            u_res = await db.execute(select(User).where(User.email == bad_email))
-            bad_u = u_res.scalar_one_or_none()
-            if bad_u:
-                c_res = await db.execute(select(Candidate).where(Candidate.user_id == bad_u.id))
-                bad_c = c_res.scalar_one_or_none()
-                if bad_c:
-                    await db.execute(text("DELETE FROM candidate_roadmaps WHERE candidate_id = :cid"), {"cid": bad_c.id})
-                    await db.execute(text("DELETE FROM candidate_certificates WHERE candidate_id = :cid"), {"cid": bad_c.id})
-                    await db.execute(text("DELETE FROM support_tickets WHERE candidate_id = :cid"), {"cid": bad_c.id})
-                    await db.execute(text("DELETE FROM interview_attempts WHERE candidate_id = :cid"), {"cid": bad_c.id})
-                    await db.execute(text("DELETE FROM candidates WHERE id = :cid"), {"cid": bad_c.id})
-                await db.execute(text("DELETE FROM users WHERE id = :uid"), {"uid": bad_u.id})
+        # Purge all non-admin @cloudops.internal dummy candidates
+        dummy_res = await db.execute(select(User).where(User.email.like("%@cloudops.internal%")))
+        dummy_users = dummy_res.scalars().all()
+        for bad_u in dummy_users:
+            if bad_u.email == "admin@cloudops.internal":
+                continue
+            c_res = await db.execute(select(Candidate).where(Candidate.user_id == bad_u.id))
+            bad_c = c_res.scalar_one_or_none()
+            if bad_c:
+                await db.execute(text("DELETE FROM candidate_roadmaps WHERE candidate_id = :cid"), {"cid": bad_c.id})
+                await db.execute(text("DELETE FROM candidate_certificates WHERE candidate_id = :cid"), {"cid": bad_c.id})
+                await db.execute(text("DELETE FROM support_tickets WHERE candidate_id = :cid"), {"cid": bad_c.id})
+                await db.execute(text("DELETE FROM interview_attempts WHERE candidate_id = :cid"), {"cid": bad_c.id})
+                await db.execute(text("DELETE FROM candidates WHERE id = :cid"), {"cid": bad_c.id})
+            await db.execute(text("DELETE FROM users WHERE id = :uid"), {"uid": bad_u.id})
         await db.commit()
 
         # 4. Job Description for CloudOps
