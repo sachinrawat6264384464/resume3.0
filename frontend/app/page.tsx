@@ -5,6 +5,7 @@ import Link from "next/link";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { SpaceBackground } from "@/components/SpaceBackground";
 import { SunThemeTransition } from "@/components/SunThemeTransition";
+import { PlatformDemoSection } from "@/components/PlatformDemoSection";
 import { 
   Cloud, Mic, Sparkles, Trophy, ArrowRight, CheckCircle2, 
   FileText, Upload, Play, Search, Award, ArrowUpRight
@@ -199,6 +200,9 @@ export default function LandingPage() {
 
         </div>
       </section>
+
+      {/* SECTION 1.5: INTERACTIVE PLATFORM DEMO & CANDIDATE SERVICES TOUR */}
+      <PlatformDemoSection />
 
       {/* SECTION 2: THE 2 PRIMARY JOURNEY CARDS (PUSHED DOWN BELOW THE FOLD) */}
       <section className="relative z-10 py-16 sm:py-24 border-t border-slate-200/80 dark:border-transparent w-full bg-slate-50/50 dark:bg-transparent">
