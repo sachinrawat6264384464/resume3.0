@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { 
-  Bell, Plus, Trash2, RefreshCw, AlertCircle, Sparkles, 
+  Bell, Plus, Trash2, RefreshCw, AlertCircle, AlertTriangle, Sparkles, 
   Send, Users, CheckCircle2, ShieldCheck, Loader2, Search, Filter,
   Megaphone, Clock, Tag
 } from "lucide-react";
@@ -36,6 +36,10 @@ export default function AdminRemindersPage() {
   const [targetAudience, setTargetAudience] = useState("ALL");
   const [sending, setSending] = useState(false);
   const [alertMsg, setAlertMsg] = useState<{ type: "success" | "error"; text: string } | null>(null);
+
+  // Delete Confirmation Modal State
+  const [reminderToDelete, setReminderToDelete] = useState<AdminReminder | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const fetchReminders = async () => {
     setLoading(true);
@@ -93,17 +97,24 @@ export default function AdminRemindersPage() {
     }
   };
 
-  const handleDelete = async (id: string) => {
-    if (!confirm("Are you sure you want to delete this reminder from candidate records?")) return;
+  const confirmDeleteReminder = async () => {
+    if (!reminderToDelete) return;
+    setIsDeleting(true);
     try {
-      await apiFetch(`/reminders/admin/${id}`, { method: "DELETE" });
+      await apiFetch(`/reminders/admin/${reminderToDelete.id}`, { method: "DELETE" });
       setAlertMsg({
         type: "success",
-        text: "Smart reminder deleted successfully."
+        text: `Smart reminder "${reminderToDelete.title}" deleted successfully.`
       });
+      setReminderToDelete(null);
       fetchReminders();
     } catch (err: any) {
-      alert("Failed to delete reminder: " + err.message);
+      setAlertMsg({
+        type: "error",
+        text: "Failed to delete reminder: " + (err?.message || "Unknown error")
+      });
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -332,8 +343,8 @@ export default function AdminRemindersPage() {
 
                     <td className="py-3.5 px-4 text-right">
                       <button
-                        onClick={() => handleDelete(rem.id)}
-                        className="p-1.5 rounded-lg text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950 transition-colors"
+                        onClick={() => setReminderToDelete(rem)}
+                        className="p-1.5 rounded-lg text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950 transition-colors cursor-pointer"
                         title="Delete Reminder"
                       >
                         <Trash2 className="w-4 h-4" />
@@ -442,6 +453,61 @@ export default function AdminRemindersPage() {
               </div>
 
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Reminder Custom In-Page Confirmation Modal */}
+      {reminderToDelete && (
+        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-200">
+          <div className="w-full max-w-md bg-white dark:bg-slate-900 rounded-3xl border border-rose-500/30 dark:border-rose-900/50 p-6 shadow-2xl flex flex-col items-center text-center gap-4 relative overflow-hidden">
+            
+            <div className="w-14 h-14 rounded-2xl bg-rose-500/10 dark:bg-rose-500/20 text-rose-600 dark:text-rose-400 flex items-center justify-center shrink-0 border border-rose-500/20 shadow-lg shadow-rose-500/10">
+              <AlertTriangle className="w-7 h-7" />
+            </div>
+
+            <div className="flex flex-col gap-1">
+              <h3 className="text-base font-black tracking-tight text-slate-900 dark:text-white uppercase">
+                Permanently Delete Reminder?
+              </h3>
+              <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
+                Are you sure you want to delete <span className="font-bold text-slate-800 dark:text-slate-200">"{reminderToDelete.title}"</span> from candidate records?
+              </p>
+              <span className="text-[11px] font-semibold text-rose-500 dark:text-rose-400 mt-1 bg-rose-500/10 py-1 px-3 rounded-full self-center">
+                This action cannot be undone.
+              </span>
+            </div>
+
+            <div className="flex items-center justify-center gap-3 w-full mt-2">
+              <button
+                type="button"
+                disabled={isDeleting}
+                onClick={() => setReminderToDelete(null)}
+                className="flex-1 py-2.5 px-4 rounded-xl text-xs font-bold bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 transition-all cursor-pointer disabled:opacity-50"
+              >
+                Cancel
+              </button>
+
+              <button
+                type="button"
+                disabled={isDeleting}
+                onClick={confirmDeleteReminder}
+                className="flex-1 py-2.5 px-4 rounded-xl text-xs font-bold text-white bg-rose-600 hover:bg-rose-700 flex items-center justify-center gap-2 transition-all cursor-pointer shadow-md shadow-rose-600/25 disabled:opacity-50"
+              >
+                {isDeleting ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span>Deleting...</span>
+                  </>
+                ) : (
+                  <>
+                    <Trash2 className="w-4 h-4" />
+                    <span>Delete Permanently</span>
+                  </>
+                )}
+              </button>
+            </div>
+
           </div>
         </div>
       )}

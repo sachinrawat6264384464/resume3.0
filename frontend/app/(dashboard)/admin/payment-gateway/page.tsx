@@ -214,7 +214,10 @@ export default function AdminPaymentGatewayPage() {
         await fetchConfig();
       }
     } catch (err: any) {
-      alert("Failed to record transaction: " + err.message);
+      setMsg({
+        type: "error",
+        text: "Failed to record transaction: " + err.message
+      });
     } finally {
       setCreatingTx(false);
     }

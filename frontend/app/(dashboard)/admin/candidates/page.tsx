@@ -18,6 +18,7 @@ export default function AdminCandidatesPage() {
   // Delete candidate confirmation modal state
   const [candidateToDelete, setCandidateToDelete] = useState<any | null>(null);
   const [isDeleting, setIsDeleting] = useState<boolean>(false);
+  const [alertMsg, setAlertMsg] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
   const getLinkedinUrl = (c: any) => {
     if (c.linkedin_url) return c.linkedin_url;
@@ -34,13 +35,21 @@ export default function AdminCandidatesPage() {
   const handleDeleteCandidate = async () => {
     if (!candidateToDelete) return;
     setIsDeleting(true);
+    setAlertMsg(null);
     try {
       await apiFetch(`/candidates/${candidateToDelete.id}`, { method: "DELETE" });
       setCandidates(prev => prev.filter(cand => cand.id !== candidateToDelete.id && cand.user_id !== candidateToDelete.id));
+      setAlertMsg({
+        type: "success",
+        text: `Candidate profile "${candidateToDelete.user?.full_name || candidateToDelete.full_name || 'Account'}" permanently deleted.`
+      });
       setCandidateToDelete(null);
       await fetchCandidates();
     } catch (err: any) {
-      alert("Failed to delete candidate: " + (err?.message || "Unknown error"));
+      setAlertMsg({
+        type: "error",
+        text: "Failed to delete candidate: " + (err?.message || "Unknown error")
+      });
     } finally {
       setIsDeleting(false);
     }
@@ -175,6 +184,17 @@ export default function AdminCandidatesPage() {
           </button>
         </div>
       </div>
+
+      {alertMsg && (
+        <div className={`p-4 rounded-2xl text-xs font-bold border flex items-center gap-2 ${
+          alertMsg.type === "success" 
+            ? "bg-emerald-50 dark:bg-emerald-950/60 border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300"
+            : "bg-rose-50 dark:bg-rose-950/60 border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-300"
+        }`}>
+          <CheckCircle2 className="w-4 h-4 shrink-0" />
+          <span>{alertMsg.text}</span>
+        </div>
+      )}
 
       {/* Top Stat Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
