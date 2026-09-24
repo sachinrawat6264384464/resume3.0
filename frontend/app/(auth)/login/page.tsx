@@ -278,13 +278,13 @@ export default function LoginPage() {
   ];
 
   return (
-    <div className="w-full h-screen max-h-screen flex flex-row bg-slate-50 dark:bg-[#070b14] text-slate-900 dark:text-slate-100 font-sans selection:bg-[#FF6B00] selection:text-white relative overflow-hidden transition-colors duration-300">
+    <div className="w-full min-h-screen lg:h-screen lg:max-h-screen flex flex-col lg:flex-row bg-slate-50 dark:bg-[#070b14] text-slate-900 dark:text-slate-100 font-sans selection:bg-[#FF6B00] selection:text-white relative overflow-y-auto lg:overflow-hidden transition-colors duration-300">
       
       {/* Invisible reCAPTCHA container for Firebase Auth */}
       <div id="recaptcha-container"></div>
 
-      {/* LEFT COLUMN - Candidate Branding Banner (ALWAYS EXACT 50% SPLIT SCREEN) */}
-      <div className="w-1/2 h-full flex flex-col justify-between p-8 xl:p-12 overflow-y-auto bg-slate-950 text-white relative shrink-0">
+      {/* LEFT COLUMN - Candidate Branding Banner (Desktop / Large Screens Only) */}
+      <div className="hidden lg:flex lg:w-1/2 h-full flex-col justify-between p-8 xl:p-12 overflow-y-auto bg-slate-950 text-white relative shrink-0">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,_var(--tw-gradient-stops))] from-[#FF6B00]/20 via-slate-950 to-slate-950 pointer-events-none" />
 
         <div className="relative z-10 flex items-center justify-between">
@@ -336,16 +336,30 @@ export default function LoginPage() {
         </div>
       </div>
 
-      {/* RIGHT COLUMN - Candidate Auth Form Container (ALWAYS EXACT 50% SPLIT SCREEN) */}
-      <div className="w-1/2 h-full flex flex-col justify-between p-8 xl:p-12 overflow-y-auto relative z-10 bg-white dark:bg-[#070b14] shrink-0">
+      {/* RIGHT COLUMN - Candidate Auth Form Container (Responsive Mobile & Desktop) */}
+      <div className="w-full lg:w-1/2 min-h-screen lg:h-full flex flex-col justify-between p-4 xs:p-6 sm:p-8 xl:p-12 overflow-y-auto relative z-10 bg-white dark:bg-[#070b14] shrink-0">
         
-        <div className="flex items-center justify-between w-full">
+        {/* Top Header & Navigation */}
+        <div className="flex flex-wrap items-center justify-between w-full gap-2 mb-2">
+          
+          {/* Mobile Logo Brand Badge (Visible on Mobile & Tablet < 1024px) */}
+          <Link href="/" className="lg:hidden flex items-center gap-2">
+            <div className="w-7 h-7 rounded-lg bg-gradient-to-tr from-[#FF6B00] via-amber-500 to-orange-400 p-[1px] shadow-sm">
+              <div className="w-full h-full bg-[#0B1E36] rounded-[7px] flex items-center justify-center text-white">
+                <Cloud className="w-3.5 h-3.5 text-[#FF6B00]" />
+              </div>
+            </div>
+            <span className="text-sm font-black text-slate-900 dark:text-white leading-none">
+              CloudOps <span className="text-[#FF6B00]">AI</span>
+            </span>
+          </Link>
+
           {/* Main Auth Mode Toggle: Sign In vs Create Account */}
-          <div className="flex items-center gap-1.5 p-1 rounded-2xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs font-black">
+          <div className="flex items-center gap-1 p-1 rounded-xl sm:rounded-2xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-[11px] sm:text-xs font-black">
             <button
               type="button"
               onClick={() => { setAuthMode("signin"); setError(null); setInfoMsg(null); }}
-              className={`px-4 py-1.5 rounded-xl transition-all cursor-pointer ${
+              className={`px-3 sm:px-4 py-1.5 rounded-lg sm:rounded-xl transition-all cursor-pointer ${
                 authMode === "signin"
                   ? "bg-[#FF6B00] text-white shadow-xs"
                   : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
@@ -356,7 +370,7 @@ export default function LoginPage() {
             <button
               type="button"
               onClick={() => { setAuthMode("signup"); setError(null); setInfoMsg(null); }}
-              className={`px-4 py-1.5 rounded-xl transition-all cursor-pointer ${
+              className={`px-3 sm:px-4 py-1.5 rounded-lg sm:rounded-xl transition-all cursor-pointer ${
                 authMode === "signup"
                   ? "bg-[#FF6B00] text-white shadow-xs"
                   : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
@@ -371,56 +385,56 @@ export default function LoginPage() {
           </div>
         </div>
 
-        <div className="w-full max-w-md mx-auto my-auto py-2 flex flex-col gap-5">
+        <div className="w-full max-w-md mx-auto my-auto py-2 sm:py-4 flex flex-col gap-4 sm:gap-5">
           
-          <div className="flex flex-col gap-1.5">
-            <h2 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
+          <div className="flex flex-col gap-1 sm:gap-1.5">
+            <h2 className="text-xl xs:text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
               {authMode === "signin" ? "Welcome Back, Candidate! 👋" : "Create Candidate Account 🚀"}
             </h2>
-            <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
+            <p className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 font-medium leading-relaxed">
               {authMode === "signin"
                 ? "Sign in using OTP to access your AI voice interviews, ATS audits & study roadmaps."
                 : "Sign up using OTP to launch your CloudOps & DevOps interview assessment journey."}
             </p>
           </div>
 
-          {/* Authentication Method Selector Tabs: Mobile OTP vs Email OTP (PASSWORD REMOVED) */}
-          <div className="grid grid-cols-2 p-1.5 rounded-2xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs font-black">
+          {/* Authentication Method Selector Tabs */}
+          <div className="grid grid-cols-2 p-1 sm:p-1.5 rounded-xl sm:rounded-2xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-[11px] sm:text-xs font-black">
             <button
               type="button"
               onClick={() => switchMethod("mobile_otp")}
-              className={`py-2.5 rounded-xl transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+              className={`py-2 sm:py-2.5 rounded-lg sm:rounded-xl transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
                 authMethod === "mobile_otp" 
                   ? "bg-[#FF6B00] text-white shadow-md font-black" 
                   : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
               }`}
             >
-              <Phone className="w-4 h-4" />
+              <Phone className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
               <span>Mobile OTP</span>
             </button>
 
             <button
               type="button"
               onClick={() => switchMethod("email_otp")}
-              className={`py-2.5 rounded-xl transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+              className={`py-2 sm:py-2.5 rounded-lg sm:rounded-xl transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
                 authMethod === "email_otp" 
                   ? "bg-[#FF6B00] text-white shadow-md font-black" 
                   : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
               }`}
             >
-              <Mail className="w-4 h-4" />
+              <Mail className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
               <span>Email OTP</span>
             </button>
           </div>
 
           {/* Banners */}
           {error && (
-            <div className="p-3.5 rounded-2xl bg-rose-50 dark:bg-rose-950/60 border border-rose-200 dark:border-rose-800 text-xs font-bold text-rose-600 dark:text-rose-300">
+            <div className="p-3 sm:p-3.5 rounded-xl sm:rounded-2xl bg-rose-50 dark:bg-rose-950/60 border border-rose-200 dark:border-rose-800 text-xs font-bold text-rose-600 dark:text-rose-300">
               {error}
             </div>
           )}
           {infoMsg && (
-            <div className="p-3.5 rounded-2xl bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 text-xs font-bold text-emerald-700 dark:text-emerald-300 flex items-center gap-2">
+            <div className="p-3 sm:p-3.5 rounded-xl sm:rounded-2xl bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 text-xs font-bold text-emerald-700 dark:text-emerald-300 flex items-center gap-2">
               <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
               <span>{infoMsg}</span>
             </div>
@@ -429,11 +443,11 @@ export default function LoginPage() {
           {/* MOBILE OTP & EMAIL OTP FLOWS */}
           {otpStep === 1 ? (
             /* Step 1: Enter Name + Mobile / Email */
-            <form onSubmit={handleSendOTP} className="flex flex-col gap-4">
+            <form onSubmit={handleSendOTP} className="flex flex-col gap-3.5 sm:gap-4">
               
-              <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
-                  <User className="w-3.5 h-3.5 text-[#FF6B00]" />
+              <div className="flex flex-col gap-1 sm:gap-1.5">
+                <label className="text-[11px] sm:text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                  <User className="w-3.5 h-3.5 text-[#FF6B00] shrink-0" />
                   Candidate Full Name:
                 </label>
                 <input
@@ -442,18 +456,18 @@ export default function LoginPage() {
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
                   placeholder="e.g. Sachin Rawat"
-                  className="w-full px-4 py-3 rounded-2xl text-xs bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white font-bold focus:outline-none focus:border-[#FF6B00]"
+                  className="w-full px-3.5 py-2.5 sm:px-4 sm:py-3 rounded-xl sm:rounded-2xl text-xs bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white font-bold focus:outline-none focus:border-[#FF6B00]"
                 />
               </div>
 
               {authMethod === "mobile_otp" ? (
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
-                    <Phone className="w-3.5 h-3.5 text-[#FF6B00]" />
+                <div className="flex flex-col gap-1 sm:gap-1.5">
+                  <label className="text-[11px] sm:text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                    <Phone className="w-3.5 h-3.5 text-[#FF6B00] shrink-0" />
                     Mobile Number (10 Digits):
                   </label>
                   <div className="flex items-center gap-2">
-                    <span className="px-3.5 py-3 rounded-2xl text-xs bg-slate-100 dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 font-mono font-bold shrink-0">
+                    <span className="px-3 py-2.5 sm:px-3.5 sm:py-3 rounded-xl sm:rounded-2xl text-xs bg-slate-100 dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 font-mono font-bold shrink-0">
                       +91
                     </span>
                     <input
@@ -463,14 +477,14 @@ export default function LoginPage() {
                       value={phoneNumber}
                       onChange={(e) => setPhoneNumber(e.target.value.replace(/\D/g, ""))}
                       placeholder="9876543210"
-                      className="w-full px-4 py-3 rounded-2xl text-xs bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white font-mono font-bold focus:outline-none focus:border-[#FF6B00]"
+                      className="w-full px-3.5 py-2.5 sm:px-4 sm:py-3 rounded-xl sm:rounded-2xl text-xs bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white font-mono font-bold focus:outline-none focus:border-[#FF6B00]"
                     />
                   </div>
                 </div>
               ) : (
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
-                    <Mail className="w-3.5 h-3.5 text-[#FF6B00]" />
+                <div className="flex flex-col gap-1 sm:gap-1.5">
+                  <label className="text-[11px] sm:text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                    <Mail className="w-3.5 h-3.5 text-[#FF6B00] shrink-0" />
                     Email Address for OTP:
                   </label>
                   <input
@@ -479,13 +493,13 @@ export default function LoginPage() {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="candidate@cloudops.ai"
-                    className="w-full px-4 py-3 rounded-2xl text-xs bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white font-medium focus:outline-none focus:border-[#FF6B00]"
+                    className="w-full px-3.5 py-2.5 sm:px-4 sm:py-3 rounded-xl sm:rounded-2xl text-xs bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white font-medium focus:outline-none focus:border-[#FF6B00]"
                   />
                 </div>
               )}
 
               {/* Fallback button between Mobile OTP and Email OTP */}
-              <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-[11px] font-bold text-slate-600 dark:text-slate-400 flex items-center justify-between">
+              <div className="p-2.5 sm:p-3 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-[10.5px] sm:text-[11px] font-bold text-slate-600 dark:text-slate-400 flex items-center justify-between gap-1 flex-wrap">
                 <span>
                   {authMethod === "mobile_otp" ? "SMS OTP not working?" : "Prefer SMS on Phone?"}
                 </span>
@@ -501,7 +515,7 @@ export default function LoginPage() {
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full py-4 rounded-2xl font-black text-xs text-white bg-[#FF6B00] hover:bg-[#e05e00] shadow-lg shadow-[#FF6B00]/25 flex items-center justify-center gap-2 transition-all cursor-pointer uppercase tracking-wider mt-1 disabled:opacity-50"
+                className="w-full py-3 sm:py-4 rounded-xl sm:rounded-2xl font-black text-xs text-white bg-[#FF6B00] hover:bg-[#e05e00] shadow-lg shadow-[#FF6B00]/25 flex items-center justify-center gap-2 transition-all cursor-pointer uppercase tracking-wider mt-1 disabled:opacity-50"
               >
                 {isLoading ? (
                   <>
@@ -518,27 +532,27 @@ export default function LoginPage() {
             </form>
           ) : (
             /* Step 2: Enter 6-Digit Verification OTP Code */
-            <form onSubmit={handleVerifyOTP} className="flex flex-col gap-4 animate-fadeIn">
+            <form onSubmit={handleVerifyOTP} className="flex flex-col gap-3.5 sm:gap-4 animate-fadeIn">
               
-              <div className="p-3.5 rounded-2xl bg-amber-50 dark:bg-amber-950/40 border border-[#FF6B00]/30 text-xs font-medium text-amber-900 dark:text-amber-200 flex items-center justify-between">
+              <div className="p-3 sm:p-3.5 rounded-xl sm:rounded-2xl bg-amber-50 dark:bg-amber-950/40 border border-[#FF6B00]/30 text-xs font-medium text-amber-900 dark:text-amber-200 flex items-center justify-between gap-2">
                 <div>
                   <span className="font-bold block">
                     {authMethod === "mobile_otp" ? "Mobile Number:" : "Email Address:"}
                   </span>
-                  <span className="font-mono">{authMethod === "mobile_otp" ? phoneNumber : email} ({fullName})</span>
+                  <span className="font-mono text-[11px] sm:text-xs">{authMethod === "mobile_otp" ? phoneNumber : email} ({fullName})</span>
                 </div>
                 <button
                   type="button"
                   onClick={() => setOtpStep(1)}
-                  className="text-[11px] font-bold text-[#FF6B00] hover:underline cursor-pointer"
+                  className="text-[11px] font-bold text-[#FF6B00] hover:underline cursor-pointer shrink-0"
                 >
                   Edit
                 </button>
               </div>
 
-              <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
-                  <KeyRound className="w-3.5 h-3.5 text-[#FF6B00]" />
+              <div className="flex flex-col gap-1 sm:gap-1.5">
+                <label className="text-[11px] sm:text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                  <KeyRound className="w-3.5 h-3.5 text-[#FF6B00] shrink-0" />
                   Enter 6-Digit Verification Code:
                 </label>
                 <input
@@ -548,17 +562,17 @@ export default function LoginPage() {
                   value={otpCode}
                   onChange={(e) => setOtpCode(e.target.value)}
                   placeholder="123456"
-                  className="w-full px-4 py-3.5 rounded-2xl text-center text-lg font-mono font-black tracking-widest bg-white dark:bg-slate-900 border-2 border-[#FF6B00] text-slate-900 dark:text-white focus:outline-none shadow-md shadow-[#FF6B00]/10"
+                  className="w-full px-3.5 py-3 sm:px-4 sm:py-3.5 rounded-xl sm:rounded-2xl text-center text-base sm:text-lg font-mono font-black tracking-widest bg-white dark:bg-slate-900 border-2 border-[#FF6B00] text-slate-900 dark:text-white focus:outline-none shadow-md shadow-[#FF6B00]/10"
                   autoFocus
                 />
               </div>
 
               {/* Resend & Fallback Controls */}
-              <div className="flex items-center justify-between text-xs font-medium pt-1">
+              <div className="flex items-center justify-between text-xs font-medium pt-1 gap-1">
                 <button
                   type="button"
                   onClick={() => switchMethod(authMethod === "mobile_otp" ? "email_otp" : "mobile_otp")}
-                  className="text-[11px] font-bold text-slate-500 hover:text-[#FF6B00] underline cursor-pointer"
+                  className="text-[10.5px] sm:text-[11px] font-bold text-slate-500 hover:text-[#FF6B00] underline cursor-pointer"
                 >
                   {authMethod === "mobile_otp" ? "Switch to Email OTP ✉️" : "Switch to Mobile OTP 📱"}
                 </button>
@@ -569,7 +583,7 @@ export default function LoginPage() {
                   onClick={handleSendOTP}
                   className="font-bold text-[#FF6B00] hover:underline disabled:opacity-40 cursor-pointer flex items-center gap-1"
                 >
-                  <RefreshCw className="w-3 h-3" />
+                  <RefreshCw className="w-3 h-3 shrink-0" />
                   <span>{isTimerActive ? `Resend (${timer}s)` : "Resend OTP"}</span>
                 </button>
               </div>
@@ -577,7 +591,7 @@ export default function LoginPage() {
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full py-4 rounded-2xl font-black text-xs text-white bg-[#FF6B00] hover:bg-[#e05e00] shadow-lg shadow-[#FF6B00]/25 flex items-center justify-center gap-2 transition-all cursor-pointer uppercase tracking-wider mt-2 disabled:opacity-50"
+                className="w-full py-3 sm:py-4 rounded-xl sm:rounded-2xl font-black text-xs text-white bg-[#FF6B00] hover:bg-[#e05e00] shadow-lg shadow-[#FF6B00]/25 flex items-center justify-center gap-2 transition-all cursor-pointer uppercase tracking-wider mt-1 disabled:opacity-50"
               >
                 {isLoading ? (
                   <>
@@ -587,7 +601,7 @@ export default function LoginPage() {
                 ) : (
                   <>
                     <CheckCircle2 className="w-4 h-4" />
-                    <span>{authMode === "signup" ? "Verify & Launch Candidate Account" : "Verify & Access Dashboard"}</span>
+                    <span>{authMode === "signup" ? "Verify & Launch Account" : "Verify & Access Dashboard"}</span>
                   </>
                 )}
               </button>
@@ -595,7 +609,7 @@ export default function LoginPage() {
           )}
 
           {/* Bottom Switch between Sign In / Sign Up */}
-          <div className="flex flex-col items-center gap-3 pt-4 border-t border-slate-200 dark:border-slate-800 text-xs">
+          <div className="flex flex-col items-center gap-2 sm:gap-3 pt-3 sm:pt-4 border-t border-slate-200 dark:border-slate-800 text-xs">
             <div className="flex items-center gap-1.5 font-medium text-slate-600 dark:text-slate-400">
               <span>{authMode === "signin" ? "New to CloudOps AI?" : "Already registered?"}</span>
               <button
@@ -607,14 +621,14 @@ export default function LoginPage() {
                 }}
                 className="font-bold text-[#FF6B00] hover:underline cursor-pointer"
               >
-                {authMode === "signin" ? "Create Candidate Account" : "Sign In to Portal"}
+                {authMode === "signin" ? "Create Account" : "Sign In to Portal"}
               </button>
             </div>
           </div>
 
         </div>
 
-        <div className="text-center text-xs text-slate-400 font-mono">
+        <div className="text-center text-[10px] sm:text-xs text-slate-400 font-mono py-2">
           CloudOps Candidate Assessment Platform
         </div>
 
