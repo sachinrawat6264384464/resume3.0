@@ -25,9 +25,10 @@ async def db_session():
         await session.flush()
 
         user = User(
+            id="candidate-default-id",
             organization_id=org.id,
-            email="testcandidate@cloudops.internal",
-            full_name="Test Student",
+            email="candidate@cloudops.internal",
+            full_name="Default Candidate",
             role=UserRole.CANDIDATE.value
         )
         session.add(user)
@@ -88,3 +89,14 @@ async def db_session():
         yield session
 
     await test_engine.dispose()
+
+from app.core.database import get_db
+from app.main import app
+
+@pytest_asyncio.fixture(autouse=True)
+async def override_get_db_autouse(db_session):
+    async def _override_get_db():
+        yield db_session
+    app.dependency_overrides[get_db] = _override_get_db
+    yield
+    app.dependency_overrides.clear()

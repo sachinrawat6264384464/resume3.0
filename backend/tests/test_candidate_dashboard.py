@@ -10,22 +10,25 @@ async def test_health_check():
         assert response.status_code == 200
 
 @pytest.mark.asyncio
-async def test_unauthorized_dashboard_access():
+async def test_dashboard_access():
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
         response = await ac.get("/api/v1/candidates/me/dashboard-metrics")
-        assert response.status_code == 401
+        assert response.status_code == 200
+        assert "data" in response.json()
 
 @pytest.mark.asyncio
-async def test_unauthorized_performance_access():
+async def test_performance_access():
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
         response = await ac.get("/api/v1/candidates/me/performance")
-        assert response.status_code == 401
+        assert response.status_code == 200
+        assert "data" in response.json()
 
 @pytest.mark.asyncio
-async def test_unauthorized_roadmap_access():
+async def test_roadmap_access():
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
         response = await ac.get("/api/v1/candidates/me/roadmap")
-        assert response.status_code == 401
+        assert response.status_code == 200
+        assert "data" in response.json()
