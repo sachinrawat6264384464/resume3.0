@@ -790,72 +790,7 @@ Learn Today. Implement Today. Build Your Career for a Lifetime.
         </div>
       )}
 
-      {/* READINESS SCORE & 5-FACTOR MATRIX */}
-      <div className="w-full relative z-10">
-        <div className="w-full bg-white dark:bg-slate-900 rounded-[24px] border border-slate-200 dark:border-slate-800 p-5 shadow-sm flex flex-col justify-between gap-3">
-          
-          <div className="flex items-center justify-between text-xs font-black text-slate-900 dark:text-white">
-            <span className="flex items-center gap-2">
-              <Award className="w-4 h-4 text-[#FF9900]" />
-              YOUR READINESS SCORE
-            </span>
-            {readiness >= 80 ? (
-              <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-50 text-emerald-600 dark:bg-emerald-950/50 dark:text-emerald-400 border border-emerald-500/30 flex items-center gap-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                Production Ready
-              </span>
-            ) : (
-              <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-amber-50 text-[#FF9900] dark:bg-amber-950/50 border border-[#FF9900]/30 flex items-center gap-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-[#FF9900] animate-pulse" />
-                AI Benchmark Evaluated
-              </span>
-            )}
-          </div>
 
-          <div className="flex items-center gap-4 my-1">
-            <div className="relative w-[90px] h-[90px] shrink-0 flex items-center justify-center">
-              <svg className="w-full h-full -rotate-90" viewBox="0 0 100 100">
-                <circle cx="50" cy="50" r="38" stroke="currentColor" strokeWidth="9" fill="transparent" className="text-slate-100 dark:text-slate-800" />
-                <circle cx="50" cy="50" r="38" stroke="#FF9900" strokeWidth="9" fill="transparent" strokeDasharray={`${(readiness / 100) * 238} 238`} strokeLinecap="round" />
-              </svg>
-              <div className="absolute inset-0 flex flex-col items-center justify-center">
-                <span className="text-xl font-black text-slate-900 dark:text-white leading-none">{readiness}%</span>
-                <span className="text-[7px] font-extrabold text-slate-400 uppercase tracking-widest text-center mt-0.5">
-                  {readiness >= 80 ? "Top Fit" : "Evaluated"}
-                </span>
-              </div>
-            </div>
-
-            <div className="flex flex-col gap-1.5 flex-1 min-w-0">
-              {[
-                { name: "Technical",       val: readinessBreakdown.technical,       color: "bg-[#FF9900]" },
-                { name: "Problem Solving", val: readinessBreakdown.problem_solving, color: "bg-violet-500" },
-                { name: "Communication",   val: readinessBreakdown.communication,   color: "bg-emerald-500" },
-                { name: "System Design",   val: readinessBreakdown.system_design,   color: "bg-amber-500" },
-                { name: "DevOps Mindset",  val: readinessBreakdown.devops_mindset,  color: "bg-red-500" },
-              ].map((item, i) => (
-                <div key={i} className="flex flex-col gap-0.5">
-                  <div className="flex items-center justify-between text-[10px]">
-                    <span className="text-slate-600 dark:text-slate-400 font-bold truncate">{item.name}</span>
-                    <span className="font-mono font-black text-slate-900 dark:text-white ml-1 shrink-0">{item.val ?? 0}%</span>
-                  </div>
-                  <div className="h-1.5 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
-                    <div className={`h-full rounded-full transition-all duration-700 ${item.color}`} style={{ width: `${Math.min(100, item.val ?? 0)}%` }} />
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <Link prefetch={false}
-            href="/performance"
-            className="w-full py-2.5 rounded-xl font-bold text-xs bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 hover:border-[#FF9900] text-slate-800 dark:text-slate-200 flex items-center justify-center gap-1.5 transition-all shadow-xs"
-          >
-            <BarChart2 className="w-3.5 h-3.5 text-[#FF9900]" />
-            <span>View 5-Pillar Rubric Matrix →</span>
-          </Link>
-        </div>
-      </div>
 
       {/* GROUP-WISE STAGE MANAGEMENT (REQUIREMENT 8 INTEGRATION) */}
       <div className="bg-white dark:bg-slate-900 rounded-[28px] border border-slate-200 dark:border-slate-800 p-6 shadow-sm flex flex-col gap-5 relative z-10">
