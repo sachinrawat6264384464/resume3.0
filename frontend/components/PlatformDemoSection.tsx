@@ -64,6 +64,7 @@ const CANDIDATE_SERVICES: CandidateServiceDemo[] = [
     mockRoute: "/interviews",
     videoPlaceholderBg: "from-purple-950 via-slate-900 to-indigo-950",
     accentColor: "text-purple-400",
+    videoUrl: "/vedio/interview-stages.mp4",
     stats: [
       { label: "Stages", value: "30 Levels" },
       { label: "Feedback", value: "STAR Formula" },
