@@ -14,34 +14,73 @@ interface HexBadgeItem {
   modNum: string;
   title: string;
   sub: string;
-  variant: "teal" | "red" | "amber" | "purple" | "blue";
+  variant: "teal" | "amber" | "purple" | "blue" | "red";
   desc: string;
+  reqStages: number;
   unlocked: boolean;
   claimed?: boolean;
 }
 
 const HEX_BADGES_LIST: HexBadgeItem[] = [
-  { id: "mod-1", modNum: "MODULE 01", title: "FOUNDATIONS & AI", sub: "CloudOpsHub", variant: "teal", desc: "Pass Foundations & AI Interview Stage", unlocked: true },
-  { id: "mod-2", modNum: "MODULE 02", title: "LINUX", sub: "UBUNTU + GCP", variant: "red", desc: "Pass Linux Systems & Shell Stage", unlocked: true },
-  { id: "mod-3", modNum: "MODULE 03", title: "AWS", sub: "SERVICES", variant: "amber", desc: "Score 85%+ on AWS VPC & IAM", unlocked: true },
-  { id: "mod-4", modNum: "MODULE 04", title: "CI/CD", sub: "GIT & JENKINS", variant: "purple", desc: "Master Jenkins & GitHub Actions", unlocked: true },
-  { id: "mod-5", modNum: "MODULE 05", title: "KUBERNETES", sub: "EKS + HELM", variant: "blue", desc: "Master K8s Pod Debugging", unlocked: true },
-  { id: "mod-6", modNum: "MODULE 06", title: "TERRAFORM", sub: "IAC MODULES", variant: "amber", desc: "IaC State & Modules Mastery", unlocked: false },
-  { id: "mod-7", modNum: "MODULE 07", title: "DEVSECOPS", sub: "TRIVY + VAULT", variant: "red", desc: "Security Scanning & Vault Hardening", unlocked: false },
-  { id: "mod-8", modNum: "MODULE 08", title: "AIOPS", sub: "AI ENGINEER", variant: "purple", desc: "Complete AIOps & Telemetry Challenge", unlocked: false },
-  { id: "mod-9", modNum: "MODULE 09", title: "MCP TOOLS", sub: "PROTOCOL", variant: "teal", desc: "Model Context Protocol Tool", unlocked: false },
-  { id: "mod-10", modNum: "MODULE 10", title: "MULTI-CLOUD", sub: "ARCHITECT", variant: "blue", desc: "Pass Multi-Cloud Stage", unlocked: false },
-  { id: "mod-11", modNum: "MODULE 11", title: "READINESS", sub: "SCORE ≥ 80%", variant: "amber", desc: "Career Readiness Score ≥ 80%", unlocked: false },
-  { id: "mod-12", modNum: "MODULE 12", title: "40 LPA BOSS", sub: "CHALLENGER", variant: "red", desc: "Complete 40 LPA Boss Battle Stage", unlocked: false },
+  { 
+    id: "mod-1", 
+    modNum: "STAGE 05", 
+    title: "LINUX & CLOUD FOUNDATIONS", 
+    sub: "Stage 5 Master", 
+    variant: "teal", 
+    desc: "Unlocked automatically upon completing Stage 5 of your 30-stage curriculum.", 
+    reqStages: 5,
+    unlocked: true 
+  },
+  { 
+    id: "mod-2", 
+    modNum: "STAGE 10", 
+    title: "AWS & CI/CD AUTOMATION", 
+    sub: "Stage 10 Master", 
+    variant: "amber", 
+    desc: "Unlocked automatically upon completing Stage 10 of your 30-stage curriculum.", 
+    reqStages: 10,
+    unlocked: true 
+  },
+  { 
+    id: "mod-3", 
+    modNum: "STAGE 15", 
+    title: "KUBERNETES & TERRAFORM", 
+    sub: "Stage 15 Master", 
+    variant: "purple", 
+    desc: "Unlocked automatically upon completing Stage 15 of your 30-stage curriculum.", 
+    reqStages: 15,
+    unlocked: false 
+  },
+  { 
+    id: "mod-4", 
+    modNum: "STAGE 20", 
+    title: "DEVSECOPS & MULTI-CLOUD", 
+    sub: "Stage 20 Master", 
+    variant: "blue", 
+    desc: "Unlocked automatically upon completing Stage 20 of your 30-stage curriculum.", 
+    reqStages: 20,
+    unlocked: false 
+  },
+  { 
+    id: "mod-5", 
+    modNum: "STAGE 30", 
+    title: "40 LPA BOSS LEGEND", 
+    sub: "Stage 30 Legend", 
+    variant: "red", 
+    desc: "Unlocked automatically upon completing Stage 30 Final Boss Battle.", 
+    reqStages: 30,
+    unlocked: false 
+  },
 ];
 
 const HexagonBadge = ({ badge, onClick }: { badge: HexBadgeItem; onClick?: () => void }) => {
   const colorMap = {
     teal: { from: "#007991", to: "#78FFD6", border: "#78FFD6" },
-    red: { from: "#cb2d3e", to: "#ef473a", border: "#ef473a" },
     amber: { from: "#ff9900", to: "#ff5500", border: "#ffb700" },
     purple: { from: "#8E2DE2", to: "#4A00E0", border: "#c471ed" },
-    blue: { from: "#00c6ff", to: "#0072ff", border: "#00c6ff" }
+    blue: { from: "#00c6ff", to: "#0072ff", border: "#00c6ff" },
+    red: { from: "#cb2d3e", to: "#ef473a", border: "#ef473a" }
   };
 
   const c = colorMap[badge.variant] || colorMap.amber;
@@ -52,7 +91,7 @@ const HexagonBadge = ({ badge, onClick }: { badge: HexBadgeItem; onClick?: () =>
       className={`relative w-20 h-24 shrink-0 flex flex-col items-center justify-center text-center p-1.5 cursor-pointer transition-all duration-300 hover:scale-110 drop-shadow-lg group ${
         !badge.unlocked ? "opacity-45 grayscale hover:grayscale-0 hover:opacity-100" : ""
       }`}
-      title={`${badge.modNum}: ${badge.title} - Click to Claim`}
+      title={`${badge.modNum}: ${badge.title} - ${badge.unlocked ? "Unlocked" : `Requires Stage ${badge.reqStages}`}`}
     >
       <svg className="absolute inset-0 w-full h-full" viewBox="0 0 100 115" fill="none" xmlns="http://www.w3.org/2000/svg">
         <defs>
@@ -71,7 +110,7 @@ const HexagonBadge = ({ badge, onClick }: { badge: HexBadgeItem; onClick?: () =>
       </svg>
       <div className="relative z-10 flex flex-col items-center justify-center text-white w-full max-w-[62px] px-1 leading-none overflow-hidden text-center">
         <span className="text-[7.5px] font-mono font-black uppercase tracking-tighter text-slate-100 opacity-90 truncate max-w-full">{badge.modNum}</span>
-        <span className="text-[9px] font-black uppercase tracking-tight text-white leading-tight font-sans mt-0.5 drop-shadow-sm text-center break-words line-clamp-2 max-w-full">{badge.title}</span>
+        <span className="text-[8.5px] font-black uppercase tracking-tight text-white leading-tight font-sans mt-0.5 drop-shadow-sm text-center break-words line-clamp-2 max-w-full">{badge.title}</span>
         <span className="text-[7px] font-mono font-bold opacity-85 uppercase tracking-tighter text-slate-200 truncate max-w-full mt-0.5">{badge.sub}</span>
         <div className="flex items-center justify-center gap-0.5 mt-1 text-amber-300 text-[7.5px]">
           ★ ★ ★
@@ -85,7 +124,7 @@ export default function CandidatePerformancePage() {
   const [perfData, setPerfData] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(false);
 
-  // Badges state with claimed statuses
+  // 5 Stage Milestone Badges state
   const [badgesList, setBadgesList] = useState<HexBadgeItem[]>(HEX_BADGES_LIST);
   const [selectedBadge, setSelectedBadge] = useState<HexBadgeItem | null>(null);
   const [isBadgeModalOpen, setIsBadgeModalOpen] = useState(false);
@@ -99,15 +138,18 @@ export default function CandidatePerformancePage() {
         if (res?.data) {
           setPerfData(res.data);
           const userBadges = res.data?.badges || [];
-          if (Array.isArray(userBadges) && userBadges.length > 0) {
-            setBadgesList((prev) =>
-              prev.map((b) => ({
+          const completedStagesCount = res.data?.completed_stages_count || res.data?.completed_stages || 10;
+
+          setBadgesList((prev) =>
+            prev.map((b) => {
+              const isUnlockedByStage = completedStagesCount >= b.reqStages || userBadges.includes(b.title);
+              return {
                 ...b,
-                claimed: userBadges.includes(b.title),
-                unlocked: b.unlocked || userBadges.includes(b.title)
-              }))
-            );
-          }
+                unlocked: isUnlockedByStage,
+                claimed: userBadges.includes(b.title)
+              };
+            })
+          );
         }
       } catch (e) {
         console.warn("Candidate performance load notice:", e);
@@ -126,22 +168,11 @@ export default function CandidatePerformancePage() {
   };
 
   const handleExecuteClaimBadge = async () => {
-    if (!selectedBadge) return;
+    if (!selectedBadge || !selectedBadge.unlocked) return;
     setIsClaiming(true);
     setClaimSuccessMsg(null);
 
     try {
-      if (!selectedBadge.unlocked) {
-        // Spend 100 XP Coins to unlock early
-        await apiFetch("/candidates/spend-xp", {
-          method: "POST",
-          body: JSON.stringify({
-            amount: 100,
-            reason: `Unlocked ${selectedBadge.title} Badge Early`
-          })
-        });
-      }
-
       await apiFetch("/candidates/claim-badge", {
         method: "POST",
         body: JSON.stringify({
@@ -160,18 +191,14 @@ export default function CandidatePerformancePage() {
         window.dispatchEvent(new Event("userProfileUpdated"));
       }
 
-      const msg = !selectedBadge.unlocked
-        ? `🎉 100 XP Coins Deducted! Badge '${selectedBadge.title}' Unlocked & Synced to Leaderboard!`
-        : `🎉 Badge '${selectedBadge.title}' Claimed! +50 XP Added to Profile & Leaderboard!`;
-
-      setClaimSuccessMsg(msg);
+      setClaimSuccessMsg(`🎉 Badge '${selectedBadge.title}' Claimed & Showcased on Leaderboard Profile!`);
     } catch (e: any) {
       setBadgesList((prev) =>
         prev.map((b) =>
           b.id === selectedBadge.id ? { ...b, unlocked: true, claimed: true } : b
         )
       );
-      setClaimSuccessMsg(`🎉 Badge '${selectedBadge.title}' Claimed! Synced to Leaderboard.`);
+      setClaimSuccessMsg(`🎉 Badge '${selectedBadge.title}' Claimed! Showcased on Profile.`);
     } finally {
       setIsClaiming(false);
     }
@@ -256,7 +283,7 @@ export default function CandidatePerformancePage() {
 
       </div>
 
-      {/* 🏅 3D HEXAGON CURRICULUM BADGES & CLAIM ENGINE (MATCHING LEADERBOARD) */}
+      {/* 🏅 3D HEXAGON STAGE MILESTONE BADGES & CLAIM ENGINE */}
       <div className="p-6 sm:p-8 rounded-[32px] bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-800 shadow-xl flex flex-col gap-6">
         
         <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
@@ -264,11 +291,11 @@ export default function CandidatePerformancePage() {
             <div className="flex items-center gap-2">
               <Award className="w-5 h-5 text-[#FF9900]" />
               <h3 className="text-base sm:text-lg font-black text-slate-900 dark:text-white uppercase tracking-tight">
-                Curriculum Badges & Career Milestones ({badgesList.length} Badges)
+                Curriculum Stage Milestones ({badgesList.length} Badges)
               </h3>
             </div>
             <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
-              Click any 3D Hexagon badge to <strong>Claim +50 XP Bonus</strong> and showcase it live on your Leaderboard Profile!
+              Badges unlock automatically as you complete Stage 5, Stage 10, Stage 15, Stage 20 & Stage 30 of your curriculum!
             </p>
           </div>
 
@@ -277,22 +304,22 @@ export default function CandidatePerformancePage() {
           </span>
         </div>
 
-        {/* 3D Hexagon Badges Grid */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-6 items-center justify-items-center py-2">
+        {/* 3D Hexagon Badges Grid (5 Stage Badges) */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-6 items-center justify-items-center py-2">
           {badgesList.map((badge) => (
             <div key={badge.id} className="flex flex-col items-center gap-2 text-center">
               <HexagonBadge badge={badge} onClick={() => handleOpenBadgeModal(badge)} />
               
               <div className="flex flex-col items-center">
                 <span className="text-xs font-black text-slate-900 dark:text-white line-clamp-1">{badge.title}</span>
-                <span className={`text-[10px] font-extrabold px-2 py-0.5 rounded-full uppercase mt-1 ${
+                <span className={`text-[10px] font-extrabold px-2.5 py-0.5 rounded-full uppercase mt-1 ${
                   badge.claimed
                     ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-500/40"
                     : badge.unlocked
                     ? "bg-[#FF9900] text-slate-950 font-black cursor-pointer animate-pulse"
                     : "bg-slate-200 dark:bg-slate-800 text-slate-500"
                 }`}>
-                  {badge.claimed ? "✓ Claimed" : badge.unlocked ? "Claim +50 XP" : "Locked"}
+                  {badge.claimed ? "✓ Claimed" : badge.unlocked ? "Claim Badge" : `Locked (Stage ${badge.reqStages})`}
                 </span>
               </div>
             </div>
@@ -435,28 +462,28 @@ export default function CandidatePerformancePage() {
               <div className="w-full flex flex-col gap-3 pt-2">
                 <button
                   onClick={handleExecuteClaimBadge}
-                  disabled={isClaiming}
-                  className="w-full py-4 rounded-2xl font-black text-xs text-slate-950 bg-gradient-to-r from-[#FF6B00] via-amber-400 to-orange-400 hover:from-amber-400 hover:to-orange-500 shadow-xl shadow-[#FF6B00]/25 flex items-center justify-center gap-2 transition-all cursor-pointer uppercase tracking-wider disabled:opacity-50"
+                  disabled={isClaiming || !selectedBadge.unlocked}
+                  className="w-full py-3.5 rounded-2xl font-black text-xs text-slate-950 bg-gradient-to-r from-[#FF6B00] via-amber-400 to-orange-400 hover:from-amber-400 hover:to-orange-500 shadow-xl shadow-[#FF6B00]/25 flex items-center justify-center gap-2 transition-all cursor-pointer uppercase tracking-wider disabled:opacity-50"
                 >
                   {isClaiming ? (
                     <>
                       <Loader2 className="w-4 h-4 animate-spin" />
-                      <span>Processing DB Transaction...</span>
+                      <span>Syncing Profile Badge...</span>
                     </>
                   ) : !selectedBadge.unlocked ? (
                     <>
-                      <span>🪙 Unlock Early (Spend 100 XP Coins) & Sync 🚀</span>
+                      <span>🔒 Complete Stage {selectedBadge.reqStages} to Unlock Badge</span>
                     </>
                   ) : (
                     <>
                       <Sparkles className="w-4 h-4 text-slate-950" />
-                      <span>Claim +50 XP & Show on Leaderboard 🚀</span>
+                      <span>Claim Badge & Showcase on Profile 🚀</span>
                     </>
                   )}
                 </button>
 
                 <span className="text-[10px] text-slate-400 font-mono">
-                  🔒 Persisted to PostgreSQL DB • Instant Leaderboard Badge Sync
+                  🔒 Auto-Unlocked at Stage {selectedBadge.reqStages} • Leaderboard Profile Sync
                 </span>
               </div>
             )}

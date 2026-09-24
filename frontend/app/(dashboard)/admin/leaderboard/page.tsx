@@ -15,15 +15,15 @@ interface CurriculumBadge {
   modNum: string;
   title: string;
   sub: string;
-  variant: "teal" | "red" | "amber" | "purple" | "blue";
+  variant: "teal" | "amber" | "purple" | "blue" | "red";
 }
 
 const MODULE_BADGES: CurriculumBadge[] = [
-  { id: "mod-1", modNum: "MODULE 01", title: "FOUNDATIONS & AI", sub: "CloudOpsHub", variant: "teal" },
-  { id: "mod-2", modNum: "MODULE 02", title: "LINUX", sub: "UBUNTU + GCP", variant: "red" },
-  { id: "mod-3", modNum: "MODULE 03", title: "AWS", sub: "SERVICES", variant: "amber" },
-  { id: "mod-4", modNum: "MODULE 04", title: "CI/CD", sub: "GIT & JENKINS", variant: "purple" },
-  { id: "mod-5", modNum: "MODULE 05", title: "KUBERNETES", sub: "EKS + HELM", variant: "blue" },
+  { id: "mod-1", modNum: "STAGE 05", title: "LINUX & CLOUD", sub: "Stage 5 Master", variant: "teal" },
+  { id: "mod-2", modNum: "STAGE 10", title: "AWS & CI/CD", sub: "Stage 10 Master", variant: "amber" },
+  { id: "mod-3", modNum: "STAGE 15", title: "KUBERNETES", sub: "Stage 15 Master", variant: "purple" },
+  { id: "mod-4", modNum: "STAGE 20", title: "DEVSECOPS", sub: "Stage 20 Master", variant: "blue" },
+  { id: "mod-5", modNum: "STAGE 30", title: "40 LPA BOSS", sub: "Stage 30 Legend", variant: "red" },
 ];
 
 const HexagonBadge = ({ badge }: { badge: CurriculumBadge }) => {

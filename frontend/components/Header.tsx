@@ -191,7 +191,7 @@ export function Header({ onToggleMobileSidebar }: HeaderProps) {
   const candidateRole = (mounted && user?.role === "ADMIN") ? "Administrator" : ((mounted && candProfile?.target_role) || "Cloud Engineer");
 
   return (
-    <header className="flex items-center justify-between gap-1.5 sm:gap-3 p-2.5 sm:p-3.5 px-3 sm:px-5 rounded-2xl sm:rounded-3xl bg-white/90 dark:bg-[#090e1a]/90 backdrop-blur-xl border border-slate-200/80 dark:border-slate-800/90 shadow-md shadow-slate-950/5 mb-4 sm:mb-6 font-sans transition-all relative z-40 w-full">
+    <header className="flex items-center justify-between gap-1.5 sm:gap-3 p-2.5 sm:p-3.5 px-3 sm:px-5 rounded-2xl sm:rounded-3xl bg-white/90 dark:bg-[#090e1a]/90 backdrop-blur-xl border border-slate-200/80 dark:border-slate-800/90 shadow-md shadow-slate-950/5 mb-4 sm:mb-6 font-sans transition-all relative z-30 w-full">
       
       {/* Left Brand / Assessment OS Badge & Mobile Hamburger Menu */}
       <div className="flex items-center gap-1.5 sm:gap-3 min-w-0">

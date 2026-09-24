@@ -145,13 +145,13 @@ export function Sidebar({ isOpenMobile = false, onCloseMobile }: SidebarProps) {
       {isOpenMobile && (
         <div 
           onClick={onCloseMobile}
-          className="fixed inset-0 bg-slate-950/60 backdrop-blur-xs z-40 lg:hidden transition-opacity"
+          className="fixed inset-0 bg-slate-950/60 backdrop-blur-xs z-50 lg:hidden transition-opacity"
         />
       )}
 
       <aside className={`
         w-[260px] h-screen border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-[#080d1a] 
-        flex flex-col overflow-y-auto shrink-0 z-40 font-sans transition-transform duration-300
+        flex flex-col overflow-y-auto shrink-0 z-50 font-sans transition-transform duration-300
         fixed top-0 left-0
         ${isOpenMobile ? "translate-x-0 shadow-2xl" : "-translate-x-full lg:translate-x-0"}
       `}>
