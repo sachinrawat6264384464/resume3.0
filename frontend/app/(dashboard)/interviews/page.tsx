@@ -511,18 +511,13 @@ export default function InterviewsPage() {
       <div className="relative z-10 p-6 sm:p-10 rounded-[32px] bg-white dark:bg-slate-900/90 border-2 border-slate-200 dark:border-slate-800 shadow-xl dark:shadow-2xl flex flex-col md:flex-row items-center justify-between gap-6 backdrop-blur-xl">
         
         <div className="flex flex-col gap-3 max-w-3xl">
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#FF6B00]/10 border border-[#FF6B00]/30 text-[#FF6B00] text-xs font-black tracking-wider uppercase w-fit">
-            <Sparkles className="w-4 h-4 text-[#FF6B00]" />
-            <span>TRACK 1 FREE (STAGES 1-5) • ONE-TIME ₹50 PRO PASS (UNLOCKS ALL STAGES 6-30)</span>
-          </div>
-
           <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight text-slate-900 dark:text-white uppercase">
             MOCK INTERVIEW <span className="text-[#FF6B00]">CHALLENGE JOURNEY</span>
           </h1>
 
           <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 font-medium leading-relaxed">
             <strong className="text-slate-900 dark:text-white">"Learn Today. Implement Today. Build Your Career for a Lifetime."</strong><br />
-            Track 1 (Stages 1–5) is 100% Free! Complete stages sequentially. Pay ₹50 ONCE (One-Time Lifetime Pass) to unlock all remaining Tracks 2 to 5.
+            Complete stages sequentially to master real-world Cloud & DevOps engineering challenges.
           </p>
         </div>
 
@@ -604,7 +599,7 @@ export default function InterviewsPage() {
       <div className="relative z-10 p-2 sm:p-3 rounded-2xl bg-white/90 dark:bg-slate-900/90 border-2 border-slate-200 dark:border-slate-800 shadow-md backdrop-blur-xl flex items-center gap-2.5 overflow-x-auto w-full max-w-full scroll-smooth">
         {[
           { key: "ALL", icon: "🔥", title: "All 30 Stages", badge: "ALL", badgeClass: "bg-slate-200/70 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-300 dark:border-slate-700" },
-          { key: "LEVEL1", icon: "🐧", title: "Track 1: Foundation", badge: "1-5 FREE", badgeClass: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30" },
+          { key: "LEVEL1", icon: "🐧", title: "Track 1: Foundation", badge: "FREE", badgeClass: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30" },
           { key: "LEVEL2", icon: "☁️", title: "Track 2: Cloud", badge: "PRO", badgeClass: "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30" },
           { key: "LEVEL3", icon: "🚀", title: "Track 3: DevOps", badge: "PRO", badgeClass: "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30" },
           { key: "LEVEL4", icon: "⚡", title: "Track 4: Advanced", badge: "PRO", badgeClass: "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30" },
