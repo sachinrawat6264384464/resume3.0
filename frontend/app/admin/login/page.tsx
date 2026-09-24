@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { 
   ShieldCheck, Lock, Mail, Terminal, ArrowRight, Loader2, 
-  Sparkles, Shield, UserCheck, KeyRound, AlertCircle, ArrowLeft
+  KeyRound, AlertCircle, ArrowLeft
 } from "lucide-react";
 import { useAuthStore } from "@/lib/store";
 import { apiFetch } from "@/lib/api";
@@ -15,18 +15,24 @@ export default function AdminLoginPage() {
   const router = useRouter();
   const setAuth = useAuthStore((state) => state.setAuth);
 
-  const [email, setEmail] = useState("admin@cloudops.internal");
-  const [password, setPassword] = useState("Admin@12345");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const handleAdminLogin = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
-    setIsLoading(true);
     setError(null);
 
-    const loginEmail = email.trim() || "admin@cloudops.internal";
-    const loginPassword = password.trim() || "Admin@12345";
+    const loginEmail = email.trim();
+    const loginPassword = password.trim();
+
+    if (!loginEmail || !loginPassword) {
+      setError("Please enter your administrator email address and password.");
+      return;
+    }
+
+    setIsLoading(true);
 
     try {
       const res = await apiFetch("/auth/login", {
@@ -43,7 +49,7 @@ export default function AdminLoginPage() {
         return;
       }
     } catch (err: any) {
-      console.warn("Backend auth login notice, using fallback admin auth:", err);
+      console.warn("Backend auth login notice, trying mock admin login fallback:", err);
     }
 
     try {
@@ -52,7 +58,7 @@ export default function AdminLoginPage() {
         body: JSON.stringify({
           role: "ADMIN",
           email: loginEmail,
-          name: "Alex Vance (Admin)"
+          name: loginEmail.split("@")[0] || "Administrator"
         })
       });
 
@@ -65,12 +71,12 @@ export default function AdminLoginPage() {
       console.warn("Mock auth notice:", mockErr);
     }
 
-    // Direct Instant Admin Authentication Fallback
+    // Direct Admin Authentication Fallback
     setAuth({
       id: "admin-001",
       organization_id: "org-001",
       email: loginEmail,
-      full_name: "Alex Vance (Admin)",
+      full_name: loginEmail.split("@")[0]?.toUpperCase() || "ADMIN",
       role: "ADMIN",
       is_active: true,
       created_at: new Date().toISOString()
@@ -81,10 +87,10 @@ export default function AdminLoginPage() {
   };
 
   return (
-    <div className="min-h-screen w-full bg-slate-950 text-slate-100 flex flex-col justify-between font-sans relative overflow-x-hidden select-none">
+    <div className="min-h-screen w-full bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col justify-between font-sans relative overflow-x-hidden select-none transition-colors duration-300">
       
       {/* Background Tech Mesh Glow */}
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))] from-[#FF6B00]/15 via-slate-950 to-slate-950 pointer-events-none" />
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))] from-[#FF6B00]/15 via-slate-100 dark:via-slate-950 to-slate-50 dark:to-slate-950 pointer-events-none" />
       <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] sm:w-[600px] h-[300px] sm:h-[600px] bg-[#FF6B00]/10 rounded-full blur-[100px] sm:blur-[140px] pointer-events-none" />
 
       {/* Top Bar Header */}
@@ -94,7 +100,7 @@ export default function AdminLoginPage() {
             <Terminal className="w-4 h-4 sm:w-5 sm:h-5" />
           </div>
           <div className="flex flex-col">
-            <span className="text-base sm:text-lg font-black text-white leading-none">
+            <span className="text-base sm:text-lg font-black text-slate-900 dark:text-white leading-none">
               CloudOps <span className="text-[#FF6B00]">AI</span>
             </span>
             <span className="text-[9px] sm:text-[10px] font-mono font-black text-[#FF6B00] uppercase tracking-widest mt-0.5">
@@ -106,9 +112,9 @@ export default function AdminLoginPage() {
         <div className="flex items-center gap-2 sm:gap-3 shrink-0">
           <Link 
             href="/login"
-            className="px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl bg-slate-900 border border-slate-800 text-[11px] sm:text-xs font-bold text-slate-300 hover:text-white hover:border-[#FF6B00]/50 transition-all flex items-center gap-1.5"
+            className="px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-[11px] sm:text-xs font-bold text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:border-[#FF6B00]/50 transition-all flex items-center gap-1.5 shadow-xs"
           >
-            <ArrowLeft className="w-3.5 h-3.5" />
+            <ArrowLeft className="w-3.5 h-3.5 text-[#FF6B00]" />
             <span>Candidate Portal Login</span>
           </Link>
           <ThemeToggle />
@@ -117,7 +123,7 @@ export default function AdminLoginPage() {
 
       {/* Main Admin Login Card Container */}
       <main className="relative z-10 flex-1 flex items-center justify-center px-3 sm:px-4 py-4 sm:py-12 w-full">
-        <div className="w-full max-w-[420px] p-4 xs:p-6 sm:p-10 rounded-2xl sm:rounded-[36px] bg-slate-900/95 border-2 border-[#FF6B00]/40 shadow-2xl backdrop-blur-2xl flex flex-col gap-4 sm:gap-6 relative my-auto">
+        <div className="w-full max-w-[420px] p-4 xs:p-6 sm:p-10 rounded-2xl sm:rounded-[36px] bg-white/95 dark:bg-slate-900/95 border-2 border-[#FF6B00]/40 shadow-2xl backdrop-blur-2xl flex flex-col gap-4 sm:gap-6 relative my-auto">
           
           <div className="absolute top-0 inset-x-0 h-1.5 sm:h-2 bg-gradient-to-r from-[#FF6B00] via-amber-500 to-orange-500 rounded-t-2xl sm:rounded-t-[36px]" />
 
@@ -132,17 +138,17 @@ export default function AdminLoginPage() {
               <span className="truncate">ADMINISTRATOR AUTH PORTAL</span>
             </div>
 
-            <h1 className="text-xl sm:text-3xl font-black text-white tracking-tight mt-0.5">
+            <h1 className="text-xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight mt-0.5">
               Sign In to Admin OS
             </h1>
-            <p className="text-[11px] sm:text-xs text-slate-400 font-medium leading-relaxed max-w-xs">
+            <p className="text-[11px] sm:text-xs text-slate-600 dark:text-slate-400 font-medium leading-relaxed max-w-xs">
               Restricted management portal for 30-stage assessment blueprints, candidate attempt streams, and AI telemetry.
             </p>
           </div>
 
           {error && (
-            <div className="p-3 rounded-xl sm:rounded-2xl bg-rose-950/80 border border-rose-800 text-xs font-bold text-rose-300 flex items-center gap-2">
-              <AlertCircle className="w-4 h-4 text-rose-400 shrink-0" />
+            <div className="p-3 rounded-xl sm:rounded-2xl bg-rose-50 dark:bg-rose-950/80 border border-rose-200 dark:border-rose-800 text-xs font-bold text-rose-700 dark:text-rose-300 flex items-center gap-2">
+              <AlertCircle className="w-4 h-4 text-rose-500 shrink-0" />
               <span>{error}</span>
             </div>
           )}
@@ -151,7 +157,7 @@ export default function AdminLoginPage() {
           <form onSubmit={handleAdminLogin} className="flex flex-col gap-3.5 sm:gap-4">
             
             <div className="flex flex-col gap-1 sm:gap-1.5">
-              <label className="text-[11px] sm:text-xs font-black text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
+              <label className="text-[11px] sm:text-xs font-black text-slate-800 dark:text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
                 <Mail className="w-3.5 h-3.5 text-[#FF6B00]" />
                 Administrator Email Address:
               </label>
@@ -161,12 +167,12 @@ export default function AdminLoginPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="admin@cloudops.internal"
-                className="w-full px-3.5 py-2.5 sm:px-4 sm:py-3.5 rounded-xl sm:rounded-2xl bg-slate-950 border-2 border-slate-800 text-xs font-mono font-bold text-white focus:outline-none focus:border-[#FF6B00] transition-colors"
+                className="w-full px-3.5 py-2.5 sm:px-4 sm:py-3.5 rounded-xl sm:rounded-2xl bg-slate-50 dark:bg-slate-950 border-2 border-slate-200 dark:border-slate-800 text-xs font-mono font-bold text-slate-900 dark:text-white focus:outline-none focus:border-[#FF6B00] transition-colors"
               />
             </div>
 
             <div className="flex flex-col gap-1 sm:gap-1.5">
-              <label className="text-[11px] sm:text-xs font-black text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
+              <label className="text-[11px] sm:text-xs font-black text-slate-800 dark:text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
                 <Lock className="w-3.5 h-3.5 text-[#FF6B00]" />
                 Password:
               </label>
@@ -176,7 +182,7 @@ export default function AdminLoginPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••••••"
-                className="w-full px-3.5 py-2.5 sm:px-4 sm:py-3.5 rounded-xl sm:rounded-2xl bg-slate-950 border-2 border-slate-800 text-xs font-mono font-bold text-white focus:outline-none focus:border-[#FF6B00] transition-colors"
+                className="w-full px-3.5 py-2.5 sm:px-4 sm:py-3.5 rounded-xl sm:rounded-2xl bg-slate-50 dark:bg-slate-950 border-2 border-slate-200 dark:border-slate-800 text-xs font-mono font-bold text-slate-900 dark:text-white focus:outline-none focus:border-[#FF6B00] transition-colors"
               />
             </div>
 
@@ -199,19 +205,6 @@ export default function AdminLoginPage() {
               )}
             </button>
           </form>
-
-          {/* Quick One-Click Admin Demo Login */}
-          <div className="pt-3 border-t border-slate-800/80 flex flex-col gap-2">
-            <button
-              type="button"
-              onClick={() => handleAdminLogin()}
-              disabled={isLoading}
-              className="w-full py-2.5 sm:py-3 rounded-xl sm:rounded-2xl font-black text-[11px] sm:text-xs text-amber-400 bg-amber-950/40 border border-amber-800/60 hover:bg-amber-950/80 flex items-center justify-center gap-1.5 transition-all cursor-pointer"
-            >
-              <Sparkles className="w-4 h-4 text-amber-400 shrink-0" />
-              <span>⚡ One-Click Admin Login (Alex Vance)</span>
-            </button>
-          </div>
 
         </div>
       </main>
