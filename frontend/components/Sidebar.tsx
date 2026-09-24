@@ -84,7 +84,7 @@ export function Sidebar({ isOpenMobile = false, onCloseMobile }: SidebarProps) {
 
   const isUserAdmin = user?.role === "ADMIN" || user?.role === "SUPER_ADMIN" || (user as any)?.is_admin === true || user?.email === "admin@cloudops.internal";
 
-  const isAdminMode = pathname.startsWith("/admin") || process.env.NEXT_PUBLIC_IS_ADMIN_PORTAL === "true";
+  const isAdminMode = isUserAdmin && (pathname.startsWith("/admin") || process.env.NEXT_PUBLIC_IS_ADMIN_PORTAL === "true");
 
   const candidateNavItems = [
     { label: "Candidate Dashboard", href: "/dashboard", icon: LayoutDashboard },

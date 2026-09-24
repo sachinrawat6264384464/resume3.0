@@ -15,12 +15,24 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     setMounted(true);
   }, []);
 
-  const isAdminUser = 
-    process.env.NEXT_PUBLIC_IS_ADMIN_PORTAL === "true" ||
-    user?.role === "ADMIN" || 
-    user?.role === "SUPER_ADMIN" || 
-    (user as any)?.is_admin === true || 
-    user?.email === "admin@cloudops.internal";
+  const getIsAdminUser = () => {
+    if (process.env.NEXT_PUBLIC_IS_ADMIN_PORTAL === "true") return true;
+    let currentUser = user;
+    if (!currentUser && typeof window !== "undefined") {
+      try {
+        const stored = localStorage.getItem("auth_user");
+        if (stored) currentUser = JSON.parse(stored);
+      } catch {}
+    }
+    return (
+      currentUser?.role === "ADMIN" ||
+      currentUser?.role === "SUPER_ADMIN" ||
+      (currentUser as any)?.is_admin === true ||
+      currentUser?.email === "admin@cloudops.internal"
+    );
+  };
+
+  const isAdminUser = getIsAdminUser();
 
   useEffect(() => {
     if (mounted && !isAdminUser && !pathname.startsWith("/admin/login")) {
@@ -30,8 +42,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   if (!mounted || (!isAdminUser && !pathname.startsWith("/admin/login"))) {
     return (
-      <div className="flex-1 flex items-center justify-center min-h-[60vh]">
+      <div className="flex-1 flex flex-col items-center justify-center min-h-[60vh] gap-3">
         <Loader2 className="w-8 h-8 text-[#FF6B00] animate-spin" />
+        <span className="text-xs font-mono font-bold text-slate-400 uppercase tracking-widest">
+          Authenticating Administrator Session...
+        </span>
       </div>
     );
   }

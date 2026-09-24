@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { useAuthStore } from "@/lib/store";
 import { Loader2 } from "lucide-react";
 import { Sidebar } from "@/components/Sidebar";
@@ -9,11 +9,13 @@ import { Header } from "@/components/Header";
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
-  const { isAuthenticated, setAuth } = useAuthStore();
+  const pathname = usePathname();
+  const { user, setAuth } = useAuthStore();
   const [mounted, setMounted] = useState(false);
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
 
   useEffect(() => {
+    setMounted(true);
     // Restore session from localStorage if present
     const storedToken = localStorage.getItem("auth_token");
     const storedUser = localStorage.getItem("auth_user");
@@ -29,6 +31,45 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       }
     }
   }, [setAuth]);
+
+  // Synchronous check for Admin user session
+  const getIsAdminUser = () => {
+    if (process.env.NEXT_PUBLIC_IS_ADMIN_PORTAL === "true") return true;
+    let currentUser = user;
+    if (!currentUser && typeof window !== "undefined") {
+      try {
+        const stored = localStorage.getItem("auth_user");
+        if (stored) currentUser = JSON.parse(stored);
+      } catch {}
+    }
+    return (
+      currentUser?.role === "ADMIN" ||
+      currentUser?.role === "SUPER_ADMIN" ||
+      (currentUser as any)?.is_admin === true ||
+      currentUser?.email === "admin@cloudops.internal"
+    );
+  };
+
+  const isAdminRoute = pathname.startsWith("/admin");
+  const isAdminUser = getIsAdminUser();
+
+  useEffect(() => {
+    if (mounted && isAdminRoute && !isAdminUser) {
+      router.replace("/admin/login");
+    }
+  }, [mounted, isAdminRoute, isAdminUser, router]);
+
+  // If visiting an admin route without admin authentication, do NOT render candidate/admin sidebar layout
+  if (isAdminRoute && !isAdminUser) {
+    return (
+      <div className="min-h-screen w-full bg-slate-950 text-slate-100 flex flex-col items-center justify-center p-6">
+        <Loader2 className="w-9 h-9 text-[#FF6B00] animate-spin mb-3" />
+        <span className="text-xs font-mono font-bold text-slate-400 uppercase tracking-widest">
+          Redirecting to Administrator Login Portal...
+        </span>
+      </div>
+    );
+  }
 
   return (
     <div className="flex min-h-screen w-full max-w-full bg-slate-50 dark:bg-[#050810] relative overflow-x-hidden" suppressHydrationWarning>

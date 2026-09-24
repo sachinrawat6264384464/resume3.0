@@ -62,15 +62,22 @@ export default function AdminAnalyticsPage() {
 
   useEffect(() => {
     const isAdminPortalEnv = process.env.NEXT_PUBLIC_IS_ADMIN_PORTAL === "true";
-    const isAdminUser = user?.role === "ADMIN" || user?.role === "SUPER_ADMIN" || (user as any)?.is_admin === true;
+    let currentUser = user;
+    if (!currentUser && typeof window !== "undefined") {
+      try {
+        const stored = localStorage.getItem("auth_user");
+        if (stored) currentUser = JSON.parse(stored);
+      } catch {}
+    }
+    const isAdminUser =
+      currentUser?.role === "ADMIN" ||
+      currentUser?.role === "SUPER_ADMIN" ||
+      (currentUser as any)?.is_admin === true ||
+      currentUser?.email === "admin@cloudops.internal";
 
-    // Allow Admin portal access when in Admin environment OR when logged in with Admin Role.
-    // If logged in as CANDIDATE, redirect to Admin Login page so they can authenticate as Admin.
-    if (!isAdminPortalEnv && !isAdminUser && typeof window !== "undefined" && !window.location.hostname.includes("admin")) {
-      if (user?.role === "CANDIDATE") {
-        router.replace("/login?admin=true&notice=admin_required");
-        return;
-      }
+    if (!isAdminPortalEnv && !isAdminUser) {
+      router.replace("/admin/login");
+      return;
     }
 
     loadAnalytics();
