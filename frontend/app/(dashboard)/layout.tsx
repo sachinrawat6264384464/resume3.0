@@ -32,17 +32,19 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     }
   }, [setAuth]);
 
-  // Synchronous check for Admin user session
-  const getIsAdminUser = () => {
+  const isAdminRoute = pathname.startsWith("/admin");
+
+  // Synchronous check for Admin user session safely after mount
+  const checkIsAdmin = () => {
     if (process.env.NEXT_PUBLIC_IS_ADMIN_PORTAL === "true") return true;
     let currentUser = user;
-    if (!currentUser && typeof window !== "undefined") {
+    if (!currentUser && mounted && typeof window !== "undefined") {
       try {
         const stored = localStorage.getItem("auth_user");
         if (stored) currentUser = JSON.parse(stored);
       } catch {}
     }
-    return (
+    return Boolean(
       currentUser?.role === "ADMIN" ||
       currentUser?.role === "SUPER_ADMIN" ||
       (currentUser as any)?.is_admin === true ||
@@ -50,8 +52,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     );
   };
 
-  const isAdminRoute = pathname.startsWith("/admin");
-  const isAdminUser = getIsAdminUser();
+  const isAdminUser = checkIsAdmin();
 
   useEffect(() => {
     if (mounted && isAdminRoute && !isAdminUser) {
@@ -59,8 +60,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     }
   }, [mounted, isAdminRoute, isAdminUser, router]);
 
-  // If visiting an admin route without admin authentication, do NOT render candidate/admin sidebar layout
-  if (isAdminRoute && !isAdminUser) {
+  // If visiting an admin route without admin authentication after mount, render clean redirect screen
+  if (mounted && isAdminRoute && !isAdminUser) {
     return (
       <div className="min-h-screen w-full bg-slate-950 text-slate-100 flex flex-col items-center justify-center p-6">
         <Loader2 className="w-9 h-9 text-[#FF6B00] animate-spin mb-3" />
