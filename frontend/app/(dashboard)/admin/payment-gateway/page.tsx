@@ -313,30 +313,28 @@ export default function AdminPaymentGatewayPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             
           {/* PERMANENT ACTIVE PAYMENT GATEWAY SYSTEM STATUS BAR */}
-          <div className="p-5 rounded-2xl border-2 transition-all flex items-center justify-between shadow-lg bg-gradient-to-r from-emerald-950/80 via-emerald-900/40 to-slate-900 border-emerald-500/80 shadow-emerald-500/10">
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-2xl flex items-center justify-center text-white font-black shadow-md bg-emerald-600 shadow-emerald-600/40">
-                <ShieldCheck className="w-6 h-6 text-white" />
+          <div className="p-4 rounded-2xl border border-emerald-500/50 bg-gradient-to-r from-emerald-950/90 via-emerald-900/40 to-slate-900/90 shadow-md flex items-center justify-between gap-3 min-w-0">
+            <div className="flex items-center gap-2.5 min-w-0">
+              <div className="w-9 h-9 rounded-xl flex items-center justify-center text-white font-black bg-emerald-600 shadow-sm shrink-0">
+                <ShieldCheck className="w-5 h-5 text-white" />
               </div>
 
-              <div className="flex flex-col gap-0.5">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <span className="text-xs sm:text-sm font-black text-white uppercase tracking-tight">
-                    PAYMENT GATEWAY SYSTEM STATUS:
+              <div className="flex flex-col min-w-0">
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  <span className="text-xs font-black text-white uppercase tracking-tight">
+                    STATUS:
                   </span>
-                  <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-500 text-slate-950">
-                    🟢 GATEWAY ACTIVE
+                  <span className="px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider bg-emerald-500 text-slate-950 shrink-0">
+                    🟢 ACTIVE
+                  </span>
+                  <span className="px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-wider bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 shrink-0">
+                    ALWAYS ON
                   </span>
                 </div>
-                <span className="text-xs font-semibold text-slate-300">
-                  Candidates MUST pay fee to unlock Stages 6-30 (Payment Gateway Enabled)
+                <span className="text-[10.5px] font-medium text-slate-300 truncate">
+                  Fee required for Stages 6-30
                 </span>
               </div>
-            </div>
-
-            <div className="px-3.5 py-2 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-black uppercase tracking-wider shrink-0 flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-              <span>ALWAYS ON</span>
             </div>
           </div>
 
