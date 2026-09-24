@@ -17,7 +17,11 @@ class AdminService:
         self.db = db
 
     async def get_dashboard_analytics(self, org_id: str) -> AdminDashboardMetrics:
-        cand_stmt = select(func.count(Candidate.id))
+        cand_stmt = (
+            select(func.count(Candidate.id))
+            .join(User, Candidate.user_id == User.id)
+            .where(~User.email.like("%@cloudops.internal%"))
+        )
         total_candidates = (await self.db.execute(cand_stmt)).scalar() or 0
 
         att_stmt = (
@@ -145,6 +149,15 @@ class AdminService:
                     if "troubleshooting" in p_breakdown: pillar_sums["trouble"].append(p_breakdown["troubleshooting"])
                     if "practical_execution" in p_breakdown: pillar_sums["practical"].append(p_breakdown["practical_execution"])
                     if "communication" in p_breakdown: pillar_sums["comm"].append(p_breakdown["communication"])
+                else:
+                    if getattr(a, "technical_score", None) is not None:
+                        pillar_sums["technical"].append(a.technical_score)
+                        pillar_sums["practical"].append(a.technical_score)
+                        pillar_sums["trouble"].append(a.technical_score)
+                    if getattr(a, "overall_score", None) is not None:
+                        pillar_sums["arch"].append(a.overall_score)
+                    if getattr(a, "communication_score", None) is not None:
+                        pillar_sums["comm"].append(a.communication_score)
             
             pillar_scores = {
                 "technical_command": round(sum(pillar_sums["technical"]) / len(pillar_sums["technical"]), 1) if pillar_sums["technical"] else 0.0,
