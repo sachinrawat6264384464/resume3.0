@@ -125,8 +125,6 @@ export default function AdminLoginPage() {
       <main className="relative z-10 flex-1 flex items-center justify-center px-3 sm:px-4 py-4 sm:py-12 w-full">
         <div className="w-full max-w-[420px] p-4 xs:p-6 sm:p-10 rounded-2xl sm:rounded-[36px] bg-white/95 dark:bg-slate-900/95 border-2 border-[#FF6B00]/40 shadow-2xl backdrop-blur-2xl flex flex-col gap-4 sm:gap-6 relative my-auto">
           
-          <div className="absolute top-0 inset-x-0 h-1.5 sm:h-2 bg-gradient-to-r from-[#FF6B00] via-amber-500 to-orange-500 rounded-t-2xl sm:rounded-t-[36px]" />
-
           {/* Admin Header */}
           <div className="flex flex-col items-center text-center gap-1.5 sm:gap-2">
             <div className="w-10 h-10 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl bg-[#0B1E36] border-2 border-[#FF6B00]/40 flex items-center justify-center text-[#FF6B00] shadow-lg shadow-[#FF6B00]/20 mb-0.5">
@@ -166,7 +164,8 @@ export default function AdminLoginPage() {
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="admin@cloudops.internal"
+                placeholder="Enter admin email address"
+                autoComplete="off"
                 className="w-full px-3.5 py-2.5 sm:px-4 sm:py-3.5 rounded-xl sm:rounded-2xl bg-slate-50 dark:bg-slate-950 border-2 border-slate-200 dark:border-slate-800 text-xs font-mono font-bold text-slate-900 dark:text-white focus:outline-none focus:border-[#FF6B00] transition-colors"
               />
             </div>
@@ -181,7 +180,8 @@ export default function AdminLoginPage() {
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••••••"
+                placeholder="Enter password"
+                autoComplete="new-password"
                 className="w-full px-3.5 py-2.5 sm:px-4 sm:py-3.5 rounded-xl sm:rounded-2xl bg-slate-50 dark:bg-slate-950 border-2 border-slate-200 dark:border-slate-800 text-xs font-mono font-bold text-slate-900 dark:text-white focus:outline-none focus:border-[#FF6B00] transition-colors"
               />
             </div>
