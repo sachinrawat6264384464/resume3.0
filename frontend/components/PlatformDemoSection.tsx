@@ -21,6 +21,7 @@ interface CandidateServiceDemo {
   videoPlaceholderBg: string;
   accentColor: string;
   stats: { label: string; value: string }[];
+  videoUrl?: string;
 }
 
 const CANDIDATE_SERVICES: CandidateServiceDemo[] = [
@@ -40,6 +41,7 @@ const CANDIDATE_SERVICES: CandidateServiceDemo[] = [
     mockRoute: "/dashboard",
     videoPlaceholderBg: "from-[#0F172A] via-[#1E293B] to-[#0F172A]",
     accentColor: "text-[#FF6B00]",
+    videoUrl: "/vedio/candidate-dashboard.mp4",
     stats: [
       { label: "Stages Covered", value: "30 Stages" },
       { label: "Target Band", value: "₹18 – ₹40 LPA" },
@@ -184,20 +186,40 @@ export function PlatformDemoSection() {
   const [activeTabId, setActiveTabId] = useState<string>("dashboard");
   const [isPlaying, setIsPlaying] = useState<boolean>(true);
   const [isMuted, setIsMuted] = useState<boolean>(true);
-  const [progress, setProgress] = useState<number>(35);
+  const [progress, setProgress] = useState<number>(0);
+  const [currentTime, setCurrentTime] = useState<number>(0);
+  const [duration, setDuration] = useState<number>(0);
+  const videoRef = useRef<HTMLVideoElement>(null);
 
   const activeService = CANDIDATE_SERVICES.find(s => s.id === activeTabId) || CANDIDATE_SERVICES[0];
 
-  // Auto progress demo simulation scrubber
+  useEffect(() => {
+    if (videoRef.current && activeService.videoUrl) {
+      if (isPlaying) {
+        videoRef.current.play().catch(() => {});
+      } else {
+        videoRef.current.pause();
+      }
+    }
+  }, [isPlaying, activeTabId, activeService.videoUrl]);
+
+  // Auto progress demo simulation scrubber for services without video yet
   useEffect(() => {
     let interval: any;
-    if (isPlaying) {
+    if (isPlaying && !activeService.videoUrl) {
       interval = setInterval(() => {
         setProgress(prev => (prev >= 100 ? 0 : prev + 1));
       }, 150);
     }
     return () => clearInterval(interval);
-  }, [isPlaying]);
+  }, [isPlaying, activeService.videoUrl]);
+
+  const formatTime = (secs: number) => {
+    if (isNaN(secs) || secs <= 0) return "00:00";
+    const m = Math.floor(secs / 60);
+    const s = Math.floor(secs % 60);
+    return `${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`;
+  };
 
   return (
     <section className="relative z-10 py-16 sm:py-24 w-full bg-slate-900/60 dark:bg-[#070b14]/90 border-t border-b border-slate-800/80 backdrop-blur-xl">
@@ -252,7 +274,7 @@ export function PlatformDemoSection() {
           <div className="lg:col-span-7 flex flex-col rounded-[28px] bg-slate-950 border-2 border-slate-800 shadow-2xl overflow-hidden relative group">
             
             {/* Player Browser Header */}
-            <div className="px-4 py-3 bg-slate-900/90 border-b border-slate-800 flex items-center justify-between">
+            <div className="px-4 py-3 bg-slate-900/90 border-b border-slate-800 flex items-center justify-between z-20">
               <div className="flex items-center gap-2">
                 <span className="w-3 h-3 rounded-full bg-rose-500 inline-block"></span>
                 <span className="w-3 h-3 rounded-full bg-amber-500 inline-block"></span>
@@ -265,18 +287,46 @@ export function PlatformDemoSection() {
               </div>
 
               <span className="text-[10px] font-mono font-black text-[#FF6B00] bg-[#FF6B00]/15 px-2.5 py-0.5 rounded-full border border-[#FF6B00]/30">
-                LIVE DEMO
+                {activeService.videoUrl ? "LIVE VIDEO" : "LIVE DEMO"}
               </span>
             </div>
 
             {/* Video Canvas Container */}
             <div className={`relative flex-1 min-h-[340px] sm:min-h-[400px] bg-gradient-to-br ${activeService.videoPlaceholderBg} flex flex-col justify-between p-6 sm:p-8 overflow-hidden`}>
               
+              {/* REAL MP4 VIDEO PLAYER IF AVAILABLE */}
+              {activeService.videoUrl ? (
+                <video
+                  ref={videoRef}
+                  src={activeService.videoUrl}
+                  autoPlay
+                  loop
+                  playsInline
+                  muted={isMuted}
+                  onTimeUpdate={() => {
+                    if (videoRef.current && videoRef.current.duration) {
+                      setCurrentTime(videoRef.current.currentTime);
+                      setDuration(videoRef.current.duration);
+                      setProgress((videoRef.current.currentTime / videoRef.current.duration) * 100);
+                    }
+                  }}
+                  onLoadedMetadata={() => {
+                    if (videoRef.current) {
+                      setDuration(videoRef.current.duration);
+                    }
+                  }}
+                  className="absolute inset-0 w-full h-full object-cover z-0 cursor-pointer"
+                  onClick={() => setIsPlaying(!isPlaying)}
+                />
+              ) : null}
+
               {/* Background Animated Grid Overlay */}
-              <div className="absolute inset-0 bg-[linear-gradient(to_right,#1f2937_1px,transparent_1px),linear-gradient(to_bottom,#1f2937_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_50%,#000_70%,transparent_100%)] opacity-20 pointer-events-none"></div>
+              {!activeService.videoUrl && (
+                <div className="absolute inset-0 bg-[linear-gradient(to_right,#1f2937_1px,transparent_1px),linear-gradient(to_bottom,#1f2937_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_50%,#000_70%,transparent_100%)] opacity-20 pointer-events-none"></div>
+              )}
 
               {/* Top Service Badge Overlay */}
-              <div className="flex items-center justify-between z-10">
+              <div className="flex items-center justify-between z-10 pointer-events-none">
                 <div className="flex items-center gap-2.5 bg-slate-900/90 backdrop-blur-md px-3.5 py-1.5 rounded-2xl border border-slate-700/80 shadow-md">
                   <activeService.icon className={`w-4 h-4 ${activeService.accentColor}`} />
                   <span className="text-xs font-black text-white">{activeService.name}</span>
@@ -284,53 +334,57 @@ export function PlatformDemoSection() {
 
                 <div className="flex items-center gap-2 text-xs font-mono font-bold text-slate-300 bg-slate-900/90 backdrop-blur-md px-3 py-1.5 rounded-xl border border-slate-700/80">
                   <Eye className="w-3.5 h-3.5 text-[#FF6B00]" />
-                  <span>Preview Mode</span>
+                  <span>{activeService.videoUrl ? "Recorded Walkthrough" : "Preview Mode"}</span>
                 </div>
               </div>
 
-              {/* Center Play Pulse Overlay */}
-              <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 z-10">
-                <button
-                  onClick={() => setIsPlaying(!isPlaying)}
-                  className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-[#FF6B00] hover:bg-orange-500 text-white flex items-center justify-center shadow-2xl shadow-[#FF6B00]/50 hover:scale-110 active:scale-95 transition-all cursor-pointer group/btn"
-                >
-                  {isPlaying ? (
-                    <Pause className="w-8 h-8 sm:w-10 sm:h-10 fill-white" />
-                  ) : (
-                    <Play className="w-8 h-8 sm:w-10 sm:h-10 fill-white ml-1" />
-                  )}
-                </button>
-                <span className="text-xs font-mono font-bold text-slate-300 bg-slate-900/80 px-3 py-1 rounded-full border border-slate-800">
-                  {isPlaying ? "Demo Playing • Click to Pause" : "Click to Play Demo Video"}
-                </span>
-              </div>
+              {/* Center Play Pulse Overlay (Visible when paused or on hover) */}
+              {(!isPlaying || !activeService.videoUrl) && (
+                <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 z-10 bg-slate-950/40 backdrop-blur-xs">
+                  <button
+                    onClick={() => setIsPlaying(!isPlaying)}
+                    className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-[#FF6B00] hover:bg-orange-500 text-white flex items-center justify-center shadow-2xl shadow-[#FF6B00]/50 hover:scale-110 active:scale-95 transition-all cursor-pointer group/btn"
+                  >
+                    {isPlaying ? (
+                      <Pause className="w-8 h-8 sm:w-10 sm:h-10 fill-white" />
+                    ) : (
+                      <Play className="w-8 h-8 sm:w-10 sm:h-10 fill-white ml-1" />
+                    )}
+                  </button>
+                  <span className="text-xs font-mono font-bold text-slate-300 bg-slate-900/90 px-3.5 py-1 rounded-full border border-slate-800 shadow-md">
+                    {isPlaying ? "Demo Playing • Click to Pause" : "Click to Play Candidate Dashboard Video"}
+                  </span>
+                </div>
+              )}
 
               {/* Bottom Visual Mockup UI Card inside Canvas */}
-              <div className="z-10 bg-slate-900/90 backdrop-blur-xl border border-slate-700/80 p-4 sm:p-5 rounded-2xl flex flex-col gap-3 shadow-2xl">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-extrabold text-white flex items-center gap-2">
-                    <Sparkles className="w-3.5 h-3.5 text-[#FF6B00]" />
-                    {activeService.tagline}
-                  </span>
-                  <span className="text-[10px] font-mono text-emerald-400 font-bold bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/30">
-                    Active Module
-                  </span>
-                </div>
+              {!activeService.videoUrl && (
+                <div className="z-10 bg-slate-900/90 backdrop-blur-xl border border-slate-700/80 p-4 sm:p-5 rounded-2xl flex flex-col gap-3 shadow-2xl">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-extrabold text-white flex items-center gap-2">
+                      <Sparkles className="w-3.5 h-3.5 text-[#FF6B00]" />
+                      {activeService.tagline}
+                    </span>
+                    <span className="text-[10px] font-mono text-emerald-400 font-bold bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/30">
+                      Active Module
+                    </span>
+                  </div>
 
-                <div className="grid grid-cols-3 gap-2 pt-1 border-t border-slate-800">
-                  {activeService.stats.map((st, i) => (
-                    <div key={i} className="flex flex-col">
-                      <span className="text-[9px] font-mono text-slate-400 uppercase">{st.label}</span>
-                      <span className="text-xs font-mono font-black text-white">{st.value}</span>
-                    </div>
-                  ))}
+                  <div className="grid grid-cols-3 gap-2 pt-1 border-t border-slate-800">
+                    {activeService.stats.map((st, i) => (
+                      <div key={i} className="flex flex-col">
+                        <span className="text-[9px] font-mono text-slate-400 uppercase">{st.label}</span>
+                        <span className="text-xs font-mono font-black text-white">{st.value}</span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-              </div>
+              )}
 
             </div>
 
             {/* Video Controls Bar */}
-            <div className="px-4 py-3 bg-slate-900 border-t border-slate-800 flex items-center justify-between gap-4">
+            <div className="px-4 py-3 bg-slate-900 border-t border-slate-800 flex items-center justify-between gap-4 z-20">
               <div className="flex items-center gap-3">
                 <button
                   onClick={() => setIsPlaying(!isPlaying)}
@@ -340,14 +394,20 @@ export function PlatformDemoSection() {
                 </button>
 
                 <button
-                  onClick={() => setIsMuted(!isMuted)}
+                  onClick={() => {
+                    const nextMuted = !isMuted;
+                    setIsMuted(nextMuted);
+                    if (videoRef.current) {
+                      videoRef.current.muted = nextMuted;
+                    }
+                  }}
                   className="text-slate-400 hover:text-white transition-colors cursor-pointer"
                 >
-                  {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
+                  {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4 text-emerald-400" />}
                 </button>
 
                 <span className="text-[11px] font-mono text-slate-400 font-bold">
-                  00:{Math.floor(progress / 2).toString().padStart(2, '0')} / 01:30
+                  {activeService.videoUrl ? `${formatTime(currentTime)} / ${formatTime(duration)}` : `00:${Math.floor(progress / 2).toString().padStart(2, '0')} / 01:30`}
                 </span>
               </div>
 
@@ -357,6 +417,9 @@ export function PlatformDemoSection() {
                 const clickX = e.clientX - rect.left;
                 const newProgress = Math.round((clickX / rect.width) * 100);
                 setProgress(newProgress);
+                if (videoRef.current && activeService.videoUrl && videoRef.current.duration) {
+                  videoRef.current.currentTime = (newProgress / 100) * videoRef.current.duration;
+                }
               }}>
                 <div
                   className="h-full bg-gradient-to-r from-[#FF6B00] to-amber-500 rounded-full transition-all duration-150"
@@ -366,7 +429,18 @@ export function PlatformDemoSection() {
 
               <div className="flex items-center gap-2">
                 <span className="text-[9px] font-mono font-black text-slate-400 bg-slate-800 px-2 py-0.5 rounded uppercase">HD 1080p</span>
-                <Maximize2 className="w-4 h-4 text-slate-400 hover:text-white transition-colors cursor-pointer" />
+                <button
+                  onClick={() => {
+                    if (videoRef.current) {
+                      if (videoRef.current.requestFullscreen) {
+                        videoRef.current.requestFullscreen();
+                      }
+                    }
+                  }}
+                  className="text-slate-400 hover:text-white transition-colors cursor-pointer"
+                >
+                  <Maximize2 className="w-4 h-4" />
+                </button>
               </div>
             </div>
 
