@@ -328,79 +328,94 @@ export default function CandidatePerformancePage() {
 
       </div>
 
-      {/* 5-PILLAR RUBRIC AVERAGES & SPEECH TELEMETRY GRID */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+      {/* UNIFIED CANDIDATE PERFORMANCE & SKILL EVALUATION CARD */}
+      <div className="p-6 sm:p-8 rounded-[32px] bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-xl flex flex-col gap-6">
         
-        {/* LEFT: 5 PILLAR RUBRIC BREAKDOWN */}
-        <div className="lg:col-span-6 p-6 sm:p-8 rounded-[32px] bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-xl flex flex-col justify-between gap-6">
-          <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
-            <div className="flex flex-col gap-1">
-              <span className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-widest flex items-center gap-2">
-                <Award className="w-4 h-4 text-[#FF9900]" />
-                5-PILLAR ASSESSMENT RUBRIC AVERAGES
-              </span>
-              <span className="text-xs text-slate-500 font-medium">Cumulative weighted score across evaluated spoken answers</span>
-            </div>
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-slate-100 dark:border-slate-800 gap-2">
+          <div className="flex flex-col gap-1">
+            <h3 className="text-base sm:text-lg font-black text-slate-900 dark:text-white uppercase tracking-tight flex items-center gap-2">
+              <TrendingUp className="w-5 h-5 text-[#FF9900]" />
+              Candidate Performance & Skill Evaluation
+            </h3>
+            <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
+              Real-time skill mastery breakdown and AI-driven interview feedback.
+            </p>
           </div>
 
-          <div className="flex flex-col gap-4">
-            {[
-              { pillar: "Technical Accuracy (40%)", score: pillars.technical_accuracy, color: "from-[#FF6B00] to-[#FF9900]" },
-              { pillar: "Concept Coverage (25%)", score: pillars.concept_coverage, color: "from-amber-400 to-yellow-500" },
-              { pillar: "Reasoning Quality (20%)", score: pillars.reasoning_quality, color: "from-purple-500 to-indigo-500" },
-              { pillar: "Practical Knowledge (10%)", score: pillars.practical_knowledge, color: "from-emerald-500 to-teal-500" },
-              { pillar: "Communication Clarity (5%)", score: pillars.communication_clarity, color: "from-blue-500 to-cyan-500" }
-            ].map((p, idx) => (
-              <div key={idx} className="flex flex-col gap-1.5">
-                <div className="flex justify-between text-xs font-mono font-bold">
-                  <span className="text-slate-700 dark:text-slate-300">{p.pillar}</span>
-                  <span className="text-slate-900 dark:text-white font-black">{p.score}%</span>
-                </div>
-                <div className="w-full h-2.5 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
-                  <div className={`h-full bg-gradient-to-r ${p.color} rounded-full transition-all duration-500`} style={{ width: `${p.score}%` }} />
-                </div>
-              </div>
-            ))}
+          <div className="flex items-center gap-2">
+            <span className="px-3.5 py-1.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 text-xs font-black font-mono">
+              Overall Score: {readiness}%
+            </span>
           </div>
         </div>
 
-        {/* RIGHT: SPEECH & TELEMETRY ANALYTICS */}
-        <div className="lg:col-span-6 p-6 sm:p-8 rounded-[32px] bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-xl flex flex-col justify-between gap-6">
-          <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
-            <div className="flex flex-col gap-1">
-              <span className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-widest flex items-center gap-2">
-                <Mic className="w-4 h-4 text-emerald-500" />
-                SPEECH & TELEMETRY ANALYTICS
-              </span>
-              <span className="text-xs text-slate-500 font-medium">Non-psychological observable vocal indicators</span>
+        {/* 2 Column Body */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
+          
+          {/* Left Column: 5 Skill Mastery Progress Bars */}
+          <div className="lg:col-span-7 flex flex-col justify-between gap-4">
+            <span className="text-xs font-extrabold text-slate-400 uppercase tracking-wider">5-Pillar Skill Breakdown</span>
+
+            <div className="flex flex-col gap-3.5">
+              {[
+                { pillar: "Technical Accuracy (40%)", score: pillars.technical_accuracy, color: "from-[#FF6B00] to-[#FF9900]" },
+                { pillar: "Concept Coverage (25%)", score: pillars.concept_coverage, color: "from-amber-400 to-yellow-500" },
+                { pillar: "Reasoning & Logic (20%)", score: pillars.reasoning_quality, color: "from-purple-500 to-indigo-500" },
+                { pillar: "Practical Knowledge (10%)", score: pillars.practical_knowledge, color: "from-emerald-500 to-teal-500" },
+                { pillar: "Communication Clarity (5%)", score: pillars.communication_clarity, color: "from-blue-500 to-cyan-500" }
+              ].map((p, idx) => (
+                <div key={idx} className="flex flex-col gap-1.5">
+                  <div className="flex justify-between text-xs font-bold">
+                    <span className="text-slate-700 dark:text-slate-300">{p.pillar}</span>
+                    <span className="text-slate-900 dark:text-white font-mono font-black">{p.score}%</span>
+                  </div>
+                  <div className="w-full h-2.5 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
+                    <div className={`h-full bg-gradient-to-r ${p.color} rounded-full transition-all duration-500`} style={{ width: `${p.score}%` }} />
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200/80 dark:border-slate-800 flex flex-col gap-1">
-              <span className="text-[10px] font-mono text-slate-500 font-bold uppercase">Average Pacing</span>
-              <span className="text-2xl font-black text-slate-900 dark:text-white font-mono">{speech.pacing_wpm} WPM</span>
-              <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold font-mono">✓ Optimal Pacing</span>
+          {/* Right Column: AI Insights & Next Steps */}
+          <div className="lg:col-span-5 p-5 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200/80 dark:border-slate-800/80 flex flex-col justify-between gap-4">
+            <span className="text-xs font-extrabold text-slate-400 uppercase tracking-wider">AI Performance Insights</span>
+
+            <div className="flex flex-col gap-3">
+              <div className="p-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-start gap-3">
+                <div className="w-7 h-7 rounded-lg bg-orange-500/10 text-[#FF9900] flex items-center justify-center shrink-0 mt-0.5 font-bold text-xs">
+                  🎯
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-xs font-bold text-slate-900 dark:text-white">Target Focus Area</span>
+                  <span className="text-[11px] text-slate-500 dark:text-slate-400">Strengthen Linux & Cloud Systems fundamentals to maximize interview pass rate.</span>
+                </div>
+              </div>
+
+              <div className="p-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-start gap-3">
+                <div className="w-7 h-7 rounded-lg bg-emerald-500/10 text-emerald-500 flex items-center justify-center shrink-0 mt-0.5 font-bold text-xs">
+                  💬
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-xs font-bold text-slate-900 dark:text-white">Communication Pitch</span>
+                  <span className="text-[11px] text-slate-500 dark:text-slate-400">Clear delivery with STAR methodology pattern verified across spoken answers.</span>
+                </div>
+              </div>
+
+              <div className="p-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-start gap-3">
+                <div className="w-7 h-7 rounded-lg bg-blue-500/10 text-blue-500 flex items-center justify-center shrink-0 mt-0.5 font-bold text-xs">
+                  🚀
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-xs font-bold text-slate-900 dark:text-white">Next Milestone</span>
+                  <span className="text-[11px] text-slate-500 dark:text-slate-400">Complete curriculum stage challenges to unlock exclusive stage badges.</span>
+                </div>
+              </div>
             </div>
 
-            <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200/80 dark:border-slate-800 flex flex-col gap-1">
-              <span className="text-[10px] font-mono text-slate-500 font-bold uppercase">Filler Words</span>
-              <span className="text-2xl font-black text-slate-900 dark:text-white font-mono">{speech.filler_words_per_min} / min</span>
-              <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold font-mono">✓ Clear Delivery</span>
-            </div>
-
-            <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200/80 dark:border-slate-800 flex flex-col gap-1">
-              <span className="text-[10px] font-mono text-slate-500 font-bold uppercase">Structural Clarity</span>
-              <span className="text-2xl font-black text-slate-900 dark:text-white font-mono">{speech.structural_clarity} / 100</span>
-              <span className="text-[10px] text-blue-600 dark:text-blue-400 font-bold font-mono">STAR Methodology</span>
-            </div>
-
-            <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200/80 dark:border-slate-800 flex flex-col gap-1">
-              <span className="text-[10px] font-mono text-slate-500 font-bold uppercase">Confidence Signals</span>
-              <span className="text-2xl font-black text-slate-900 dark:text-white font-mono">{speech.confidence_signals} / 100</span>
-              <span className="text-[10px] text-purple-600 dark:text-purple-400 font-bold font-mono">Fluency & Tone</span>
-            </div>
           </div>
+
         </div>
 
       </div>
