@@ -27,7 +27,7 @@ interface PaymentTx {
 
 export default function AdminPaymentGatewayPage() {
   const [provider, setProvider] = useState("razorpay");
-  const [isEnabled, setIsEnabled] = useState(false);
+  const [isEnabled, setIsEnabled] = useState(true);
   const [isTestMode, setIsTestMode] = useState(true);
   const [publishableKey, setPublishableKey] = useState("");
   const [secretKey, setSecretKey] = useState("");
@@ -312,16 +312,10 @@ export default function AdminPaymentGatewayPage() {
           {/* Active Status Badge & Mode Toggle */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             
-          {/* HIGH-VISIBILITY SYSTEM MASTER ON/OFF TOGGLE SWITCH BAR */}
-          <div className={`p-5 rounded-2xl border-2 transition-all flex items-center justify-between shadow-lg ${
-            isEnabled 
-              ? "bg-gradient-to-r from-emerald-950/80 via-emerald-900/40 to-slate-900 border-emerald-500/80 shadow-emerald-500/10" 
-              : "bg-gradient-to-r from-rose-950/80 via-rose-900/40 to-slate-900 border-rose-500/80 shadow-rose-500/10"
-          }`}>
+          {/* PERMANENT ACTIVE PAYMENT GATEWAY SYSTEM STATUS BAR */}
+          <div className="p-5 rounded-2xl border-2 transition-all flex items-center justify-between shadow-lg bg-gradient-to-r from-emerald-950/80 via-emerald-900/40 to-slate-900 border-emerald-500/80 shadow-emerald-500/10">
             <div className="flex items-center gap-3">
-              <div className={`w-12 h-12 rounded-2xl flex items-center justify-center text-white font-black shadow-md ${
-                isEnabled ? "bg-emerald-600 shadow-emerald-600/40" : "bg-rose-600 shadow-rose-600/40"
-              }`}>
+              <div className="w-12 h-12 rounded-2xl flex items-center justify-center text-white font-black shadow-md bg-emerald-600 shadow-emerald-600/40">
                 <ShieldCheck className="w-6 h-6 text-white" />
               </div>
 
@@ -330,46 +324,20 @@ export default function AdminPaymentGatewayPage() {
                   <span className="text-xs sm:text-sm font-black text-white uppercase tracking-tight">
                     PAYMENT GATEWAY SYSTEM STATUS:
                   </span>
-                  <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider ${
-                    isEnabled ? "bg-emerald-500 text-slate-950" : "bg-rose-500 text-white"
-                  }`}>
-                    {isEnabled ? "🟢 GATEWAY ON" : "🔴 GATEWAY OFF"}
+                  <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-500 text-slate-950">
+                    🟢 GATEWAY ACTIVE
                   </span>
                 </div>
                 <span className="text-xs font-semibold text-slate-300">
-                  {isEnabled 
-                    ? "Candidates MUST pay fee to unlock Stages 6-30" 
-                    : "Payment requirement BYPASSED — All 30 Stages FREE for Candidates"}
+                  Candidates MUST pay fee to unlock Stages 6-30 (Payment Gateway Enabled)
                 </span>
               </div>
             </div>
 
-            {/* REAL SLIDING PILL ON / OFF TOGGLE BUTTON */}
-            <button
-              type="button"
-              onClick={() => handleToggleEnabled(!isEnabled)}
-              className={`relative w-24 h-11 rounded-full p-1 transition-colors duration-300 cursor-pointer flex items-center shadow-inner shrink-0 ${
-                isEnabled ? "bg-emerald-500" : "bg-rose-600"
-              }`}
-              title={isEnabled ? "Click to TURN OFF Payment Gateway" : "Click to TURN ON Payment Gateway"}
-            >
-              {/* Sliding Circle Knob */}
-              <div
-                className={`w-9 h-9 rounded-full bg-white shadow-md transform transition-transform duration-300 flex items-center justify-center font-black text-[10px] ${
-                  isEnabled ? "translate-x-13 text-emerald-700" : "translate-x-0 text-rose-700"
-                }`}
-              >
-                {isEnabled ? "ON" : "OFF"}
-              </div>
-
-              {/* Background labels */}
-              <span className={`absolute left-2.5 text-[9px] font-black uppercase text-white ${isEnabled ? "opacity-100" : "opacity-0"}`}>
-                ON
-              </span>
-              <span className={`absolute right-2.5 text-[9px] font-black uppercase text-white ${!isEnabled ? "opacity-100" : "opacity-0"}`}>
-                OFF
-              </span>
-            </button>
+            <div className="px-3.5 py-2 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-black uppercase tracking-wider shrink-0 flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+              <span>ALWAYS ON</span>
+            </div>
           </div>
 
             <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 flex items-center justify-between">

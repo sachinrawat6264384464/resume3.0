@@ -15,7 +15,7 @@ router = APIRouter(prefix="/admin/payment-gateway", tags=["Admin Payment Gateway
 
 class GatewayConfigRequest(BaseModel):
     provider_name: str = "razorpay"
-    is_enabled: bool = False
+    is_enabled: bool = True
     is_test_mode: bool = True
     publishable_key: Optional[str] = None
     secret_key: Optional[str] = None
@@ -144,7 +144,7 @@ async def update_payment_config(
     config = await get_or_create_singleton_config(db)
     now = datetime.now(timezone.utc)
 
-    config.is_enabled = req.is_enabled
+    config.is_enabled = True
     config.is_test_mode = req.is_test_mode
     
     if req.publishable_key is not None and req.publishable_key.strip():
