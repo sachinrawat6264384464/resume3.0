@@ -2,7 +2,7 @@ import secrets
 from fastapi import APIRouter, Depends, Query, status, HTTPException, Response
 from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, desc, func, and_
+from sqlalchemy import select, desc, func, and_, or_, delete
 from sqlalchemy.orm import selectinload
 from typing import Optional, List
 from datetime import datetime, timedelta, timezone
@@ -961,6 +961,7 @@ async def export_candidates_csv(
     from fastapi.responses import Response
     import csv
     import io
+    import json
 
     stmt = select(Candidate).options(selectinload(Candidate.user)).order_by(desc(Candidate.created_at))
     res = await db.execute(stmt)
@@ -968,18 +969,31 @@ async def export_candidates_csv(
 
     output = io.StringIO()
     writer = csv.writer(output)
-    writer.writerow(["Candidate ID", "Full Name", "Email", "Phone Number", "Target Role", "Readiness Score (%)", "Level", "XP", "Target Salary Band", "Created At"])
+    writer.writerow(["Candidate ID", "Full Name", "Email", "Phone Number", "Target Role", "LinkedIn URL", "Readiness Score (%)", "Level", "XP", "Target Salary Band", "Created At"])
 
     for c in candidates:
         email = c.user.email if c.user else c.email or ""
         phone = c.user.phone_number if c.user else c.phone or ""
         name = c.user.full_name if c.user else c.full_name or ""
+        
+        linkedin_url = ""
+        if c.resume_data_json and isinstance(c.resume_data_json, dict):
+            linkedin_url = c.resume_data_json.get("linkedin_url", "")
+        if not linkedin_url and c.notes:
+            try:
+                n_dict = json.loads(c.notes)
+                if isinstance(n_dict, dict):
+                    linkedin_url = n_dict.get("linkedin_url", "")
+            except Exception:
+                pass
+
         writer.writerow([
             c.id,
             name,
             email,
             phone,
             c.target_role or "Senior DevOps Engineer",
+            linkedin_url,
             round(c.readiness_score or 0, 1),
             c.level or 1,
             c.xp or 0,
@@ -994,6 +1008,85 @@ async def export_candidates_csv(
         content=csv_data,
         media_type="text/csv",
         headers={"Content-Disposition": "attachment; filename=AI_Interview_Candidates_Export.csv"}
+    )
+
+@router.delete("/{candidate_id}", response_model=StandardResponse[dict])
+async def delete_candidate(
+    candidate_id: str,
+    payload: dict = Depends(verify_auth_token),
+    db: AsyncSession = Depends(get_db)
+):
+    auth_svc = AuthService(db)
+    current_user = await auth_svc.get_current_user_from_payload(payload)
+
+    # Allow Admin or Super Admin to delete
+    if current_user.role not in ["ADMIN", "SUPER_ADMIN"] and getattr(current_user, "is_admin", False) is not True:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only administrators can delete candidate accounts."
+        )
+
+    stmt = select(Candidate).options(selectinload(Candidate.user)).where(Candidate.id == candidate_id)
+    res = await db.execute(stmt)
+    cand = res.scalar_one_or_none()
+
+    if not cand:
+        raise HTTPException(status_code=404, detail="Candidate not found")
+
+    user_id = cand.user_id
+    user_email = cand.user.email if cand.user else cand.email
+
+    from app.models import (
+        SupportTicket, CandidateRoadmap, CandidateCertificate,
+        StudyTask, Reminder, ResumeAudit, InterviewAttempt,
+        StageAttempt, QuestionAttempt, Recording, AuditLog, PaymentTransaction
+    )
+
+    # 1. Fetch Attempt IDs
+    att_stmt = select(InterviewAttempt.id).where(InterviewAttempt.candidate_id == cand.id)
+    att_res = await db.execute(att_stmt)
+    attempt_ids = att_res.scalars().all()
+
+    if attempt_ids:
+        await db.execute(delete(QuestionAttempt).where(QuestionAttempt.interview_attempt_id.in_(attempt_ids)))
+        await db.execute(delete(StageAttempt).where(StageAttempt.interview_attempt_id.in_(attempt_ids)))
+        await db.execute(delete(Recording).where(Recording.interview_attempt_id.in_(attempt_ids)))
+
+    # 2. Delete Interview Attempts
+    await db.execute(delete(InterviewAttempt).where(InterviewAttempt.candidate_id == cand.id))
+
+    # 3. Delete Candidate modules
+    await db.execute(delete(SupportTicket).where(SupportTicket.candidate_id == cand.id))
+    await db.execute(delete(CandidateRoadmap).where(CandidateRoadmap.candidate_id == cand.id))
+    await db.execute(delete(CandidateCertificate).where(CandidateCertificate.candidate_id == cand.id))
+    await db.execute(delete(StudyTask).where(StudyTask.candidate_id == cand.id))
+    await db.execute(delete(Reminder).where(Reminder.candidate_id == cand.id))
+    await db.execute(delete(ResumeAudit).where(ResumeAudit.candidate_id == cand.id))
+
+    if user_email:
+        await db.execute(delete(PaymentTransaction).where(
+            or_(PaymentTransaction.candidate_id == cand.id, PaymentTransaction.candidate_email == user_email)
+        ))
+
+    if user_id:
+        await db.execute(delete(AuditLog).where(AuditLog.user_id == user_id))
+
+    # 4. Delete Candidate row
+    await db.delete(cand)
+
+    # 5. Delete User row so user is permanently removed and cannot login
+    if user_id:
+        u_stmt = select(User).where(User.id == user_id)
+        u_res = await db.execute(u_stmt)
+        user_obj = u_res.scalar_one_or_none()
+        if user_obj:
+            await db.delete(user_obj)
+
+    await db.commit()
+
+    return StandardResponse(
+        message=f"Candidate profile '{cand.full_name or user_email}' and user login account permanently deleted from database.",
+        data={"deleted_id": candidate_id}
     )
 
 class ClaimBadgeRequest(BaseModel):

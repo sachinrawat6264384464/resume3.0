@@ -60,6 +60,18 @@ class CandidateService:
             passed = sum(1 for a in attempts if a.decision == "PASS")
             latest_attempt = sorted(attempts, key=lambda a: a.created_at, reverse=True)[0] if attempts else None
             
+            linkedin_url = None
+            if cand.resume_data_json and isinstance(cand.resume_data_json, dict):
+                linkedin_url = cand.resume_data_json.get("linkedin_url")
+            if not linkedin_url and cand.notes:
+                try:
+                    import json
+                    n_dict = json.loads(cand.notes)
+                    if isinstance(n_dict, dict):
+                        linkedin_url = n_dict.get("linkedin_url")
+                except Exception:
+                    pass
+
             output.append(CandidateWithAttemptsOut(
                 id=cand.id,
                 user_id=cand.user_id,
@@ -71,6 +83,16 @@ class CandidateService:
                 experience_level=cand.experience_level,
                 target_role=cand.target_role,
                 notes=cand.notes,
+                linkedin_url=linkedin_url,
+                resume_data_json=cand.resume_data_json or {},
+                xp=cand.xp or 0,
+                level=cand.level or 1,
+                streak_days=cand.streak_days or 1,
+                readiness_score=cand.readiness_score or 0.0,
+                target_salary_band=cand.target_salary_band or "₹8–12 LPA",
+                skills_matrix_json=cand.skills_matrix_json or {},
+                badges_json=cand.badges_json or [],
+                latest_ats_score=cand.latest_ats_score or 0.0,
                 user=cand.user,
                 total_attempts=total_attempts,
                 passed_interviews=passed,

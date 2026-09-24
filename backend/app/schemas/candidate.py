@@ -12,6 +12,8 @@ class CandidateBase(BaseSchema):
     experience_level: str = "JUNIOR"
     target_role: str = "CloudOps Engineer"
     notes: Optional[str] = None
+    linkedin_url: Optional[str] = None
+    resume_data_json: Dict[str, Any] = {}
     xp: int = 0
     level: int = 1
     streak_days: int = 1
