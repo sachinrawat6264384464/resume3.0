@@ -1026,15 +1026,36 @@ async def delete_candidate(
             detail="Only administrators can delete candidate accounts."
         )
 
-    stmt = select(Candidate).options(selectinload(Candidate.user)).where(Candidate.id == candidate_id)
+    # 1. Try to find Candidate by Candidate.id or Candidate.user_id
+    stmt = select(Candidate).options(selectinload(Candidate.user)).where(
+        or_(Candidate.id == candidate_id, Candidate.user_id == candidate_id)
+    )
     res = await db.execute(stmt)
     cand = res.scalar_one_or_none()
 
-    if not cand:
-        raise HTTPException(status_code=404, detail="Candidate not found")
+    user_obj = None
+    user_id = None
+    user_email = None
 
-    user_id = cand.user_id
-    user_email = cand.user.email if cand.user else cand.email
+    if cand:
+        user_id = cand.user_id
+        user_obj = cand.user
+        user_email = cand.user.email if cand.user else cand.email
+    else:
+        # Fallback: check if candidate_id matches a User.id or User.email
+        u_stmt = select(User).where(or_(User.id == candidate_id, User.email == candidate_id))
+        u_res = await db.execute(u_stmt)
+        user_obj = u_res.scalar_one_or_none()
+        if user_obj:
+            user_id = user_obj.id
+            user_email = user_obj.email
+            # Check if there is a candidate linked to this user
+            c_stmt = select(Candidate).options(selectinload(Candidate.user)).where(Candidate.user_id == user_id)
+            c_res = await db.execute(c_stmt)
+            cand = c_res.scalar_one_or_none()
+
+    if not cand and not user_obj:
+        raise HTTPException(status_code=404, detail="Candidate not found")
 
     from app.models import (
         SupportTicket, CandidateRoadmap, CandidateCertificate,
@@ -1042,50 +1063,55 @@ async def delete_candidate(
         StageAttempt, QuestionAttempt, Recording, AuditLog, PaymentTransaction
     )
 
+    candidate_ids_to_clean = [cand.id] if cand else []
+
     # 1. Fetch Attempt IDs
-    att_stmt = select(InterviewAttempt.id).where(InterviewAttempt.candidate_id == cand.id)
-    att_res = await db.execute(att_stmt)
-    attempt_ids = att_res.scalars().all()
+    if candidate_ids_to_clean:
+        att_stmt = select(InterviewAttempt.id).where(InterviewAttempt.candidate_id.in_(candidate_ids_to_clean))
+        att_res = await db.execute(att_stmt)
+        attempt_ids = att_res.scalars().all()
 
-    if attempt_ids:
-        await db.execute(delete(QuestionAttempt).where(QuestionAttempt.interview_attempt_id.in_(attempt_ids)))
-        await db.execute(delete(StageAttempt).where(StageAttempt.interview_attempt_id.in_(attempt_ids)))
-        await db.execute(delete(Recording).where(Recording.interview_attempt_id.in_(attempt_ids)))
+        if attempt_ids:
+            await db.execute(delete(QuestionAttempt).where(QuestionAttempt.interview_attempt_id.in_(attempt_ids)))
+            await db.execute(delete(StageAttempt).where(StageAttempt.interview_attempt_id.in_(attempt_ids)))
+            await db.execute(delete(Recording).where(Recording.interview_attempt_id.in_(attempt_ids)))
 
-    # 2. Delete Interview Attempts
-    await db.execute(delete(InterviewAttempt).where(InterviewAttempt.candidate_id == cand.id))
+        # 2. Delete Interview Attempts
+        await db.execute(delete(InterviewAttempt).where(InterviewAttempt.candidate_id.in_(candidate_ids_to_clean)))
 
-    # 3. Delete Candidate modules
-    await db.execute(delete(SupportTicket).where(SupportTicket.candidate_id == cand.id))
-    await db.execute(delete(CandidateRoadmap).where(CandidateRoadmap.candidate_id == cand.id))
-    await db.execute(delete(CandidateCertificate).where(CandidateCertificate.candidate_id == cand.id))
-    await db.execute(delete(StudyTask).where(StudyTask.candidate_id == cand.id))
-    await db.execute(delete(Reminder).where(Reminder.candidate_id == cand.id))
-    await db.execute(delete(ResumeAudit).where(ResumeAudit.candidate_id == cand.id))
+        # 3. Delete Candidate modules
+        await db.execute(delete(SupportTicket).where(SupportTicket.candidate_id.in_(candidate_ids_to_clean)))
+        await db.execute(delete(CandidateRoadmap).where(CandidateRoadmap.candidate_id.in_(candidate_ids_to_clean)))
+        await db.execute(delete(CandidateCertificate).where(CandidateCertificate.candidate_id.in_(candidate_ids_to_clean)))
+        await db.execute(delete(StudyTask).where(StudyTask.candidate_id.in_(candidate_ids_to_clean)))
+        await db.execute(delete(Reminder).where(Reminder.candidate_id.in_(candidate_ids_to_clean)))
+        await db.execute(delete(ResumeAudit).where(ResumeAudit.candidate_id.in_(candidate_ids_to_clean)))
 
-    if user_email:
-        await db.execute(delete(PaymentTransaction).where(
-            or_(PaymentTransaction.candidate_id == cand.id, PaymentTransaction.candidate_email == user_email)
-        ))
+    if user_email or candidate_ids_to_clean:
+        filters = []
+        if candidate_ids_to_clean:
+            filters.append(PaymentTransaction.candidate_id.in_(candidate_ids_to_clean))
+        if user_email:
+            filters.append(PaymentTransaction.candidate_email == user_email)
+        await db.execute(delete(PaymentTransaction).where(or_(*filters)))
 
     if user_id:
         await db.execute(delete(AuditLog).where(AuditLog.user_id == user_id))
 
-    # 4. Delete Candidate row
-    await db.delete(cand)
+    # 4. Delete Candidate row if present
+    if cand:
+        await db.delete(cand)
 
-    # 5. Delete User row so user is permanently removed and cannot login
-    if user_id:
-        u_stmt = select(User).where(User.id == user_id)
-        u_res = await db.execute(u_stmt)
-        user_obj = u_res.scalar_one_or_none()
-        if user_obj:
-            await db.delete(user_obj)
+    # 5. Delete User row if present
+    if user_obj:
+        await db.delete(user_obj)
 
     await db.commit()
 
+    deleted_name = (cand.full_name if cand and cand.full_name else None) or (user_obj.full_name if user_obj else None) or user_email or candidate_id
+
     return StandardResponse(
-        message=f"Candidate profile '{cand.full_name or user_email}' and user login account permanently deleted from database.",
+        message=f"Candidate profile '{deleted_name}' and user login account permanently deleted from database.",
         data={"deleted_id": candidate_id}
     )
 

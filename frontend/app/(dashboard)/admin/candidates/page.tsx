@@ -36,8 +36,9 @@ export default function AdminCandidatesPage() {
     setIsDeleting(true);
     try {
       await apiFetch(`/candidates/${candidateToDelete.id}`, { method: "DELETE" });
-      setCandidates(prev => prev.filter(cand => cand.id !== candidateToDelete.id));
+      setCandidates(prev => prev.filter(cand => cand.id !== candidateToDelete.id && cand.user_id !== candidateToDelete.id));
       setCandidateToDelete(null);
+      await fetchCandidates();
     } catch (err: any) {
       alert("Failed to delete candidate: " + (err?.message || "Unknown error"));
     } finally {
