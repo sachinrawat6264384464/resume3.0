@@ -30,7 +30,7 @@ const HEX_BADGES_LIST: HexBadgeItem[] = [
     variant: "teal", 
     desc: "Unlocked automatically upon completing Stage 5 of your 30-stage curriculum.", 
     reqStages: 5,
-    unlocked: true 
+    unlocked: false 
   },
   { 
     id: "mod-2", 
@@ -40,7 +40,7 @@ const HEX_BADGES_LIST: HexBadgeItem[] = [
     variant: "amber", 
     desc: "Unlocked automatically upon completing Stage 10 of your 30-stage curriculum.", 
     reqStages: 10,
-    unlocked: true 
+    unlocked: false 
   },
   { 
     id: "mod-3", 
@@ -138,7 +138,7 @@ export default function CandidatePerformancePage() {
         if (res?.data) {
           setPerfData(res.data);
           const userBadges = res.data?.badges || [];
-          const completedStagesCount = res.data?.completed_stages_count || res.data?.completed_stages || 10;
+          const completedStagesCount = typeof res.data?.completed_stages_count === "number" ? res.data.completed_stages_count : 0;
 
           setBadgesList((prev) =>
             prev.map((b) => {

@@ -257,66 +257,63 @@ async def get_dashboard_metrics(
 
     attempts_by_stage = {}
     for att in candidate_attempts:
-        if att.stage_number:
+        if att.stage_number is not None:
             existing = attempts_by_stage.get(att.stage_number)
             # Keep highest score / passed attempt for the stage
             if not existing or (att.score or 0) > (existing.score or 0) or att.status == "PASSED":
                 attempts_by_stage[att.stage_number] = att
 
-    # Define 5 official stages
-    official_stages = [
+    passed_stage_ids = set()
+    for s_num, sa in attempts_by_stage.items():
+        if sa.status in ["PASSED", "COMPLETED"] or (sa.score and sa.score >= 70.0):
+            passed_stage_ids.add(s_num)
+
+    # Mark Stage 0 completed if candidate has completed baseline profile / XP
+    if cand.xp and cand.xp > 0:
+        passed_stage_ids.add(0)
+
+    stages_progress = []
+    completed_scores = []
+    
+    official_stages_list = [
         {"id": 1, "name": "Profile & Career Pitch", "subtitle": "Introduction & Resume Pitch"},
         {"id": 2, "name": "Linux Systems Warrior", "subtitle": "Linux Heap, Shell & Kernel Triage"},
         {"id": 3, "name": "Multi-Cloud Architecture", "subtitle": "AWS VPC, IAM, IRSA, Networking"},
         {"id": 4, "name": "DevOps & Containers", "subtitle": "Docker, Kubernetes & Terraform"},
         {"id": 5, "name": "Production Incident Boss Battle", "subtitle": "Live Outage & Incident Triage"}
     ]
+    next_upcoming_stage = official_stages_list[0]
 
-    stages_progress = []
-    completed_scores = []
-    next_upcoming_stage = official_stages[0]
-    unlocked_stage_found = False
-
-    for idx, stage in enumerate(official_stages, 1):
-        att = attempts_by_stage.get(idx)
-        if att and (att.status in ["PASSED", "COMPLETED"] or (att.score and att.score >= 80.0)):
-            score_val = att.score or 0.0
+    for s_num in range(1, 31):
+        att = attempts_by_stage.get(s_num)
+        if s_num in passed_stage_ids:
+            score_val = att.score if (att and att.score) else 100.0
             completed_scores.append(score_val)
             stages_progress.append({
-                "id": stage["id"],
-                "name": stage["name"],
-                "subtitle": stage["subtitle"],
+                "id": s_num,
                 "score": f"{int(score_val)}%",
                 "status": "completed",
                 "attempt_id": att.interview_attempt_id if att else None
             })
-        elif att and (att.score and att.score > 0):
-            score_val = att.score or 0.0
-            completed_scores.append(score_val)
+        elif s_num == 1 or (s_num - 1) in passed_stage_ids:
+            score_str = f"{int(att.score)}%" if (att and att.score and att.score > 0) else "Active"
             stages_progress.append({
-                "id": stage["id"],
-                "name": stage["name"],
-                "subtitle": stage["subtitle"],
-                "score": f"{int(score_val)}%",
+                "id": s_num,
+                "score": score_str,
                 "status": "in_progress",
                 "attempt_id": att.interview_attempt_id if att else None
             })
+            if s_num <= 5:
+                next_upcoming_stage = official_stages_list[min(s_num - 1, 4)]
         else:
-            prev_att = attempts_by_stage.get(idx - 1)
-            prev_passed = bool(prev_att and (prev_att.status in ["PASSED", "COMPLETED"] or (prev_att.score and prev_att.score >= 70.0)))
-            status_str = "in_progress" if prev_passed else "locked"
-            score_str = f"{int(att.score)}%" if (att and att.score and att.score > 0) else ("Active" if prev_passed else "--")
             stages_progress.append({
-                "id": stage["id"],
-                "name": stage["name"],
-                "subtitle": stage["subtitle"],
-                "score": score_str,
-                "status": status_str,
-                "attempt_id": att.interview_attempt_id if att else None
+                "id": s_num,
+                "score": "--",
+                "status": "locked",
+                "attempt_id": None
             })
-            if prev_passed and not unlocked_stage_found:
-                next_upcoming_stage = stage
-                unlocked_stage_found = True
+
+    completed_stages_count = len([s for s in passed_stage_ids if s >= 1])
 
     # 2. Dynamic Readiness Score & 5-Pillar Breakdown Calculation from Neon DB Question Attempts
     stmt_eval_q = (
@@ -552,6 +549,7 @@ async def get_dashboard_metrics(
         "xp": cand.xp or 0,
         "level": cand.level or 1,
         "streak_days": cand.streak_days or 1,
+        "completed_stages_count": completed_stages_count,
         "is_subscribed": is_subscribed,
         "target_salary_band": cand.target_salary_band or "₹18 – ₹40 LPA",
         "readiness_breakdown": breakdown,
@@ -824,6 +822,12 @@ async def get_my_performance(
             "conf": f"{max(0, s_val - 5)}%"
         })
 
+    passed_stages = set()
+    for sa in stage_atts:
+        if sa.stage_number is not None and (sa.status in ["PASSED", "COMPLETED"] or (sa.score and sa.score >= 70.0)):
+            passed_stages.add(sa.stage_number)
+    completed_stages_count = len([s for s in passed_stages if s >= 1])
+
     # 3. Query Latest ResumeAudit from DB
     stmt_aud = select(ResumeAudit).where(ResumeAudit.candidate_id == cand.id).order_by(desc(ResumeAudit.created_at)).limit(1)
     res_aud = await db.execute(stmt_aud)
@@ -834,6 +838,8 @@ async def get_my_performance(
         "candidate_id": cand.id,
         "readiness_score": readiness_score,
         "resume_ats_score": ats_score_val,
+        "completed_stages_count": completed_stages_count,
+        "badges": cand.badges_json or [],
         "salary_band": "₹18–25 LPA" if readiness_score < 80 else "₹25–40 LPA",
         "pillars": {
             "technical_accuracy": tech_avg,

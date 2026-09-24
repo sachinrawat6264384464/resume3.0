@@ -335,8 +335,8 @@ export default function CandidateDashboardPage() {
       groupTitle: "Track 1: Profile & Resume Pitch",
       description: "Foundational self-presentation & resume alignment",
       stages: [
-        { id: 1, title: "Career Pitch & Intro", cat: "Core", diff: "Easy", status: "completed", score: "92%" },
-        { id: 2, title: "Resume ATS Gap Matcher", cat: "Core", diff: "Easy", status: "in_progress", score: "Active" },
+        { id: 1, title: "Career Pitch & Intro", cat: "Core", diff: "Easy", status: "in_progress", score: "Active" },
+        { id: 2, title: "Resume ATS Gap Matcher", cat: "Core", diff: "Easy", status: "locked", score: "--" },
         { id: 3, title: "STAR Formula Experience Pitch", cat: "Core", diff: "Medium", status: "locked", score: "--" },
         { id: 4, title: "Technical Behavioral Q&A", cat: "Core", diff: "Medium", status: "locked", score: "--" },
         { id: 5, title: "Soft Skills & Leadership Pitch", cat: "Core", diff: "Medium", status: "locked", score: "--" }
@@ -494,9 +494,24 @@ Learn Today. Implement Today. Build Your Career for a Lifetime.
     }
   };
 
+  const mappedStageGroups = stageGroups.map((group) => ({
+    ...group,
+    stages: group.stages.map((stg) => {
+      const match = dbMetrics?.stages_progress?.find((sp: any) => sp.id === stg.id);
+      if (match) {
+        return {
+          ...stg,
+          status: match.status || stg.status,
+          score: match.score || stg.score
+        };
+      }
+      return stg;
+    })
+  }));
+
   const visibleGroups = selectedGroupTab === "ALL" 
-    ? stageGroups 
-    : stageGroups.filter(g => g.groupId === selectedGroupTab);
+    ? mappedStageGroups 
+    : mappedStageGroups.filter(g => g.groupId === selectedGroupTab);
 
   return (
     <div className="flex flex-col gap-6 w-full pb-12 text-slate-900 dark:text-slate-100 font-sans relative overflow-x-hidden">
