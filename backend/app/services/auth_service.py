@@ -42,22 +42,22 @@ class AuthService:
                 detail="User with this email already exists"
             )
 
-        org_id = user_in.organization_id
+        org_id = getattr(user_in, "organization_id", None)
         if not org_id:
             org = await self.get_or_create_default_org()
             org_id = org.id
 
-        hashed_pwd = get_password_hash(user_in.password) if user_in.password else None
+        hashed_pwd = get_password_hash(user_in.password) if getattr(user_in, "password", None) else None
         
         user = User(
             email=user_in.email,
-            phone_number=user_in.phone_number,
+            phone_number=getattr(user_in, "phone_number", None),
             full_name=user_in.full_name,
             hashed_password=hashed_pwd,
             role=user_in.role.value if isinstance(user_in.role, UserRole) else str(user_in.role),
             organization_id=org_id,
-            firebase_uid=user_in.firebase_uid,
-            is_active=user_in.is_active
+            firebase_uid=getattr(user_in, "firebase_uid", None),
+            is_active=getattr(user_in, "is_active", True)
         )
         self.db.add(user)
         await self.db.flush()

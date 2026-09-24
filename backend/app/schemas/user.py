@@ -10,7 +10,10 @@ class UserBase(BaseModel):
     role: UserRole = UserRole.CANDIDATE
 
 class UserCreate(UserBase):
-    password: str
+    password: Optional[str] = None
+    organization_id: Optional[str] = None
+    firebase_uid: Optional[str] = None
+    is_active: bool = True
 
 class UserUpdate(BaseModel):
     email: Optional[EmailStr] = None

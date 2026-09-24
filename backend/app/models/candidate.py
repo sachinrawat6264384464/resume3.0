@@ -21,7 +21,7 @@ class Candidate(TimeStampedModel):
     streak_days = Column(Integer, default=1, nullable=False)
     last_active_at = Column(DateTime(timezone=True), nullable=True)
     readiness_score = Column(Float, default=0.0, nullable=False)
-    target_salary_band = Column(String(50), default="₹8–12 LPA", nullable=False)
+    target_salary_band = Column(String(50), default="INR 18-40 LPA", nullable=False)
     skills_matrix_json = Column(JSON, default=dict, nullable=False)
     badges_json = Column(JSON, default=list, nullable=False)
 
