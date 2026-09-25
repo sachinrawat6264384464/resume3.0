@@ -94,15 +94,14 @@ export default function LoginPage() {
     }
   };
 
-  // Google One-Click Social Auth & Instant Registration
+  // Google One-Click Social Auth & Instant Registration (Official Chrome Google OAuth Popup)
   const handleGoogleAuth = async () => {
     setError(null);
     setInfoMsg(null);
+    setIsLoading(true);
 
-    // 1. Try Firebase Google Popup first
     if (auth) {
       try {
-        setIsLoading(true);
         const provider = new GoogleAuthProvider();
         provider.setCustomParameters({ prompt: "select_account" });
         const result = await signInWithPopup(auth, provider);
@@ -127,14 +126,29 @@ export default function LoginPage() {
         router.push(destinationPath);
         return;
       } catch (fbErr: any) {
-        console.warn("Firebase Google popup notice / fallback modal:", fbErr);
+        console.warn("Google OAuth notice:", fbErr);
+        if (fbErr.code === "auth/popup-closed-by-user" || fbErr.code === "auth/cancelled-popup-request") {
+          setIsLoading(false);
+          return;
+        }
+
+        // Try direct tab redirect to Google Auth if popup window is blocked by browser
+        try {
+          const { signInWithRedirect } = await import("firebase/auth");
+          const provider = new GoogleAuthProvider();
+          provider.setCustomParameters({ prompt: "select_account" });
+          await signInWithRedirect(auth, provider);
+          return;
+        } catch (redirectErr) {
+          setError("Google Sign-In popup was blocked or closed. Please allow popups for localhost and try again.");
+        }
       } finally {
         setIsLoading(false);
       }
+    } else {
+      setError("Firebase Authentication is initializing. Please refresh and try again.");
+      setIsLoading(false);
     }
-
-    // 2. Open Custom Google Sign-In Modal (NO browser prompt!)
-    openSocialAuthModal("google");
   };
 
   // LinkedIn One-Click Social Auth & Instant Registration
