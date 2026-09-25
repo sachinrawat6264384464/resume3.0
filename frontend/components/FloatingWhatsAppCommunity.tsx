@@ -17,11 +17,14 @@ export function FloatingWhatsAppCommunity() {
   useEffect(() => {
     setMounted(true);
     try {
-      const saved = localStorage.getItem("floating_widget_pos");
+      const saved = localStorage.getItem("floating_widget_pos_v2");
       if (saved) {
         const parsed = JSON.parse(saved);
         if (typeof parsed.x === "number" && typeof parsed.y === "number") {
-          setPos(parsed);
+          const maxAllowedX = typeof window !== "undefined" ? Math.max(24, window.innerWidth - 320) : 400;
+          const safeX = Math.min(Math.max(24, parsed.x), maxAllowedX);
+          const safeY = Math.max(24, Math.min(typeof window !== "undefined" ? window.innerHeight - 120 : 600, parsed.y));
+          setPos({ x: safeX, y: safeY });
         }
       }
     } catch (e) {}
@@ -37,8 +40,9 @@ export function FloatingWhatsAppCommunity() {
         setHasMoved(true);
       }
 
-      const newX = Math.max(10, Math.min(window.innerWidth - 120, dragStartRef.current.initialX + deltaX));
-      const newY = Math.max(10, Math.min(window.innerHeight - 120, dragStartRef.current.initialY + deltaY));
+      const maxAllowedX = Math.max(24, window.innerWidth - 320);
+      const newX = Math.max(20, Math.min(maxAllowedX, dragStartRef.current.initialX + deltaX));
+      const newY = Math.max(20, Math.min(window.innerHeight - 120, dragStartRef.current.initialY + deltaY));
 
       setPos({ x: newX, y: newY });
     };
@@ -52,8 +56,9 @@ export function FloatingWhatsAppCommunity() {
         setHasMoved(true);
       }
 
-      const newX = Math.max(10, Math.min(window.innerWidth - 120, dragStartRef.current.initialX + deltaX));
-      const newY = Math.max(10, Math.min(window.innerHeight - 120, dragStartRef.current.initialY + deltaY));
+      const maxAllowedX = Math.max(24, window.innerWidth - 320);
+      const newX = Math.max(20, Math.min(maxAllowedX, dragStartRef.current.initialX + deltaX));
+      const newY = Math.max(20, Math.min(window.innerHeight - 120, dragStartRef.current.initialY + deltaY));
 
       setPos({ x: newX, y: newY });
     };
@@ -62,7 +67,7 @@ export function FloatingWhatsAppCommunity() {
       if (isDragging) {
         setIsDragging(false);
         try {
-          localStorage.setItem("floating_widget_pos", JSON.stringify(pos));
+          localStorage.setItem("floating_widget_pos_v2", JSON.stringify(pos));
         } catch (e) {}
       }
     };
