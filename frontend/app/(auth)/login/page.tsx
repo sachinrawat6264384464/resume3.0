@@ -131,13 +131,18 @@ export default function LoginPage() {
             router.push(destinationPath);
           }
         })
-        .catch((err) => {
+        .catch((err: any) => {
           console.warn("Google Redirect result error:", err);
+          if (err?.code === "auth/operation-not-allowed") {
+            setError("⚠️ Google Sign-In is disabled in Firebase Console. Please enable Google under Authentication > Sign-in method in Firebase Console.");
+          } else if (err?.code) {
+            setError(`Google Sign-In notice: ${err.message || err.code}`);
+          }
         });
     }
   }, [router]);
 
-  // Google Direct One-Click Social Auth (Opens Chrome Google Account Chooser Tab/Popup)
+  // Google Direct One-Click Social Auth (Navigates directly to Google Account Chooser screen)
   const handleGoogleAuth = async () => {
     setError(null);
     setInfoMsg(null);
@@ -152,50 +157,11 @@ export default function LoginPage() {
     try {
       const provider = new GoogleAuthProvider();
       provider.setCustomParameters({ prompt: "select_account" });
-      const result = await signInWithPopup(auth, provider);
-      const gUser = result.user;
-      const gEmail = gUser.email || "";
-      const gName = gUser.displayName || gEmail.split("@")[0] || "Candidate User";
-
-      const res = await apiFetch("/auth/social-login", {
-        method: "POST",
-        body: JSON.stringify({
-          provider: "google",
-          email: gEmail,
-          full_name: gName,
-          provider_id: gUser.uid,
-          avatar_url: gUser.photoURL
-        })
-      });
-
-      const destinationPath = new URLSearchParams(window.location.search).get("redirect") || "/dashboard";
-      setAuth(res.user, res.access_token);
-      setInfoMsg(`🎉 Successfully logged in with Google as ${gName}! Redirecting...`);
-      router.push(destinationPath);
-      return;
+      // Direct redirect to Google Account Chooser page (avoids popup auto-close issue)
+      await signInWithRedirect(auth, provider);
     } catch (fbErr: any) {
-      console.warn("Firebase Google Auth notice:", fbErr?.code, fbErr?.message);
+      console.warn("Firebase Google Auth redirect error:", fbErr?.code, fbErr?.message);
       setIsLoading(false);
-
-      // User closed popup or cancelled
-      if (fbErr?.code === "auth/popup-closed-by-user" || fbErr?.code === "auth/cancelled-popup-request") {
-        return;
-      }
-
-      // If popup was blocked by browser, attempt direct page redirect to Google Auth tab
-      if (fbErr?.code === "auth/popup-blocked") {
-        try {
-          setIsLoading(true);
-          const provider = new GoogleAuthProvider();
-          provider.setCustomParameters({ prompt: "select_account" });
-          await signInWithRedirect(auth, provider);
-          return;
-        } catch (redirErr: any) {
-          setIsLoading(false);
-          setError("Google popup was blocked by your browser. Please allow popups or try again.");
-        }
-        return;
-      }
 
       if (fbErr?.code === "auth/operation-not-allowed") {
         setError("⚠️ Google Sign-In is disabled in your Firebase Console. Please go to Firebase Console > Authentication > Sign-in method > Enable Google.");
