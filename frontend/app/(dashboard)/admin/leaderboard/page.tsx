@@ -378,7 +378,7 @@ export default function AdminLeaderboardPage() {
           
           <div className="p-6 rounded-3xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/80 flex flex-col gap-1 text-center justify-center">
             <span className="text-3xl sm:text-4xl font-black text-slate-900 dark:text-white font-mono tracking-tight">
-              {(totalPoints || 70957).toLocaleString()}
+              {members.reduce((sum, m) => sum + (m.pts || 0), 0).toLocaleString()}
             </span>
             <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
               Total Cohort Points
@@ -387,7 +387,7 @@ export default function AdminLeaderboardPage() {
 
           <div className="p-6 rounded-3xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/80 flex flex-col gap-1 text-center justify-center">
             <span className="text-3xl sm:text-4xl font-black text-slate-900 dark:text-white font-mono tracking-tight">
-              52
+              {members.filter(m => (m.badgeCountTotal || 0) > 0 || (m.allClaimedBadges || []).length > 0).length || members.length}
             </span>
             <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
               Certified Module Experts
