@@ -106,19 +106,41 @@ export default function AdminCandidatesPage() {
     }
   };
 
+  const getDesignation = (c: any) => {
+    if (c.designation) return c.designation;
+    if (c.resume_data_json?.designation) return c.resume_data_json.designation;
+    if (c.notes) {
+      try {
+        const parsed = typeof c.notes === "string" ? JSON.parse(c.notes) : c.notes;
+        if (parsed?.designation) return parsed.designation;
+      } catch (e) {}
+    }
+    return "DevOps Engineer";
+  };
+
+  const getExperienceLevel = (c: any) => {
+    return c.experience_level || c.resume_data_json?.experience_level || "MID";
+  };
+
+  const getTargetSalaryBand = (c: any) => {
+    return c.target_salary_band || c.resume_data_json?.target_salary_band || "₹18 – ₹40 LPA";
+  };
+
   const generateClientCSV = () => {
-    const headers = ["Candidate ID", "Full Name", "Email", "Phone", "Target Role", "LinkedIn URL", "Readiness Score (%)", "Level", "XP", "Target Salary Band"];
+    const headers = ["Candidate ID", "Full Name", "Email", "Phone", "Current Designation", "Target Role", "Experience Level", "Target Salary Band", "LinkedIn URL", "Readiness Score (%)", "Level", "XP"];
     const rows = candidates.map(c => [
       c.id,
       `"${c.user?.full_name || c.full_name || 'Candidate'}"`,
       c.user?.email || c.email || '',
       c.phone || c.user?.phone_number || '',
+      `"${getDesignation(c)}"`,
       `"${c.target_role || 'Senior DevOps Engineer'}"`,
+      `"${getExperienceLevel(c)}"`,
+      `"${getTargetSalaryBand(c)}"`,
       `"${getLinkedinUrl(c) || ''}"`,
       Math.round(c.readiness_score || 0),
       c.level || 1,
-      c.xp || 0,
-      `"${c.target_salary_band || '₹18 – ₹40 LPA'}"`
+      c.xp || 0
     ]);
 
     const csvContent = "data:text/csv;charset=utf-8," + [headers.join(","), ...rows.map(r => r.join(","))].join("\n");
@@ -135,8 +157,9 @@ export default function AdminCandidatesPage() {
     const name = c.user?.full_name || c.full_name || "";
     const email = c.user?.email || c.email || "";
     const role = c.target_role || "";
+    const desig = getDesignation(c);
     const q = searchQuery.toLowerCase();
-    return name.toLowerCase().includes(q) || email.toLowerCase().includes(q) || role.toLowerCase().includes(q);
+    return name.toLowerCase().includes(q) || email.toLowerCase().includes(q) || role.toLowerCase().includes(q) || desig.toLowerCase().includes(q);
   });
 
   const avgReadiness = candidates.length > 0
@@ -258,21 +281,27 @@ export default function AdminCandidatesPage() {
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="border-b border-slate-100 dark:border-slate-800 text-[11px] font-black text-slate-400 uppercase tracking-wider bg-slate-50/50 dark:bg-slate-800/30">
-                  <th className="py-3.5 px-5">Candidate Name</th>
-                  <th className="py-3.5 px-5">Email & Contact</th>
-                  <th className="py-3.5 px-5">Target Role</th>
-                  <th className="py-3.5 px-5">LinkedIn Profile</th>
-                  <th className="py-3.5 px-5">Readiness Score</th>
-                  <th className="py-3.5 px-5">Level & XP</th>
-                  <th className="py-3.5 px-5 text-center">Actions</th>
+                  <th className="py-3.5 px-4">Candidate Name</th>
+                  <th className="py-3.5 px-4">Email & Contact</th>
+                  <th className="py-3.5 px-4">Current Designation</th>
+                  <th className="py-3.5 px-4">Target Role & Salary</th>
+                  <th className="py-3.5 px-4">Exp Level</th>
+                  <th className="py-3.5 px-4">LinkedIn Profile</th>
+                  <th className="py-3.5 px-4">Readiness</th>
+                  <th className="py-3.5 px-4">Level & XP</th>
+                  <th className="py-3.5 px-4 text-center">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60 text-xs">
                 {filteredCandidates.map((c) => {
                   const linkedinUrl = getLinkedinUrl(c);
+                  const desig = getDesignation(c);
+                  const expLvl = getExperienceLevel(c);
+                  const salary = getTargetSalaryBand(c);
+
                   return (
                     <tr key={c.id} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors">
-                      <td className="py-4 px-5">
+                      <td className="py-4 px-4">
                         <div className="flex items-center gap-3">
                           <div className="w-8 h-8 rounded-full bg-[#0B1E36] text-[#FF6B00] font-black flex items-center justify-center shrink-0">
                             {(c.user?.full_name || c.full_name || "C").charAt(0)}
@@ -286,20 +315,37 @@ export default function AdminCandidatesPage() {
                         </div>
                       </td>
 
-                      <td className="py-4 px-5 font-mono text-slate-600 dark:text-slate-300">
+                      <td className="py-4 px-4 font-mono text-slate-600 dark:text-slate-300">
                         <div className="flex flex-col">
                           <span>{c.user?.email || c.email || "sachin@cloudops.internal"}</span>
                           <span className="text-[10px] text-slate-400">{c.phone || c.user?.phone_number || "+91 99999 88888"}</span>
                         </div>
                       </td>
 
-                      <td className="py-4 px-5">
-                        <span className="font-bold text-slate-800 dark:text-slate-200">
-                          {c.target_role || "Senior DevOps Engineer"}
+                      <td className="py-4 px-4">
+                        <span className="font-bold text-slate-800 dark:text-slate-200 bg-slate-100 dark:bg-slate-800 px-2.5 py-1 rounded-lg text-[11px]">
+                          {desig}
                         </span>
                       </td>
 
-                      <td className="py-4 px-5">
+                      <td className="py-4 px-4">
+                        <div className="flex flex-col">
+                          <span className="font-extrabold text-slate-900 dark:text-white">
+                            {c.target_role || "Senior DevOps Engineer"}
+                          </span>
+                          <span className="text-[10px] font-mono text-[#FF6B00] font-black">
+                            {salary}
+                          </span>
+                        </div>
+                      </td>
+
+                      <td className="py-4 px-4">
+                        <span className="px-2.5 py-1 rounded-full text-[10px] font-mono font-black uppercase bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
+                          {expLvl}
+                        </span>
+                      </td>
+
+                      <td className="py-4 px-4">
                         {linkedinUrl ? (
                           <a
                             href={linkedinUrl.startsWith("http") ? linkedinUrl : `https://${linkedinUrl}`}
@@ -308,7 +354,7 @@ export default function AdminCandidatesPage() {
                             className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-blue-500/10 hover:bg-blue-500/20 text-[#0A66C2] dark:text-blue-400 font-extrabold text-[11px] transition-all border border-blue-500/20 shadow-2xs"
                           >
                             <Linkedin className="w-3.5 h-3.5 fill-current" />
-                            <span>LinkedIn</span>
+                            <span>Profile</span>
                             <ExternalLink className="w-3 h-3 opacity-70" />
                           </a>
                         ) : (
@@ -316,13 +362,13 @@ export default function AdminCandidatesPage() {
                         )}
                       </td>
 
-                      <td className="py-4 px-5">
+                      <td className="py-4 px-4">
                         <span className="font-black text-amber-600 dark:text-amber-400 bg-amber-500/10 px-2.5 py-1 rounded-full text-xs">
                           {Math.round(c.readiness_score || 0)}% READY
                         </span>
                       </td>
 
-                      <td className="py-4 px-5 font-mono">
+                      <td className="py-4 px-4 font-mono">
                         <span className="font-bold text-slate-700 dark:text-slate-300">
                           Lvl {c.level || 1} • {c.xp || 0} XP
                         </span>
