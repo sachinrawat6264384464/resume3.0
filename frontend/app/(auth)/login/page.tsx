@@ -191,7 +191,9 @@ export default function LoginPage() {
             console.warn("Google Redirect error:", redirErr);
           }
         } else {
-          setError(fbErr?.message || "Google Sign-In popup closed. Please try again.");
+          if (fbErr?.message && !fbErr.message.includes("api-key-not-valid") && !fbErr.message.includes("Firebase:")) {
+            setError(fbErr.message);
+          }
         }
       } finally {
         setIsLoading(false);
