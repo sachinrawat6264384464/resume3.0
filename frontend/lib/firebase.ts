@@ -12,6 +12,14 @@ import {
   signInWithPhoneNumber, 
   ConfirmationResult 
 } from "firebase/auth";
+import {
+  getFirestore,
+  Firestore,
+  doc,
+  setDoc,
+  getDoc,
+  collection
+} from "firebase/firestore";
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY || "AIzaSyDLN1qS36ajsf5I4me3hRWdsiF3si2aFKI",
@@ -25,24 +33,45 @@ const firebaseConfig = {
 
 let app: FirebaseApp | undefined;
 let auth: Auth | undefined;
+let db: Firestore | undefined;
 
 if (typeof window !== "undefined") {
   if (!getApps().length) {
     try {
       app = initializeApp(firebaseConfig);
       auth = getAuth(app);
+      db = getFirestore(app);
     } catch (e) {
       console.warn("Firebase client init skipped or mocked:", e);
     }
   } else {
     app = getApps()[0];
     auth = getAuth(app);
+    db = getFirestore(app);
+  }
+}
+
+export async function saveCandidateToFirestore(uid: string, candidateData: Record<string, any>) {
+  if (!db) return;
+  try {
+    const candidateRef = doc(db, "candidates", uid);
+    await setDoc(candidateRef, {
+      ...candidateData,
+      updated_at: new Date().toISOString()
+    }, { merge: true });
+  } catch (err) {
+    console.warn("Firestore candidate save notice:", err);
   }
 }
 
 export { 
   app, 
   auth, 
+  db,
+  doc,
+  setDoc,
+  getDoc,
+  collection,
   GoogleAuthProvider, 
   signInWithPopup, 
   signInWithRedirect,
