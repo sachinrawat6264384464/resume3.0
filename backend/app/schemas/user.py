@@ -63,3 +63,11 @@ class VerifyOTPRequest(BaseModel):
     full_name: Optional[str] = None
     password: Optional[str] = None
     mode: Optional[str] = "signin"
+
+class SocialLoginRequest(BaseModel):
+    provider: str  # "google" or "linkedin"
+    email: str
+    full_name: str
+    provider_id: Optional[str] = None
+    avatar_url: Optional[str] = None
+
