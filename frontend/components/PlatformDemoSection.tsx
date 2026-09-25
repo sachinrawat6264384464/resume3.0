@@ -223,7 +223,7 @@ export function PlatformDemoSection() {
   };
 
   return (
-    <section className="relative z-10 py-16 sm:py-24 w-full bg-slate-900/60 dark:bg-[#070b14]/90 border-t border-b border-slate-800/80 backdrop-blur-xl">
+    <section className="relative z-10 py-16 sm:py-24 w-full bg-slate-50/90 dark:bg-[#070b14]/90 border-t border-b border-slate-200 dark:border-slate-800/80 backdrop-blur-xl transition-colors">
       <div className="w-full px-4 sm:px-8 lg:px-20 flex flex-col gap-10">
         
         {/* Section Header */}
@@ -272,10 +272,10 @@ export function PlatformDemoSection() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch w-full">
           
           {/* LEFT: INTERACTIVE SIMULATED VIDEO PLAYER SCREEN (7 cols) */}
-          <div className="lg:col-span-7 flex flex-col rounded-[28px] bg-slate-950 border-2 border-slate-800 shadow-2xl overflow-hidden relative group">
+          <div className="lg:col-span-7 flex flex-col rounded-[28px] bg-slate-900 dark:bg-slate-950 border-2 border-slate-300 dark:border-slate-800 shadow-xl dark:shadow-2xl overflow-hidden relative group transition-colors">
             
             {/* Player Browser Header */}
-            <div className="px-4 py-3 bg-slate-900/90 border-b border-slate-800 flex items-center justify-between z-20">
+            <div className="px-4 py-3 bg-slate-800/90 dark:bg-slate-900/90 border-b border-slate-700/80 dark:border-slate-800 flex items-center justify-between z-20 transition-colors">
               <div className="flex items-center gap-2">
                 <span className="w-3 h-3 rounded-full bg-rose-500 inline-block"></span>
                 <span className="w-3 h-3 rounded-full bg-amber-500 inline-block"></span>
