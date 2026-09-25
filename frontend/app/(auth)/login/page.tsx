@@ -135,6 +135,8 @@ export default function LoginPage() {
           console.warn("Google Redirect result error:", err);
           if (err?.code === "auth/operation-not-allowed") {
             setError("⚠️ Google Sign-In is disabled in Firebase Console. Please enable Google under Authentication > Sign-in method in Firebase Console.");
+          } else if (err?.code === "auth/api-key-not-valid") {
+            setError("⚠️ Invalid Firebase API Key in frontend/.env. Please update NEXT_PUBLIC_FIREBASE_API_KEY with your real Web API Key from Firebase Console.");
           } else if (err?.code) {
             setError(`Google Sign-In notice: ${err.message || err.code}`);
           }
@@ -165,6 +167,10 @@ export default function LoginPage() {
 
       if (fbErr?.code === "auth/operation-not-allowed") {
         setError("⚠️ Google Sign-In is disabled in your Firebase Console. Please go to Firebase Console > Authentication > Sign-in method > Enable Google.");
+        return;
+      }
+      if (fbErr?.code === "auth/api-key-not-valid") {
+        setError("⚠️ Invalid Firebase API Key in frontend/.env. Please update NEXT_PUBLIC_FIREBASE_API_KEY with your real Web API Key from Firebase Console.");
         return;
       }
 
