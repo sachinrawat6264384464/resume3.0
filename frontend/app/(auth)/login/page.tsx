@@ -53,10 +53,8 @@ export default function LoginPage() {
 
   const openSocialAuthModal = (provider: "google" | "linkedin") => {
     setSocialProvider(provider);
-    const defaultEmail = provider === "google" ? "candidate@gmail.com" : "candidate@linkedin.com";
-    const defaultName = fullName.trim() || "Sachin Rawat";
-    setSocialEmail(email.trim() || defaultEmail);
-    setSocialName(defaultName);
+    setSocialEmail(email.trim());
+    setSocialName(fullName.trim());
     setIsSocialModalOpen(true);
   };
 
@@ -106,6 +104,7 @@ export default function LoginPage() {
       try {
         setIsLoading(true);
         const provider = new GoogleAuthProvider();
+        provider.setCustomParameters({ prompt: "select_account" });
         const result = await signInWithPopup(auth, provider);
         const gUser = result.user;
         const gEmail = gUser.email || "";
@@ -815,41 +814,18 @@ export default function LoginPage() {
               </button>
             </div>
 
-            {/* Account Quick Select Pills */}
-            <div className="flex flex-col gap-2">
-              <span className="text-[11px] font-bold text-slate-500 uppercase font-mono tracking-wider">
-                Select Candidate Account:
-              </span>
-              <button
-                type="button"
-                onClick={() => {
-                  setSocialEmail("sachinrawat6264384464@gmail.com");
-                  setSocialName("Sachin Rawat");
-                }}
-                className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 hover:border-[#FF6B00] flex items-center justify-between text-left transition-all cursor-pointer group"
-              >
-                <div className="flex flex-col">
-                  <span className="text-xs font-black text-slate-900 dark:text-white group-hover:text-[#FF6B00]">
-                    Sachin Rawat (Candidate)
-                  </span>
-                  <span className="text-[11px] font-mono text-slate-500">sachinrawat6264384464@gmail.com</span>
-                </div>
-                <CheckCircle2 className="w-4 h-4 text-[#FF6B00] opacity-80" />
-              </button>
-            </div>
-
             {/* Custom Input Fields */}
             <form onSubmit={handleExecuteSocialAuth} className="flex flex-col gap-3.5 pt-1">
               <div className="flex flex-col gap-1">
                 <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                  {socialProvider === "google" ? "Google Email Address:" : "LinkedIn Email Address:"}
+                  {socialProvider === "google" ? "Google Account Email:" : "LinkedIn Account Email:"}
                 </label>
                 <input
                   type="email"
                   required
                   value={socialEmail}
                   onChange={(e) => setSocialEmail(e.target.value)}
-                  placeholder={socialProvider === "google" ? "candidate@gmail.com" : "candidate@linkedin.com"}
+                  placeholder={socialProvider === "google" ? "your.email@gmail.com" : "your.email@linkedin.com"}
                   className="w-full px-4 py-2.5 rounded-2xl text-xs bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white font-bold focus:outline-none focus:border-[#FF6B00]"
                 />
               </div>
@@ -863,7 +839,7 @@ export default function LoginPage() {
                   required
                   value={socialName}
                   onChange={(e) => setSocialName(e.target.value)}
-                  placeholder="e.g. Sachin Rawat"
+                  placeholder="Enter your full name"
                   className="w-full px-4 py-2.5 rounded-2xl text-xs bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white font-bold focus:outline-none focus:border-[#FF6B00]"
                 />
               </div>
