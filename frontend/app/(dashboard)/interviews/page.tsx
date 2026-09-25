@@ -9,6 +9,7 @@ import {
   Video, LogOut
 } from "lucide-react";
 import { apiFetch } from "@/lib/api";
+import { useAuthStore } from "@/lib/store";
 
 const ALL_30_STAGES = [
   // LEVEL 1 — FOUNDATION (TRACK 1)
@@ -55,6 +56,7 @@ const ALL_30_STAGES = [
 
 export default function InterviewsPage() {
   const router = useRouter();
+  const user = useAuthStore((state) => state.user);
   const [stages, setStages] = useState<any[]>([]);
   const [isLoadingStages, setIsLoadingStages] = useState<boolean>(true);
   const [activeTab, setActiveTab] = useState<string>("ALL");
@@ -136,6 +138,25 @@ export default function InterviewsPage() {
       if (stg0AttCheck && (stg0AttCheck.status === "completed" || stg0AttCheck.status === "PASSED")) {
         completedSet.add(0);
       }
+
+      // Populate Stage 0 form with existing candidate profile / stored LinkedIn URL
+      const savedLinkedin = typeof window !== "undefined" ? localStorage.getItem("candidate_linkedin_url") : "";
+      const candLinkedin = savedLinkedin || resMetrics?.data?.candidate?.resume_data_json?.linkedin_url || "";
+      const savedName = resMetrics?.data?.candidate?.full_name || user?.full_name || "";
+      const savedRole = resMetrics?.data?.candidate?.target_role || "Senior DevOps Engineer";
+      const savedDesig = resMetrics?.data?.candidate?.resume_data_json?.designation || "DevOps Specialist";
+      const savedExp = resMetrics?.data?.candidate?.experience_level || "MID";
+      const savedBand = resMetrics?.data?.candidate?.target_salary_band || "₹18–40 LPA";
+
+      setStage0Form((prev) => ({
+        ...prev,
+        fullName: savedName || prev.fullName,
+        targetRole: savedRole || prev.targetRole,
+        designation: savedDesig || prev.designation,
+        linkedinUrl: candLinkedin || prev.linkedinUrl,
+        experienceLevel: savedExp || prev.experienceLevel,
+        targetSalaryBand: savedBand || prev.targetSalaryBand
+      }));
 
       const merged = ALL_30_STAGES.map((stg) => {
         const dbStg = dbStageMap.get(stg.id);
@@ -273,13 +294,19 @@ export default function InterviewsPage() {
     e.preventDefault();
     setIsSavingStage0(true);
     try {
+      if (stage0Form.linkedinUrl.trim()) {
+        try {
+          localStorage.setItem("candidate_linkedin_url", stage0Form.linkedinUrl.trim());
+        } catch (e) {}
+      }
+
       await apiFetch("/candidates/me/profile", {
         method: "PUT",
         body: JSON.stringify({
           full_name: stage0Form.fullName,
           target_role: stage0Form.targetRole,
           designation: stage0Form.designation,
-          linkedin_url: stage0Form.linkedinUrl,
+          linkedin_url: stage0Form.linkedinUrl.trim(),
           experience_level: stage0Form.experienceLevel,
           target_salary_band: stage0Form.targetSalaryBand,
           mark_stage_0_complete: true
