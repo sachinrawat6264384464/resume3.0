@@ -173,15 +173,11 @@ export default function LoginPage() {
     }
   }, [router]);
 
-  // Google Direct 1-Click Social Auth (Instant login & seamless launch)
+  // Google Social Auth (Opens Google Account Selector for dynamic account authorization)
   const handleGoogleAuth = async () => {
     setError(null);
     setInfoMsg(null);
     setIsLoading(true);
-
-    const destinationPath = typeof window !== "undefined"
-      ? new URLSearchParams(window.location.search).get("redirect") || "/dashboard"
-      : "/dashboard";
 
     if (auth) {
       try {
@@ -191,7 +187,7 @@ export default function LoginPage() {
         const result = await signInWithPopup(auth, provider);
         const gUser = result.user;
         const gEmail = gUser.email || "";
-        const gName = gUser.displayName || gEmail.split("@")[0] || "Sachin Rawat";
+        const gName = gUser.displayName || gEmail.split("@")[0] || "Candidate User";
 
         const res = await apiFetch("/auth/social-login", {
           method: "POST",
@@ -204,63 +200,37 @@ export default function LoginPage() {
           })
         });
 
+        const destinationPath = new URLSearchParams(window.location.search).get("redirect") || "/dashboard";
         setAuth(res.user, res.access_token);
-        setInfoMsg(`🎉 Successfully logged in with Google as ${res.user.full_name}! Redirecting...`);
+        setInfoMsg(`🎉 Successfully logged in as ${gName}! Redirecting...`);
         router.push(destinationPath);
         return;
       } catch (fbErr: any) {
-        console.warn("Firebase Google Auth client notice, authenticating directly:", fbErr);
+        console.warn("Firebase Google Auth notice:", fbErr?.code, fbErr?.message);
+        if (fbErr?.code === "auth/popup-blocked") {
+          try {
+            const provider = new GoogleAuthProvider();
+            provider.setCustomParameters({ prompt: "select_account" });
+            await signInWithRedirect(auth, provider);
+            return;
+          } catch (redirErr: any) {
+            console.warn("Google Redirect notice:", redirErr);
+          }
+        }
+      } finally {
+        setIsLoading(false);
       }
     }
 
-    try {
-      const res = await apiFetch("/auth/social-login", {
-        method: "POST",
-        body: JSON.stringify({
-          provider: "google",
-          email: "sachinrawat6264384464@gmail.com",
-          full_name: "Sachin Rawat"
-        })
-      });
-
-      setAuth(res.user, res.access_token);
-      setInfoMsg(`🎉 Successfully logged in with Google as ${res.user.full_name}! Redirecting...`);
-      router.push(destinationPath);
-    } catch (err: any) {
-      setError(err.message || "Google authentication failed. Please try again.");
-    } finally {
-      setIsLoading(false);
-    }
+    setIsLoading(false);
+    openSocialAuthModal("google");
   };
 
-  // LinkedIn Direct 1-Click Social Auth (Instant login & seamless launch)
-  const handleLinkedInAuth = async () => {
+  // LinkedIn Social Auth
+  const handleLinkedInAuth = () => {
     setError(null);
     setInfoMsg(null);
-    setIsLoading(true);
-
-    const destinationPath = typeof window !== "undefined"
-      ? new URLSearchParams(window.location.search).get("redirect") || "/dashboard"
-      : "/dashboard";
-
-    try {
-      const res = await apiFetch("/auth/social-login", {
-        method: "POST",
-        body: JSON.stringify({
-          provider: "linkedin",
-          email: "sachinrawat6264384464@gmail.com",
-          full_name: "Sachin Rawat"
-        })
-      });
-
-      setAuth(res.user, res.access_token);
-      setInfoMsg(`🎉 Successfully authenticated via LinkedIn as ${res.user.full_name}! Redirecting...`);
-      router.push(destinationPath);
-    } catch (err: any) {
-      setError(err.message || "LinkedIn authentication failed. Please try again.");
-    } finally {
-      setIsLoading(false);
-    }
+    openSocialAuthModal("linkedin");
   };
 
   useEffect(() => {
