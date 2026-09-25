@@ -98,17 +98,17 @@ async def update_my_profile(
         await db.flush()
 
     if req.get("full_name"):
-        user.full_name = req["full_name"]
-        cand.full_name = req["full_name"]
+        user.full_name = req["full_name"].strip()
+        cand.full_name = req["full_name"].strip()
     if req.get("phone"):
-        user.phone_number = req["phone"]
-        cand.phone = req["phone"]
+        user.phone_number = req["phone"].strip()
+        cand.phone = req["phone"].strip()
     if req.get("target_role"):
-        cand.target_role = req["target_role"]
+        cand.target_role = req["target_role"].strip()
     if req.get("target_salary_band"):
-        cand.target_salary_band = req["target_salary_band"]
+        cand.target_salary_band = req["target_salary_band"].strip()
     if req.get("experience_level"):
-        cand.experience_level = req["experience_level"]
+        cand.experience_level = req["experience_level"].strip()
     
     import json
     notes_dict = {}
@@ -121,67 +121,22 @@ async def update_my_profile(
     res_data = dict(cand.resume_data_json or {})
 
     if req.get("designation"):
-        notes_dict["designation"] = req["designation"]
-        res_data["designation"] = req["designation"]
+        notes_dict["designation"] = req["designation"].strip()
+        res_data["designation"] = req["designation"].strip()
     if req.get("linkedin_url"):
-        notes_dict["linkedin_url"] = req["linkedin_url"]
-        res_data["linkedin_url"] = req["linkedin_url"]
+        notes_dict["linkedin_url"] = req["linkedin_url"].strip()
+        res_data["linkedin_url"] = req["linkedin_url"].strip()
 
     cand.notes = json.dumps(notes_dict)
     cand.resume_data_json = res_data
 
     if req.get("mark_stage_0_complete"):
-        s_stmt = select(InterviewStage).where(InterviewStage.stage_number == 0)
-        s_res = await db.execute(s_stmt)
-        stage0 = s_res.scalar_one_or_none()
-        
-        from app.models import InterviewTemplate
-        att_stmt = select(InterviewAttempt).where(InterviewAttempt.candidate_id == cand.id).order_by(desc(InterviewAttempt.created_at))
-        att_res = await db.execute(att_stmt)
-        attempt = att_res.scalars().first()
-        
-        if not attempt:
-            t_stmt = select(InterviewTemplate).limit(1)
-            t_res = await db.execute(t_stmt)
-            template = t_res.scalar_one_or_none()
-            template_id = template.id if template else None
-            
-            attempt = InterviewAttempt(
-                candidate_id=cand.id,
-                interview_template_id=template_id,
-                status="IN_PROGRESS"
-            )
-            db.add(attempt)
-            await db.flush()
-
-        if stage0:
-            sa_stmt = select(StageAttempt).where(
-                StageAttempt.interview_attempt_id == attempt.id,
-                StageAttempt.interview_stage_id == stage0.id
-            )
-            sa_res = await db.execute(sa_stmt)
-            sa = sa_res.scalar_one_or_none()
-
-            if not sa:
-                sa = StageAttempt(
-                    interview_attempt_id=attempt.id,
-                    interview_stage_id=stage0.id,
-                    stage_number=0,
-                    status="PASSED",
-                    score=100.0
-                )
-                db.add(sa)
-            else:
-                sa.status = "PASSED"
-                sa.score = 100.0
-
-            cand.xp = (cand.xp or 0) + 200
-            cand.readiness_score = max(cand.readiness_score or 0.0, 75.0)
+        cand.xp = (cand.xp or 0) + 200
+        cand.readiness_score = max(cand.readiness_score or 0.0, 75.0)
 
     await db.commit()
-    await db.refresh(cand)
     return StandardResponse(
-        message="Profile and Stage 0 completed successfully",
+        message="Profile saved to database successfully",
         data={
             "id": cand.id,
             "full_name": cand.full_name,

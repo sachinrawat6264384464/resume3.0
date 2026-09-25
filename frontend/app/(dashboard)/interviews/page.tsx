@@ -290,11 +290,15 @@ export default function InterviewsPage() {
     }
   };
 
-  const handleSaveStage0Profile = async (e: React.FormEvent) => {
+  const handleSaveStage0Profile = (e: React.FormEvent) => {
     e.preventDefault();
-    setIsSavingStage0(true);
     
-    // Save to localStorage immediately for instant local persistence
+    // 1. Instant UI modal close & success notification (0ms delay)
+    setIsSavingStage0(false);
+    setIsStage0ModalOpen(false);
+    setPaymentSuccessMsg("🎉 Stage 0 Profile Setup Saved! +200 XP Awarded & Stage 1 Unlocked.");
+
+    // 2. Instant Local Storage Persistence
     if (typeof window !== "undefined") {
       try {
         if (stage0Form.linkedinUrl.trim()) {
@@ -312,27 +316,28 @@ export default function InterviewsPage() {
       } catch (e) {}
     }
 
-    try {
-      await apiFetch("/candidates/me/profile", {
-        method: "PUT",
-        body: JSON.stringify({
-          full_name: stage0Form.fullName,
-          target_role: stage0Form.targetRole,
-          designation: stage0Form.designation,
-          linkedin_url: stage0Form.linkedinUrl.trim(),
-          experience_level: stage0Form.experienceLevel,
-          target_salary_band: stage0Form.targetSalaryBand,
-          mark_stage_0_complete: true
-        })
-      });
-    } catch (err: any) {
-      console.warn("Stage 0 Profile API sync notice (saved locally):", err);
-    } finally {
-      setIsSavingStage0(false);
-      setIsStage0ModalOpen(false);
-      setPaymentSuccessMsg("🎉 Stage 0 Profile Setup Completed! +200 XP Awarded & Stage 1 Unlocked.");
-      fetchStagesData();
-    }
+    // 3. Instant local stage state update (Unlock Stage 1 immediately)
+    setStages((prevStages) =>
+      prevStages.map((stg) => {
+        if (stg.id === 0) return { ...stg, status: "passed", score: 100 };
+        if (stg.id === 1 && stg.status === "locked") return { ...stg, status: "unlocked" };
+        return stg;
+      })
+    );
+
+    // 4. Background DB persistence (non-blocking)
+    apiFetch("/candidates/me/profile", {
+      method: "PUT",
+      body: JSON.stringify({
+        full_name: stage0Form.fullName,
+        target_role: stage0Form.targetRole,
+        designation: stage0Form.designation,
+        linkedin_url: stage0Form.linkedinUrl.trim(),
+        experience_level: stage0Form.experienceLevel,
+        target_salary_band: stage0Form.targetSalaryBand,
+        mark_stage_0_complete: true
+      })
+    }).catch((err) => console.warn("Stage 0 DB sync notice:", err));
   };
 
   const handleStartStage = async (stageId: number) => {
