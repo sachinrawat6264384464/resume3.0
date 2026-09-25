@@ -26,11 +26,14 @@ async def get_leaderboard(
     limit: int = Query(100, ge=1, le=500),
     db: AsyncSession = Depends(get_db)
 ):
-    # Query candidates registered in database
+    # Query candidates registered in database (excluding admin accounts)
     stmt = (
         select(Candidate)
         .options(selectinload(Candidate.user))
         .join(User, Candidate.user_id == User.id)
+        .where(User.role != "admin")
+        .where(~User.full_name.ilike("%admin%"))
+        .where(~User.full_name.ilike("%alex vance%"))
         .order_by(desc(Candidate.xp), desc(Candidate.readiness_score))
         .limit(limit)
     )

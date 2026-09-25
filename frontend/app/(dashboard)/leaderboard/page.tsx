@@ -80,6 +80,37 @@ const HexagonBadge = ({ badge }: { badge: CurriculumBadge }) => {
   );
 };
 
+const parseCandidateBadges = (rawBadges: any[]): CurriculumBadge[] => {
+  if (!Array.isArray(rawBadges) || rawBadges.length === 0) {
+    return [];
+  }
+
+  const claimed: CurriculumBadge[] = [];
+
+  MODULE_BADGES.forEach((mb) => {
+    const isMatched = rawBadges.some((b) => {
+      if (typeof b !== "string") return false;
+      const str = b.toLowerCase();
+      return (
+        str === mb.id.toLowerCase() ||
+        str.includes(mb.modNum.toLowerCase()) ||
+        str.includes(mb.title.toLowerCase()) ||
+        (mb.id === "mod-1" && (str.includes("linux") || str.includes("stage 05") || str.includes("stage 5"))) ||
+        (mb.id === "mod-2" && (str.includes("aws") || str.includes("ci/cd") || str.includes("stage 10"))) ||
+        (mb.id === "mod-3" && (str.includes("kubernetes") || str.includes("stage 15"))) ||
+        (mb.id === "mod-4" && (str.includes("devsecops") || str.includes("stage 20"))) ||
+        (mb.id === "mod-5" && (str.includes("boss") || str.includes("40 lpa") || str.includes("stage 30")))
+      );
+    });
+
+    if (isMatched) {
+      claimed.push(mb);
+    }
+  });
+
+  return claimed;
+};
+
 export default function LeaderboardPage() {
   const user = useAuthStore((state) => state.user);
   
@@ -101,11 +132,11 @@ export default function LeaderboardPage() {
       initials: "PT",
       linkedinUrl: "https://www.linkedin.com/in/pooja-tyagi/",
       batch: "Batch 44",
-      badges: [MODULE_BADGES[0], MODULE_BADGES[1], MODULE_BADGES[2]],
-      extraBadgesCount: 4,
-      postsCount: 19,
+      allClaimedBadges: MODULE_BADGES.slice(0, 5),
+      badges: MODULE_BADGES.slice(0, 3),
+      extraBadgesCount: 2,
       pts: 2151,
-      badgeCountTotal: 7,
+      badgeCountTotal: 5,
       role: "Senior Cloud & DevOps Engineer",
       readinessScore: 94
     },
@@ -115,11 +146,11 @@ export default function LeaderboardPage() {
       initials: "SB",
       linkedinUrl: "https://www.linkedin.com/in/sandip-biswas/",
       batch: "Batch 44",
-      badges: [MODULE_BADGES[1], MODULE_BADGES[2], MODULE_BADGES[3]],
-      extraBadgesCount: 4,
-      postsCount: 20,
+      allClaimedBadges: MODULE_BADGES.slice(0, 4),
+      badges: MODULE_BADGES.slice(0, 3),
+      extraBadgesCount: 1,
       pts: 2105,
-      badgeCountTotal: 7,
+      badgeCountTotal: 4,
       role: "AWS & Kubernetes Architect",
       readinessScore: 91
     },
@@ -129,11 +160,11 @@ export default function LeaderboardPage() {
       initials: "RK",
       linkedinUrl: "https://www.linkedin.com/in/rakesh-kumar/",
       batch: "Batch 44",
-      badges: [MODULE_BADGES[1], MODULE_BADGES[2], MODULE_BADGES[3]],
-      extraBadgesCount: 5,
-      postsCount: 20,
+      allClaimedBadges: MODULE_BADGES.slice(0, 3),
+      badges: MODULE_BADGES.slice(0, 3),
+      extraBadgesCount: 0,
       pts: 2104,
-      badgeCountTotal: 8,
+      badgeCountTotal: 3,
       role: "Site Reliability Engineer (SRE)",
       readinessScore: 90
     },
@@ -143,11 +174,11 @@ export default function LeaderboardPage() {
       initials: "AC",
       linkedinUrl: "https://www.linkedin.com/in/abhishek-chahar/",
       batch: "Batch 44",
-      badges: [MODULE_BADGES[1], MODULE_BADGES[2], MODULE_BADGES[3]],
-      extraBadgesCount: 2,
-      postsCount: 20,
+      allClaimedBadges: MODULE_BADGES.slice(0, 3),
+      badges: MODULE_BADGES.slice(0, 3),
+      extraBadgesCount: 0,
       pts: 2040,
-      badgeCountTotal: 5,
+      badgeCountTotal: 3,
       role: "DevOps & CI/CD Automation Specialist",
       readinessScore: 88
     },
@@ -157,11 +188,11 @@ export default function LeaderboardPage() {
       initials: "AT",
       linkedinUrl: "https://www.linkedin.com/in/anju-tangadpally/",
       batch: "Batch 44",
-      badges: [MODULE_BADGES[1], MODULE_BADGES[2], MODULE_BADGES[4]],
-      extraBadgesCount: 2,
-      postsCount: 19,
+      allClaimedBadges: MODULE_BADGES.slice(0, 2),
+      badges: MODULE_BADGES.slice(0, 2),
+      extraBadgesCount: 0,
       pts: 2009,
-      badgeCountTotal: 5,
+      badgeCountTotal: 2,
       role: "Cloud Infrastructure Specialist",
       readinessScore: 86
     }
@@ -174,43 +205,71 @@ export default function LeaderboardPage() {
         const list = res?.data?.global_ranking || res?.global_ranking;
 
         if (Array.isArray(list) && list.length > 0) {
-          const formatted = list.map((item: any, idx: number) => {
+          // Filter out dummy or admin entries (e.g. Alex Vance or Admin)
+          const candidateList = list.filter((item: any) => {
+            const n = (item.candidate_name || "").toLowerCase();
+            return !n.includes("alex vance") && !n.includes("admin");
+          });
+
+          const formatted = candidateList.map((item: any, idx: number) => {
             const nameStr = item.candidate_name || "Candidate User";
             const init = nameStr.split(" ").map((n: string) => n[0]).join("").toUpperCase().slice(0, 2);
+            
+            const rawBadges = item.badges || item.badges_json || [];
+            let claimed = parseCandidateBadges(rawBadges);
+
+            // If candidate has XP, map XP milestone badges
+            if (claimed.length === 0 && (item.xp || 0) > 0) {
+              const count = Math.min(5, Math.floor((item.xp || 1000) / 300) + 1);
+              claimed = MODULE_BADGES.slice(0, count);
+            }
+
+            const visibleBadges = claimed.slice(0, 3);
+            const extraCount = Math.max(0, claimed.length - 3);
+
             return {
               rank: idx + 1,
               name: nameStr,
               initials: init,
               linkedinUrl: `https://www.linkedin.com/in/${nameStr.toLowerCase().replace(/\s+/g, "-")}`,
-              batch: "Batch 45",
-              badges: [MODULE_BADGES[0], MODULE_BADGES[1], MODULE_BADGES[2]],
-              extraBadgesCount: 4,
-              postsCount: Math.floor((item.xp || 1000) / 100),
+              batch: item.batch || "Batch 45",
+              allClaimedBadges: claimed,
+              badges: visibleBadges,
+              extraBadgesCount: extraCount,
               pts: item.xp || 1500,
-              badgeCountTotal: 7,
+              badgeCountTotal: claimed.length,
               role: item.target_role || "CloudOps Specialist",
               readinessScore: item.readiness_score || 85
             };
           });
 
-          // Prepend active user if logged in
-          if (user && user.full_name) {
+          // Prepend active user ONLY if logged in and IS A CANDIDATE (not admin / Alex Vance)
+          const userName = (user?.full_name || "").toLowerCase();
+          const isUserAdmin = userName.includes("admin") || userName.includes("alex vance") || user?.role === "admin";
+
+          if (user && user.full_name && !isUserAdmin) {
             const myInit = user.full_name.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2);
+            const myClaimed = MODULE_BADGES.slice(0, 5); // 5 claimed -> 3 visible + +2 pill
             const myEntry = {
               rank: 1,
               name: `${user.full_name} (YOU)`,
               initials: myInit,
               linkedinUrl: "https://www.linkedin.com/",
               batch: "Batch 45",
-              badges: [MODULE_BADGES[0], MODULE_BADGES[1], MODULE_BADGES[2]],
-              extraBadgesCount: 4,
-              postsCount: 19,
+              allClaimedBadges: myClaimed,
+              badges: myClaimed.slice(0, 3),
+              extraBadgesCount: 2,
               pts: 2151,
-              badgeCountTotal: 7,
+              badgeCountTotal: 5,
               role: "Senior Cloud & DevOps Engineer",
               readinessScore: 95
             };
-            setMembers([myEntry, ...formatted.slice(0, 10)]);
+
+            const combined = [myEntry, ...formatted.filter(m => !m.name.includes(user.full_name))].map((m, i) => ({
+              ...m,
+              rank: i + 1
+            }));
+            setMembers(combined);
           } else {
             setMembers(formatted);
           }
@@ -407,7 +466,6 @@ export default function LeaderboardPage() {
                 <th className="py-4 px-6 bg-slate-50/95 dark:bg-slate-900/95">MEMBER</th>
                 <th className="py-4 px-6 text-center bg-slate-50/95 dark:bg-slate-900/95">BATCH</th>
                 <th className="py-4 px-6 text-center bg-slate-50/95 dark:bg-slate-900/95">CURRICULUM BADGES</th>
-                <th className="py-4 px-6 text-center bg-slate-50/95 dark:bg-slate-900/95">POSTS</th>
                 <th className="py-4 px-6 text-center bg-slate-50/95 dark:bg-slate-900/95">TOTAL PTS</th>
               </tr>
             </thead>
@@ -415,14 +473,14 @@ export default function LeaderboardPage() {
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60 font-bold">
               {isLoading ? (
                 <tr>
-                  <td colSpan={6} className="py-12 text-center text-slate-400">
+                  <td colSpan={5} className="py-12 text-center text-slate-400">
                     <Loader2 className="w-6 h-6 animate-spin mx-auto text-[#FF6B00] mb-2" />
                     <span>Loading real database leaderboard entries...</span>
                   </td>
                 </tr>
               ) : filteredMembers.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="py-12 text-center text-slate-400 italic">
+                  <td colSpan={5} className="py-12 text-center text-slate-400 italic">
                     No leaderboard members found matching your search.
                   </td>
                 </tr>
@@ -466,25 +524,25 @@ export default function LeaderboardPage() {
                       </span>
                     </td>
 
-                    {/* Curriculum 3D Hexagon Badges */}
+                    {/* Curriculum 3D Hexagon Badges (Max 3 visible + extra count pill) */}
                     <td className="py-4 px-6">
                       <div className="flex items-center justify-center gap-2">
-                        {m.badges.map((b: any, bIdx: number) => (
-                          <HexagonBadge key={bIdx} badge={b} />
-                        ))}
+                        {m.badges && m.badges.length > 0 ? (
+                          m.badges.map((b: any, bIdx: number) => (
+                            <HexagonBadge key={bIdx} badge={b} />
+                          ))
+                        ) : (
+                          <span className="text-slate-400 text-xs italic font-normal">No Badges Claimed</span>
+                        )}
                         {m.extraBadgesCount > 0 && (
-                          <div className="w-10 h-10 rounded-full bg-cyan-100 dark:bg-cyan-950/80 border border-cyan-300 dark:border-cyan-800 text-cyan-700 dark:text-cyan-300 font-mono font-black text-xs flex items-center justify-center shadow-xs">
+                          <div 
+                            className="w-10 h-10 rounded-full bg-cyan-100 dark:bg-cyan-950/80 border border-cyan-300 dark:border-cyan-800 text-cyan-700 dark:text-cyan-300 font-mono font-black text-xs flex items-center justify-center shadow-xs cursor-pointer hover:scale-105 transition-transform"
+                            title={`${m.extraBadgesCount} additional badges claimed`}
+                          >
                             +{m.extraBadgesCount}
                           </div>
                         )}
                       </div>
-                    </td>
-
-                    {/* Posts Count */}
-                    <td className="py-4 px-6 text-center">
-                      <span className="px-3 py-1 rounded-xl text-xs font-mono font-black bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800">
-                        {m.postsCount}
-                      </span>
                     </td>
 
                     {/* Total Points */}
@@ -555,10 +613,10 @@ export default function LeaderboardPage() {
             {/* Unlocked Badges */}
             <div className="flex flex-col gap-2">
               <span className="text-xs font-black text-slate-700 dark:text-slate-300 uppercase tracking-wider">
-                Unlocked Curriculum Badges ({selectedCandidateAudit.badgeCountTotal}/10):
+                Unlocked Curriculum Badges ({selectedCandidateAudit.badgeCountTotal}/5):
               </span>
               <div className="flex items-center gap-2 overflow-x-auto py-2">
-                {selectedCandidateAudit.badges.map((b: any, idx: number) => (
+                {(selectedCandidateAudit.allClaimedBadges || selectedCandidateAudit.badges || []).map((b: any, idx: number) => (
                   <HexagonBadge key={idx} badge={b} />
                 ))}
               </div>

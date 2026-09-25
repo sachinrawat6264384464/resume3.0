@@ -79,6 +79,37 @@ const HexagonBadge = ({ badge }: { badge: CurriculumBadge }) => {
   );
 };
 
+const parseCandidateBadges = (rawBadges: any[]): CurriculumBadge[] => {
+  if (!Array.isArray(rawBadges) || rawBadges.length === 0) {
+    return [];
+  }
+
+  const claimed: CurriculumBadge[] = [];
+
+  MODULE_BADGES.forEach((mb) => {
+    const isMatched = rawBadges.some((b) => {
+      if (typeof b !== "string") return false;
+      const str = b.toLowerCase();
+      return (
+        str === mb.id.toLowerCase() ||
+        str.includes(mb.modNum.toLowerCase()) ||
+        str.includes(mb.title.toLowerCase()) ||
+        (mb.id === "mod-1" && (str.includes("linux") || str.includes("stage 05") || str.includes("stage 5"))) ||
+        (mb.id === "mod-2" && (str.includes("aws") || str.includes("ci/cd") || str.includes("stage 10"))) ||
+        (mb.id === "mod-3" && (str.includes("kubernetes") || str.includes("stage 15"))) ||
+        (mb.id === "mod-4" && (str.includes("devsecops") || str.includes("stage 20"))) ||
+        (mb.id === "mod-5" && (str.includes("boss") || str.includes("40 lpa") || str.includes("stage 30")))
+      );
+    });
+
+    if (isMatched) {
+      claimed.push(mb);
+    }
+  });
+
+  return claimed;
+};
+
 export default function AdminLeaderboardPage() {
   const [activeTab, setActiveTab] = useState<"global" | "weekly" | "improved" | "tech">("global");
   const [selectedTech, setSelectedTech] = useState<string>("AWS");
@@ -99,11 +130,11 @@ export default function AdminLeaderboardPage() {
       initials: "SR",
       linkedinUrl: "https://www.linkedin.com/in/sachin-rawat/",
       batch: "Batch 45",
-      badges: [MODULE_BADGES[0], MODULE_BADGES[1], MODULE_BADGES[2]],
-      extraBadgesCount: 4,
-      postsCount: 42,
+      allClaimedBadges: MODULE_BADGES.slice(0, 5),
+      badges: MODULE_BADGES.slice(0, 3),
+      extraBadgesCount: 2,
       pts: 4200,
-      badgeCountTotal: 7,
+      badgeCountTotal: 5,
       role: "Senior DevOps Engineer",
       readinessScore: 88,
       salaryBand: "₹25–40 LPA",
@@ -115,11 +146,11 @@ export default function AdminLeaderboardPage() {
       initials: "NN",
       linkedinUrl: "https://www.linkedin.com/in/neha-nair/",
       batch: "Batch 45",
-      badges: [MODULE_BADGES[0], MODULE_BADGES[1], MODULE_BADGES[2]],
-      extraBadgesCount: 4,
-      postsCount: 16,
+      allClaimedBadges: MODULE_BADGES.slice(0, 4),
+      badges: MODULE_BADGES.slice(0, 3),
+      extraBadgesCount: 1,
       pts: 1600,
-      badgeCountTotal: 7,
+      badgeCountTotal: 4,
       role: "Multi-Cloud Architect",
       readinessScore: 94,
       salaryBand: "₹25–40 LPA",
@@ -131,11 +162,11 @@ export default function AdminLeaderboardPage() {
       initials: "AS",
       linkedinUrl: "https://www.linkedin.com/in/aarav-sharma/",
       batch: "Batch 45",
-      badges: [MODULE_BADGES[0], MODULE_BADGES[1], MODULE_BADGES[2]],
-      extraBadgesCount: 4,
-      postsCount: 14,
+      allClaimedBadges: MODULE_BADGES.slice(0, 3),
+      badges: MODULE_BADGES.slice(0, 3),
+      extraBadgesCount: 0,
       pts: 1450,
-      badgeCountTotal: 6,
+      badgeCountTotal: 3,
       role: "Senior DevOps Engineer",
       readinessScore: 92.5,
       salaryBand: "₹25–40 LPA",
@@ -147,11 +178,11 @@ export default function AdminLeaderboardPage() {
       initials: "AV",
       linkedinUrl: "https://www.linkedin.com/in/ananya-verma/",
       batch: "Batch 45",
-      badges: [MODULE_BADGES[0], MODULE_BADGES[1], MODULE_BADGES[4]],
-      extraBadgesCount: 4,
-      postsCount: 13,
+      allClaimedBadges: MODULE_BADGES.slice(0, 3),
+      badges: MODULE_BADGES.slice(0, 3),
+      extraBadgesCount: 0,
       pts: 1300,
-      badgeCountTotal: 5,
+      badgeCountTotal: 3,
       role: "Site Reliability Engineer",
       readinessScore: 90,
       salaryBand: "₹25–40 LPA",
@@ -163,47 +194,15 @@ export default function AdminLeaderboardPage() {
       initials: "RG",
       linkedinUrl: "https://www.linkedin.com/in/rohan-gupta/",
       batch: "Batch 45",
-      badges: [MODULE_BADGES[0], MODULE_BADGES[1], MODULE_BADGES[2]],
-      extraBadgesCount: 4,
-      postsCount: 9,
+      allClaimedBadges: MODULE_BADGES.slice(0, 2),
+      badges: MODULE_BADGES.slice(0, 2),
+      extraBadgesCount: 0,
       pts: 950,
-      badgeCountTotal: 4,
+      badgeCountTotal: 2,
       role: "Kubernetes & SRE Specialist",
       readinessScore: 84,
       salaryBand: "₹18–25 LPA",
       streak: 6
-    },
-    {
-      rank: 6,
-      name: "Vikram Singh",
-      initials: "VS",
-      linkedinUrl: "https://www.linkedin.com/in/vikram-singh/",
-      batch: "Batch 45",
-      badges: [MODULE_BADGES[0], MODULE_BADGES[1], MODULE_BADGES[2]],
-      extraBadgesCount: 4,
-      postsCount: 6,
-      pts: 650,
-      badgeCountTotal: 4,
-      role: "Cloud Infrastructure Engineer",
-      readinessScore: 79.5,
-      salaryBand: "₹12–18 LPA",
-      streak: 4
-    },
-    {
-      rank: 7,
-      name: "Kabir Mehta",
-      initials: "KM",
-      linkedinUrl: "https://www.linkedin.com/in/kabir-mehta/",
-      batch: "Batch 45",
-      badges: [MODULE_BADGES[0], MODULE_BADGES[1], MODULE_BADGES[2]],
-      extraBadgesCount: 4,
-      postsCount: 5,
-      pts: 580,
-      badgeCountTotal: 3,
-      role: "Platform Engineer",
-      readinessScore: 75,
-      salaryBand: "₹12–18 LPA",
-      streak: 2
     }
   ]);
 
@@ -214,20 +213,37 @@ export default function AdminLeaderboardPage() {
         const list = res?.data?.global_ranking || res?.global_ranking;
 
         if (Array.isArray(list) && list.length > 0) {
-          const formatted = list.map((item: any, idx: number) => {
+          const candidateList = list.filter((item: any) => {
+            const n = (item.candidate_name || "").toLowerCase();
+            return !n.includes("alex vance") && !n.includes("admin");
+          });
+
+          const formatted = candidateList.map((item: any, idx: number) => {
             const nameStr = item.candidate_name || "Candidate User";
             const init = nameStr.split(" ").map((n: string) => n[0]).join("").toUpperCase().slice(0, 2);
+            
+            const rawBadges = item.badges || item.badges_json || [];
+            let claimed = parseCandidateBadges(rawBadges);
+
+            if (claimed.length === 0 && (item.xp || 0) > 0) {
+              const count = Math.min(5, Math.floor((item.xp || 1000) / 300) + 1);
+              claimed = MODULE_BADGES.slice(0, count);
+            }
+
+            const visibleBadges = claimed.slice(0, 3);
+            const extraCount = Math.max(0, claimed.length - 3);
+
             return {
               rank: idx + 1,
               name: nameStr,
               initials: init,
               linkedinUrl: `https://www.linkedin.com/in/${nameStr.toLowerCase().replace(/\s+/g, "-")}`,
               batch: item.batch || "Batch 45",
-              badges: [MODULE_BADGES[0], MODULE_BADGES[1], MODULE_BADGES[2]],
-              extraBadgesCount: 4,
-              postsCount: Math.floor((item.xp || 1000) / 100),
+              allClaimedBadges: claimed,
+              badges: visibleBadges,
+              extraBadgesCount: extraCount,
               pts: item.xp || 1500,
-              badgeCountTotal: 7,
+              badgeCountTotal: claimed.length,
               role: item.target_role || "CloudOps Specialist",
               readinessScore: item.readiness_score || 85,
               salaryBand: item.target_salary_band || "₹18–40 LPA",
@@ -467,7 +483,6 @@ export default function AdminLeaderboardPage() {
                 <th className="py-4 px-3 bg-slate-50/95 dark:bg-slate-900/95 min-w-[190px]">CANDIDATE NAME & ROLE</th>
                 <th className="py-4 px-3 text-center bg-slate-50/95 dark:bg-slate-900/95">BATCH</th>
                 <th className="py-4 px-4 text-center bg-slate-50/95 dark:bg-slate-900/95 min-w-[240px]">CURRICULUM BADGES</th>
-                <th className="py-4 px-3 text-center bg-slate-50/95 dark:bg-slate-900/95">POSTS</th>
                 <th className="py-4 px-3 text-center bg-slate-50/95 dark:bg-slate-900/95">TOTAL PTS / XP</th>
                 <th className="py-4 px-3 text-center bg-slate-50/95 dark:bg-slate-900/95">READINESS SCORE</th>
               </tr>
@@ -476,14 +491,14 @@ export default function AdminLeaderboardPage() {
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60 font-bold">
               {isLoading ? (
                 <tr>
-                  <td colSpan={7} className="py-12 text-center text-slate-400">
+                  <td colSpan={6} className="py-12 text-center text-slate-400">
                     <Loader2 className="w-6 h-6 animate-spin mx-auto text-[#FF6B00] mb-2" />
                     <span>Loading real database leaderboard entries...</span>
                   </td>
                 </tr>
               ) : filteredMembers.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="py-12 text-center text-slate-400 italic">
+                  <td colSpan={6} className="py-12 text-center text-slate-400 italic">
                     No leaderboard candidates found matching your search.
                   </td>
                 </tr>
@@ -539,25 +554,25 @@ export default function AdminLeaderboardPage() {
                       </span>
                     </td>
 
-                    {/* Curriculum 3D Hexagon Badges */}
+                    {/* Curriculum 3D Hexagon Badges (Max 3 visible + extra count pill) */}
                     <td className="py-4 px-4 min-w-[240px]">
                       <div className="flex items-center justify-center gap-2 whitespace-nowrap">
-                        {m.badges.map((b: any, bIdx: number) => (
-                          <HexagonBadge key={bIdx} badge={b} />
-                        ))}
+                        {m.badges && m.badges.length > 0 ? (
+                          m.badges.map((b: any, bIdx: number) => (
+                            <HexagonBadge key={bIdx} badge={b} />
+                          ))
+                        ) : (
+                          <span className="text-slate-400 text-xs italic font-normal">No Badges Claimed</span>
+                        )}
                         {m.extraBadgesCount > 0 && (
-                          <div className="w-10 h-10 rounded-full bg-cyan-100 dark:bg-cyan-950/80 border border-cyan-300 dark:border-cyan-800 text-cyan-700 dark:text-cyan-300 font-mono font-black text-xs flex items-center justify-center shadow-xs shrink-0">
+                          <div 
+                            className="w-10 h-10 rounded-full bg-cyan-100 dark:bg-cyan-950/80 border border-cyan-300 dark:border-cyan-800 text-cyan-700 dark:text-cyan-300 font-mono font-black text-xs flex items-center justify-center shadow-xs shrink-0 cursor-pointer hover:scale-105 transition-transform"
+                            title={`${m.extraBadgesCount} additional badges claimed`}
+                          >
                             +{m.extraBadgesCount}
                           </div>
                         )}
                       </div>
-                    </td>
-
-                    {/* Posts Count */}
-                    <td className="py-4 px-3 text-center">
-                      <span className="px-2.5 py-1 rounded-xl text-xs font-mono font-black bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800">
-                        {m.postsCount}
-                      </span>
                     </td>
 
                     {/* Total Points / XP */}
@@ -643,10 +658,10 @@ export default function AdminLeaderboardPage() {
             {/* Unlocked Badges */}
             <div className="flex flex-col gap-2">
               <span className="text-xs font-black text-slate-700 dark:text-slate-300 uppercase tracking-wider">
-                Unlocked Curriculum Badges ({selectedCandidateAudit.badgeCountTotal}/10):
+                Unlocked Curriculum Badges ({selectedCandidateAudit.badgeCountTotal}/5):
               </span>
               <div className="flex items-center gap-2 overflow-x-auto py-2">
-                {selectedCandidateAudit.badges.map((b: any, idx: number) => (
+                {(selectedCandidateAudit.allClaimedBadges || selectedCandidateAudit.badges || []).map((b: any, idx: number) => (
                   <HexagonBadge key={idx} badge={b} />
                 ))}
               </div>
