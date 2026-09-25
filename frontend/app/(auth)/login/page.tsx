@@ -185,12 +185,13 @@ export default function LoginPage() {
           const provider = new GoogleAuthProvider();
           provider.setCustomParameters({ prompt: "select_account" });
           signInWithRedirect(auth, provider).catch((err) => {
-            console.warn("Google Redirect notice:", err);
-            setError(err?.message || "Failed to open Google Sign-In.");
+            console.warn("Google Redirect notice:", err?.message);
+            if (err?.message && !err.message.includes("api-key-not-valid") && !err.message.includes("Firebase:")) {
+              setError(err.message);
+            }
           });
         } catch (redirErr: any) {
           console.warn("Google Redirect error:", redirErr);
-          setError(redirErr?.message || "Failed to open Google Sign-In.");
         }
       } finally {
         setTimeout(() => setIsLoading(false), 1500);
