@@ -175,26 +175,26 @@ export default function LoginPage() {
         return;
       } catch (fbErr: any) {
         console.warn("Firebase Google Auth notice:", fbErr?.code, fbErr?.message);
-        if (fbErr?.code === "auth/popup-closed-by-user") {
+        if (fbErr?.code === "auth/operation-not-allowed") {
+          setError("⚠️ Google Sign-In is disabled in Firebase Console. Please go to Firebase Console > Authentication > Sign-in method and click Enable on Google.");
+        } else if (fbErr?.code === "auth/unauthorized-domain") {
+          setError("⚠️ localhost is not authorized in Firebase Console. Please go to Firebase Console > Authentication > Settings > Authorized domains and add localhost.");
+        } else if (fbErr?.code === "auth/popup-closed-by-user") {
           setError("Google Sign-In popup was closed. Please click 'Continue with Google' again.");
-          setIsLoading(false);
-          return;
-        }
-
-        try {
-          const provider = new GoogleAuthProvider();
-          provider.setCustomParameters({ prompt: "select_account" });
-          signInWithRedirect(auth, provider).catch((err) => {
-            console.warn("Google Redirect notice:", err?.message);
-            if (err?.message && !err.message.includes("api-key-not-valid") && !err.message.includes("Firebase:")) {
-              setError(err.message);
-            }
-          });
-        } catch (redirErr: any) {
-          console.warn("Google Redirect error:", redirErr);
+        } else if (fbErr?.code === "auth/popup-blocked") {
+          try {
+            const provider = new GoogleAuthProvider();
+            provider.setCustomParameters({ prompt: "select_account" });
+            await signInWithRedirect(auth, provider);
+            return;
+          } catch (redirErr: any) {
+            console.warn("Google Redirect error:", redirErr);
+          }
+        } else {
+          setError(fbErr?.message || "Google Sign-In popup closed. Please try again.");
         }
       } finally {
-        setTimeout(() => setIsLoading(false), 1500);
+        setIsLoading(false);
       }
     } else {
       setError("Firebase Auth service is initializing. Please try again.");
