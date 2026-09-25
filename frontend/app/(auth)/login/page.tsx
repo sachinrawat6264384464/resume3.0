@@ -124,7 +124,7 @@ export default function LoginPage() {
     }
   }, [router]);
 
-  // Google Social Auth (Opens real Google Account Selector for authentic Google sign-in)
+  // Google Social Auth (Opens real Google Account Selector directly in tab - zero popup blocking)
   const handleGoogleAuth = async () => {
     setError(null);
     setInfoMsg(null);
@@ -135,54 +135,54 @@ export default function LoginPage() {
         const provider = new GoogleAuthProvider();
         provider.setCustomParameters({ prompt: "select_account" });
 
-        const result = await signInWithPopup(auth, provider);
-        const gUser = result.user;
-        const gEmail = gUser.email || "";
-        const gName = gUser.displayName || gEmail.split("@")[0] || "Candidate User";
-
-        let res: any;
-        try {
-          res = await apiFetch("/auth/social-login", {
-            method: "POST",
-            body: JSON.stringify({
-              provider: "google",
-              email: gEmail,
-              full_name: gName,
-              provider_id: gUser.uid,
-              avatar_url: gUser.photoURL
-            })
-          });
-        } catch (apiErr) {
-          res = {
-            user: {
-              id: gUser.uid || `cand-${Date.now()}`,
-              organization_id: "org-001",
-              email: gEmail,
-              full_name: gName,
-              role: "CANDIDATE",
-              is_active: true,
-              avatar_url: gUser.photoURL,
-              created_at: new Date().toISOString()
-            },
-            access_token: "google-session-token"
-          };
-        }
-
-        const destinationPath = new URLSearchParams(window.location.search).get("redirect") || "/dashboard";
-        setAuth(res.user, res.access_token);
-        setInfoMsg(`🎉 Successfully logged in as ${gName}! Redirecting...`);
-        router.push(destinationPath);
+        // Direct main tab redirect to Google (100% bypasses browser popup blockers)
+        await signInWithRedirect(auth, provider);
         return;
       } catch (fbErr: any) {
-        console.warn("Firebase Google Auth notice:", fbErr?.code, fbErr?.message);
+        console.warn("Firebase Google Auth redirect notice:", fbErr?.code, fbErr?.message);
         try {
           const provider = new GoogleAuthProvider();
           provider.setCustomParameters({ prompt: "select_account" });
-          await signInWithRedirect(auth, provider);
+          const result = await signInWithPopup(auth, provider);
+          const gUser = result.user;
+          const gEmail = gUser.email || "";
+          const gName = gUser.displayName || gEmail.split("@")[0] || "Candidate User";
+
+          let res: any;
+          try {
+            res = await apiFetch("/auth/social-login", {
+              method: "POST",
+              body: JSON.stringify({
+                provider: "google",
+                email: gEmail,
+                full_name: gName,
+                provider_id: gUser.uid,
+                avatar_url: gUser.photoURL
+              })
+            });
+          } catch (apiErr) {
+            res = {
+              user: {
+                id: gUser.uid || `cand-${Date.now()}`,
+                organization_id: "org-001",
+                email: gEmail,
+                full_name: gName,
+                role: "CANDIDATE",
+                is_active: true,
+                avatar_url: gUser.photoURL,
+                created_at: new Date().toISOString()
+              },
+              access_token: "google-session-token"
+            };
+          }
+
+          const destinationPath = new URLSearchParams(window.location.search).get("redirect") || "/dashboard";
+          setAuth(res.user, res.access_token);
+          setInfoMsg(`🎉 Successfully logged in as ${gName}! Redirecting...`);
+          router.push(destinationPath);
           return;
-        } catch (redirErr: any) {
-          console.warn("Google Redirect notice:", redirErr);
-          setError("Redirecting to Google Sign-In...");
+        } catch (popupErr: any) {
+          setError(popupErr?.message || "Failed to open Google Sign-In.");
         }
       } finally {
         setIsLoading(false);
