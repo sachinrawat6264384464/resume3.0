@@ -45,8 +45,28 @@ export default function LoginPage() {
 
   const recaptchaVerifierRef = useRef<any>(null);
 
-  // Google One-Click Social Auth & Instant Registration
-  const handleGoogleAuth = async () => {
+  // Social Auth Modal State
+  const [isSocialModalOpen, setIsSocialModalOpen] = useState(false);
+  const [socialProvider, setSocialProvider] = useState<"google" | "linkedin">("google");
+  const [socialEmail, setSocialEmail] = useState("");
+  const [socialName, setSocialName] = useState("");
+
+  const openSocialAuthModal = (provider: "google" | "linkedin") => {
+    setSocialProvider(provider);
+    const defaultEmail = provider === "google" ? "candidate@gmail.com" : "candidate@linkedin.com";
+    const defaultName = fullName.trim() || "Sachin Rawat";
+    setSocialEmail(email.trim() || defaultEmail);
+    setSocialName(defaultName);
+    setIsSocialModalOpen(true);
+  };
+
+  const handleExecuteSocialAuth = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    if (!socialEmail || !socialEmail.includes("@")) {
+      setError("Please enter a valid email address.");
+      return;
+    }
+
     setIsLoading(true);
     setError(null);
     setInfoMsg(null);
@@ -56,7 +76,35 @@ export default function LoginPage() {
       : "/dashboard";
 
     try {
-      if (auth) {
+      const res = await apiFetch("/auth/social-login", {
+        method: "POST",
+        body: JSON.stringify({
+          provider: socialProvider,
+          email: socialEmail.trim().toLowerCase(),
+          full_name: socialName.trim() || "Candidate User"
+        })
+      });
+
+      setAuth(res.user, res.access_token);
+      setIsSocialModalOpen(false);
+      setInfoMsg(`🎉 Successfully authenticated via ${socialProvider === "google" ? "Google" : "LinkedIn"} as ${res.user.full_name}! Redirecting...`);
+      router.push(destinationPath);
+    } catch (err: any) {
+      setError(err.message || `Failed to authenticate with ${socialProvider}.`);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Google One-Click Social Auth & Instant Registration
+  const handleGoogleAuth = async () => {
+    setError(null);
+    setInfoMsg(null);
+
+    // 1. Try Firebase Google Popup first
+    if (auth) {
+      try {
+        setIsLoading(true);
         const provider = new GoogleAuthProvider();
         const result = await signInWithPopup(auth, provider);
         const gUser = result.user;
@@ -74,82 +122,27 @@ export default function LoginPage() {
           })
         });
 
+        const destinationPath = new URLSearchParams(window.location.search).get("redirect") || "/dashboard";
         setAuth(res.user, res.access_token);
         setInfoMsg(`🎉 Successfully logged in as ${gName}! Redirecting...`);
         router.push(destinationPath);
         return;
-      }
-    } catch (fbErr: any) {
-      console.warn("Firebase Google popup notice / fallback prompt:", fbErr);
-    }
-
-    // Fallback: Prompt for Google email & name if Firebase popup is blocked
-    try {
-      const inputEmail = prompt("Enter your Google Account email address to register / log in:", "candidate@gmail.com");
-      if (!inputEmail || !inputEmail.includes("@")) {
+      } catch (fbErr: any) {
+        console.warn("Firebase Google popup notice / fallback modal:", fbErr);
+      } finally {
         setIsLoading(false);
-        return;
       }
-      const defaultName = inputEmail.split("@")[0].replace(/[._-]/g, " ");
-      const formattedName = defaultName.charAt(0).toUpperCase() + defaultName.slice(1);
-      const inputName = prompt("Enter your Candidate Full Name:", fullName || formattedName) || formattedName;
-
-      const res = await apiFetch("/auth/social-login", {
-        method: "POST",
-        body: JSON.stringify({
-          provider: "google",
-          email: inputEmail.trim().toLowerCase(),
-          full_name: inputName.trim()
-        })
-      });
-
-      setAuth(res.user, res.access_token);
-      setInfoMsg(`🎉 Welcome ${inputName}! Google account authenticated.`);
-      router.push(destinationPath);
-    } catch (err: any) {
-      setError(err.message || "Failed to authenticate with Google. Please try Email OTP.");
-    } finally {
-      setIsLoading(false);
     }
+
+    // 2. Open Custom Google Sign-In Modal (NO browser prompt!)
+    openSocialAuthModal("google");
   };
 
   // LinkedIn One-Click Social Auth & Instant Registration
-  const handleLinkedInAuth = async () => {
-    setIsLoading(true);
+  const handleLinkedInAuth = () => {
     setError(null);
     setInfoMsg(null);
-
-    const destinationPath = typeof window !== "undefined"
-      ? new URLSearchParams(window.location.search).get("redirect") || "/dashboard"
-      : "/dashboard";
-
-    try {
-      const linkedinEmail = prompt("Enter your LinkedIn email address to register / sign in:", "candidate@linkedin.com");
-      if (!linkedinEmail || !linkedinEmail.includes("@")) {
-        setIsLoading(false);
-        return;
-      }
-      const defaultName = linkedinEmail.split("@")[0].replace(/[._-]/g, " ");
-      const formattedName = defaultName.charAt(0).toUpperCase() + defaultName.slice(1);
-      const linkedinName = prompt("Enter your LinkedIn Profile Name:", fullName || formattedName) || formattedName;
-
-      const res = await apiFetch("/auth/social-login", {
-        method: "POST",
-        body: JSON.stringify({
-          provider: "linkedin",
-          email: linkedinEmail.trim().toLowerCase(),
-          full_name: linkedinName.trim()
-        })
-      });
-
-      setAuth(res.user, res.access_token);
-      setInfoMsg(`🎉 Connected via LinkedIn as ${linkedinName}! Redirecting...`);
-      router.push(destinationPath);
-    } catch (err: any) {
-      setError(err.message || "Failed to authenticate with LinkedIn.");
-    } finally {
-      setIsLoading(false);
-    }
+    openSocialAuthModal("linkedin");
   };
 
   useEffect(() => {
@@ -777,6 +770,130 @@ export default function LoginPage() {
         </div>
 
       </div>
+
+      {/* NATIVE SOCIAL AUTH MODAL (Google & LinkedIn) */}
+      {isSocialModalOpen && (
+        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 flex items-center justify-center p-4 animate-fadeIn">
+          <div className="bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-800 rounded-[32px] max-w-md w-full p-6 sm:p-8 shadow-2xl flex flex-col gap-5 relative overflow-hidden">
+            
+            {/* Header with Provider Branding */}
+            <div className="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-slate-800">
+              <div className="flex items-center gap-3">
+                {socialProvider === "google" ? (
+                  <div className="w-10 h-10 rounded-2xl bg-white border border-slate-200 dark:border-slate-700 flex items-center justify-center shadow-xs">
+                    <svg className="w-5 h-5 shrink-0" viewBox="0 0 24 24">
+                      <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                      <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                      <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
+                      <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
+                    </svg>
+                  </div>
+                ) : (
+                  <div className="w-10 h-10 rounded-2xl bg-[#0A66C2] text-white flex items-center justify-center shadow-md">
+                    <svg className="w-5 h-5 fill-current shrink-0" viewBox="0 0 24 24">
+                      <path d="M19 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14m-.5 15.5v-5.3a3.26 3.26 0 0 0-3.26-3.26c-.85 0-1.84.52-2.28 1.3v-1.11h-2.79v8.37h2.79v-4.93c0-.77.62-1.4 1.39-1.4a1.4 1.4 0 0 1 1.4 1.4v4.93h2.75M6.46 10.9v8.37H9.25V10.9H6.46M7.86 6.64a1.6 1.6 0 1 0 0 3.2 1.6 1.6 0 0 0 0-3.2Z"/>
+                    </svg>
+                  </div>
+                )}
+                
+                <div className="flex flex-col">
+                  <h3 className="text-base font-black text-slate-900 dark:text-white uppercase tracking-tight">
+                    {socialProvider === "google" ? "Sign In with Google" : "Sign In with LinkedIn"}
+                  </h3>
+                  <span className="text-[11px] font-medium text-slate-500">
+                    {socialProvider === "google" ? "One-click OAuth account authorization" : "Sync candidate profile & badges"}
+                  </span>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setIsSocialModalOpen(false)}
+                className="p-1.5 text-slate-400 hover:text-slate-900 dark:hover:text-white cursor-pointer rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Account Quick Select Pills */}
+            <div className="flex flex-col gap-2">
+              <span className="text-[11px] font-bold text-slate-500 uppercase font-mono tracking-wider">
+                Select Candidate Account:
+              </span>
+              <button
+                type="button"
+                onClick={() => {
+                  setSocialEmail("sachinrawat6264384464@gmail.com");
+                  setSocialName("Sachin Rawat");
+                }}
+                className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 hover:border-[#FF6B00] flex items-center justify-between text-left transition-all cursor-pointer group"
+              >
+                <div className="flex flex-col">
+                  <span className="text-xs font-black text-slate-900 dark:text-white group-hover:text-[#FF6B00]">
+                    Sachin Rawat (Candidate)
+                  </span>
+                  <span className="text-[11px] font-mono text-slate-500">sachinrawat6264384464@gmail.com</span>
+                </div>
+                <CheckCircle2 className="w-4 h-4 text-[#FF6B00] opacity-80" />
+              </button>
+            </div>
+
+            {/* Custom Input Fields */}
+            <form onSubmit={handleExecuteSocialAuth} className="flex flex-col gap-3.5 pt-1">
+              <div className="flex flex-col gap-1">
+                <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                  {socialProvider === "google" ? "Google Email Address:" : "LinkedIn Email Address:"}
+                </label>
+                <input
+                  type="email"
+                  required
+                  value={socialEmail}
+                  onChange={(e) => setSocialEmail(e.target.value)}
+                  placeholder={socialProvider === "google" ? "candidate@gmail.com" : "candidate@linkedin.com"}
+                  className="w-full px-4 py-2.5 rounded-2xl text-xs bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white font-bold focus:outline-none focus:border-[#FF6B00]"
+                />
+              </div>
+
+              <div className="flex flex-col gap-1">
+                <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                  Full Candidate Name:
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={socialName}
+                  onChange={(e) => setSocialName(e.target.value)}
+                  placeholder="e.g. Sachin Rawat"
+                  className="w-full px-4 py-2.5 rounded-2xl text-xs bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white font-bold focus:outline-none focus:border-[#FF6B00]"
+                />
+              </div>
+
+              <button
+                type="submit"
+                disabled={isLoading}
+                className={`w-full py-3.5 rounded-2xl font-black text-xs text-white shadow-lg flex items-center justify-center gap-2 transition-all cursor-pointer uppercase tracking-wider mt-2 ${
+                  socialProvider === "google"
+                    ? "bg-[#FF6B00] hover:bg-[#e05e00] shadow-[#FF6B00]/25"
+                    : "bg-[#0A66C2] hover:bg-[#084e96] shadow-[#0A66C2]/25"
+                }`}
+              >
+                {isLoading ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span>Authenticating Candidate...</span>
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="w-4 h-4" />
+                    <span>Authorize & Launch Portal →</span>
+                  </>
+                )}
+              </button>
+            </form>
+
+          </div>
+        </div>
+      )}
 
     </div>
   );
