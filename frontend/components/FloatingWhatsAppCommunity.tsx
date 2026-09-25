@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { usePathname } from "next/navigation";
 import { Headphones, X, ChevronRight } from "lucide-react";
+import { apiFetch } from "@/lib/api";
 
 export function FloatingWhatsAppCommunity() {
   const pathname = usePathname();
@@ -11,6 +12,7 @@ export function FloatingWhatsAppCommunity() {
   const [pos, setPos] = useState({ x: 24, y: 24 }); // right: 24, bottom: 24
   const [isDragging, setIsDragging] = useState(false);
   const [hasMoved, setHasMoved] = useState(false);
+  const [activeSession, setActiveSession] = useState<any>(null);
 
   const dragStartRef = useRef<{ startX: number; startY: number; initialX: number; initialY: number } | null>(null);
 
@@ -28,6 +30,15 @@ export function FloatingWhatsAppCommunity() {
         }
       }
     } catch (e) {}
+
+    // Fetch active live session URLs configured by Admin in /admin/live-sessions
+    apiFetch("/live-sessions/active")
+      .then((res) => {
+        if (res?.data && Array.isArray(res.data) && res.data.length > 0) {
+          setActiveSession(res.data[0]);
+        }
+      })
+      .catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -126,12 +137,14 @@ export function FloatingWhatsAppCommunity() {
 
   const openWhatsApp = (e: React.MouseEvent) => {
     e.stopPropagation();
-    window.open("https://chat.whatsapp.com/LOxsACQwbGgAudjaC3qhOJ", "_blank", "noopener,noreferrer");
+    const url = activeSession?.whatsapp_group_url || "https://chat.whatsapp.com/AIInterviewCommunity";
+    window.open(url, "_blank", "noopener,noreferrer");
   };
 
   const openZoomMeet = (e: React.MouseEvent) => {
     e.stopPropagation();
-    window.open("https://zoom.us/j/cloudops-candidate-support", "_blank", "noopener,noreferrer");
+    const url = activeSession?.meeting_url || "https://meet.google.com/xyz-cloudops-live";
+    window.open(url, "_blank", "noopener,noreferrer");
   };
 
   return (

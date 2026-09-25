@@ -764,7 +764,8 @@ Learn Today. Implement Today. Build Your Career for a Lifetime.
               <button
                 type="button"
                 onClick={() => {
-                  if (typeof window !== "undefined") window.open("https://chat.whatsapp.com/LOxsACQwbGgAudjaC3qhOJ", "_blank");
+                  const url = activeLiveSession?.whatsapp_group_url || "https://chat.whatsapp.com/AIInterviewCommunity";
+                  if (typeof window !== "undefined") window.open(url, "_blank");
                 }}
                 className="flex-1 py-4 px-5 rounded-2xl bg-gradient-to-r from-emerald-600 via-emerald-500 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black text-xs sm:text-sm tracking-wide shadow-xl shadow-emerald-900/40 border border-emerald-400/40 transition-all flex items-center justify-center gap-2.5 cursor-pointer uppercase group"
               >
