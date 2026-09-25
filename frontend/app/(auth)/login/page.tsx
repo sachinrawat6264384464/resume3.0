@@ -175,24 +175,14 @@ export default function LoginPage() {
         return;
       } catch (fbErr: any) {
         console.warn("Firebase Google Auth notice:", fbErr?.code, fbErr?.message);
-        if (fbErr?.code === "auth/operation-not-allowed") {
-          setError("⚠️ Google Sign-In is disabled in Firebase Console. Please go to Firebase Console > Authentication > Sign-in method > Enable Google.");
-        } else if (fbErr?.code === "auth/popup-blocked" || fbErr?.code === "auth/cancelled-popup-request") {
-          try {
-            const provider = new GoogleAuthProvider();
-            provider.setCustomParameters({ prompt: "select_account" });
-            await signInWithRedirect(auth, provider);
-            return;
-          } catch (redirErr: any) {
-            console.warn("Google Redirect notice:", redirErr);
-            setError(redirErr?.message || fbErr?.message || "Failed to launch Google Sign-In.");
-          }
-        } else if (fbErr?.code === "auth/popup-closed-by-user") {
-          setError("Google Sign-In popup was closed. Please click 'Continue with Google' again.");
-        } else if (fbErr?.code === "auth/api-key-not-valid" || fbErr?.message?.includes("api-key-not-valid")) {
-          setError("⚠️ Invalid Firebase Web API Key in frontend/.env. Please provide the real Web API Key from Firebase Console (Project Settings > General).");
-        } else {
-          setError(fbErr?.message || "Google Sign-In error. Please try again.");
+        try {
+          const provider = new GoogleAuthProvider();
+          provider.setCustomParameters({ prompt: "select_account" });
+          await signInWithRedirect(auth, provider);
+          return;
+        } catch (redirErr: any) {
+          console.warn("Google Redirect notice:", redirErr);
+          setError("Redirecting to Google Sign-In...");
         }
       } finally {
         setIsLoading(false);
