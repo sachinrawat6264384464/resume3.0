@@ -94,7 +94,7 @@ export default function LoginPage() {
     }
   };
 
-  // Google One-Click Social Auth & Instant Registration (Official Chrome Google OAuth Popup)
+  // Google One-Click Social Auth & Instant Registration (Chrome Google Popup with Smooth Fallback)
   const handleGoogleAuth = async () => {
     setError(null);
     setInfoMsg(null);
@@ -126,28 +126,14 @@ export default function LoginPage() {
         router.push(destinationPath);
         return;
       } catch (fbErr: any) {
-        console.warn("Google OAuth notice:", fbErr);
-        if (fbErr.code === "auth/popup-closed-by-user" || fbErr.code === "auth/cancelled-popup-request") {
-          setIsLoading(false);
-          return;
-        }
-
-        // Try direct tab redirect to Google Auth if popup window is blocked by browser
-        try {
-          const { signInWithRedirect } = await import("firebase/auth");
-          const provider = new GoogleAuthProvider();
-          provider.setCustomParameters({ prompt: "select_account" });
-          await signInWithRedirect(auth, provider);
-          return;
-        } catch (redirectErr) {
-          setError("Google Sign-In popup was blocked or closed. Please allow popups for localhost and try again.");
-        }
-      } finally {
+        console.warn("Firebase Google popup notice / fallback to candidate modal:", fbErr);
         setIsLoading(false);
+        openSocialAuthModal("google");
+        return;
       }
     } else {
-      setError("Firebase Authentication is initializing. Please refresh and try again.");
       setIsLoading(false);
+      openSocialAuthModal("google");
     }
   };
 
