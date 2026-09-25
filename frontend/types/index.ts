@@ -337,6 +337,8 @@ export interface ResumeATSResponse {
 export interface LeaderboardEntry {
   rank: number;
   candidate_id: string;
+  user_id?: string;
+  email?: string;
   candidate_name: string;
   experience_level: string;
   target_role: string;

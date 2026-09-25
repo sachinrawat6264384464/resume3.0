@@ -5,6 +5,8 @@ from app.schemas.common import BaseSchema
 class LeaderboardEntry(BaseSchema):
     rank: int
     candidate_id: str
+    user_id: Optional[str] = None
+    email: Optional[str] = None
     candidate_name: str
     experience_level: str = "MID"
     target_role: str = "CloudOps Engineer"

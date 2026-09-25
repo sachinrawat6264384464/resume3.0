@@ -49,6 +49,8 @@ async def get_leaderboard(
         global_ranking.append(LeaderboardEntry(
             rank=idx,
             candidate_id=cand.id,
+            user_id=cand.user_id,
+            email=cand.user.email if cand.user else None,
             candidate_name=name,
             experience_level=cand.experience_level or "Junior/Mid",
             target_role=cand.target_role or "Cloud Engineer",

@@ -168,6 +168,8 @@ export default function LeaderboardPage() {
 
             return {
               id: item.candidate_id,
+              userId: item.user_id,
+              email: item.email,
               rank: idx + 1,
               name: nameStr,
               initials: init,
@@ -186,6 +188,8 @@ export default function LeaderboardPage() {
 
         // 3. Attach logged-in candidate with their REAL DB XP and REAL claimed badges
         const userName = (user?.full_name || "").toLowerCase();
+        const userEmail = (user?.email || "").toLowerCase();
+        const userId = user?.id;
         const userRole = String(user?.role || "").toLowerCase();
         const isUserAdmin = userName.includes("admin") || userName.includes("alex vance") || userRole.includes("admin");
 
@@ -193,7 +197,9 @@ export default function LeaderboardPage() {
           const myInit = user.full_name.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2);
           
           const existingInList = formatted.find(
-            m => m.name.toLowerCase() === user.full_name.toLowerCase() || (m.id && user.id && m.id === user.id)
+            m => (userId && (m.id === userId || m.userId === userId)) ||
+                 (userEmail && m.email && m.email.toLowerCase() === userEmail) ||
+                 (m.name.toLowerCase() === userName)
           );
 
           // Get REAL claimed badges (from candidate performance DB or claimed list)
@@ -209,7 +215,9 @@ export default function LeaderboardPage() {
           const myExtraCount = Math.max(0, myRealBadges.length - 3);
 
           const myEntry = {
-            id: user.id || "me",
+            id: userId || existingInList?.id || "me",
+            userId: userId,
+            email: userEmail,
             rank: existingInList?.rank || (formatted.length + 1),
             name: `${user.full_name} (YOU)`,
             initials: myInit,
@@ -224,8 +232,13 @@ export default function LeaderboardPage() {
             readinessScore: myRealReadiness
           };
 
-          // Filter out duplicate user entry and sort by REAL XP (descending)
-          const otherMembers = formatted.filter(m => m.name.toLowerCase() !== user.full_name.toLowerCase());
+          // Filter out ONLY the logged-in candidate's exact row by ID/Email (or exact single match), keeping all other DB candidates
+          const otherMembers = formatted.filter(m => {
+            if (userId && (m.id === userId || m.userId === userId)) return false;
+            if (userEmail && m.email && m.email.toLowerCase() === userEmail) return false;
+            return true;
+          });
+
           const combined = [...otherMembers, myEntry]
             .sort((a, b) => (b.pts || 0) - (a.pts || 0))
             .map((m, i) => ({
