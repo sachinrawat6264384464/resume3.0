@@ -144,7 +144,7 @@ export default function LoginPage() {
     }
   }, [router]);
 
-  // Google Direct One-Click Social Auth (Navigates directly to Google Account Chooser screen)
+  // Google Direct One-Click Social Auth (Opens Chrome Google Account Selector Popup)
   const handleGoogleAuth = async () => {
     setError(null);
     setInfoMsg(null);
@@ -159,14 +159,46 @@ export default function LoginPage() {
     try {
       const provider = new GoogleAuthProvider();
       provider.setCustomParameters({ prompt: "select_account" });
-      // Direct redirect to Google Account Chooser page (avoids popup auto-close issue)
-      await signInWithRedirect(auth, provider);
-    } catch (fbErr: any) {
-      console.warn("Firebase Google Auth redirect error:", fbErr?.code, fbErr?.message);
-      setIsLoading(false);
 
+      const result = await signInWithPopup(auth, provider);
+      const gUser = result.user;
+      const gEmail = gUser.email || "";
+      const gName = gUser.displayName || gEmail.split("@")[0] || "Candidate User";
+
+      const res = await apiFetch("/auth/social-login", {
+        method: "POST",
+        body: JSON.stringify({
+          provider: "google",
+          email: gEmail,
+          full_name: gName,
+          provider_id: gUser.uid,
+          avatar_url: gUser.photoURL
+        })
+      });
+
+      const destinationPath = new URLSearchParams(window.location.search).get("redirect") || "/dashboard";
+      setAuth(res.user, res.access_token);
+      setInfoMsg(`🎉 Successfully logged in with Google as ${gName}! Redirecting...`);
+      router.push(destinationPath);
+    } catch (fbErr: any) {
+      console.warn("Firebase Google Auth notice:", fbErr?.code, fbErr?.message);
+
+      if (fbErr?.code === "auth/popup-closed-by-user" || fbErr?.code === "auth/cancelled-popup-request") {
+        return;
+      }
+      if (fbErr?.code === "auth/popup-blocked") {
+        try {
+          const provider = new GoogleAuthProvider();
+          provider.setCustomParameters({ prompt: "select_account" });
+          await signInWithRedirect(auth, provider);
+          return;
+        } catch (redirErr: any) {
+          setError("Google sign-in popup was blocked by your browser. Please allow popups.");
+        }
+        return;
+      }
       if (fbErr?.code === "auth/operation-not-allowed") {
-        setError("⚠️ Google Sign-In is disabled in your Firebase Console. Please go to Firebase Console > Authentication > Sign-in method > Enable Google.");
+        setError("⚠️ Google Sign-In is disabled in Firebase Console. Please enable Google under Authentication > Sign-in method.");
         return;
       }
       if (fbErr?.code === "auth/api-key-not-valid") {
@@ -175,6 +207,8 @@ export default function LoginPage() {
       }
 
       setError(fbErr?.message || "Google Sign-In failed. Please try again.");
+    } finally {
+      setIsLoading(false);
     }
   };
 
