@@ -10,7 +10,16 @@ import {
 } from "lucide-react";
 import { useAuthStore } from "@/lib/store";
 import { apiFetch } from "@/lib/api";
-import { auth, GoogleAuthProvider, signInWithPopup, RecaptchaVerifier, signInWithPhoneNumber, type ConfirmationResult } from "@/lib/firebase";
+import { 
+  auth, 
+  GoogleAuthProvider, 
+  signInWithPopup, 
+  signInWithRedirect,
+  getRedirectResult,
+  RecaptchaVerifier, 
+  signInWithPhoneNumber, 
+  type ConfirmationResult 
+} from "@/lib/firebase";
 import { ThemeToggle } from "@/components/ThemeToggle";
 
 export default function LoginPage() {
@@ -45,7 +54,7 @@ export default function LoginPage() {
 
   const recaptchaVerifierRef = useRef<any>(null);
 
-  // Social Auth Modal State
+  // Social Auth Modal State (LinkedIn / Manual Fallback)
   const [isSocialModalOpen, setIsSocialModalOpen] = useState(false);
   const [socialProvider, setSocialProvider] = useState<"google" | "linkedin">("google");
   const [socialEmail, setSocialEmail] = useState("");
@@ -94,46 +103,106 @@ export default function LoginPage() {
     }
   };
 
-  // Google One-Click Social Auth & Instant Registration (Chrome Google Popup with Smooth Fallback)
+  // Check for Google OAuth Redirect Result when page mounts
+  useEffect(() => {
+    if (auth && typeof window !== "undefined") {
+      getRedirectResult(auth)
+        .then(async (result) => {
+          if (result && result.user) {
+            setIsLoading(true);
+            const gUser = result.user;
+            const gEmail = gUser.email || "";
+            const gName = gUser.displayName || gEmail.split("@")[0] || "Candidate User";
+
+            const res = await apiFetch("/auth/social-login", {
+              method: "POST",
+              body: JSON.stringify({
+                provider: "google",
+                email: gEmail,
+                full_name: gName,
+                provider_id: gUser.uid,
+                avatar_url: gUser.photoURL
+              })
+            });
+
+            const destinationPath = new URLSearchParams(window.location.search).get("redirect") || "/dashboard";
+            setAuth(res.user, res.access_token);
+            setInfoMsg(`🎉 Successfully logged in with Google as ${gName}! Redirecting...`);
+            router.push(destinationPath);
+          }
+        })
+        .catch((err) => {
+          console.warn("Google Redirect result error:", err);
+        });
+    }
+  }, [router]);
+
+  // Google Direct One-Click Social Auth (Opens Chrome Google Account Chooser Tab/Popup)
   const handleGoogleAuth = async () => {
     setError(null);
     setInfoMsg(null);
     setIsLoading(true);
 
-    if (auth) {
-      try {
-        const provider = new GoogleAuthProvider();
-        provider.setCustomParameters({ prompt: "select_account" });
-        const result = await signInWithPopup(auth, provider);
-        const gUser = result.user;
-        const gEmail = gUser.email || "";
-        const gName = gUser.displayName || gEmail.split("@")[0] || "Candidate User";
+    if (!auth) {
+      setIsLoading(false);
+      setError("Firebase Authentication is not initialized.");
+      return;
+    }
 
-        const res = await apiFetch("/auth/social-login", {
-          method: "POST",
-          body: JSON.stringify({
-            provider: "google",
-            email: gEmail,
-            full_name: gName,
-            provider_id: gUser.uid,
-            avatar_url: gUser.photoURL
-          })
-        });
+    try {
+      const provider = new GoogleAuthProvider();
+      provider.setCustomParameters({ prompt: "select_account" });
+      const result = await signInWithPopup(auth, provider);
+      const gUser = result.user;
+      const gEmail = gUser.email || "";
+      const gName = gUser.displayName || gEmail.split("@")[0] || "Candidate User";
 
-        const destinationPath = new URLSearchParams(window.location.search).get("redirect") || "/dashboard";
-        setAuth(res.user, res.access_token);
-        setInfoMsg(`🎉 Successfully logged in as ${gName}! Redirecting...`);
-        router.push(destinationPath);
-        return;
-      } catch (fbErr: any) {
-        console.warn("Firebase Google popup notice / fallback to candidate modal:", fbErr);
-        setIsLoading(false);
-        openSocialAuthModal("google");
+      const res = await apiFetch("/auth/social-login", {
+        method: "POST",
+        body: JSON.stringify({
+          provider: "google",
+          email: gEmail,
+          full_name: gName,
+          provider_id: gUser.uid,
+          avatar_url: gUser.photoURL
+        })
+      });
+
+      const destinationPath = new URLSearchParams(window.location.search).get("redirect") || "/dashboard";
+      setAuth(res.user, res.access_token);
+      setInfoMsg(`🎉 Successfully logged in with Google as ${gName}! Redirecting...`);
+      router.push(destinationPath);
+      return;
+    } catch (fbErr: any) {
+      console.warn("Firebase Google Auth notice:", fbErr?.code, fbErr?.message);
+      setIsLoading(false);
+
+      // User closed popup or cancelled
+      if (fbErr?.code === "auth/popup-closed-by-user" || fbErr?.code === "auth/cancelled-popup-request") {
         return;
       }
-    } else {
-      setIsLoading(false);
-      openSocialAuthModal("google");
+
+      // If popup was blocked by browser, attempt direct page redirect to Google Auth tab
+      if (fbErr?.code === "auth/popup-blocked") {
+        try {
+          setIsLoading(true);
+          const provider = new GoogleAuthProvider();
+          provider.setCustomParameters({ prompt: "select_account" });
+          await signInWithRedirect(auth, provider);
+          return;
+        } catch (redirErr: any) {
+          setIsLoading(false);
+          setError("Google popup was blocked by your browser. Please allow popups or try again.");
+        }
+        return;
+      }
+
+      if (fbErr?.code === "auth/operation-not-allowed") {
+        setError("⚠️ Google Sign-In is disabled in your Firebase Console. Please go to Firebase Console > Authentication > Sign-in method > Enable Google.");
+        return;
+      }
+
+      setError(fbErr?.message || "Google Sign-In failed. Please try again.");
     }
   };
 
@@ -157,6 +226,7 @@ export default function LoginPage() {
       }
     }
   }, [router]);
+
 
   // Countdown timer for Resend OTP
   useEffect(() => {

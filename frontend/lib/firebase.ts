@@ -4,6 +4,8 @@ import {
   Auth, 
   GoogleAuthProvider, 
   signInWithPopup, 
+  signInWithRedirect,
+  getRedirectResult,
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   RecaptchaVerifier, 
@@ -43,9 +45,12 @@ export {
   auth, 
   GoogleAuthProvider, 
   signInWithPopup, 
+  signInWithRedirect,
+  getRedirectResult,
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   RecaptchaVerifier, 
   signInWithPhoneNumber 
 };
 export type { ConfirmationResult };
+
