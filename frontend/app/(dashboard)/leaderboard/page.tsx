@@ -245,7 +245,8 @@ export default function LeaderboardPage() {
 
           // Prepend active user ONLY if logged in and IS A CANDIDATE (not admin / Alex Vance)
           const userName = (user?.full_name || "").toLowerCase();
-          const isUserAdmin = userName.includes("admin") || userName.includes("alex vance") || user?.role === "admin";
+          const userRole = String(user?.role || "").toLowerCase();
+          const isUserAdmin = userName.includes("admin") || userName.includes("alex vance") || userRole.includes("admin");
 
           if (user && user.full_name && !isUserAdmin) {
             const myInit = user.full_name.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2);
