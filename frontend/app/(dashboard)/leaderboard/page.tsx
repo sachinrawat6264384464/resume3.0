@@ -125,85 +125,31 @@ export default function LeaderboardPage() {
   const [claimedBonus, setClaimedBonus] = useState(false);
 
   // Leaderboard Members List
-  const [members, setMembers] = useState<any[]>([
-    {
-      rank: 1,
-      name: "Pooja Tyagi",
-      initials: "PT",
-      linkedinUrl: "https://www.linkedin.com/in/pooja-tyagi/",
-      batch: "Batch 44",
-      allClaimedBadges: MODULE_BADGES.slice(0, 5),
-      badges: MODULE_BADGES.slice(0, 3),
-      extraBadgesCount: 2,
-      pts: 2151,
-      badgeCountTotal: 5,
-      role: "Senior Cloud & DevOps Engineer",
-      readinessScore: 94
-    },
-    {
-      rank: 2,
-      name: "Sandip Biswas",
-      initials: "SB",
-      linkedinUrl: "https://www.linkedin.com/in/sandip-biswas/",
-      batch: "Batch 44",
-      allClaimedBadges: MODULE_BADGES.slice(0, 4),
-      badges: MODULE_BADGES.slice(0, 3),
-      extraBadgesCount: 1,
-      pts: 2105,
-      badgeCountTotal: 4,
-      role: "AWS & Kubernetes Architect",
-      readinessScore: 91
-    },
-    {
-      rank: 3,
-      name: "Rakesh kumar",
-      initials: "RK",
-      linkedinUrl: "https://www.linkedin.com/in/rakesh-kumar/",
-      batch: "Batch 44",
-      allClaimedBadges: MODULE_BADGES.slice(0, 3),
-      badges: MODULE_BADGES.slice(0, 3),
-      extraBadgesCount: 0,
-      pts: 2104,
-      badgeCountTotal: 3,
-      role: "Site Reliability Engineer (SRE)",
-      readinessScore: 90
-    },
-    {
-      rank: 4,
-      name: "Abhishek Chahar",
-      initials: "AC",
-      linkedinUrl: "https://www.linkedin.com/in/abhishek-chahar/",
-      batch: "Batch 44",
-      allClaimedBadges: MODULE_BADGES.slice(0, 3),
-      badges: MODULE_BADGES.slice(0, 3),
-      extraBadgesCount: 0,
-      pts: 2040,
-      badgeCountTotal: 3,
-      role: "DevOps & CI/CD Automation Specialist",
-      readinessScore: 88
-    },
-    {
-      rank: 5,
-      name: "Anju Tangadpally",
-      initials: "AT",
-      linkedinUrl: "https://www.linkedin.com/in/anju-tangadpally/",
-      batch: "Batch 44",
-      allClaimedBadges: MODULE_BADGES.slice(0, 2),
-      badges: MODULE_BADGES.slice(0, 2),
-      extraBadgesCount: 0,
-      pts: 2009,
-      badgeCountTotal: 2,
-      role: "Cloud Infrastructure Specialist",
-      readinessScore: 86
-    }
-  ]);
+  const [members, setMembers] = useState<any[]>([]);
 
   useEffect(() => {
     async function loadLeaderboardData() {
       try {
+        setIsLoading(true);
+
+        // 1. Fetch logged in candidate's real performance & claimed badges from DB
+        let myPerfData: any = null;
+        if (user && user.full_name) {
+          try {
+            const perfRes: any = await apiFetch("/candidates/me/performance");
+            if (perfRes?.data) {
+              myPerfData = perfRes.data;
+            }
+          } catch (pErr) {
+            console.warn("My performance load notice:", pErr);
+          }
+        }
+
+        // 2. Fetch global leaderboard ranking from DB
         const res: any = await apiFetch("/leaderboard?limit=100");
         const list = res?.data?.global_ranking || res?.global_ranking;
 
+        let formatted: any[] = [];
         if (Array.isArray(list) && list.length > 0) {
           // Filter out dummy or admin entries (e.g. Alex Vance or Admin)
           const candidateList = list.filter((item: any) => {
@@ -211,23 +157,17 @@ export default function LeaderboardPage() {
             return !n.includes("alex vance") && !n.includes("admin");
           });
 
-          const formatted = candidateList.map((item: any, idx: number) => {
+          formatted = candidateList.map((item: any, idx: number) => {
             const nameStr = item.candidate_name || "Candidate User";
             const init = nameStr.split(" ").map((n: string) => n[0]).join("").toUpperCase().slice(0, 2);
             
             const rawBadges = item.badges || item.badges_json || [];
-            let claimed = parseCandidateBadges(rawBadges);
-
-            // If candidate has XP, map XP milestone badges
-            if (claimed.length === 0 && (item.xp || 0) > 0) {
-              const count = Math.min(5, Math.floor((item.xp || 1000) / 300) + 1);
-              claimed = MODULE_BADGES.slice(0, count);
-            }
-
+            const claimed = parseCandidateBadges(rawBadges);
             const visibleBadges = claimed.slice(0, 3);
             const extraCount = Math.max(0, claimed.length - 3);
 
             return {
+              id: item.candidate_id,
               rank: idx + 1,
               name: nameStr,
               initials: init,
@@ -236,44 +176,66 @@ export default function LeaderboardPage() {
               allClaimedBadges: claimed,
               badges: visibleBadges,
               extraBadgesCount: extraCount,
-              pts: item.xp || 1500,
+              pts: item.xp || 0,
               badgeCountTotal: claimed.length,
               role: item.target_role || "CloudOps Specialist",
-              readinessScore: item.readiness_score || 85
+              readinessScore: item.readiness_score || 0
             };
           });
+        }
 
-          // Prepend active user ONLY if logged in and IS A CANDIDATE (not admin / Alex Vance)
-          const userName = (user?.full_name || "").toLowerCase();
-          const userRole = String(user?.role || "").toLowerCase();
-          const isUserAdmin = userName.includes("admin") || userName.includes("alex vance") || userRole.includes("admin");
+        // 3. Attach logged-in candidate with their REAL DB XP and REAL claimed badges
+        const userName = (user?.full_name || "").toLowerCase();
+        const userRole = String(user?.role || "").toLowerCase();
+        const isUserAdmin = userName.includes("admin") || userName.includes("alex vance") || userRole.includes("admin");
 
-          if (user && user.full_name && !isUserAdmin) {
-            const myInit = user.full_name.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2);
-            const myClaimed = MODULE_BADGES.slice(0, 5); // 5 claimed -> 3 visible + +2 pill
-            const myEntry = {
-              rank: 1,
-              name: `${user.full_name} (YOU)`,
-              initials: myInit,
-              linkedinUrl: "https://www.linkedin.com/",
-              batch: "Batch 45",
-              allClaimedBadges: myClaimed,
-              badges: myClaimed.slice(0, 3),
-              extraBadgesCount: 2,
-              pts: 2151,
-              badgeCountTotal: 5,
-              role: "Senior Cloud & DevOps Engineer",
-              readinessScore: 95
-            };
+        if (user && user.full_name && !isUserAdmin) {
+          const myInit = user.full_name.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2);
+          
+          const existingInList = formatted.find(
+            m => m.name.toLowerCase() === user.full_name.toLowerCase() || (m.id && user.id && m.id === user.id)
+          );
 
-            const combined = [myEntry, ...formatted.filter(m => !m.name.includes(user.full_name))].map((m, i) => ({
+          // Get REAL claimed badges (from candidate performance DB or claimed list)
+          const rawMyBadges = myPerfData?.badges || (existingInList?.allClaimedBadges ? [] : []);
+          const myRealBadges = parseCandidateBadges(rawMyBadges);
+
+          // Get REAL XP from database (0 for new user)
+          const myRealXp = typeof myPerfData?.xp === "number" ? myPerfData.xp : (existingInList?.pts || 0);
+          const myRealReadiness = typeof myPerfData?.readiness_score === "number" ? myPerfData.readiness_score : (existingInList?.readinessScore || 0);
+          const myRealRole = myPerfData?.target_role || existingInList?.role || "CloudOps Specialist";
+
+          const myVisibleBadges = myRealBadges.slice(0, 3);
+          const myExtraCount = Math.max(0, myRealBadges.length - 3);
+
+          const myEntry = {
+            id: user.id || "me",
+            rank: existingInList?.rank || (formatted.length + 1),
+            name: `${user.full_name} (YOU)`,
+            initials: myInit,
+            linkedinUrl: "https://www.linkedin.com/",
+            batch: "Batch 45",
+            allClaimedBadges: myRealBadges,
+            badges: myVisibleBadges,
+            extraBadgesCount: myExtraCount,
+            pts: myRealXp,
+            badgeCountTotal: myRealBadges.length,
+            role: myRealRole,
+            readinessScore: myRealReadiness
+          };
+
+          // Filter out duplicate user entry and sort by REAL XP (descending)
+          const otherMembers = formatted.filter(m => m.name.toLowerCase() !== user.full_name.toLowerCase());
+          const combined = [...otherMembers, myEntry]
+            .sort((a, b) => (b.pts || 0) - (a.pts || 0))
+            .map((m, i) => ({
               ...m,
               rank: i + 1
             }));
-            setMembers(combined);
-          } else {
-            setMembers(formatted);
-          }
+          
+          setMembers(combined);
+        } else {
+          setMembers(formatted);
         }
       } catch (e) {
         console.warn("Leaderboard fetch notice:", e);
