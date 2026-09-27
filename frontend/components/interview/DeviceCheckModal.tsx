@@ -27,9 +27,83 @@ export function DeviceCheckModal({ templateTitle, onReadyToStart }: DeviceCheckM
   const [consent, setConsent] = useState(true);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
+  const [isBlurEnabled, setIsBlurEnabled] = useState(true);
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const blurCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const visualizerRef = useRef<AudioVisualizer | null>(null);
+
+  // Real-time Background Blur Processing Canvas Loop
+  useEffect(() => {
+    if (!cameraActive || !stream) return;
+
+    let animId: number;
+
+    const renderBlurFrame = () => {
+      const video = videoRef.current;
+      const canvas = blurCanvasRef.current;
+      if (video && canvas && video.readyState >= 2) {
+        const width = video.videoWidth || 640;
+        const height = video.videoHeight || 480;
+
+        if (canvas.width !== width || canvas.height !== height) {
+          canvas.width = width;
+          canvas.height = height;
+        }
+
+        const ctx = canvas.getContext("2d");
+        if (ctx) {
+          if (isBlurEnabled) {
+            // 1. Draw heavily blurred background video frame
+            ctx.save();
+            ctx.filter = "blur(18px) brightness(0.92) contrast(1.05)";
+            ctx.drawImage(video, 0, 0, width, height);
+            ctx.restore();
+
+            // 2. Composite sharp portrait subject using soft-feathered radial mask
+            const maskCanvas = document.createElement("canvas");
+            maskCanvas.width = width;
+            maskCanvas.height = height;
+            const mCtx = maskCanvas.getContext("2d");
+
+            if (mCtx) {
+              mCtx.drawImage(video, 0, 0, width, height);
+              mCtx.globalCompositeOperation = "destination-in";
+
+              const centerX = width / 2;
+              const centerY = height * 0.52;
+              const rx = width * 0.36;
+              const ry = height * 0.48;
+
+              const grad = mCtx.createRadialGradient(
+                centerX, centerY, rx * 0.35,
+                centerX, centerY, rx
+              );
+              grad.addColorStop(0, "rgba(0,0,0,1)");
+              grad.addColorStop(0.7, "rgba(0,0,0,0.95)");
+              grad.addColorStop(1, "rgba(0,0,0,0)");
+
+              mCtx.fillStyle = grad;
+              mCtx.beginPath();
+              mCtx.ellipse(centerX, centerY, rx, ry, 0, 0, 2 * Math.PI);
+              mCtx.fill();
+
+              ctx.drawImage(maskCanvas, 0, 0);
+            }
+          } else {
+            ctx.drawImage(video, 0, 0, width, height);
+          }
+        }
+      }
+      animId = requestAnimationFrame(renderBlurFrame);
+    };
+
+    renderBlurFrame();
+
+    return () => {
+      cancelAnimationFrame(animId);
+    };
+  }, [cameraActive, stream, isBlurEnabled]);
 
   // Helper to release camera tracks & extinguish hardware light
   const stopAllMediaTracks = () => {
@@ -241,11 +315,18 @@ export function DeviceCheckModal({ templateTitle, onReadyToStart }: DeviceCheckM
         <div className="md:col-span-6 flex flex-col gap-3">
           <div className="relative aspect-video w-full rounded-2xl bg-slate-950 overflow-hidden border border-slate-800 shadow-lg flex items-center justify-center">
             
+            {/* Hidden video element for media stream input */}
             <video
               ref={videoRef}
               autoPlay
               playsInline
               muted
+              className="hidden"
+            />
+
+            {/* Real-time Portrait Background Blur Output Canvas */}
+            <canvas
+              ref={blurCanvasRef}
               className={`w-full h-full object-cover transform -scale-x-100 ${!cameraActive ? "hidden" : ""}`}
             />
 
@@ -260,19 +341,31 @@ export function DeviceCheckModal({ templateTitle, onReadyToStart }: DeviceCheckM
             {cameraActive && (
               <div className="absolute inset-0 pointer-events-none flex flex-col items-center justify-between p-4">
                 
-                {/* Status Badge Top Overlay */}
-                <div className={`px-3 py-1 rounded-full text-xs font-mono font-bold border shadow-md ${
-                  isHandDetected
-                    ? "bg-rose-950/90 text-rose-300 border-rose-500 animate-pulse"
-                    : faceDetected
-                    ? "bg-emerald-950/90 text-emerald-300 border-emerald-500"
-                    : "bg-amber-950/90 text-amber-300 border-amber-500 animate-pulse"
-                }`}>
-                  {isHandDetected
-                    ? "🔴 HAND DETECTED — SHOW YOUR FACE"
-                    : faceDetected
-                    ? "🟢 FACE DETECTED & CENTERED"
-                    : "🔴 NO FACE DETECTED"}
+                {/* Status Badges Top Overlay with Background Blur Toggle */}
+                <div className="flex items-center gap-2 flex-wrap justify-center pointer-events-auto">
+                  <div className={`px-3 py-1 rounded-full text-xs font-mono font-bold border shadow-md ${
+                    isHandDetected
+                      ? "bg-rose-950/90 text-rose-300 border-rose-500 animate-pulse"
+                      : faceDetected
+                      ? "bg-emerald-950/90 text-emerald-300 border-emerald-500"
+                      : "bg-amber-950/90 text-amber-300 border-amber-500 animate-pulse"
+                  }`}>
+                    {isHandDetected
+                      ? "🔴 HAND DETECTED — SHOW YOUR FACE"
+                      : faceDetected
+                      ? "🟢 FACE DETECTED & CENTERED"
+                      : "🔴 NO FACE DETECTED"}
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => setIsBlurEnabled(!isBlurEnabled)}
+                    className="px-3 py-1 rounded-full text-xs font-mono font-bold bg-slate-900/90 text-amber-300 border border-amber-500/50 shadow-md backdrop-blur-md flex items-center gap-1.5 hover:bg-slate-800 transition-all cursor-pointer"
+                    title="Toggle Camera Background Blur Mode"
+                  >
+                    <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+                    <span>{isBlurEnabled ? "✨ Background Blur: ON" : "📷 Background Blur: OFF"}</span>
+                  </button>
                 </div>
 
                 {/* Center Face Target Frame */}

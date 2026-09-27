@@ -858,9 +858,6 @@ export default function StudyPlannerPage() {
                       </span>
 
                       <div className="flex items-center gap-2">
-                        <span className="font-mono font-bold text-xs text-purple-600 dark:text-purple-400">
-                          +{task.xp_reward} XP
-                        </span>
                         <button
                           onClick={() => handleDeleteTask(task.id)}
                           className="p-1 text-slate-400 hover:text-red-500 transition-colors cursor-pointer"
@@ -902,7 +899,7 @@ export default function StudyPlannerPage() {
                           className="w-full py-2.5 rounded-xl text-xs font-black text-slate-950 bg-gradient-to-r from-amber-400 to-[#FF9900] hover:from-amber-500 hover:to-orange-500 shadow-sm flex items-center justify-center gap-1.5 transition-all cursor-pointer uppercase tracking-wider"
                         >
                           <Check className="w-3.5 h-3.5 text-slate-950" />
-                          <span>Mark Complete (+{task.xp_reward} XP)</span>
+                          <span>Mark Complete</span>
                         </button>
                       )}
                     </div>
@@ -1206,9 +1203,9 @@ export default function StudyPlannerPage() {
                     onChange={(e) => setDifficulty(e.target.value)}
                     className="px-2 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-900 dark:text-white focus:outline-none focus:border-[#FF9900]"
                   >
-                    <option value="BEGINNER">Beginner (+50 XP)</option>
-                    <option value="INTERMEDIATE">Intermediate (+75 XP)</option>
-                    <option value="ADVANCED">Advanced (+100 XP)</option>
+                    <option value="BEGINNER">Beginner</option>
+                    <option value="INTERMEDIATE">Intermediate</option>
+                    <option value="ADVANCED">Advanced</option>
                   </select>
                 </div>
               </div>

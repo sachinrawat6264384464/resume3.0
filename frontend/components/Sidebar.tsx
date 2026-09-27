@@ -7,7 +7,7 @@ import {
   LayoutDashboard, CheckSquare, FileText, BarChart3, Trophy, 
   Map, Award, Settings, HelpCircle, LogOut, Cloud, Sparkles,
   Users, CreditCard, Mail, HardDrive, Shield, Loader2, X,
-  Calendar, Bell
+  Calendar, Bell, Video, ShieldCheck
 } from "lucide-react";
 import { useAuthStore, useATSStore } from "@/lib/store";
 import { apiFetch } from "@/lib/api";
@@ -100,6 +100,8 @@ export function Sidebar({ isOpenMobile = false, onCloseMobile }: SidebarProps) {
   const adminNavItems = [
     { label: "Dashboard", href: "/admin", icon: LayoutDashboard },
     { label: "Users & Candidates", href: "/admin/candidates", icon: Users },
+    { label: "Video Walkthroughs", href: "/admin/video-management", icon: Video },
+    { label: "Roles & Permissions", href: "/admin/roles-permissions", icon: ShieldCheck },
     { label: "Smart Reminders", href: "/admin/reminders", icon: Bell },
     { label: "Live Sessions", href: "/admin/live-sessions", icon: Calendar },
     { label: "Payment Gateway", href: "/admin/payment-gateway", icon: CreditCard },
@@ -279,23 +281,11 @@ export function Sidebar({ isOpenMobile = false, onCloseMobile }: SidebarProps) {
                 </span>
               </div>
             ) : (
-              <>
-                <div className="flex items-center justify-between text-[10px] font-bold">
-                  <span className="px-2 py-0.5 rounded-full bg-[#FF6B00] text-white font-black">
-                    Level {userLevel}
-                  </span>
-                  <span className="text-slate-500 font-mono">
-                    XP: {userXp.toLocaleString()} / 10,000
-                  </span>
-                </div>
-
-                <div className="w-full h-1.5 bg-slate-200 dark:bg-slate-800 rounded-full overflow-hidden">
-                  <div 
-                    className="h-full bg-[#FF6B00] rounded-full transition-all duration-500" 
-                    style={{ width: `${Math.min((userXp / 10000) * 100, 100)}%` }} 
-                  />
-                </div>
-              </>
+              <div className="flex items-center justify-between text-[10px] font-bold">
+                <span className="px-2 py-0.5 rounded-full bg-[#FF6B00] text-white font-black">
+                  Level {userLevel} Candidate
+                </span>
+              </div>
             )}
           </div>
         )}

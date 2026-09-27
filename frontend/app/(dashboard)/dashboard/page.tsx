@@ -15,18 +15,31 @@ import { apiFetch } from "@/lib/api";
 
 function parseSessionDate(dateStr: string): Date {
   if (!dateStr) return new Date(0);
+  
+  // 1. Direct ISO or standard date parse
   const parsedDirect = new Date(dateStr);
   if (!isNaN(parsedDirect.getTime())) return parsedDirect;
 
   try {
     const cleaned = dateStr.replace(/[•]/g, " ").replace(/\s+/g, " ").trim();
+
+    // 2. Format: 25/09/2026 or 25-09-2026
+    const slashMatch = cleaned.match(/(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/);
+    if (slashMatch) {
+      const day = parseInt(slashMatch[1], 10);
+      const month = parseInt(slashMatch[2], 10) - 1;
+      const year = parseInt(slashMatch[3], 10);
+      return new Date(year, month, day, 20, 15);
+    }
+
+    // 3. Format: 25 Sept 2026 8:15 PM IST
     const match = cleaned.match(/(\d{1,2})\s+([A-Za-z]+)\s+(\d{4})(?:\s+(\d{1,2}):(\d{2})\s*(AM|PM)?)?/i);
     if (match) {
       const day = parseInt(match[1], 10);
       const monthStr = match[2];
       const year = parseInt(match[3], 10);
-      let hours = match[4] ? parseInt(match[4], 10) : 0;
-      const mins = match[5] ? parseInt(match[5], 10) : 0;
+      let hours = match[4] ? parseInt(match[4], 10) : 20;
+      const mins = match[5] ? parseInt(match[5], 10) : 15;
       const ampm = match[6] ? match[6].toUpperCase() : null;
 
       if (ampm === "PM" && hours < 12) hours += 12;
@@ -54,7 +67,7 @@ export default function CandidateDashboardPage() {
     id: "live-default-001",
     title: "👑 40 LPA DevOps Architecture & Outage Troubleshooting Masterclass",
     description: "Live Q&A, mock interview feedback & ATS resume review session with Vikas Sir and Sachin Rawat.",
-    session_date: "25 Sept 2026 • 8:15 PM IST",
+    session_date: "Tomorrow • 8:15 PM IST",
     meeting_url: "https://meet.google.com/xyz-cloudops-live",
     whatsapp_group_url: "https://chat.whatsapp.com/AIInterviewCommunity",
     banner_url: "/banner-live.png",
@@ -75,29 +88,45 @@ export default function CandidateDashboardPage() {
       return;
     }
 
-    // 1. Session explicitly marked LIVE_NOW or LIVE_STREAMING takes highest priority
-    const liveNow = sessions.find(s => s.status === "LIVE_NOW" || s.status === "LIVE_STREAMING");
+    const now = Date.now();
+    const FOUR_HOURS_MS = 4 * 60 * 60 * 1000;
+    const SESSION_DURATION_MS = 2 * 60 * 60 * 1000; // 2 hour session window
+
+    // 1. Session explicitly marked LIVE_NOW or LIVE_STREAMING (ignoring stale abandoned streams > 4h old)
+    const liveNow = sessions.find(s => {
+      if (s.status !== "LIVE_NOW" && s.status !== "LIVE_STREAMING") return false;
+      let sTime = s.parsed_dt ? new Date(s.parsed_dt).getTime() : parseSessionDate(s.session_date).getTime();
+      if (sTime > 0 && (sTime + FOUR_HOURS_MS) < now) return false;
+      return true;
+    });
+
     if (liveNow) {
       setActiveLiveSession(liveNow);
       return;
     }
 
-    const now = Date.now();
-    const SESSION_DURATION_MS = 2 * 60 * 60 * 1000; // 2 hour session window
 
-    // 2. Filter sessions whose end time (scheduled time + duration) is in the future
+    // 2. Filter sessions whose end time (scheduled time + 2 hours) is in the FUTURE
     const upcomingOrCurrent = sessions.filter(s => {
-      if (s.status === "COMPLETED") return false;
-      const sTime = parseSessionDate(s.session_date).getTime();
-      if (sTime === 0) return true; // fallback if date couldn't be parsed
+      if (s.status === "COMPLETED" || s.status === "EXPIRED" || s.is_active === false) return false;
+      
+      let sTime = s.parsed_dt ? new Date(s.parsed_dt).getTime() : 0;
+      if (isNaN(sTime) || sTime === 0) {
+        sTime = parseSessionDate(s.session_date).getTime();
+      }
+
+      // If date could not be determined at all, keep as fallback
+      if (sTime === 0) return true;
+
+      // EXCLUDE past expired sessions!
       return (sTime + SESSION_DURATION_MS) > now;
     });
 
     if (upcomingOrCurrent.length > 0) {
-      // Pick the immediate next upcoming session
+      // Pick the single immediate next upcoming session (earliest date)
       setActiveLiveSession(upcomingOrCurrent[0]);
     } else {
-      // Array empty or all sessions have finished
+      // All sessions have expired or finished
       setActiveLiveSession(null);
     }
   };
@@ -116,14 +145,18 @@ export default function CandidateDashboardPage() {
       if (isLiveA) return -1;
       if (isLiveB) return 1;
 
-      const dtA = parseSessionDate(a.session_date).getTime();
-      const dtB = parseSessionDate(b.session_date).getTime();
+      let dtA = a.parsed_dt ? new Date(a.parsed_dt).getTime() : parseSessionDate(a.session_date).getTime();
+      let dtB = b.parsed_dt ? new Date(b.parsed_dt).getTime() : parseSessionDate(b.session_date).getTime();
+      if (isNaN(dtA)) dtA = 0;
+      if (isNaN(dtB)) dtB = 0;
+
       return dtA - dtB;
     });
 
     setAllLiveSessions(sorted);
     evaluateCurrentActiveSession(sorted);
   };
+
 
   // LinkedIn Post Creator State
   const [linkedInText, setLinkedInText] = useState("");
@@ -138,8 +171,10 @@ export default function CandidateDashboardPage() {
   useEffect(() => {
     if (!activeLiveSession) return;
 
-    const targetDate = parseSessionDate(activeLiveSession.session_date);
-    const targetMs = targetDate.getTime();
+    const targetMs = activeLiveSession.parsed_dt
+      ? new Date(activeLiveSession.parsed_dt).getTime()
+      : parseSessionDate(activeLiveSession.session_date).getTime();
+
 
     const updateCountdown = () => {
       const now = Date.now();

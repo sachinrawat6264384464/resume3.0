@@ -59,13 +59,37 @@ export function AIInterviewerAvatar({
         </span>
       </div>
 
-      {/* Voice prompt / status */}
-      <div className="flex items-center gap-2 mb-4 text-xs font-medium text-slate-500">
+      {/* Voice prompt / status & Stop / Listen Controls */}
+      <div className="flex items-center gap-2 mb-4 text-xs font-medium text-slate-500 flex-wrap justify-center">
+        {onReplayAudio && (
+          <button
+            onClick={onReplayAudio}
+            className={`px-4 py-1.5 rounded-full font-bold text-xs flex items-center gap-2 transition-all cursor-pointer shadow-md active:scale-95 ${
+              isSpeaking
+                ? "bg-rose-950/90 text-rose-300 border border-rose-500 animate-pulse hover:bg-rose-900"
+                : "bg-[#FF9900]/10 text-[#FF9900] border border-[#FF9900]/40 hover:bg-[#FF9900] hover:text-slate-950"
+            }`}
+            title={isSpeaking ? "Click to Stop / Mute AI Voice immediately" : "Read question out loud in Male AI Voice"}
+          >
+            {isSpeaking ? (
+              <>
+                <VolumeX className="w-4 h-4 text-rose-400 animate-bounce" />
+                <span>⏹️ Stop AI Voice (Click to Stop)</span>
+              </>
+            ) : (
+              <>
+                <Volume2 className="w-4 h-4" />
+                <span>Listen Question 🔊</span>
+              </>
+            )}
+          </button>
+        )}
+
         <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
           {isSpeaking ? (
             <>
-              <Volume2 className="w-3.5 h-3.5 text-[#FF9900] animate-pulse" />
-              <span className="text-slate-900 dark:text-white font-bold">AI Interviewer Speaking...</span>
+              <Volume2 className="w-3.5 h-3.5 text-rose-400 animate-pulse" />
+              <span className="text-slate-900 dark:text-white font-bold">Male AI Voice Speaking...</span>
             </>
           ) : (
             <>
@@ -74,16 +98,6 @@ export function AIInterviewerAvatar({
             </>
           )}
         </div>
-
-        {onReplayAudio && (
-          <button
-            onClick={onReplayAudio}
-            className="p-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:text-[#FF9900] transition-colors"
-            title="Replay question audio"
-          >
-            <Volume2 className="w-4 h-4" />
-          </button>
-        )}
       </div>
 
       {/* Question prompt typography */}

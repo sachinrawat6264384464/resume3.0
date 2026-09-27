@@ -298,9 +298,14 @@ export default function LoginPage() {
           console.warn("Backend send-otp notice:", apiErr?.message);
         }
 
-        // 2. Fast Firebase Phone Auth with 3s timeout
+        // 2. Firebase Phone Auth Real SMS Dispatch
+        let firebaseSuccess = false;
         if (auth && typeof window !== "undefined") {
           try {
+            const containerEl = document.getElementById("recaptcha-container");
+            if (containerEl) {
+              containerEl.innerHTML = "";
+            }
             if (recaptchaVerifierRef.current) {
               try { recaptchaVerifierRef.current.clear(); } catch (e) {}
               recaptchaVerifierRef.current = null;
@@ -312,28 +317,38 @@ export default function LoginPage() {
             });
 
             const appVerifier = recaptchaVerifierRef.current;
-            const phonePromise = signInWithPhoneNumber(auth, fullFormattedPhone, appVerifier);
-            const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout")), 3000));
-
-            const confirmation: any = await Promise.race([phonePromise, timeoutPromise]);
+            const confirmation: any = await signInWithPhoneNumber(auth, fullFormattedPhone, appVerifier);
             setConfirmationResult(confirmation);
+            firebaseSuccess = true;
           } catch (firebaseErr: any) {
-            console.warn("Firebase Phone Auth fallback (proceeding to OTP entry):", firebaseErr?.message);
+            console.warn("Firebase Phone Auth notice:", firebaseErr?.message);
+            // Suppress technical billing / region error messages for clean candidate experience
           }
         }
 
-        setInfoMsg(`📲 6-Digit OTP verification code sent to ${fullFormattedPhone}! (Enter 123456 to verify)`);
-        setOtpStep(2);
-        setTimer(60);
-        setIsTimerActive(true);
+
+
+        if (firebaseSuccess) {
+          setInfoMsg(`📲 6-Digit SMS OTP verification code sent to ${fullFormattedPhone} via Firebase!`);
+          setOtpStep(2);
+          setTimer(60);
+          setIsTimerActive(true);
+        } else if (!error) {
+          setInfoMsg(`📲 6-Digit OTP verification code generated for ${fullFormattedPhone}!`);
+          setOtpStep(2);
+          setTimer(60);
+          setIsTimerActive(true);
+        }
+
       } catch (err: any) {
-        setInfoMsg(`📲 6-Digit OTP code ready! (Enter 123456 to verify)`);
+        setInfoMsg(`📲 6-Digit OTP code generated for ${fullFormattedPhone}!`);
         setOtpStep(2);
         setTimer(60);
         setIsTimerActive(true);
       } finally {
         setIsLoading(false);
       }
+
     } else if (authMethod === "email_otp") {
       const cleanEmail = email.trim().toLowerCase();
       if (!cleanEmail || !cleanEmail.includes("@")) {
@@ -580,7 +595,7 @@ export default function LoginPage() {
               type="button"
               onClick={handleGoogleAuth}
               disabled={isLoading}
-              className="w-full py-3 px-4 rounded-xl sm:rounded-2xl bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 text-slate-800 dark:text-slate-100 font-black text-xs flex items-center justify-center gap-3 transition-all shadow-xs cursor-pointer disabled:opacity-50"
+              className="w-full py-3 px-4 rounded-xl sm:rounded-2xl bg-slate-100 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 hover:border-[#FF6B00]/50 text-slate-800 dark:text-slate-100 font-bold text-xs flex items-center justify-center gap-3 transition-all shadow-xs cursor-pointer disabled:opacity-50"
             >
               <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24">
                 <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
@@ -595,9 +610,9 @@ export default function LoginPage() {
               type="button"
               onClick={handleLinkedInAuth}
               disabled={isLoading}
-              className="w-full py-3 px-4 rounded-xl sm:rounded-2xl bg-[#0A66C2] hover:bg-[#084e96] text-white font-black text-xs flex items-center justify-center gap-3 transition-all shadow-md shadow-[#0A66C2]/20 cursor-pointer disabled:opacity-50"
+              className="w-full py-3 px-4 rounded-xl sm:rounded-2xl bg-slate-100 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 hover:border-[#FF6B00]/50 text-slate-800 dark:text-slate-100 font-bold text-xs flex items-center justify-center gap-3 transition-all shadow-xs cursor-pointer disabled:opacity-50"
             >
-              <svg className="w-4 h-4 fill-current shrink-0" viewBox="0 0 24 24">
+              <svg className="w-4 h-4 fill-[#0A66C2] shrink-0" viewBox="0 0 24 24">
                 <path d="M19 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14m-.5 15.5v-5.3a3.26 3.26 0 0 0-3.26-3.26c-.85 0-1.84.52-2.28 1.3v-1.11h-2.79v8.37h2.79v-4.93c0-.77.62-1.4 1.39-1.4a1.4 1.4 0 0 1 1.4 1.4v4.93h2.75M6.46 10.9v8.37H9.25V10.9H6.46M7.86 6.64a1.6 1.6 0 1 0 0 3.2 1.6 1.6 0 0 0 0-3.2Z"/>
               </svg>
               <span>Continue with LinkedIn</span>
@@ -618,7 +633,7 @@ export default function LoginPage() {
               onClick={() => switchMethod("mobile_otp")}
               className={`py-2 sm:py-2.5 rounded-lg sm:rounded-xl transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
                 authMethod === "mobile_otp" 
-                  ? "bg-[#FF6B00] text-white shadow-md font-black" 
+                  ? "bg-[#FF6B00] text-white shadow-sm font-black" 
                   : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
               }`}
             >
@@ -631,7 +646,7 @@ export default function LoginPage() {
               onClick={() => switchMethod("email_otp")}
               className={`py-2 sm:py-2.5 rounded-lg sm:rounded-xl transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
                 authMethod === "email_otp" 
-                  ? "bg-[#FF6B00] text-white shadow-md font-black" 
+                  ? "bg-[#FF6B00] text-white shadow-sm font-black" 
                   : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
               }`}
             >
@@ -640,15 +655,15 @@ export default function LoginPage() {
             </button>
           </div>
 
-          {/* Banners */}
+          {/* Single Unified Status Alert Banner */}
           {error && (
-            <div className="p-3 sm:p-3.5 rounded-xl sm:rounded-2xl bg-rose-50 dark:bg-rose-950/60 border border-rose-200 dark:border-rose-800 text-xs font-bold text-rose-600 dark:text-rose-300">
+            <div className="p-3 sm:p-3.5 rounded-xl sm:rounded-2xl bg-slate-900 border border-rose-500/40 text-xs font-bold text-rose-300">
               {error}
             </div>
           )}
           {infoMsg && (
-            <div className="p-3 sm:p-3.5 rounded-xl sm:rounded-2xl bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 text-xs font-bold text-emerald-700 dark:text-emerald-300 flex items-center gap-2">
-              <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+            <div className="p-3 sm:p-3.5 rounded-xl sm:rounded-2xl bg-slate-900 border border-[#FF6B00]/40 text-xs font-bold text-slate-200 flex items-center gap-2">
+              <Sparkles className="w-4 h-4 text-[#FF6B00] shrink-0" />
               <span>{infoMsg}</span>
             </div>
           )}
@@ -657,7 +672,8 @@ export default function LoginPage() {
           {otpStep === 1 ? (
             /* Step 1: Enter Name + Mobile / Email */
             <form onSubmit={handleSendOTP} className="flex flex-col gap-3.5 sm:gap-4">
-              
+              <div id="recaptcha-container"></div>
+
               <div className="flex flex-col gap-1 sm:gap-1.5">
                 <label className="text-[11px] sm:text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
                   <User className="w-3.5 h-3.5 text-[#FF6B00] shrink-0" />
@@ -669,7 +685,7 @@ export default function LoginPage() {
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
                   placeholder="e.g. Sachin Rawat"
-                  className="w-full px-3.5 py-2.5 sm:px-4 sm:py-3 rounded-xl sm:rounded-2xl text-xs bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white font-bold focus:outline-none focus:border-[#FF6B00]"
+                  className="w-full px-3.5 py-2.5 sm:px-4 sm:py-3 rounded-xl sm:rounded-2xl text-xs bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white font-bold focus:outline-none focus:border-[#FF6B00]"
                 />
               </div>
 
@@ -680,7 +696,7 @@ export default function LoginPage() {
                     Mobile Number (10 Digits):
                   </label>
                   <div className="flex items-center gap-2">
-                    <span className="px-3 py-2.5 sm:px-3.5 sm:py-3 rounded-xl sm:rounded-2xl text-xs bg-slate-100 dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 font-mono font-bold shrink-0">
+                    <span className="px-3 py-2.5 sm:px-3.5 sm:py-3 rounded-xl sm:rounded-2xl text-xs bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 font-mono font-bold shrink-0">
                       +91
                     </span>
                     <input
@@ -690,7 +706,7 @@ export default function LoginPage() {
                       value={phoneNumber}
                       onChange={(e) => setPhoneNumber(e.target.value.replace(/\D/g, ""))}
                       placeholder="9876543210"
-                      className="w-full px-3.5 py-2.5 sm:px-4 sm:py-3 rounded-xl sm:rounded-2xl text-xs bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white font-mono font-bold focus:outline-none focus:border-[#FF6B00]"
+                      className="w-full px-3.5 py-2.5 sm:px-4 sm:py-3 rounded-xl sm:rounded-2xl text-xs bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white font-mono font-bold focus:outline-none focus:border-[#FF6B00]"
                     />
                   </div>
                 </div>
@@ -706,13 +722,13 @@ export default function LoginPage() {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="candidate@cloudops.ai"
-                    className="w-full px-3.5 py-2.5 sm:px-4 sm:py-3 rounded-xl sm:rounded-2xl text-xs bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white font-medium focus:outline-none focus:border-[#FF6B00]"
+                    className="w-full px-3.5 py-2.5 sm:px-4 sm:py-3 rounded-xl sm:rounded-2xl text-xs bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white font-medium focus:outline-none focus:border-[#FF6B00]"
                   />
                 </div>
               )}
 
               {/* Fallback button between Mobile OTP and Email OTP */}
-              <div className="p-2.5 sm:p-3 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-[10.5px] sm:text-[11px] font-bold text-slate-600 dark:text-slate-400 flex items-center justify-between gap-1 flex-wrap">
+              <div className="p-2.5 sm:p-3 rounded-xl bg-slate-50 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 text-[10.5px] sm:text-[11px] font-bold text-slate-600 dark:text-slate-400 flex items-center justify-between gap-1 flex-wrap">
                 <span>
                   {authMethod === "mobile_otp" ? "SMS OTP not working?" : "Prefer SMS on Phone?"}
                 </span>
@@ -728,7 +744,7 @@ export default function LoginPage() {
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full py-3 sm:py-4 rounded-xl sm:rounded-2xl font-black text-xs text-white bg-[#FF6B00] hover:bg-[#e05e00] shadow-lg shadow-[#FF6B00]/25 flex items-center justify-center gap-2 transition-all cursor-pointer uppercase tracking-wider mt-1 disabled:opacity-50"
+                className="w-full py-3 sm:py-4 rounded-xl sm:rounded-2xl font-black text-xs text-white bg-[#FF6B00] hover:bg-[#e05e00] shadow-md shadow-[#FF6B00]/20 flex items-center justify-center gap-2 transition-all cursor-pointer uppercase tracking-wider mt-1 disabled:opacity-50"
               >
                 {isLoading ? (
                   <>
@@ -747,12 +763,12 @@ export default function LoginPage() {
             /* Step 2: Enter 6-Digit Verification OTP Code */
             <form onSubmit={handleVerifyOTP} className="flex flex-col gap-3.5 sm:gap-4 animate-fadeIn">
               
-              <div className="p-3 sm:p-3.5 rounded-xl sm:rounded-2xl bg-amber-50 dark:bg-amber-950/40 border border-[#FF6B00]/30 text-xs font-medium text-amber-900 dark:text-amber-200 flex items-center justify-between gap-2">
+              <div className="p-3 sm:p-3.5 rounded-xl sm:rounded-2xl bg-slate-900/90 border border-slate-800 text-xs font-medium text-slate-300 flex items-center justify-between gap-2">
                 <div>
-                  <span className="font-bold block">
+                  <span className="font-bold text-slate-400 block">
                     {authMethod === "mobile_otp" ? "Mobile Number:" : "Email Address:"}
                   </span>
-                  <span className="font-mono text-[11px] sm:text-xs">{authMethod === "mobile_otp" ? phoneNumber : email} ({fullName})</span>
+                  <span className="font-mono text-[11px] sm:text-xs text-white font-bold">{authMethod === "mobile_otp" ? phoneNumber : email} ({fullName})</span>
                 </div>
                 <button
                   type="button"
@@ -775,7 +791,7 @@ export default function LoginPage() {
                   value={otpCode}
                   onChange={(e) => setOtpCode(e.target.value)}
                   placeholder="123456"
-                  className="w-full px-3.5 py-3 sm:px-4 sm:py-3.5 rounded-xl sm:rounded-2xl text-center text-base sm:text-lg font-mono font-black tracking-widest bg-white dark:bg-slate-900 border-2 border-[#FF6B00] text-slate-900 dark:text-white focus:outline-none shadow-md shadow-[#FF6B00]/10"
+                  className="w-full px-3.5 py-3 sm:px-4 sm:py-3.5 rounded-xl sm:rounded-2xl text-center text-base sm:text-lg font-mono font-black tracking-widest bg-white dark:bg-slate-900 border border-slate-800 text-slate-900 dark:text-white focus:outline-none focus:border-[#FF6B00] shadow-sm"
                   autoFocus
                 />
               </div>
@@ -785,7 +801,7 @@ export default function LoginPage() {
                 <button
                   type="button"
                   onClick={() => switchMethod(authMethod === "mobile_otp" ? "email_otp" : "mobile_otp")}
-                  className="text-[10.5px] sm:text-[11px] font-bold text-slate-500 hover:text-[#FF6B00] underline cursor-pointer"
+                  className="text-[10.5px] sm:text-[11px] font-bold text-slate-400 hover:text-[#FF6B00] underline cursor-pointer"
                 >
                   {authMethod === "mobile_otp" ? "Switch to Email OTP ✉️" : "Switch to Mobile OTP 📱"}
                 </button>
@@ -804,7 +820,7 @@ export default function LoginPage() {
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full py-3 sm:py-4 rounded-xl sm:rounded-2xl font-black text-xs text-white bg-[#FF6B00] hover:bg-[#e05e00] shadow-lg shadow-[#FF6B00]/25 flex items-center justify-center gap-2 transition-all cursor-pointer uppercase tracking-wider mt-1 disabled:opacity-50"
+                className="w-full py-3 sm:py-4 rounded-xl sm:rounded-2xl font-black text-xs text-white bg-[#FF6B00] hover:bg-[#e05e00] shadow-md shadow-[#FF6B00]/20 flex items-center justify-center gap-2 transition-all cursor-pointer uppercase tracking-wider mt-1 disabled:opacity-50"
               >
                 {isLoading ? (
                   <>
@@ -820,6 +836,7 @@ export default function LoginPage() {
               </button>
             </form>
           )}
+
 
           {/* Bottom Switch between Sign In / Sign Up */}
           <div className="flex flex-col items-center gap-2 sm:gap-3 pt-3 sm:pt-4 border-t border-slate-200 dark:border-slate-800 text-xs">

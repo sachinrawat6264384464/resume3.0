@@ -18,6 +18,9 @@ import {
   doc,
   setDoc,
   getDoc,
+  getDocs,
+  deleteDoc,
+  updateDoc,
   collection
 } from "firebase/firestore";
 
@@ -71,6 +74,9 @@ export {
   doc,
   setDoc,
   getDoc,
+  getDocs,
+  deleteDoc,
+  updateDoc,
   collection,
   GoogleAuthProvider, 
   signInWithPopup, 

@@ -21,6 +21,7 @@ from app.models.study_goal import StudyGoal
 from app.models.reminder import Reminder
 from app.models.payment_gateway import PaymentGatewayConfig, PaymentTransaction
 from app.models.live_session import LiveSession
+from app.models.walkthrough_video import WalkthroughVideo
 
 __all__ = [
     "Base",
@@ -48,5 +49,6 @@ __all__ = [
     "Reminder",
     "PaymentGatewayConfig",
     "PaymentTransaction",
-    "LiveSession"
+    "LiveSession",
+    "WalkthroughVideo"
 ]

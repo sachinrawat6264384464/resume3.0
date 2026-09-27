@@ -34,8 +34,15 @@ export default function QuickPracticePage() {
   const [evalResult, setEvalResult] = useState<QuestionEvaluationResult | null>(null);
   const [xpToast, setXpToast] = useState<string | null>(null);
 
-  // Play audio on question change
+  // Play / Stop audio handler
   const playAudio = () => {
+    if (isSpeaking) {
+      if (typeof window !== "undefined" && "speechSynthesis" in window) {
+        window.speechSynthesis.cancel();
+      }
+      setIsSpeaking(false);
+      return;
+    }
     speakText(
       currentQuestion,
       () => setIsSpeaking(true),
@@ -120,7 +127,6 @@ export default function QuickPracticePage() {
               <Zap className="w-3.5 h-3.5 text-amber-400" />
               Quick Practice Sandbox
             </span>
-            <span className="text-xs text-slate-400 font-mono">+10 XP Per Question</span>
           </div>
           <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">
             Single Question Practice Chamber
@@ -288,7 +294,7 @@ export default function QuickPracticePage() {
             ) : (
               <>
                 <Sparkles className="w-4 h-4" />
-                <span>Submit for AI Evaluation (+10 XP)</span>
+                <span>Submit for AI Evaluation</span>
               </>
             )}
           </button>

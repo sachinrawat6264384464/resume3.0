@@ -257,10 +257,10 @@ export default function LandingPage() {
 
               <Link prefetch={false}
                 href="/login?redirect=/resume-ats"
-                className="w-full py-3 rounded-xl font-black text-xs text-white bg-[#FF6B00] hover:bg-orange-500 shadow-md shadow-[#FF6B00]/25 flex items-center justify-center gap-2 transition-all z-10 uppercase tracking-widest mt-2"
+                className="w-full px-3 sm:px-6 py-3.5 sm:py-4 rounded-xl font-black text-xs sm:text-sm text-white bg-[#FF6B00] hover:bg-orange-500 shadow-md shadow-[#FF6B00]/25 flex items-center justify-center gap-2 transition-all z-10 uppercase tracking-wider text-center leading-tight break-words max-w-full overflow-hidden mt-2"
               >
-                <Upload className="w-4 h-4" />
-                <span>Upload & Audit Resume ATS Now →</span>
+                <Upload className="w-4 h-4 shrink-0" />
+                <span className="break-words text-center font-black">Upload & Audit Resume ATS Now →</span>
               </Link>
             </div>
 
@@ -304,10 +304,10 @@ export default function LandingPage() {
 
               <Link prefetch={false}
                 href="/login?redirect=/interviews"
-                className="w-full py-3 rounded-xl font-black text-xs text-white bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 shadow-md shadow-purple-600/25 flex items-center justify-center gap-2 transition-all z-10 uppercase tracking-widest mt-2"
+                className="w-full px-3 sm:px-6 py-3.5 sm:py-4 rounded-xl font-black text-xs sm:text-sm text-white bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 shadow-md shadow-purple-600/25 flex items-center justify-center gap-2 transition-all z-10 uppercase tracking-wider text-center leading-tight break-words max-w-full overflow-hidden mt-2"
               >
-                <Play className="w-4 h-4 fill-white" />
-                <span>Start Voice AI Interview Challenge →</span>
+                <Play className="w-4 h-4 fill-white shrink-0" />
+                <span className="break-words text-center font-black">Start Voice AI Interview Challenge →</span>
               </Link>
             </div>
 
@@ -339,7 +339,7 @@ export default function LandingPage() {
               { num: "02", title: "Analyze & JD Match", desc: "Compare your resume against any target Job Description. Get instant 6-Factor ATS score and missing skill gap analysis.", icon: Search, color: "text-blue-500 dark:text-blue-400" },
               { num: "03", title: "Personalized Practice", desc: "Unlock customized interview challenges tailored to your target role. Practice with Hints Level 1-3 or Teleprompter Mode.", icon: Mic, color: "text-purple-500 dark:text-purple-400" },
               { num: "04", title: "AI + Human Feedback", desc: "Receive real-time 5-dimension AI evaluation (Technical, Communication, Confidence, Structure, Practical) + optional mentor review.", icon: Award, color: "text-emerald-500 dark:text-emerald-400" },
-              { num: "05", title: "Repeat & Level Up", desc: "Earn XP, unlock badges, rise on weekly/improvement leaderboards, and re-attempt challenges to reach 80%+ readiness.", icon: Trophy, color: "text-amber-500 dark:text-amber-400" },
+              { num: "05", title: "Repeat & Level Up", desc: "Unlock badges, rise on weekly/improvement leaderboards, and re-attempt challenges to reach 80%+ readiness.", icon: Trophy, color: "text-amber-500 dark:text-amber-400" },
               { num: "06", title: "Crack the Real Interview", desc: "Unlock 40 LPA Final Boss Battles and enter real interviews with confidence, clear answers, and top salary readiness.", icon: CheckCircle2, color: "text-teal-500 dark:text-teal-400" }
             ].map((step, idx) => {
               const IconComp = step.icon;

@@ -45,17 +45,27 @@ class LiveSessionOut(BaseModel):
 def parse_session_datetime(date_str: Optional[str]) -> datetime:
     if not date_str:
         return datetime.min.replace(tzinfo=timezone.utc)
+    
+    # 1. ISO format check
     try:
         return datetime.fromisoformat(date_str.replace("Z", "+00:00"))
     except Exception:
         pass
 
+    # 2. Clean string and normalize month names (Sept -> Sep)
     try:
-        clean_str = date_str.replace("•", "").replace("IST", "").strip()
+        clean_str = date_str.replace("•", " ").replace("IST", "").replace("sept", "sep").replace("Sept", "Sep").strip()
+        clean_str = " ".join(clean_str.split())
+
         for fmt in (
             "%d %b %Y %I:%M %p",
             "%d %B %Y %I:%M %p",
             "%d %b %Y %H:%M",
+            "%d/%m/%Y %I:%M %p",
+            "%d/%m/%Y %H:%M",
+            "%d/%m/%Y",
+            "%d-%m-%Y %H:%M",
+            "%d-%m-%Y",
             "%Y-%m-%d %H:%M:%S",
             "%Y-%m-%d %H:%M",
             "%Y-%m-%d"
@@ -75,8 +85,21 @@ async def get_active_live_sessions(db: AsyncSession = Depends(get_db)):
     res = await db.execute(stmt)
     sessions = res.scalars().all()
 
+    now = datetime.now(timezone.utc)
+    SESSION_DURATION = timedelta(hours=2)
+
     items = []
     for s in sessions:
+        s_dt = parse_session_datetime(s.session_date)
+        # Auto-complete past sessions (if scheduled time + duration has passed)
+        if s_dt > datetime.min.replace(tzinfo=timezone.utc):
+            max_allowed = SESSION_DURATION if s.status not in ["LIVE_NOW", "LIVE_STREAMING"] else timedelta(hours=4)
+            if (s_dt + max_allowed) < now:
+                s.is_active = False
+                s.status = "COMPLETED"
+                continue
+
+
         items.append({
             "id": s.id,
             "title": s.title,
@@ -87,25 +110,30 @@ async def get_active_live_sessions(db: AsyncSession = Depends(get_db)):
             "banner_url": s.banner_url,
             "status": s.status,
             "host_name": s.host_name,
-            "parsed_dt": parse_session_datetime(s.session_date).isoformat()
+            "parsed_dt": s_dt.isoformat()
         })
 
-    # Sample default session if none created yet
+    if db.dirty:
+        await db.commit()
+
+    # Dynamic fallback session (always scheduled 24 hours in future if no session in DB)
     if not items:
+        tomorrow_dt = now + timedelta(days=1)
+        formatted_date = tomorrow_dt.strftime("%d %b %Y • 8:15 PM IST")
         items = [{
             "id": "live-default-001",
             "title": "👑 40 LPA DevOps Architecture & Outage Troubleshooting Masterclass",
             "description": "Join Vikas Sir and Sachin Rawat for live interactive Q&A, mock interview feedback & ATS resume reviews.",
-            "session_date": "25 Sept 2026 • 8:15 PM IST",
+            "session_date": formatted_date,
             "meeting_url": "https://meet.google.com/xyz-cloudops-live",
             "whatsapp_group_url": "https://chat.whatsapp.com/AIInterviewCommunity",
             "banner_url": "/banner-live.png",
             "status": "UPCOMING",
             "host_name": "Vikas Sir & Sachin Rawat",
-            "parsed_dt": "2026-09-25T20:15:00+00:00"
+            "parsed_dt": tomorrow_dt.isoformat()
         }]
     else:
-        # Sort items: LIVE_NOW / LIVE_STREAMING first, then chronological by session_date (ascending)
+        # Sort items: LIVE_NOW / LIVE_STREAMING first, then earliest upcoming session (ascending by date)
         def sort_key(item):
             is_live = item.get("status") in ["LIVE_NOW", "LIVE_STREAMING"]
             dt = parse_session_datetime(item.get("session_date"))
@@ -113,6 +141,7 @@ async def get_active_live_sessions(db: AsyncSession = Depends(get_db)):
         items.sort(key=sort_key)
 
     return StandardResponse(data=items)
+
 
 @router.get("/admin/list", response_model=StandardResponse[List[dict]])
 async def list_admin_live_sessions(

@@ -42,11 +42,9 @@ class Settings(BaseSettings):
     FIREBASE_CREDENTIALS_PATH: Optional[str] = None
     MOCK_AUTH_ENABLED: bool = True  # Allows instant dev/demo login without external Firebase setup
     
-    # SMS Gateway Provider (Fast2SMS / Twilio)
-    FAST2SMS_API_KEY: Optional[str] = None
-    TWILIO_ACCOUNT_SID: Optional[str] = None
-    TWILIO_AUTH_TOKEN: Optional[str] = None
-    TWILIO_PHONE_NUMBER: Optional[str] = None
+    # SMS Gateway Provider (Firebase Phone Auth Managed)
+
+
     
     # Meta WhatsApp Business Cloud API
     META_WHATSAPP_TOKEN: Optional[str] = None

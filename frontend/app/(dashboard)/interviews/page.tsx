@@ -1,12 +1,12 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { 
   Play, CheckCircle2, Lock, Sparkles, Trophy, Clock, 
   ArrowRight, ShieldCheck, Cpu, Mic, FileText, ChevronRight,
   Flame, Award, AlertCircle, RefreshCw, Loader2, Star, Zap, Crown, X,
-  Video, LogOut
+  Video, LogOut, Monitor, Copy, Check
 } from "lucide-react";
 import { apiFetch } from "@/lib/api";
 import { useAuthStore } from "@/lib/store";
@@ -85,6 +85,11 @@ export default function InterviewsPage() {
   const [paymentSuccessMsg, setPaymentSuccessMsg] = useState<string | null>(null);
   const [alertMsg, setAlertMsg] = useState<string | null>(null);
 
+  // Mobile Auto-Scroll Ref & Desktop Required Warning Modal State
+  const detailsRef = useRef<HTMLDivElement>(null);
+  const [isMobileWarningModalOpen, setIsMobileWarningModalOpen] = useState(false);
+  const [copiedLink, setCopiedLink] = useState(false);
+
   // Active Running Interview Session State
   const [activeSession, setActiveSession] = useState<{
     attemptId: string;
@@ -127,6 +132,10 @@ export default function InterviewsPage() {
       // Track completed stages for sequential unlocking
       const completedSet = new Set<number>();
 
+      const hasLocalStage0 = typeof window !== "undefined" && Boolean(localStorage.getItem("stage0_profile_data"));
+      const candXp = resMetrics?.data?.candidate?.xp || 0;
+      const isStage0DoneInDb = candXp > 0 || Boolean(resMetrics?.data?.candidate?.resume_data_json?.stage_0_completed) || Boolean(resMetrics?.data?.candidate?.target_role);
+
       ALL_30_STAGES.forEach((stg) => {
         const att = attemptMap.get(stg.id);
         if (att && (att.status === "completed" || att.status === "PASSED" || (typeof att.score === "string" && parseInt(att.score) >= 70))) {
@@ -135,7 +144,7 @@ export default function InterviewsPage() {
       });
 
       const stg0AttCheck = attemptMap.get(0);
-      if (stg0AttCheck && (stg0AttCheck.status === "completed" || stg0AttCheck.status === "PASSED")) {
+      if (hasLocalStage0 || isStage0DoneInDb || (stg0AttCheck && (stg0AttCheck.status === "completed" || stg0AttCheck.status === "PASSED"))) {
         completedSet.add(0);
       }
 
@@ -277,6 +286,20 @@ export default function InterviewsPage() {
   const handleSelectStage = (s: any) => {
     setSelectedStage(s);
     setAlertMsg(null);
+
+    const isMobile = typeof window !== "undefined" && (window.innerWidth < 768 || /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent));
+    if (isMobile) {
+      setIsMobileWarningModalOpen(true);
+      return;
+    }
+
+    // Auto-scroll on tablet/desktop devices to details card below if needed
+    if (typeof window !== "undefined" && window.innerWidth < 1024 && detailsRef.current) {
+      setTimeout(() => {
+        detailsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+      }, 100);
+    }
+
     if (activeSession) {
       setAlertMsg(`⚠️ You have an active live interview running (${activeSession.stageTitle || 'Stage Interview'}). Please 'Resume Ongoing Interview 🚀' or 'Drop Out 🚪' before launching a new stage.`);
     }
@@ -296,7 +319,7 @@ export default function InterviewsPage() {
     // 1. Instant UI modal close & success notification (0ms delay)
     setIsSavingStage0(false);
     setIsStage0ModalOpen(false);
-    setPaymentSuccessMsg("🎉 Stage 0 Profile Setup Saved! +200 XP Awarded & Stage 1 Unlocked.");
+    setPaymentSuccessMsg("🎉 Stage 0 Profile Setup Saved! Stage 1 Unlocked.");
 
     // 2. Instant Local Storage Persistence
     if (typeof window !== "undefined") {
@@ -319,8 +342,8 @@ export default function InterviewsPage() {
     // 3. Instant local stage state update (Unlock Stage 1 immediately)
     setStages((prevStages) =>
       prevStages.map((stg) => {
-        if (stg.id === 0) return { ...stg, status: "passed", score: 100 };
-        if (stg.id === 1 && stg.status === "locked") return { ...stg, status: "unlocked" };
+        if (stg.id === 0) return { ...stg, status: "completed", score: "100%" };
+        if (stg.id === 1 && stg.status === "locked") return { ...stg, status: "in_progress", score: "Active" };
         return stg;
       })
     );
@@ -345,6 +368,13 @@ export default function InterviewsPage() {
 
     if (stageId === 0) {
       setIsStage0ModalOpen(true);
+      return;
+    }
+
+    // Check if user is on mobile screen or mobile device (Stage 1-30 require desktop browser for full AI interview room)
+    const isMobile = typeof window !== "undefined" && (window.innerWidth < 768 || /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent));
+    if (isMobile) {
+      setIsMobileWarningModalOpen(true);
       return;
     }
 
@@ -534,9 +564,10 @@ export default function InterviewsPage() {
 
   return (
     <div className="w-full flex flex-col gap-8 pb-16 text-slate-900 dark:text-slate-100 font-sans relative overflow-x-hidden">
-      
       {/* BACKGROUND VERTICAL GRID LINES */}
       <div className="fixed inset-0 pointer-events-none z-0 grid grid-cols-4 md:grid-cols-6 lg:grid-cols-12 w-full px-6 opacity-15">
+
+
         <div className="border-r border-slate-300 dark:border-slate-800 h-full"></div>
         <div className="border-r border-slate-300 dark:border-slate-800 h-full hidden md:block"></div>
         <div className="border-r border-slate-300 dark:border-slate-800 h-full"></div>
@@ -660,7 +691,6 @@ export default function InterviewsPage() {
                   : "bg-slate-100 dark:bg-slate-800/80 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 hover:text-slate-900 dark:hover:text-white"
               }`}
             >
-              <span className="text-sm">{tab.icon}</span>
               <span className="font-black tracking-tight">{tab.title}</span>
               <span
                 className={`px-2 py-0.5 rounded-md text-[9.5px] font-black tracking-wider uppercase border ${
@@ -700,7 +730,7 @@ export default function InterviewsPage() {
                 <div
                   key={s.id}
                   onClick={() => handleSelectStage(s)}
-                  className={`p-3.5 sm:p-4 rounded-2xl border-2 transition-all cursor-pointer relative overflow-hidden flex items-center justify-between gap-3 shrink-0 ${
+                  className={`p-3 sm:p-4 rounded-2xl border-2 transition-all cursor-pointer relative overflow-hidden flex items-center justify-between gap-2 sm:gap-3 shrink-0 ${
                     isSelected
                       ? "bg-white dark:bg-slate-900 border-[#FF6B00] shadow-xl shadow-[#FF6B00]/15 ring-2 ring-[#FF6B00]/20"
                       : isCompleted
@@ -717,8 +747,8 @@ export default function InterviewsPage() {
                     <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-[#FF6B00] rounded-l-2xl" />
                   )}
 
-                  <div className="flex items-center gap-3.5 min-w-0 pl-1">
-                    <div className={`w-11 h-11 rounded-xl font-black text-base flex items-center justify-center shrink-0 transition-transform ${
+                  <div className="flex items-center gap-2.5 sm:gap-3.5 min-w-0 pl-0.5 flex-1">
+                    <div className={`w-9 h-9 sm:w-11 sm:h-11 rounded-xl font-black text-xs sm:text-base flex items-center justify-center shrink-0 transition-transform ${
                       isBoss
                         ? "bg-amber-500 text-slate-950 shadow-md shadow-amber-500/30"
                         : isCompleted
@@ -729,32 +759,29 @@ export default function InterviewsPage() {
                         ? "bg-amber-500/20 text-[#FF9900] border border-[#FF9900]/40"
                         : "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700"
                     }`}>
-                      {isCompleted ? <CheckCircle2 className="w-6 h-6" /> : isProLocked ? <Crown className="w-5 h-5 text-[#FF9900]" /> : <span>{s.icon}</span>}
+                      {isCompleted ? <CheckCircle2 className="w-5 h-5 sm:w-6 sm:h-6" /> : isProLocked ? <Crown className="w-4 h-4 sm:w-5 sm:h-5 text-[#FF9900]" /> : <span>{s.icon}</span>}
                     </div>
 
-                    <div className="flex flex-col min-w-0">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-black text-[#FF6B00] bg-orange-50 dark:bg-orange-950/60 border border-[#FF6B00]/30 uppercase">
+                    <div className="flex flex-col min-w-0 flex-1">
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <span className="px-2 py-0.5 rounded-full text-[9px] sm:text-[10px] font-mono font-black text-[#FF6B00] bg-orange-50 dark:bg-orange-950/60 border border-[#FF6B00]/30 uppercase tracking-tight leading-tight whitespace-nowrap max-w-full">
                           STAGE {s.id} • {s.levelName}
                         </span>
-                        <span className="px-2 py-0.5 rounded-full text-[9.5px] font-mono font-black text-amber-700 dark:text-amber-300 bg-amber-100 dark:bg-amber-950/80 border border-amber-300/60 dark:border-amber-700/60">
-                          {s.xp}
-                        </span>
                       </div>
-                      <h3 className="text-sm font-black text-slate-900 dark:text-white truncate mt-1 tracking-tight">
+                      <h3 className="text-xs sm:text-sm font-black text-slate-900 dark:text-white mt-1 tracking-tight break-words leading-tight">
                         {s.title}
                       </h3>
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-2 shrink-0">
+                  <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
                     {isCompleted && (
-                      <span className="px-3 py-1 rounded-xl bg-emerald-100 dark:bg-emerald-950/80 border border-emerald-500/50 text-emerald-700 dark:text-emerald-300 text-xs font-black">
+                      <span className="px-2.5 py-1 rounded-xl bg-emerald-100 dark:bg-emerald-950/80 border border-emerald-500/50 text-emerald-700 dark:text-emerald-300 text-[10px] sm:text-xs font-black">
                         {s.score}
                       </span>
                     )}
                     {isInProgress && (
-                      <span className="px-3 py-1 rounded-xl bg-amber-100 dark:bg-amber-950/80 border border-[#FF6B00] text-[#FF6B00] text-xs font-black animate-pulse">
+                      <span className="px-2.5 py-1 rounded-xl bg-amber-100 dark:bg-amber-950/80 border border-[#FF6B00] text-[#FF6B00] text-[10px] sm:text-xs font-black animate-pulse">
                         Active
                       </span>
                     )}
@@ -765,16 +792,17 @@ export default function InterviewsPage() {
                           setSelectedStageForPayment(s);
                           setIsPaymentModalOpen(true);
                         }}
-                        className="px-3 py-1.5 rounded-xl bg-[#FF9900] text-slate-950 text-xs font-black flex items-center gap-1 shadow-sm hover:bg-amber-400 transition-all cursor-pointer"
-                        title="One-Time ₹50 Pass Unlocks All Stages 6-30"
+                        className="px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-xl bg-[#FF9900] text-slate-950 text-[10px] sm:text-xs font-black flex items-center gap-1 shadow-sm hover:bg-amber-400 transition-all cursor-pointer whitespace-nowrap"
+                        title="One-Time Pass Unlocks All Stages 6-30"
                       >
-                        <Crown className="w-3.5 h-3.5 text-slate-950" />
-                        <span>PRO PASS</span>
+                        <Crown className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-slate-950" />
+                        <span className="hidden xs:inline">PRO PASS</span>
+                        <span className="inline xs:hidden">PRO</span>
                       </button>
                     )}
                     {isLocked && (
-                      <span className="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-400 border border-slate-200 dark:border-slate-700" title={`Complete Stage ${s.id - 1} first`}>
-                        <Lock className="w-4 h-4" />
+                      <span className="p-1.5 sm:p-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-400 border border-slate-200 dark:border-slate-700" title={`Complete Stage ${s.id - 1} first`}>
+                        <Lock className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                       </span>
                     )}
                   </div>
@@ -786,7 +814,7 @@ export default function InterviewsPage() {
         </div>
 
         {/* RIGHT: SELECTED STAGE DETAILS & LAUNCH SIMULATOR CARD */}
-        <div className="lg:col-span-5 lg:sticky lg:top-24">
+        <div ref={detailsRef} className="lg:col-span-5 lg:sticky lg:top-24">
           
           {selectedStage && (
             <div className="p-6 sm:p-7 rounded-[32px] bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-800 shadow-xl dark:shadow-2xl flex flex-col justify-between gap-6">
@@ -904,7 +932,7 @@ export default function InterviewsPage() {
                     ) : (
                       <>
                         <Trophy className="w-4 h-4 text-amber-300" />
-                        <span>Setup Profile & Complete Stage 0 (+200 XP) 🚀</span>
+                        <span>Setup Profile & Complete Stage 0 🚀</span>
                       </>
                     )
                   ) : selectedStage.status === "pro_locked" || (isPaymentEnabled && !isSubscribed && selectedStage.id >= 6) ? (
@@ -1185,6 +1213,66 @@ export default function InterviewsPage() {
               </div>
 
             </form>
+
+          </div>
+        </div>
+      )}
+
+      {/* MOBILE DEVICE DESKTOP REQUIRED WARNING MODAL */}
+
+      {isMobileWarningModalOpen && (
+        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 flex items-center justify-center p-4 animate-fadeIn">
+          <div className="bg-white dark:bg-slate-900 border-2 border-[#FF6B00]/40 rounded-[28px] max-w-md w-full p-6 sm:p-7 shadow-2xl flex flex-col gap-5 relative overflow-hidden text-center items-center">
+            
+            {/* Icon Badge */}
+            <div className="w-16 h-16 rounded-2xl bg-[#FF6B00]/15 border border-[#FF6B00]/40 flex items-center justify-center text-[#FF6B00] shadow-lg shadow-[#FF6B00]/20">
+              <Monitor className="w-8 h-8 text-[#FF6B00]" />
+            </div>
+
+            <div className="flex flex-col gap-1.5 text-center">
+              <span className="text-xs font-mono font-black text-[#FF6B00] uppercase tracking-widest">
+                💻 LAPTOP / DESKTOP REQUIRED
+              </span>
+              <h3 className="text-xl font-black text-slate-900 dark:text-white uppercase tracking-tight">
+                Desktop Screen Required for AI Room
+              </h3>
+            </div>
+
+            <div className="p-4 rounded-2xl bg-amber-50 dark:bg-amber-950/30 border border-amber-300 dark:border-amber-800/60 text-xs leading-relaxed text-slate-700 dark:text-slate-200 text-left font-medium flex flex-col gap-2">
+              <p className="font-bold text-[#FF6B00]">
+                ⚠️ Yeh interview stage mobile device par continue nahi ho payega!
+              </p>
+              <p>
+                Real-Time Voice AI Spoken Interview, STAR Pitch Teleprompter, HD Microphone evaluation, and Camera Background Blur laptop / desktop browser par optimal chalte hain.
+              </p>
+              <div className="pt-2 border-t border-amber-200 dark:border-amber-900/40 flex flex-col gap-1 text-[11px] text-slate-600 dark:text-slate-300">
+                <span>✅ <strong>Recommended:</strong> Open in Chrome / Edge on Laptop</span>
+                <span>✅ <strong>Permissions:</strong> Microphone & Camera required</span>
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-2.5 w-full pt-1">
+              <button
+                onClick={() => {
+                  if (typeof window !== "undefined") {
+                    navigator.clipboard.writeText(window.location.href);
+                    setCopiedLink(true);
+                    setTimeout(() => setCopiedLink(false), 2500);
+                  }
+                }}
+                className="w-full py-3.5 rounded-2xl font-black text-xs text-white bg-gradient-to-r from-[#FF6B00] to-amber-500 hover:from-orange-500 hover:to-amber-600 shadow-md shadow-[#FF6B00]/25 flex items-center justify-center gap-2 cursor-pointer uppercase tracking-wider"
+              >
+                {copiedLink ? <Check className="w-4 h-4 text-white" /> : <Copy className="w-4 h-4 text-white" />}
+                <span>{copiedLink ? "Link Copied! Paste on Laptop 📋" : "Copy Page Link for Laptop 📋"}</span>
+              </button>
+
+              <button
+                onClick={() => setIsMobileWarningModalOpen(false)}
+                className="w-full py-3 rounded-xl font-bold text-xs text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+              >
+                Close / Go Back
+              </button>
+            </div>
 
           </div>
         </div>

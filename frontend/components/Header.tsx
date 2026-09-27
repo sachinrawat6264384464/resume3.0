@@ -203,34 +203,14 @@ export function Header({ onToggleMobileSidebar }: HeaderProps) {
         >
           <Menu className="w-4 h-4 sm:w-5 sm:h-5" />
         </button>
-
-        <div className="inline-flex items-center gap-1.5 px-2.5 py-1 sm:px-3.5 sm:py-1.5 rounded-xl sm:rounded-2xl bg-[#FF9900]/10 dark:bg-[#FF9900]/10 border border-[#FF9900]/30 shadow-xs text-xs font-mono font-black text-[#FF9900] truncate">
+        <div className="hidden xs:inline-flex items-center gap-1.5 px-2 py-1 sm:px-3.5 sm:py-1.5 rounded-xl sm:rounded-2xl bg-[#FF9900]/10 dark:bg-[#FF9900]/10 border border-[#FF9900]/30 shadow-xs text-xs font-mono font-black text-[#FF9900] shrink-0">
           <ShieldCheck className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#FF9900] shrink-0" />
-          <span className="tracking-widest text-[9px] sm:text-xs truncate max-w-[100px] xs:max-w-[150px] sm:max-w-none uppercase">CLOUDOPS AI</span>
+          <span className="tracking-widest text-[10px] sm:text-xs whitespace-nowrap uppercase">CLOUDOPS AI</span>
         </div>
       </div>
 
       {/* Right Header Action Bar (Enlarged, Professional & Sleek) */}
       <div className="flex items-center gap-1 sm:gap-3.5 relative shrink-0">
-        
-        {/* 🪙 TOP CANDIDATE XP WALLET WIDGET */}
-        {!isAdminRoute && (
-          <Link
-            href="/performance"
-            className="flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-1.5 rounded-2xl bg-gradient-to-r from-amber-500/15 via-orange-500/10 to-amber-500/15 border border-[#FF9900]/40 shadow-xs hover:border-[#FF9900] transition-all cursor-pointer group shrink-0"
-            title="Candidate XP Wallet Balance - Click to Manage Badges & Rewards"
-          >
-            <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-amber-500 text-slate-950 flex items-center justify-center font-black text-xs shrink-0 shadow-xs group-hover:scale-110 transition-transform">
-              🪙
-            </div>
-            <div className="flex flex-col text-left leading-none">
-              <span className="text-[8px] sm:text-[9px] font-extrabold text-slate-400 uppercase tracking-widest hidden xs:inline">XP WALLET</span>
-              <span className="text-[11px] sm:text-xs font-black text-[#FF9900] font-mono mt-0.5">
-                {((candProfile?.xp ?? 2450)).toLocaleString()} XP
-              </span>
-            </div>
-          </Link>
-        )}
 
         {/* Theme Toggle Button */}
         <ThemeToggle />
@@ -244,12 +224,12 @@ export function Header({ onToggleMobileSidebar }: HeaderProps) {
                 setShowNotifications(nextState);
                 if (nextState) fetchNotifications();
               }}
-              className="relative p-2.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-200 hover:text-[#FF9900] shadow-sm hover:shadow-md transition-all cursor-pointer"
+              className="relative p-2 sm:p-2.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-200 hover:text-[#FF9900] shadow-sm hover:shadow-md transition-all cursor-pointer"
               title="Smart Reminders & Alerts"
             >
-              <Bell className="w-5 h-5 text-slate-700 dark:text-slate-200 hover:text-[#FF9900]" />
+              <Bell className="w-4 h-4 sm:w-5 sm:h-5 text-slate-700 dark:text-slate-200 hover:text-[#FF9900]" />
               {unreadCount > 0 && (
-                <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-red-500 text-white font-mono text-[10px] font-black flex items-center justify-center border-2 border-white dark:border-slate-900 animate-pulse">
+                <span className="absolute -top-1 -right-1 w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-red-500 text-white font-mono text-[9px] sm:text-[10px] font-black flex items-center justify-center border-2 border-white dark:border-slate-900 animate-pulse">
                   {unreadCount}
                 </span>
               )}
@@ -317,15 +297,13 @@ export function Header({ onToggleMobileSidebar }: HeaderProps) {
           </div>
         )}
 
-
-
         {/* 👤 Professional Candidate Profile Dropdown Pill */}
         <div className="relative" ref={userMenuRef}>
           <button
             onClick={() => setShowUserMenu(!showUserMenu)}
-            className="flex items-center gap-3 p-1.5 pl-2 pr-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800/80 shadow-sm hover:shadow-md hover:border-[#FF9900]/50 transition-all cursor-pointer"
+            className="flex items-center gap-1.5 sm:gap-3 p-1 sm:p-1.5 sm:pl-2 sm:pr-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800/80 shadow-sm hover:shadow-md hover:border-[#FF9900]/50 transition-all cursor-pointer"
           >
-            <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-[#FF9900] via-amber-500 to-orange-400 text-slate-950 font-black text-sm flex items-center justify-center shadow-md shadow-[#FF9900]/20 border-2 border-white dark:border-slate-800 overflow-hidden shrink-0 flex-shrink-0">
+            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-gradient-to-tr from-[#FF9900] via-amber-500 to-orange-400 text-slate-950 font-black text-xs sm:text-sm flex items-center justify-center shadow-md shadow-[#FF9900]/20 border-2 border-white dark:border-slate-800 overflow-hidden shrink-0">
               {user?.avatar_url ? (
                 <img loading="lazy" decoding="async" src={user.avatar_url} alt="Avatar" className="w-full h-full object-cover rounded-full" />
               ) : (
@@ -342,7 +320,7 @@ export function Header({ onToggleMobileSidebar }: HeaderProps) {
               </span>
             </div>
 
-            <ChevronDown className="w-4 h-4 text-slate-400" />
+            <ChevronDown className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-slate-400 shrink-0" />
           </button>
 
           {showUserMenu && (
@@ -363,17 +341,6 @@ export function Header({ onToggleMobileSidebar }: HeaderProps) {
 
               {/* Menu Links */}
               <div className="p-2 flex flex-col gap-1">
-                {mounted && (user?.role === "ADMIN" || (user as any)?.is_admin || user?.email === "admin@cloudops.internal") && (
-                  <Link prefetch={false}
-                    href="/admin"
-                    onClick={() => setShowUserMenu(false)}
-                    className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-black text-[#FF6B00] bg-orange-50 dark:bg-orange-950/60 border border-[#FF6B00]/40 hover:bg-orange-100 transition-colors mb-1"
-                  >
-                    <ShieldCheck className="w-4 h-4 text-[#FF6B00]" />
-                    <span>⚡ Admin OS Portal (/admin)</span>
-                  </Link>
-                )}
-
                 <Link prefetch={false}
                   href="/performance"
                   onClick={() => setShowUserMenu(false)}

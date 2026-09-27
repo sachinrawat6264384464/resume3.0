@@ -6,7 +6,7 @@ import {
   Users, Calendar, Star, CheckCircle2, CreditCard, TrendingUp, 
   Search, Bell, ChevronDown, UserPlus, Megaphone, Download, 
   Settings, Database, Cpu, Mic, Cloud, Mail, ShieldCheck, 
-  Sparkles, Trash2, Layers, Activity, Server, FileText, Check, Loader2
+  Sparkles, Trash2, Layers, Activity, Server, FileText, Check, Loader2, Video
 } from "lucide-react";
 import { apiFetch } from "@/lib/api";
 import { AdminDashboardMetrics } from "@/types";
@@ -465,21 +465,40 @@ export default function AdminAnalyticsPage() {
 
           {/* Quick Actions Grid */}
           <div className="p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-sm flex flex-col gap-3">
-            <h2 className="text-sm font-black text-slate-900 dark:text-white mb-1">Quick Actions</h2>
+            <h2 className="text-sm font-black text-slate-900 dark:text-white mb-1">Quick Admin Control Actions</h2>
 
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
-              <button className="p-3 rounded-2xl bg-indigo-50 dark:bg-indigo-950/40 hover:bg-indigo-100 text-indigo-700 dark:text-indigo-300 text-xs font-bold flex items-center justify-center gap-1.5 transition-all">
-                <UserPlus className="w-3.5 h-3.5" />
-                <span>Add New Admin</span>
-              </button>
-              <button className="p-3 rounded-2xl bg-purple-50 dark:bg-purple-950/40 hover:bg-purple-100 text-purple-700 dark:text-purple-300 text-xs font-bold flex items-center justify-center gap-1.5 transition-all">
-                <Megaphone className="w-3.5 h-3.5" />
-                <span>Announcement</span>
-              </button>
-              <button className="p-3 rounded-2xl bg-blue-50 dark:bg-blue-950/40 hover:bg-blue-100 text-blue-700 dark:text-blue-300 text-xs font-bold flex items-center justify-center gap-1.5 transition-all">
-                <Download className="w-3.5 h-3.5" />
-                <span>Export Reports</span>
-              </button>
+            <div className="grid grid-cols-2 gap-2.5">
+              <Link
+                href="/admin/video-management"
+                className="p-3.5 rounded-2xl bg-orange-50 dark:bg-orange-950/40 hover:bg-orange-100 text-[#FF6B00] text-xs font-black flex items-center justify-center gap-2 transition-all border border-orange-200 dark:border-orange-900/60"
+              >
+                <Video className="w-4 h-4 text-[#FF6B00]" />
+                <span>🎬 Video Showcase</span>
+              </Link>
+
+              <Link
+                href="/admin/roles-permissions"
+                className="p-3.5 rounded-2xl bg-purple-50 dark:bg-purple-950/40 hover:bg-purple-100 text-purple-700 dark:text-purple-300 text-xs font-black flex items-center justify-center gap-2 transition-all border border-purple-200 dark:border-purple-900/60"
+              >
+                <ShieldCheck className="w-4 h-4 text-purple-500" />
+                <span>🛡️ Roles & Permissions</span>
+              </Link>
+
+              <Link
+                href="/admin/candidates"
+                className="p-3.5 rounded-2xl bg-blue-50 dark:bg-blue-950/40 hover:bg-blue-100 text-blue-700 dark:text-blue-300 text-xs font-black flex items-center justify-center gap-2 transition-all border border-blue-200 dark:border-blue-900/60"
+              >
+                <Users className="w-4 h-4 text-blue-500" />
+                <span>👥 Candidates Portal</span>
+              </Link>
+
+              <Link
+                href="/admin/payment-gateway"
+                className="p-3.5 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 hover:bg-emerald-100 text-emerald-700 dark:text-emerald-300 text-xs font-black flex items-center justify-center gap-2 transition-all border border-emerald-200 dark:border-emerald-900/60"
+              >
+                <CreditCard className="w-4 h-4 text-emerald-500" />
+                <span>💳 Payment Gateway</span>
+              </Link>
             </div>
           </div>
 

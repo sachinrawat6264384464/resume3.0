@@ -15,6 +15,7 @@ from app.api.v1.reminders import router as reminders_router
 from app.api.v1.payment_gateway import router as payment_gateway_router
 from app.api.v1.live_sessions import router as live_sessions_router
 from app.api.v1.linkedin import router as linkedin_router
+from app.api.v1.walkthrough_videos import router as walkthrough_videos_router
 
 api_router = APIRouter()
 
@@ -27,6 +28,7 @@ api_router.include_router(reminders_router)
 api_router.include_router(payment_gateway_router)
 api_router.include_router(live_sessions_router)
 api_router.include_router(linkedin_router)
+api_router.include_router(walkthrough_videos_router)
 api_router.include_router(jd_router)
 api_router.include_router(interviews_router)
 api_router.include_router(questions_router)

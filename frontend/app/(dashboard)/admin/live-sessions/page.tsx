@@ -2,9 +2,10 @@
 // Updated: 2026-09-22 Single Active Live Session Logic Enforcement
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { 
   Calendar, Video, Plus, Edit2, Trash2, Eye, CheckCircle2, 
-  Clock, Link as LinkIcon, Users, Sparkles, RefreshCw, Loader2, X, Play, Radio, StopCircle
+  Clock, Link as LinkIcon, Users, Sparkles, RefreshCw, Loader2, X, Play, Radio, StopCircle, MessageSquare
 } from "lucide-react";
 import { apiFetch } from "@/lib/api";
 
@@ -30,21 +31,122 @@ export default function AdminLiveSessionsPage() {
 
   const [saving, setSaving] = useState(false);
 
-  // Sanitize sessions on fetch to enforce single active live session in UI
-  const sanitizeSingleLiveSession = (rawSessions: any[]) => {
-    let hasLiveNow = false;
-    return rawSessions.map((s) => {
+  const parseSessionDate = (dateStr: string): number => {
+    if (!dateStr) return 0;
+    const parsedDirect = new Date(dateStr).getTime();
+    if (!isNaN(parsedDirect) && parsedDirect > 0) return parsedDirect;
+    try {
+      const cleaned = dateStr.replace(/[•]/g, " ").replace(/\s+/g, " ").trim();
+      const slashMatch = cleaned.match(/(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/);
+      if (slashMatch) {
+        const day = parseInt(slashMatch[1], 10);
+        const month = parseInt(slashMatch[2], 10) - 1;
+        const year = parseInt(slashMatch[3], 10);
+        return new Date(year, month, day, 20, 15).getTime();
+      }
+      const match = cleaned.match(/(\d{1,2})\s+([A-Za-z]+)\s+(\d{4})(?:\s+(\d{1,2}):(\d{2})\s*(AM|PM)?)?/i);
+      if (match) {
+        const day = parseInt(match[1], 10);
+        const monthStr = match[2];
+        const year = parseInt(match[3], 10);
+        let hours = match[4] ? parseInt(match[4], 10) : 20;
+        const mins = match[5] ? parseInt(match[5], 10) : 15;
+        const ampm = match[6] ? match[6].toUpperCase() : null;
+        if (ampm === "PM" && hours < 12) hours += 12;
+        if (ampm === "AM" && hours === 12) hours = 0;
+        const monthsMap: Record<string, number> = {
+          jan: 0, january: 0, feb: 1, february: 1, mar: 2, march: 2,
+          apr: 3, april: 3, may: 4, jun: 5, june: 5, jul: 6, july: 6,
+          aug: 7, august: 7, sep: 8, sept: 8, september: 8, oct: 9, october: 9,
+          nov: 10, november: 10, dec: 11, december: 11
+        };
+        const mIndex = monthsMap[monthStr.toLowerCase()] ?? 0;
+        return new Date(year, mIndex, day, hours, mins).getTime();
+      }
+    } catch (e) {}
+    return 0;
+  };
+
+  // Enforce chronological sorting, single live streaming priority & candidate queue position
+  const processAndSortSessions = (rawSessions: any[]) => {
+    const now = Date.now();
+    const SESSION_DURATION_MS = 2 * 60 * 60 * 1000; // 2 hour duration window
+
+    // 1. Sort chronologically: LIVE_NOW first, then earliest upcoming session date ascending
+    const sorted = [...rawSessions].sort((a, b) => {
+      const isLiveA = a.status === "LIVE_NOW" || a.status === "LIVE_STREAMING";
+      const isLiveB = b.status === "LIVE_NOW" || b.status === "LIVE_STREAMING";
+      if (isLiveA) return -1;
+      if (isLiveB) return 1;
+
+      const dtA = parseSessionDate(a.session_date);
+      const dtB = parseSessionDate(b.session_date);
+      return dtA - dtB;
+    });
+
+    let queueCounter = 0;
+    let hasLiveSession = false;
+
+    return sorted.map((s) => {
       const isLive = s.status === "LIVE_NOW" || s.status === "LIVE_STREAMING";
+      const sTime = parseSessionDate(s.session_date);
+      const isExpired = sTime > 0 && (sTime + SESSION_DURATION_MS) < now && !isLive;
+
+      let computedStatus = s.status;
+      if (isExpired && s.status !== "COMPLETED") {
+        computedStatus = "COMPLETED";
+      }
+
       if (isLive) {
-        if (!hasLiveNow) {
-          hasLiveNow = true;
-          return { ...s, status: "LIVE_NOW", is_active: true };
+        if (!hasLiveSession) {
+          hasLiveSession = true;
+          queueCounter++;
+          return {
+            ...s,
+            status: "LIVE_NOW",
+            is_active: true,
+            queue_position: 1,
+            is_candidate_visible: true,
+            badge_label: "● LIVE STREAMING NOW (Candidate Banner #1)"
+          };
         } else {
-          // Revert any subsequent "live" session to UPCOMING so only ONE stays live!
-          return { ...s, status: "UPCOMING", is_active: false };
+          queueCounter++;
+          return {
+            ...s,
+            status: "UPCOMING",
+            is_active: false,
+            queue_position: queueCounter,
+            is_candidate_visible: false,
+            badge_label: `⏳ QUEUED SESSION (Queue #${queueCounter})`
+          };
         }
       }
-      return s;
+
+      if (computedStatus === "COMPLETED") {
+        return {
+          ...s,
+          status: "COMPLETED",
+          is_active: false,
+          queue_position: null,
+          is_candidate_visible: false,
+          badge_label: "✓ COMPLETED / EXPIRED"
+        };
+      }
+
+      // Upcoming active session
+      queueCounter++;
+      const isCandidateVisible = !hasLiveSession && queueCounter === 1;
+
+      return {
+        ...s,
+        status: computedStatus,
+        is_active: isCandidateVisible,
+        queue_position: queueCounter,
+        is_candidate_visible: isCandidateVisible,
+        badge_label: isCandidateVisible 
+          ? "🟢 CANDIDATE BANNER (Queue #1 - Next Up)" 
+          : `⏳ QUEUED SESSION (Queue #${queueCounter})`
+      };
     });
   };
 
@@ -53,38 +155,39 @@ export default function AdminLiveSessionsPage() {
     try {
       const res = await apiFetch("/live-sessions/admin/list");
       if (res?.data && Array.isArray(res.data) && res.data.length > 0) {
-        setSessions(sanitizeSingleLiveSession(res.data));
+        setSessions(processAndSortSessions(res.data));
       } else {
         // Fallback session
-        setSessions([{
+        setSessions(processAndSortSessions([{
           id: "live-default-001",
           title: "👑 40 LPA DevOps Architecture & Outage Troubleshooting Masterclass",
           description: "Live Q&A, mock interview feedback & ATS resume review session with Vikas Sir and Sachin Rawat.",
-          session_date: "25 Sept 2026 • 8:15 PM IST",
+          session_date: "Tomorrow • 8:15 PM IST",
           meeting_url: "https://meet.google.com/xyz-cloudops-live",
           whatsapp_group_url: "https://chat.whatsapp.com/AIInterviewCommunity",
           is_active: true,
           status: "UPCOMING",
           host_name: "Vikas Sir & Sachin Rawat"
-        }]);
+        }]));
       }
     } catch (e) {
       console.warn("Failed to fetch live sessions from API, using default state:", e);
-      setSessions([{
+      setSessions(processAndSortSessions([{
         id: "live-default-001",
         title: "👑 40 LPA DevOps Architecture & Outage Troubleshooting Masterclass",
         description: "Live Q&A, mock interview feedback & ATS resume review session with Vikas Sir and Sachin Rawat.",
-        session_date: "25 Sept 2026 • 8:15 PM IST",
+        session_date: "Tomorrow • 8:15 PM IST",
         meeting_url: "https://meet.google.com/xyz-cloudops-live",
         whatsapp_group_url: "https://chat.whatsapp.com/AIInterviewCommunity",
         is_active: true,
         status: "UPCOMING",
         host_name: "Vikas Sir & Sachin Rawat"
-      }]);
+      }]));
     } finally {
       setLoading(false);
     }
   };
+
 
   const fetchClickLogs = async () => {
     setLoadingClicks(true);
@@ -273,6 +376,14 @@ export default function AdminLiveSessionsPage() {
         </div>
 
         <div className="flex items-center gap-3 flex-wrap">
+          <Link
+            href="/admin/candidates"
+            className="px-4 py-2.5 rounded-xl text-xs font-black text-white bg-emerald-600 hover:bg-emerald-700 shadow-md shadow-emerald-600/20 flex items-center gap-2 transition-all cursor-pointer uppercase tracking-wider"
+          >
+            <MessageSquare className="w-4 h-4" />
+            <span>Give Candidate Feedback 💬</span>
+          </Link>
+
           <button
             onClick={handleOpenCreateModal}
             className="px-4 py-2.5 rounded-xl text-xs font-black text-white bg-[#FF6B00] hover:bg-[#e05e00] shadow-md shadow-[#FF6B00]/20 flex items-center gap-2 transition-all cursor-pointer uppercase tracking-wider"
@@ -311,22 +422,25 @@ export default function AdminLiveSessionsPage() {
               <div key={s.id} className={`p-6 rounded-3xl bg-white dark:bg-slate-900 border-2 ${isLive ? "border-rose-500/60 dark:border-rose-500/80 shadow-rose-500/10 shadow-lg" : "border-slate-200/80 dark:border-slate-800 shadow-xs"} flex flex-col justify-between gap-4 relative group transition-all`}>
                 
                 <div className="flex flex-col gap-3">
-                  <div className="flex items-center justify-between">
+                  <div className="flex items-center justify-between gap-2 flex-wrap">
                     <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider flex items-center gap-1.5 ${
                       isLive 
                         ? "bg-rose-100 text-rose-700 dark:bg-rose-950 dark:text-rose-300 border border-rose-500/40 animate-pulse"
                         : s.status === "COMPLETED"
                         ? "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400 border border-slate-300 dark:border-slate-700"
+                        : s.is_candidate_visible
+                        ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-500/40 font-black"
                         : "bg-amber-100 text-amber-900 dark:bg-amber-950 dark:text-amber-200 border border-amber-500/40"
                     }`}>
                       <Radio className={`w-3 h-3 ${isLive ? "text-rose-500 animate-spin" : ""}`} />
-                      <span>{isLive ? "● LIVE STREAMING" : (s.status === "COMPLETED" ? "✓ COMPLETED" : "📅 SCHEDULED SESSION")}</span>
+                      <span>{s.badge_label || (isLive ? "● LIVE STREAMING" : (s.status === "COMPLETED" ? "✓ COMPLETED" : "📅 SCHEDULED SESSION"))}</span>
                     </span>
 
-                    <span className={`text-[10px] font-bold ${s.is_active ? "text-emerald-600 dark:text-emerald-400" : "text-slate-400"}`}>
-                      {s.is_active ? "Banner Visible to Candidates" : "Banner Hidden"}
+                    <span className={`text-[10px] font-bold ${s.is_candidate_visible ? "text-emerald-600 dark:text-emerald-400 font-black" : "text-slate-400"}`}>
+                      {s.is_candidate_visible ? "🟢 Candidate Banner Active (#1)" : `Banner Queued (${s.queue_position ? `#${s.queue_position}` : "Expired"})`}
                     </span>
                   </div>
+
 
                   <h3 className="text-base font-black text-slate-900 dark:text-white leading-tight">
                     {s.title}

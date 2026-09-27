@@ -133,6 +133,8 @@ async def update_my_profile(
     if req.get("mark_stage_0_complete"):
         cand.xp = (cand.xp or 0) + 200
         cand.readiness_score = max(cand.readiness_score or 0.0, 75.0)
+        res_data["stage_0_completed"] = True
+        cand.resume_data_json = res_data
 
     await db.commit()
     return StandardResponse(
@@ -223,8 +225,9 @@ async def get_dashboard_metrics(
         if sa.status in ["PASSED", "COMPLETED"] or (sa.score and sa.score >= 70.0):
             passed_stage_ids.add(s_num)
 
-    # Mark Stage 0 completed if candidate has completed baseline profile / XP
-    if cand.xp and cand.xp > 0:
+    # Mark Stage 0 completed if candidate has completed baseline profile / XP / stage_0_completed flag
+    res_data_json = cand.resume_data_json or {}
+    if (cand.xp and cand.xp > 0) or res_data_json.get("stage_0_completed") or cand.target_role:
         passed_stage_ids.add(0)
 
     stages_progress = []
@@ -239,7 +242,7 @@ async def get_dashboard_metrics(
     ]
     next_upcoming_stage = official_stages_list[0]
 
-    for s_num in range(1, 31):
+    for s_num in range(0, 31):
         att = attempts_by_stage.get(s_num)
         if s_num in passed_stage_ids:
             score_val = att.score if (att and att.score) else 100.0
@@ -250,7 +253,7 @@ async def get_dashboard_metrics(
                 "status": "completed",
                 "attempt_id": att.interview_attempt_id if att else None
             })
-        elif s_num == 1 or (s_num - 1) in passed_stage_ids:
+        elif s_num == 0 or s_num == 1 or (s_num - 1) in passed_stage_ids:
             score_str = f"{int(att.score)}%" if (att and att.score and att.score > 0) else "Active"
             stages_progress.append({
                 "id": s_num,
@@ -258,7 +261,7 @@ async def get_dashboard_metrics(
                 "status": "in_progress",
                 "attempt_id": att.interview_attempt_id if att else None
             })
-            if s_num <= 5:
+            if s_num >= 1 and s_num <= 5:
                 next_upcoming_stage = official_stages_list[min(s_num - 1, 4)]
         else:
             stages_progress.append({
@@ -789,6 +792,10 @@ async def get_my_performance(
     latest_aud = res_aud.scalar_one_or_none()
     ats_score_val = float(latest_aud.ats_score) if (latest_aud and latest_aud.ats_score) else (cand.latest_ats_score or 0.0)
 
+    # Include Admin Feedback list in performance metrics
+    res_json = cand.resume_data_json or {}
+    admin_fb_list = res_json.get("admin_feedback", [])
+
     perf = {
         "candidate_id": cand.id,
         "readiness_score": readiness_score,
@@ -809,9 +816,81 @@ async def get_my_performance(
             "structural_clarity": comm_avg,
             "confidence_signals": round(min(98.0, tech_avg * 0.95), 1)
         },
-        "progression": progression
+        "admin_feedback": admin_fb_list
     }
+
     return StandardResponse(data=perf)
+
+
+@router.post("/{candidate_id}/feedback", response_model=StandardResponse[dict])
+async def submit_candidate_feedback(
+    candidate_id: str,
+    req: dict,
+    payload: dict = Depends(verify_auth_token),
+    db: AsyncSession = Depends(get_db)
+):
+    auth_svc = AuthService(db)
+    user = await auth_svc.get_current_user_from_payload(payload)
+
+    # Check candidate by ID or user_id
+    stmt = select(Candidate).where(or_(Candidate.id == candidate_id, Candidate.user_id == candidate_id))
+    res = await db.execute(stmt)
+    cand = res.scalar_one_or_none()
+
+    if not cand:
+        raise HTTPException(status_code=404, detail="Candidate not found")
+
+    fb_text = (req.get("feedback_text") or req.get("comments") or "").strip()
+    if not fb_text:
+        raise HTTPException(status_code=400, detail="Feedback text is required")
+
+    rating = float(req.get("rating", 5.0))
+    strengths = (req.get("strengths") or "").strip()
+    improvements = (req.get("areas_of_improvement") or "").strip()
+    admin_name = (req.get("admin_name") or user.full_name or "Admin Evaluator").strip()
+
+    res_json = dict(cand.resume_data_json or {})
+    fb_list = list(res_json.get("admin_feedback") or [])
+
+    new_fb = {
+        "id": f"fb-{secrets.token_hex(4)}",
+        "feedback_text": fb_text,
+        "rating": rating,
+        "strengths": strengths,
+        "areas_of_improvement": improvements,
+        "admin_name": admin_name,
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+
+    fb_list.insert(0, new_fb)
+    res_json["admin_feedback"] = fb_list
+    cand.resume_data_json = res_json
+
+    db.add(cand)
+    await db.commit()
+
+    return StandardResponse(
+        message="Candidate feedback submitted successfully",
+        data=new_fb
+    )
+
+
+@router.get("/me/feedback", response_model=StandardResponse[List[dict]])
+async def get_my_admin_feedback(
+    payload: dict = Depends(verify_auth_token),
+    db: AsyncSession = Depends(get_db)
+):
+    auth_svc = AuthService(db)
+    user = await auth_svc.get_current_user_from_payload(payload)
+    cand_svc = CandidateService(db)
+    cand = await cand_svc.get_candidate_by_user_id(user.id, user.organization_id)
+
+    if not cand:
+        return StandardResponse(data=[])
+
+    res_json = cand.resume_data_json or {}
+    fb_list = res_json.get("admin_feedback", [])
+    return StandardResponse(data=fb_list)
 
 
 

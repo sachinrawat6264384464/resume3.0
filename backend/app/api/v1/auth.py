@@ -41,25 +41,14 @@ async def send_otp(req: SendOTPRequest, db: AsyncSession = Depends(get_db)):
             
     if target_phone:
         otp_cache[target_phone] = code
-        logger.info(f"🔑 MOBILE OTP GENERATED: [{code}] for candidate phone: {target_phone}")
+        logger.info(f"🔑 SMS OTP GENERATED: [{code}] for candidate phone: {target_phone}")
 
-        import os, httpx
-        fast2sms_key = os.getenv("FAST2SMS_API_KEY")
-        if fast2sms_key:
-            try:
-                clean_num = target_phone.replace("+91", "").replace("+", "").strip()
-                async with httpx.AsyncClient(timeout=5.0) as client:
-                    await client.post(
-                        "https://www.fast2sms.com/dev/bulkV2",
-                        headers={"authorization": fast2sms_key},
-                        json={
-                            "route": "otp",
-                            "variables_values": code,
-                            "numbers": clean_num
-                        }
-                    )
-            except Exception as sms_err:
-                logger.warn(f"Fast2SMS API dispatch notice: {sms_err}")
+        try:
+            from app.services.sms_service import SMSService
+            await SMSService.send_otp(target_phone, code)
+        except Exception as sms_err:
+            logger.warn(f"Fast2SMS dispatch notice: {sms_err}")
+
 
     return StandardResponse(
         message=f"6-Digit OTP verification code sent to {target_email or target_phone} successfully!",

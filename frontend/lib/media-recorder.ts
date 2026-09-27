@@ -121,26 +121,89 @@ export function speakText(
     return () => {};
   }
 
+  // Ensure any ongoing speech is completely stopped to prevent overlapping voices
   window.speechSynthesis.cancel();
 
   const utterance = new SpeechSynthesisUtterance(text);
-  utterance.rate = 1.0;
-  utterance.pitch = 1.0;
+  utterance.rate = 0.95; // Clear, articulate speaking pace
+  utterance.pitch = 0.9;  // Deep, masculine tone
   utterance.lang = "en-US";
 
+  // List of female names to strictly exclude
+  const femaleNames = [
+    "samantha", "zira", "hazel", "eva", "heera", "susan", "veena", 
+    "victoria", "karen", "fiona", "catherine", "linda", "serena", 
+    "alice", "female", "woman", "girl"
+  ];
+
+  // Preferred Male voice identifiers
+  const maleNames = [
+    "david", "mark", "george", "guy", "ryan", "alex", "daniel", 
+    "james", "john", "male", "man", "boy", 
+    "google uk english male", "google us english male"
+  ];
+
+  const selectMaleVoice = () => {
+    const voices = window.speechSynthesis.getVoices();
+    if (!voices || voices.length === 0) return null;
+
+    // 1. Explicit Male name match in English
+    let selected = voices.find((v) => {
+      const nameLower = v.name.toLowerCase();
+      const isFemale = femaleNames.some((f) => nameLower.includes(f));
+      if (isFemale) return false;
+      return maleNames.some((m) => nameLower.includes(m)) && v.lang.startsWith("en");
+    });
+
+    // 2. Fallback: Any English voice that is NOT female
+    if (!selected) {
+      selected = voices.find((v) => {
+        const nameLower = v.name.toLowerCase();
+        return !femaleNames.some((f) => nameLower.includes(f)) && v.lang.startsWith("en");
+      });
+    }
+
+    // 3. Fallback: Any English voice
+    if (!selected) {
+      selected = voices.find((v) => v.lang.startsWith("en")) || voices[0];
+    }
+
+    return selected;
+  };
+
+  const executeSpeech = () => {
+    try {
+      window.speechSynthesis.cancel();
+      const voice = selectMaleVoice();
+      if (voice) {
+        utterance.voice = voice;
+      }
+      utterance.pitch = 0.9; // Enforce masculine pitch
+      utterance.rate = 0.95;
+
+      utterance.onstart = () => onStart?.();
+      utterance.onend = () => onEnd?.();
+      utterance.onerror = () => onEnd?.();
+
+      window.speechSynthesis.speak(utterance);
+    } catch (e) {
+      onEnd?.();
+    }
+  };
+
   const voices = window.speechSynthesis.getVoices();
-  const naturalVoice = voices.find(v => (v.name.includes("Google") || v.name.includes("Natural") || v.name.includes("Samantha") || v.name.includes("Daniel")) && v.lang.startsWith("en"));
-  if (naturalVoice) {
-    utterance.voice = naturalVoice;
+  if (voices && voices.length > 0) {
+    executeSpeech();
+  } else {
+    window.speechSynthesis.onvoiceschanged = () => {
+      executeSpeech();
+      window.speechSynthesis.onvoiceschanged = null;
+    };
   }
 
-  utterance.onstart = () => onStart?.();
-  utterance.onend = () => onEnd?.();
-  utterance.onerror = () => onEnd?.();
-
-  window.speechSynthesis.speak(utterance);
-
   return () => {
-    window.speechSynthesis.cancel();
+    try {
+      window.speechSynthesis.cancel();
+    } catch (e) {}
   };
 }

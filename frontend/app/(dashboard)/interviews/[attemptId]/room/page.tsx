@@ -131,11 +131,18 @@ export default function InterviewRoomPage() {
         video: { width: { ideal: 1280 }, height: { ideal: 720 } },
         audio: true,
       });
+      const videoTrack = s.getVideoTracks()[0];
+      if (videoTrack) {
+        videoTrack.onended = () => setIsCameraActive(false);
+        videoTrack.onmute = () => setIsCameraActive(false);
+        videoTrack.onunmute = () => setIsCameraActive(true);
+      }
       streamRef.current = s;
       setStream(s);
       setIsCameraActive(true);
     } catch (e) {
       console.warn("Unable to capture media stream in room:", e);
+      setIsCameraActive(false);
     }
   }, []);
 
@@ -249,7 +256,15 @@ export default function InterviewRoomPage() {
   const dbTotalQCount = activeStage?.question_attempts?.length || 10;
   const maxQCount = chamberMode === "PRACTICE" ? Math.min(3, dbTotalQCount) : dbTotalQCount;
 
-  // 13-Minute Countdown Timer with Automatic Expiration & Score Aggregation
+  // Camera Stream Active & Validated State
+  const isCameraLive = Boolean(
+    stream &&
+    isCameraActive &&
+    stream.getVideoTracks().length > 0 &&
+    stream.getVideoTracks().some((t) => t.enabled && t.readyState === "live")
+  );
+
+  // 13-Minute Countdown Timer with Automatic Expiration & Camera Pause Protection
   useEffect(() => {
     if (timeLeftSeconds <= 0 && !stageSummary && !isProcessing) {
       // 🚨 TIME EXPIRED! Stop recording, stop camera hardware, calculate scores for answered questions & show final summary!
@@ -273,6 +288,11 @@ export default function InterviewRoomPage() {
       return;
     }
 
+    // 🚨 PAUSE TIMER AUTOMATICALLY WHEN CAMERA IS OFF / NOT ACTIVE!
+    if (!isCameraLive) {
+      return;
+    }
+
     const timer = setInterval(() => {
       setTimeLeftSeconds((prev) => (prev > 0 ? prev - 1 : 0));
       if (isRecording) {
@@ -280,7 +300,7 @@ export default function InterviewRoomPage() {
       }
     }, 1000);
     return () => clearInterval(timer);
-  }, [timeLeftSeconds, isRecording, stageSummary, isProcessing, accumulatedScores, maxQCount]);
+  }, [timeLeftSeconds, isRecording, stageSummary, isProcessing, accumulatedScores, maxQCount, isCameraLive]);
 
   const allQAttempts = activeStage?.question_attempts || [];
   const activeQuestionAttempt = allQAttempts[currentQIndex];
@@ -299,6 +319,19 @@ export default function InterviewRoomPage() {
 
   const playVoice = useCallback(() => {
     if (!questionText) return;
+
+    // Toggle behavior: If AI voice is currently speaking, STOP IT IMMEDIATELY
+    if (isSpeaking) {
+      if (cancelSpeechRef.current) {
+        cancelSpeechRef.current();
+      }
+      if (typeof window !== "undefined" && "speechSynthesis" in window) {
+        window.speechSynthesis.cancel();
+      }
+      setIsSpeaking(false);
+      return;
+    }
+
     if (cancelSpeechRef.current) {
       cancelSpeechRef.current();
     }
@@ -307,16 +340,18 @@ export default function InterviewRoomPage() {
       () => setIsSpeaking(true),
       () => setIsSpeaking(false)
     );
-  }, [questionText]);
+  }, [questionText, isSpeaking]);
 
+  // Manual Voice Player — Candidate can click 'Listen Question 🔊' to hear question in Male AI Voice
   useEffect(() => {
-    if (!isLoading) {
-      playVoice();
-    }
+    // Ensure any previously playing voice is stopped when switching questions
     return () => {
-      if (cancelSpeechRef.current) cancelSpeechRef.current();
+      if (cancelSpeechRef.current) {
+        cancelSpeechRef.current();
+        setIsSpeaking(false);
+      }
     };
-  }, [currentQIndex, isLoading, playVoice]);
+  }, [currentQIndex]);
 
   // Start Recording + Live Web Speech-to-Text Recognition
   const handleStartRecording = () => {
@@ -585,16 +620,31 @@ export default function InterviewRoomPage() {
         </div>
 
         {/* Live Timer, Camera Active Badge & Drop Out Button */}
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 text-xs font-mono font-bold">
-            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-            <Camera className="w-4 h-4 text-emerald-400" />
-            <span>LIVE CAMERA ACTIVE</span>
-          </div>
+        <div className="flex items-center gap-3 flex-wrap">
+          {isCameraLive ? (
+            <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 text-xs font-mono font-bold">
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+              <Camera className="w-4 h-4 text-emerald-400" />
+              <span>LIVE CAMERA ACTIVE</span>
+            </div>
+          ) : (
+            <button
+              onClick={enableCameraStream}
+              className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-amber-500/20 text-amber-300 border border-amber-500/50 text-xs font-mono font-bold hover:bg-amber-500/30 transition-all cursor-pointer animate-pulse"
+              title="Click to Enable / Reconnect Camera Stream"
+            >
+              <CameraOff className="w-4 h-4 text-amber-400 animate-bounce" />
+              <span>📷 CAMERA PAUSED (CLICK TO ENABLE)</span>
+            </button>
+          )}
 
-          <div className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-slate-950 border border-slate-800 text-xs font-mono font-bold text-amber-400">
+          <div className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl border text-xs font-mono font-bold ${
+            isCameraLive
+              ? "bg-slate-950 border-slate-800 text-amber-400"
+              : "bg-amber-950/90 border-amber-500/50 text-amber-300 animate-pulse"
+          }`}>
             <Clock className="w-4 h-4 text-amber-400" />
-            <span>Time Remaining: {formatTimer(timeLeftSeconds)}</span>
+            <span>{isCameraLive ? `Time Remaining: ${formatTimer(timeLeftSeconds)}` : `⏸️ TIMER PAUSED (${formatTimer(timeLeftSeconds)})`}</span>
           </div>
 
           {/* 🚪 DROP OUT BUTTON */}
@@ -608,6 +658,32 @@ export default function InterviewRoomPage() {
           </button>
         </div>
       </div>
+
+      {/* 🚨 CAMERA PAUSED WARNING BANNER */}
+      {!isCameraLive && (
+        <div className="p-4 rounded-2xl bg-amber-950/90 border border-amber-500/60 text-amber-200 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-2xl animate-fadeIn">
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-xl bg-amber-500/20 text-amber-400">
+              <CameraOff className="w-5 h-5 animate-pulse" />
+            </div>
+            <div className="flex flex-col">
+              <span className="text-xs font-black text-amber-300 uppercase tracking-wide">
+                ⚠️ Camera Feed Inactive — Interview Timer Paused
+              </span>
+              <span className="text-xs text-amber-200/90 font-medium">
+                The 13-minute interview countdown timer is currently paused. Please turn on your webcam to resume the timer & assessment.
+              </span>
+            </div>
+          </div>
+          <button
+            onClick={enableCameraStream}
+            className="px-4 py-2.5 rounded-xl text-xs font-black text-slate-950 bg-gradient-to-r from-amber-400 to-orange-400 hover:from-amber-300 hover:to-orange-300 shadow-md flex items-center gap-1.5 shrink-0 cursor-pointer"
+          >
+            <Camera className="w-4 h-4" />
+            <span>Enable Camera Stream 📷</span>
+          </button>
+        </div>
+      )}
 
       {/* Mode Banner Indicator */}
       <div className={`px-4 py-2.5 rounded-2xl border text-xs font-bold flex items-center justify-between shadow-sm ${

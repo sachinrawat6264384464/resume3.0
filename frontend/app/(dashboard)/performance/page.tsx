@@ -5,7 +5,8 @@ import Link from "next/link";
 import { 
   TrendingUp, Award, Clock, ArrowRight, CheckCircle2, 
   AlertTriangle, ShieldCheck, Flame, Star, Zap, 
-  Layers, ChevronRight, Loader2, Cpu, Mic, FileCheck, Sparkles, X, Linkedin
+  Layers, ChevronRight, Loader2, Cpu, Mic, FileCheck, Sparkles, X, Linkedin,
+  MessageSquare, ThumbsUp, UserCheck
 } from "lucide-react";
 import { apiFetch } from "@/lib/api";
 
@@ -283,6 +284,101 @@ export default function CandidatePerformancePage() {
 
       </div>
 
+      {/* 💬 LIVE SESSION & ADMIN EVALUATION FEEDBACK SECTION (PROMINENT TOP POSITION) */}
+      <div className="p-6 sm:p-8 rounded-[32px] bg-white dark:bg-slate-900 border-2 border-emerald-500/40 shadow-2xl flex flex-col gap-6 relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/5 rounded-full blur-3xl pointer-events-none" />
+
+        <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800 relative z-10">
+          <div className="flex flex-col gap-1">
+            <div className="flex items-center gap-2">
+              <MessageSquare className="w-5 h-5 text-emerald-500 animate-pulse" />
+              <h3 className="text-base sm:text-lg font-black text-slate-900 dark:text-white uppercase tracking-tight">
+                Live Session & Admin Evaluation Feedback
+              </h3>
+            </div>
+            <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
+              Official live mock interview feedback, stage evaluation remarks, and performance ratings published by Platform Admins.
+            </p>
+          </div>
+
+          <span className="px-3.5 py-1.5 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 text-xs font-black uppercase tracking-wider shadow-xs">
+            {(perfData?.admin_feedback || []).length} Feedback Entry(s)
+          </span>
+        </div>
+
+        {/* Feedback Cards List / Empty State */}
+        {!(perfData?.admin_feedback) || perfData.admin_feedback.length === 0 ? (
+          <div className="p-8 rounded-2xl bg-slate-50 dark:bg-slate-800/40 border border-dashed border-slate-200 dark:border-slate-700 flex flex-col items-center justify-center gap-2 text-center">
+            <UserCheck className="w-8 h-8 text-slate-400" />
+            <span className="text-xs font-bold text-slate-700 dark:text-slate-300">
+              No Admin Feedback Received Yet
+            </span>
+            <span className="text-[11px] text-slate-500 max-w-sm">
+              Complete your live sessions or voice interview stages. Your assigned admin evaluator will post detailed feedback and ratings here.
+            </span>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 gap-4 relative z-10">
+            {perfData.admin_feedback.map((fb: any, idx: number) => (
+              <div key={fb.id || idx} className="p-5 sm:p-6 rounded-2xl bg-slate-50 dark:bg-slate-800/80 border-2 border-emerald-500/30 shadow-md flex flex-col gap-3.5">
+                
+                <div className="flex items-center justify-between flex-wrap gap-2">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-500 text-white font-black flex items-center justify-center text-xs shadow-md shadow-emerald-500/20">
+                      {(fb.admin_name || "Admin").charAt(0)}
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="text-xs font-extrabold text-slate-900 dark:text-white flex items-center gap-1.5">
+                        {fb.admin_name || "Admin Evaluator"}
+                        <span className="text-[10px] font-mono font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">
+                          VERIFIED EVALUATION
+                        </span>
+                      </span>
+                      <span className="text-[10px] font-mono text-slate-400">
+                        {fb.created_at ? new Date(fb.created_at).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" }) : "Recent Evaluation"}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Star Rating Display */}
+                  <div className="flex items-center gap-1.5 bg-amber-500/10 border border-amber-500/40 px-3 py-1.5 rounded-full text-amber-500 font-black text-xs shadow-2xs">
+                    <Star className="w-4 h-4 fill-amber-500 text-amber-500" />
+                    <span>{fb.rating || 5.0} / 5 Rating</span>
+                  </div>
+                </div>
+
+                {/* Feedback Remarks */}
+                <div className="p-4 rounded-xl bg-white dark:bg-slate-900/90 border border-slate-200/80 dark:border-slate-800 shadow-2xs">
+                  <span className="text-[10px] font-bold text-slate-400 uppercase block mb-1">Instructor Remarks & Assessment:</span>
+                  <p className="text-xs text-slate-800 dark:text-slate-100 font-semibold leading-relaxed">
+                    "{fb.feedback_text}"
+                  </p>
+                </div>
+
+                {/* Strengths & Focus Areas Badges */}
+                <div className="flex flex-wrap items-center gap-3 text-[11px]">
+                  {fb.strengths && (
+                    <div className="flex items-center gap-1.5 text-emerald-700 dark:text-emerald-300 bg-emerald-500/10 px-3 py-1.5 rounded-xl border border-emerald-500/30 font-bold">
+                      <ThumbsUp className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+                      <span>Strengths: {fb.strengths}</span>
+                    </div>
+                  )}
+
+                  {fb.areas_of_improvement && (
+                    <div className="flex items-center gap-1.5 text-amber-700 dark:text-amber-300 bg-amber-500/10 px-3 py-1.5 rounded-xl border border-amber-500/30 font-bold">
+                      <Zap className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+                      <span>Focus: {fb.areas_of_improvement}</span>
+                    </div>
+                  )}
+                </div>
+
+              </div>
+            ))}
+          </div>
+        )}
+
+      </div>
+
       {/* 🏅 3D HEXAGON STAGE MILESTONE BADGES & CLAIM ENGINE */}
       <div className="p-6 sm:p-8 rounded-[32px] bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-800 shadow-xl flex flex-col gap-6">
         
@@ -328,7 +424,6 @@ export default function CandidatePerformancePage() {
 
       </div>
 
-
       {/* QUICK LAUNCH PRACTICE CTA BANNER */}
       <div className="p-6 sm:p-8 rounded-[32px] bg-gradient-to-r from-[#232F3E] via-[#1c2532] to-[#232F3E] text-white border border-[#FF9900]/30 shadow-2xl flex flex-col md:flex-row items-center justify-between gap-6">
         <div className="flex flex-col gap-1.5">
@@ -336,7 +431,7 @@ export default function CandidatePerformancePage() {
             <Sparkles className="w-5 h-5 text-[#FF9900]" />
             Target Your Weakest Skill Areas with Quick Practice
           </h3>
-          <p className="text-xs text-slate-300 font-medium">Practice one question scenario at a time to build technical depth and earn +20 XP.</p>
+          <p className="text-xs text-slate-300 font-medium">Practice one question scenario at a time to build technical depth.</p>
         </div>
 
         <Link

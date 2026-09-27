@@ -6,8 +6,9 @@ import {
   Play, Pause, Volume2, VolumeX, Maximize2, Sparkles, 
   LayoutDashboard, Mic, FileText, Calendar, Bell, 
   TrendingUp, Trophy, CheckCircle2, ArrowRight, Video, 
-  ShieldCheck, Eye, Layers, Star, Zap
+  ShieldCheck, Eye, Layers, Star, Zap, Globe
 } from "lucide-react";
+import { getFirebaseVideos, VideoWalkthroughItem } from "@/lib/firebase-admin-store";
 
 interface CandidateServiceDemo {
   id: string;
@@ -22,9 +23,34 @@ interface CandidateServiceDemo {
   accentColor: string;
   stats: { label: string; value: string }[];
   videoUrl?: string;
+  audioEnabled?: boolean;
 }
 
-const CANDIDATE_SERVICES: CandidateServiceDemo[] = [
+const STATIC_SERVICES: CandidateServiceDemo[] = [
+  {
+    id: "overview",
+    name: "🌐 All Project Overview",
+    icon: Globe,
+    badge: "Master Architecture",
+    tagline: "Complete CloudOps AI System & Platform Overview",
+    description: "Iss comprehensive walkthrough video me poore CloudOps AI project ka architecture, candidate evaluation pipeline, 30 interview stages, STAR formula resume scanner, and admin management tools ko detailed voice narration ke sath explain kiya gaya hai.",
+    keyFeatures: [
+      "Full Project System & Enterprise Architecture Walkthrough",
+      "30 Sequential CloudOps & DevOps Candidate Stages",
+      "Real-time Voice AI Interviewer & Evaluation Engine",
+      "Firebase Secured Multi-Tenant Admin & Candidate Control"
+    ],
+    mockRoute: "/dashboard",
+    videoPlaceholderBg: "from-[#0F172A] via-[#1E293B] to-[#0F172A]",
+    accentColor: "text-[#FF6B00]",
+    videoUrl: "/vedio/candidate-dashboard.mp4",
+    audioEnabled: true,
+    stats: [
+      { label: "Total Services", value: "8 Modules" },
+      { label: "Interview Stages", value: "30 Levels" },
+      { label: "Voice Support", value: "100% HD Audio" }
+    ]
+  },
   {
     id: "dashboard",
     name: "Candidate Dashboard",
@@ -42,6 +68,7 @@ const CANDIDATE_SERVICES: CandidateServiceDemo[] = [
     videoPlaceholderBg: "from-[#0F172A] via-[#1E293B] to-[#0F172A]",
     accentColor: "text-[#FF6B00]",
     videoUrl: "/vedio/candidate-dashboard.mp4",
+    audioEnabled: true,
     stats: [
       { label: "Stages Covered", value: "30 Stages" },
       { label: "Target Band", value: "₹18 – ₹40 LPA" },
@@ -57,7 +84,7 @@ const CANDIDATE_SERVICES: CandidateServiceDemo[] = [
     description: "Candidate 30 structured interview stages me part le sakte hain. AI voice interviewer real-time me questions puchta hai, spoken answers evaluating karta hai, aur STAR methodology ke sath detailed feedback deta hai.",
     keyFeatures: [
       "Voice AI interactive interview room",
-      "3-Level hints & practice mode",
+      "Real-time Camera Background Blur (18px Bokeh)",
       "5-Dimension AI evaluation rubric",
       "👑 40 LPA Staff Engineer Boss Battle"
     ],
@@ -65,6 +92,7 @@ const CANDIDATE_SERVICES: CandidateServiceDemo[] = [
     videoPlaceholderBg: "from-purple-950 via-slate-900 to-indigo-950",
     accentColor: "text-purple-400",
     videoUrl: "/vedio/interview-stages.mp4",
+    audioEnabled: true,
     stats: [
       { label: "Stages", value: "30 Levels" },
       { label: "Feedback", value: "STAR Formula" },
@@ -184,15 +212,50 @@ const CANDIDATE_SERVICES: CandidateServiceDemo[] = [
 ];
 
 export function PlatformDemoSection() {
-  const [activeTabId, setActiveTabId] = useState<string>("dashboard");
+  const [activeTabId, setActiveTabId] = useState<string>("overview");
   const [isPlaying, setIsPlaying] = useState<boolean>(true);
-  const [isMuted, setIsMuted] = useState<boolean>(true);
+  const [isMuted, setIsMuted] = useState<boolean>(false); // Unmuted voice by default
   const [progress, setProgress] = useState<number>(0);
   const [currentTime, setCurrentTime] = useState<number>(0);
   const [duration, setDuration] = useState<number>(0);
   const videoRef = useRef<HTMLVideoElement>(null);
+  const [services, setServices] = useState<CandidateServiceDemo[]>(STATIC_SERVICES);
 
-  const activeService = CANDIDATE_SERVICES.find(s => s.id === activeTabId) || CANDIDATE_SERVICES[0];
+  // Sync Firebase Walkthrough Videos
+  useEffect(() => {
+    async function syncFirebaseVideos() {
+      try {
+        const fbVideos = await getFirebaseVideos();
+        if (fbVideos && fbVideos.length > 0) {
+          const merged = STATIC_SERVICES.map(s => {
+            const match = fbVideos.find(v => 
+              v.id === s.id || 
+              v.category.toLowerCase().includes(s.id.toLowerCase()) || 
+              (s.id === "overview" && v.category.includes("Overview"))
+            );
+            if (match) {
+              return {
+                ...s,
+                name: match.category.includes("Overview") ? "🌐 All Project Overview" : s.name,
+                tagline: match.tagline || s.tagline,
+                description: match.description || s.description,
+                videoUrl: match.videoUrl || s.videoUrl,
+                audioEnabled: match.audioEnabled !== undefined ? match.audioEnabled : true,
+                keyFeatures: match.keyFeatures && match.keyFeatures.length > 0 ? match.keyFeatures : s.keyFeatures
+              };
+            }
+            return s;
+          });
+          setServices(merged);
+        }
+      } catch (e) {
+        console.warn("Firebase video sync notice:", e);
+      }
+    }
+    syncFirebaseVideos();
+  }, []);
+
+  const activeService = services.find(s => s.id === activeTabId) || services[0];
 
   useEffect(() => {
     if (videoRef.current && activeService.videoUrl) {
@@ -203,17 +266,6 @@ export function PlatformDemoSection() {
       }
     }
   }, [isPlaying, activeTabId, activeService.videoUrl]);
-
-  // Auto progress demo simulation scrubber for services without video yet
-  useEffect(() => {
-    let interval: any;
-    if (isPlaying && !activeService.videoUrl) {
-      interval = setInterval(() => {
-        setProgress(prev => (prev >= 100 ? 0 : prev + 1));
-      }, 150);
-    }
-    return () => clearInterval(interval);
-  }, [isPlaying, activeService.videoUrl]);
 
   const formatTime = (secs: number) => {
     if (isNaN(secs) || secs <= 0) return "00:00";
@@ -242,9 +294,9 @@ export function PlatformDemoSection() {
           </p>
         </div>
 
-        {/* Horizontal Navigation Tabs (All Candidate Services) */}
+        {/* Horizontal Navigation Tabs (All Candidate Services including All Project Overview) */}
         <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none justify-start lg:justify-center w-full max-w-full">
-          {CANDIDATE_SERVICES.map((service) => {
+          {services.map((service) => {
             const IconComp = service.icon;
             const isActive = service.id === activeTabId;
             return (
@@ -287,9 +339,30 @@ export function PlatformDemoSection() {
                 <span>https://cloudops.ai{activeService.mockRoute}</span>
               </div>
 
-              <span className="text-[10px] font-mono font-black text-[#FF6B00] bg-[#FF6B00]/15 px-2.5 py-0.5 rounded-full border border-[#FF6B00]/30">
-                {activeService.videoUrl ? "LIVE VIDEO" : "LIVE DEMO"}
-              </span>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setIsMuted(!isMuted)}
+                  className="px-2.5 py-1 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-[11px] font-mono font-bold flex items-center gap-1 cursor-pointer"
+                  title="Toggle Video Sound Audio Track"
+                >
+                  {isMuted ? (
+                    <>
+                      <VolumeX className="w-3.5 h-3.5 text-rose-400" />
+                      <span>Muted 🔇</span>
+                    </>
+                  ) : (
+                    <>
+                      <Volume2 className="w-3.5 h-3.5 text-emerald-400 animate-pulse" />
+                      <span>Sound ON 🔊</span>
+                    </>
+                  )}
+                </button>
+
+                <span className="text-[10px] font-mono font-black text-[#FF6B00] bg-[#FF6B00]/15 px-2.5 py-0.5 rounded-full border border-[#FF6B00]/30">
+                  {activeService.videoUrl ? "LIVE VIDEO" : "LIVE DEMO"}
+                </span>
+              </div>
             </div>
 
             {/* Video Canvas Container */}
@@ -326,189 +399,134 @@ export function PlatformDemoSection() {
                 <div className="absolute inset-0 bg-[linear-gradient(to_right,#1f2937_1px,transparent_1px),linear-gradient(to_bottom,#1f2937_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_50%,#000_70%,transparent_100%)] opacity-20 pointer-events-none"></div>
               )}
 
-              {/* Top Service Badge Overlay */}
-              <div className="flex items-center justify-between z-10 pointer-events-none">
-                <div className="flex items-center gap-2.5 bg-slate-900/90 backdrop-blur-md px-3.5 py-1.5 rounded-2xl border border-slate-700/80 shadow-md">
-                  <activeService.icon className={`w-4 h-4 ${activeService.accentColor}`} />
-                  <span className="text-xs font-black text-white">{activeService.name}</span>
+              {/* Top Service Badge Overlay (Compact, Single-Line, Non-Obstructive) */}
+              <div className="flex items-center justify-between gap-2 z-10 pointer-events-none">
+                <div className="hidden xs:flex items-center gap-1.5 bg-slate-950/80 backdrop-blur-md px-2.5 py-1 rounded-full border border-slate-700/60 shadow-sm shrink-0">
+                  <activeService.icon className={`w-3.5 h-3.5 ${activeService.accentColor}`} />
+                  <span className="text-[10px] font-extrabold text-white whitespace-nowrap truncate max-w-[130px]">
+                    {activeService.name}
+                  </span>
                 </div>
 
-                <div className="flex items-center gap-2 text-xs font-mono font-bold text-slate-300 bg-slate-900/90 backdrop-blur-md px-3 py-1.5 rounded-xl border border-slate-700/80">
-                  <Eye className="w-3.5 h-3.5 text-[#FF6B00]" />
+                <div className="flex items-center gap-1 text-[10px] font-mono font-bold text-slate-300 bg-slate-950/80 backdrop-blur-md px-2.5 py-1 rounded-full border border-slate-700/60 shrink-0 whitespace-nowrap ml-auto">
+                  <Eye className="w-3 h-3 text-[#FF6B00]" />
                   <span>{activeService.videoUrl ? "Recorded Walkthrough" : "Preview Mode"}</span>
                 </div>
               </div>
 
-              {/* Center Play Pulse Overlay (Visible when paused or on hover) */}
-              {(!isPlaying || !activeService.videoUrl) && (
-                <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 z-10 bg-slate-950/40 backdrop-blur-xs">
+              {/* Center Play Pulse Overlay (Visible when paused) */}
+              {!isPlaying && (
+                <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 z-10 bg-slate-950/40 backdrop-blur-xs">
                   <button
-                    onClick={() => setIsPlaying(!isPlaying)}
-                    className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-[#FF6B00] hover:bg-orange-500 text-white flex items-center justify-center shadow-2xl shadow-[#FF6B00]/50 hover:scale-110 active:scale-95 transition-all cursor-pointer group/btn"
+                    onClick={() => setIsPlaying(true)}
+                    className="w-14 h-14 sm:w-18 sm:h-18 rounded-full bg-[#FF6B00] hover:bg-orange-500 text-white flex items-center justify-center shadow-2xl shadow-[#FF6B00]/50 hover:scale-110 active:scale-95 transition-all cursor-pointer group/btn"
                   >
-                    {isPlaying ? (
-                      <Pause className="w-8 h-8 sm:w-10 sm:h-10 fill-white" />
-                    ) : (
-                      <Play className="w-8 h-8 sm:w-10 sm:h-10 fill-white ml-1" />
-                    )}
+                    <Play className="w-7 h-7 sm:w-9 sm:h-9 fill-white translate-x-0.5" />
                   </button>
-                  <span className="text-xs font-mono font-bold text-slate-300 bg-slate-900/90 px-3.5 py-1 rounded-full border border-slate-800 shadow-md">
-                    {isPlaying ? "Demo Playing • Click to Pause" : "Click to Play Candidate Dashboard Video"}
+                  <span className="text-[10px] sm:text-xs font-mono font-bold text-white bg-slate-900/80 px-3 py-1 rounded-full border border-slate-700 shadow-md">
+                    Click to Play Recorded Walkthrough
                   </span>
                 </div>
               )}
 
-              {/* Bottom Visual Mockup UI Card inside Canvas */}
-              {!activeService.videoUrl && (
-                <div className="z-10 bg-slate-900/90 backdrop-blur-xl border border-slate-700/80 p-4 sm:p-5 rounded-2xl flex flex-col gap-3 shadow-2xl">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-extrabold text-white flex items-center gap-2">
-                      <Sparkles className="w-3.5 h-3.5 text-[#FF6B00]" />
-                      {activeService.tagline}
-                    </span>
-                    <span className="text-[10px] font-mono text-emerald-400 font-bold bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/30">
-                      Active Module
+              {/* Bottom Video Controls Overlay Bar (Super Compact & Non-Obstructive) */}
+              <div className="mt-auto z-10 bg-slate-950/85 backdrop-blur-md p-2 sm:p-2.5 rounded-xl sm:rounded-2xl border border-white/10 flex flex-col gap-1.5 shadow-lg">
+                <div className="flex items-center justify-between gap-2 text-[10px] sm:text-xs font-mono font-bold text-slate-300">
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    <button
+                      onClick={() => setIsPlaying(!isPlaying)}
+                      className="p-1 sm:p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-white transition-colors shrink-0"
+                      title={isPlaying ? "Pause Video" : "Play Video"}
+                    >
+                      {isPlaying ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5 fill-white" />}
+                    </button>
+                    <span className="text-[10px] font-semibold text-slate-300 whitespace-nowrap truncate max-w-[120px] sm:max-w-none hidden xs:inline">
+                      {activeService.name}
                     </span>
                   </div>
 
-                  <div className="grid grid-cols-3 gap-2 pt-1 border-t border-slate-800">
-                    {activeService.stats.map((st, i) => (
-                      <div key={i} className="flex flex-col">
-                        <span className="text-[9px] font-mono text-slate-400 uppercase">{st.label}</span>
-                        <span className="text-xs font-mono font-black text-white">{st.value}</span>
-                      </div>
-                    ))}
+                  <div className="flex items-center gap-2 shrink-0">
+                    <button
+                      onClick={() => setIsMuted(!isMuted)}
+                      className="p-1 sm:p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-white transition-colors shrink-0"
+                      title="Toggle Audio"
+                    >
+                      {isMuted ? <VolumeX className="w-3.5 h-3.5 text-rose-400" /> : <Volume2 className="w-3.5 h-3.5 text-emerald-400" />}
+                    </button>
+                    <span className="whitespace-nowrap text-[10px] text-slate-300 font-mono">
+                      {formatTime(currentTime)} / {formatTime(duration || 32)}
+                    </span>
                   </div>
                 </div>
-              )}
 
-            </div>
-
-            {/* Video Controls Bar */}
-            <div className="px-4 py-3 bg-slate-900 border-t border-slate-800 flex items-center justify-between gap-4 z-20">
-              <div className="flex items-center gap-3">
-                <button
-                  onClick={() => setIsPlaying(!isPlaying)}
-                  className="text-white hover:text-[#FF6B00] transition-colors cursor-pointer"
-                >
-                  {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4 fill-white" />}
-                </button>
-
-                <button
-                  onClick={() => {
-                    const nextMuted = !isMuted;
-                    setIsMuted(nextMuted);
-                    if (videoRef.current) {
-                      videoRef.current.muted = nextMuted;
-                    }
-                  }}
-                  className="text-slate-400 hover:text-white transition-colors cursor-pointer"
-                >
-                  {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4 text-emerald-400" />}
-                </button>
-
-                <span className="text-[11px] font-mono text-slate-400 font-bold">
-                  {activeService.videoUrl ? `${formatTime(currentTime)} / ${formatTime(duration)}` : `00:${Math.floor(progress / 2).toString().padStart(2, '0')} / 01:30`}
-                </span>
+                {/* Scrubber Progress Bar */}
+                <div className="w-full h-1.5 sm:h-2 rounded-full bg-slate-800 overflow-hidden cursor-pointer">
+                  <div
+                    className="h-full bg-gradient-to-r from-[#FF6B00] via-amber-400 to-orange-500 transition-all duration-150"
+                    style={{ width: `${progress}%` }}
+                  />
+                </div>
               </div>
 
-              {/* Progress Scrubber */}
-              <div className="flex-1 h-1.5 bg-slate-800 rounded-full overflow-hidden relative cursor-pointer" onClick={(e) => {
-                const rect = e.currentTarget.getBoundingClientRect();
-                const clickX = e.clientX - rect.left;
-                const newProgress = Math.round((clickX / rect.width) * 100);
-                setProgress(newProgress);
-                if (videoRef.current && activeService.videoUrl && videoRef.current.duration) {
-                  videoRef.current.currentTime = (newProgress / 100) * videoRef.current.duration;
-                }
-              }}>
-                <div
-                  className="h-full bg-gradient-to-r from-[#FF6B00] to-amber-500 rounded-full transition-all duration-150"
-                  style={{ width: `${progress}%` }}
-                ></div>
-              </div>
-
-              <div className="flex items-center gap-2">
-                <span className="text-[9px] font-mono font-black text-slate-400 bg-slate-800 px-2 py-0.5 rounded uppercase">HD 1080p</span>
-                <button
-                  onClick={() => {
-                    if (videoRef.current) {
-                      if (videoRef.current.requestFullscreen) {
-                        videoRef.current.requestFullscreen();
-                      }
-                    }
-                  }}
-                  className="text-slate-400 hover:text-white transition-colors cursor-pointer"
-                >
-                  <Maximize2 className="w-4 h-4" />
-                </button>
-              </div>
             </div>
 
           </div>
 
-          {/* RIGHT: SERVICE EXPLANATION & "HOTA KYA HAI" DETAILS (5 cols) */}
-          <div className="lg:col-span-5 p-6 sm:p-8 rounded-[28px] bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-800 shadow-xl flex flex-col justify-between gap-6">
+          {/* RIGHT: SERVICE EXPLANATION & KEY CAPABILITIES CARD (5 cols) */}
+          <div className="lg:col-span-5 flex flex-col justify-between p-4 xs:p-5 sm:p-8 rounded-[22px] sm:rounded-[28px] bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-800 shadow-xl gap-5 sm:gap-6 max-w-full overflow-hidden">
             
-            <div className="flex flex-col gap-4">
+            <div className="flex flex-col gap-4 max-w-full">
               
-              {/* Badge & Title */}
-              <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-2xl bg-[#FF6B00]/10 text-[#FF6B00] border border-[#FF6B00]/30 flex items-center justify-center font-black">
-                    <activeService.icon className={`w-5 h-5 ${activeService.accentColor}`} />
+              <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3 gap-2 flex-wrap sm:flex-nowrap">
+                <div className="flex items-center gap-2 min-w-0">
+                  <div className="p-2 rounded-xl bg-[#FF6B00]/10 text-[#FF6B00] shrink-0">
+                    <activeService.icon className="w-5 h-5" />
                   </div>
-                  <div className="flex flex-col">
-                    <span className="text-[10px] font-mono font-bold text-[#FF6B00] uppercase tracking-widest">CANDIDATE SERVICE</span>
-                    <h3 className="text-lg font-black text-slate-900 dark:text-white tracking-tight">
-                      {activeService.name}
-                    </h3>
-                  </div>
+                  <span className="text-xs font-mono font-bold text-slate-400 uppercase tracking-wider truncate">CANDIDATE SERVICE</span>
                 </div>
-
-                <span className="px-3 py-1 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-mono font-bold border border-slate-200 dark:border-slate-700">
+                <span className="px-3 py-1 rounded-full text-xs font-mono font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 shrink-0">
                   {activeService.badge}
                 </span>
               </div>
 
-              {/* Tagline */}
-              <div className="p-3.5 rounded-2xl bg-[#FF6B00]/10 border border-[#FF6B00]/20 text-[#FF6B00] text-xs font-bold leading-snug">
-                💡 {activeService.tagline}
+              <div className="max-w-full">
+                <h3 className="text-lg sm:text-2xl font-black text-slate-900 dark:text-white uppercase tracking-tight break-words">
+                  {activeService.name}
+                </h3>
+                <p className="text-xs font-bold text-[#FF6B00] mt-1 break-words">{activeService.tagline}</p>
               </div>
 
-              {/* "Hota Kya Hai" Overview Intro */}
-              <div className="flex flex-col gap-1.5">
-                <span className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider">
-                  📖 Iss Service Me Kya Hota Hai?
-                </span>
-                <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 font-medium leading-relaxed">
-                  {activeService.description}
-                </p>
+              {/* ISS SERVICE ME KYA HOTA HAI? Box */}
+              <div className="p-3.5 sm:p-4 rounded-2xl bg-orange-50/60 dark:bg-orange-950/30 border border-orange-200 dark:border-orange-900/40 text-xs leading-relaxed text-slate-700 dark:text-slate-200 break-words max-w-full overflow-hidden">
+                <span className="font-mono font-bold text-[#FF6B00] block mb-1">📖 ISS SERVICE ME KYA HOTA HAI?</span>
+                <p className="break-words leading-relaxed text-xs">{activeService.description}</p>
               </div>
 
               {/* Key Features List */}
-              <div className="flex flex-col gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
-                <span className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider mb-1">
-                  ✨ Key Features & Capabilities:
-                </span>
-                {activeService.keyFeatures.map((feature, idx) => (
-                  <div key={idx} className="flex items-start gap-2.5 text-xs text-slate-700 dark:text-slate-300 font-semibold">
-                    <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
-                    <span>{feature}</span>
-                  </div>
-                ))}
+              <div className="flex flex-col gap-2 max-w-full">
+                <span className="text-xs font-mono font-bold text-slate-500 uppercase tracking-wider">✨ KEY FEATURES & CAPABILITIES:</span>
+                <div className="flex flex-col gap-2">
+                  {activeService.keyFeatures.map((feat, i) => (
+                    <div key={i} className="flex items-start gap-2 text-xs font-medium text-slate-700 dark:text-slate-300">
+                      <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
+                      <span className="break-words min-w-0 flex-1 leading-normal">{feat}</span>
+                    </div>
+                  ))}
+                </div>
               </div>
 
             </div>
 
-            {/* Action CTA */}
-            <div className="pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between gap-3">
+            {/* CTA Button */}
+            <div className="pt-4 border-t border-slate-100 dark:border-slate-800 flex flex-col gap-3 w-full">
               <Link
-                href={`/login?redirect=${activeService.mockRoute}`}
-                className="w-full py-3.5 rounded-2xl bg-[#FF6B00] hover:bg-[#e05e00] text-white font-black text-xs uppercase tracking-wider shadow-lg shadow-[#FF6B00]/25 flex items-center justify-center gap-2 transition-all hover:scale-[1.02] cursor-pointer"
+                href={activeService.mockRoute}
+                className="w-full px-3 sm:px-6 py-3.5 sm:py-4 rounded-2xl font-black text-xs sm:text-sm text-white bg-gradient-to-r from-[#FF6B00] via-amber-500 to-orange-500 hover:from-orange-500 hover:to-amber-600 shadow-xl shadow-[#FF6B00]/25 flex items-center justify-center gap-2 transition-all transform hover:scale-[1.01] active:scale-[0.99] text-center leading-tight uppercase tracking-wider overflow-hidden max-w-full"
               >
-                <span>Try {activeService.name} Now →</span>
-                <ArrowRight className="w-4 h-4 stroke-[2.5]" />
+                <span className="break-words text-center font-extrabold sm:font-black">
+                  TRY {activeService.name.toUpperCase()} NOW
+                </span>
+                <ArrowRight className="w-4 h-4 shrink-0" />
               </Link>
             </div>
 

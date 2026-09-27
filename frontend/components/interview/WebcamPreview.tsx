@@ -23,6 +23,8 @@ export function WebcamPreview({
   const [isDragging, setIsDragging] = useState(false);
   const dragStartRef = useRef({ x: 0, y: 0 });
   const videoRef = useRef<HTMLVideoElement | null>(null);
+  const blurCanvasRef = useRef<HTMLCanvasElement | null>(null);
+  const [isBlurEnabled, setIsBlurEnabled] = useState(true);
 
   // Callback Ref ensures video plays immediately when element mounts or stream arrives
   const setVideoRef = useCallback((node: HTMLVideoElement | null) => {
@@ -53,6 +55,78 @@ export function WebcamPreview({
       }
     };
   }, [stream]);
+
+  // Real-time Canvas Portrait Background Blur Loop
+  useEffect(() => {
+    if (!stream || !isActive) return;
+
+    let animId: number;
+
+    const renderBlurFrame = () => {
+      const video = videoRef.current;
+      const canvas = blurCanvasRef.current;
+      if (video && canvas && video.readyState >= 2) {
+        const width = video.videoWidth || 640;
+        const height = video.videoHeight || 480;
+
+        if (canvas.width !== width || canvas.height !== height) {
+          canvas.width = width;
+          canvas.height = height;
+        }
+
+        const ctx = canvas.getContext("2d");
+        if (ctx) {
+          if (isBlurEnabled) {
+            // 1. Blurred background
+            ctx.save();
+            ctx.filter = "blur(18px) brightness(0.92) contrast(1.05)";
+            ctx.drawImage(video, 0, 0, width, height);
+            ctx.restore();
+
+            // 2. Composite sharp subject
+            const maskCanvas = document.createElement("canvas");
+            maskCanvas.width = width;
+            maskCanvas.height = height;
+            const mCtx = maskCanvas.getContext("2d");
+
+            if (mCtx) {
+              mCtx.drawImage(video, 0, 0, width, height);
+              mCtx.globalCompositeOperation = "destination-in";
+
+              const centerX = width / 2;
+              const centerY = height * 0.52;
+              const rx = width * 0.36;
+              const ry = height * 0.48;
+
+              const grad = mCtx.createRadialGradient(
+                centerX, centerY, rx * 0.35,
+                centerX, centerY, rx
+              );
+              grad.addColorStop(0, "rgba(0,0,0,1)");
+              grad.addColorStop(0.7, "rgba(0,0,0,0.95)");
+              grad.addColorStop(1, "rgba(0,0,0,0)");
+
+              mCtx.fillStyle = grad;
+              mCtx.beginPath();
+              mCtx.ellipse(centerX, centerY, rx, ry, 0, 0, 2 * Math.PI);
+              mCtx.fill();
+
+              ctx.drawImage(maskCanvas, 0, 0);
+            }
+          } else {
+            ctx.drawImage(video, 0, 0, width, height);
+          }
+        }
+      }
+      animId = requestAnimationFrame(renderBlurFrame);
+    };
+
+    renderBlurFrame();
+
+    return () => {
+      cancelAnimationFrame(animId);
+    };
+  }, [stream, isActive, isBlurEnabled]);
 
   // Dragging Handlers for Moveable Widget
   const handleMouseDown = (e: React.MouseEvent) => {
@@ -108,25 +182,47 @@ export function WebcamPreview({
 
         <div className="flex items-center gap-2">
           {stream && (
-            <button
-              onClick={() => setIsFloating(!isFloating)}
-              className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-[#FF9900]/20 text-[#FF9900] border border-[#FF9900]/30 hover:bg-[#FF9900] hover:text-slate-950 transition-all"
-              title="Toggle Floating Moveable Window"
-            >
-              {isFloating ? "Dock Window" : "Float Window 📌"}
-            </button>
+            <>
+              <button
+                type="button"
+                onClick={() => setIsBlurEnabled(!isBlurEnabled)}
+                className={`px-2 py-0.5 rounded text-[10px] font-mono font-bold border transition-all ${
+                  isBlurEnabled
+                    ? "bg-amber-500/20 text-amber-300 border-amber-500/40"
+                    : "bg-slate-800 text-slate-400 border-slate-700"
+                }`}
+                title="Toggle Background Blur Mode"
+              >
+                {isBlurEnabled ? "✨ Blur: ON" : "📷 Blur: OFF"}
+              </button>
+
+              <button
+                onClick={() => setIsFloating(!isFloating)}
+                className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-[#FF9900]/20 text-[#FF9900] border border-[#FF9900]/30 hover:bg-[#FF9900] hover:text-slate-950 transition-all"
+                title="Toggle Floating Moveable Window"
+              >
+                {isFloating ? "Dock Window" : "Float Window 📌"}
+              </button>
+            </>
           )}
         </div>
       </div>
 
       {stream && isActive ? (
         <div className="w-full h-full relative pt-9">
+          {/* Hidden input video element */}
           <video
             ref={setVideoRef}
             autoPlay
             playsInline
             muted
-            className="w-full h-full object-cover scale-x-[-1]" // mirror view
+            className="hidden"
+          />
+          
+          {/* Real-time Portrait Blur Output Canvas */}
+          <canvas
+            ref={blurCanvasRef}
+            className="w-full h-full object-cover scale-x-[-1]"
           />
           
           {/* Status overlay */}
