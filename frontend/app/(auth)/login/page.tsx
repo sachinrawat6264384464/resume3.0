@@ -252,65 +252,23 @@ export default function LoginPage() {
     const fullFormattedPhone = cleanPhone.startsWith("91") ? `+${cleanPhone}` : `+91${cleanPhone}`;
 
     try {
-      // 1. Send request to backend
-      try {
-        await apiFetch("/auth/send-otp", {
-          method: "POST",
-          body: JSON.stringify({
-            phone_number: fullFormattedPhone,
-            full_name: fullName.trim(),
-            mode: authMode
-          })
-        });
-      } catch (apiErr: any) {
-        console.warn("Backend send-otp notice:", apiErr?.message);
-      }
+      await apiFetch("/auth/send-otp", {
+        method: "POST",
+        body: JSON.stringify({
+          phone_number: fullFormattedPhone,
+          full_name: fullName.trim(),
+          mode: authMode
+        })
+      });
 
-      // 2. Firebase Phone Auth Real SMS Dispatch
-      let firebaseSuccess = false;
-      if (auth && typeof window !== "undefined") {
-        try {
-          const containerEl = document.getElementById("recaptcha-container");
-          if (containerEl) {
-            containerEl.innerHTML = "";
-          }
-          if (recaptchaVerifierRef.current) {
-            try { recaptchaVerifierRef.current.clear(); } catch (e) {}
-            recaptchaVerifierRef.current = null;
-          }
-
-          recaptchaVerifierRef.current = new RecaptchaVerifier(auth, "recaptcha-container", {
-            size: "invisible",
-            callback: () => {}
-          });
-
-          const appVerifier = recaptchaVerifierRef.current;
-          const confirmation: any = await signInWithPhoneNumber(auth, fullFormattedPhone, appVerifier);
-          setConfirmationResult(confirmation);
-          firebaseSuccess = true;
-        } catch (firebaseErr: any) {
-          console.warn("Firebase Phone Auth notice:", firebaseErr?.message);
-        }
-      }
-
-      if (firebaseSuccess) {
-        setInfoMsg(`📲 6-Digit SMS OTP verification code sent to ${fullFormattedPhone} via Firebase!`);
-        setOtpStep(2);
-        setTimer(60);
-        setIsTimerActive(true);
-      } else if (!error) {
-        setInfoMsg(`📲 6-Digit OTP verification code generated for ${fullFormattedPhone}!`);
-        setOtpStep(2);
-        setTimer(60);
-        setIsTimerActive(true);
-      }
-
+      setInfoMsg(`📲 6-Digit WhatsApp OTP verification code sent to ${fullFormattedPhone}!`);
     } catch (err: any) {
+      console.warn("Backend send-otp notice:", err?.message);
       setInfoMsg(`📲 6-Digit OTP code generated for ${fullFormattedPhone}!`);
+    } finally {
       setOtpStep(2);
       setTimer(60);
       setIsTimerActive(true);
-    } finally {
       setIsLoading(false);
     }
   };
@@ -337,32 +295,6 @@ export default function LoginPage() {
     const destinationPath = urlParams?.get("redirect") || "/dashboard";
 
     try {
-      if (confirmationResult && authMethod === "mobile_otp") {
-        try {
-          const userCredential = await confirmationResult.confirm(cleanCode);
-          const idToken = await userCredential.user.getIdToken();
-
-          const res = await apiFetch("/auth/firebase-phone-login", {
-            method: "POST",
-            body: JSON.stringify({
-              id_token: idToken,
-              full_name: fullName.trim(),
-              role: "CANDIDATE"
-            })
-          });
-          setAuth(res.user, res.access_token);
-          router.push(destinationPath);
-          return;
-        } catch (fbErr: any) {
-          console.warn("Firebase confirm error, trying backend verify:", fbErr);
-          if (fbErr?.code === "auth/invalid-verification-code") {
-            setError("Invalid OTP code entered. Please check the code received on your mobile.");
-            setIsLoading(false);
-            return;
-          }
-        }
-      }
-
       const res = await apiFetch("/auth/verify-otp", {
         method: "POST",
         body: JSON.stringify({
@@ -390,7 +322,7 @@ export default function LoginPage() {
         }, "candidate-otp-session");
         router.push(destinationPath);
       } else {
-        setError(err.message || "Invalid OTP code. Please check your inbox/mobile and try again.");
+        setError(err.message || "Invalid OTP code. Please check your WhatsApp and try again.");
       }
     } finally {
       setIsLoading(false);
