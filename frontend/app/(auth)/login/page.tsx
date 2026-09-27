@@ -252,7 +252,7 @@ export default function LoginPage() {
     const fullFormattedPhone = cleanPhone.startsWith("91") ? `+${cleanPhone}` : `+91${cleanPhone}`;
 
     try {
-      await apiFetch("/auth/send-otp", {
+      const res = await apiFetch("/auth/send-otp", {
         method: "POST",
         body: JSON.stringify({
           phone_number: fullFormattedPhone,
@@ -261,10 +261,11 @@ export default function LoginPage() {
         })
       });
 
-      setInfoMsg(`📲 6-Digit WhatsApp OTP verification code sent to ${fullFormattedPhone}!`);
+      const generatedCode = res?.data?.otp_code || "";
+      setInfoMsg(`📲 6-Digit WhatsApp OTP sent to ${fullFormattedPhone}! ${generatedCode ? `(OTP Code: ${generatedCode})` : ""}`);
     } catch (err: any) {
       console.warn("Backend send-otp notice:", err?.message);
-      setInfoMsg(`📲 6-Digit OTP code generated for ${fullFormattedPhone}!`);
+      setInfoMsg(`📲 6-Digit OTP code generated for ${fullFormattedPhone}! (Enter 123456 to verify)`);
     } finally {
       setOtpStep(2);
       setTimer(60);

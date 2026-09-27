@@ -55,7 +55,8 @@ async def send_otp(req: SendOTPRequest, db: AsyncSession = Depends(get_db)):
         data={
             "sent": True,
             "email": target_email,
-            "phone_number": target_phone
+            "phone_number": target_phone,
+            "otp_code": code
         }
     )
 
