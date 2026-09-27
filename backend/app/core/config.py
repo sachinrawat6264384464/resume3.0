@@ -50,6 +50,10 @@ class Settings(BaseSettings):
     META_WHATSAPP_TOKEN: Optional[str] = None
     META_WHATSAPP_PHONE_ID: Optional[str] = None
 
+    # AiSensy WhatsApp Business API
+    AISENSY_PROJECT_KEY: Optional[str] = "22a9ef31d8d75d621ff5e"
+    AISENSY_API_KEY: Optional[str] = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY1ZmQyMDU2ZTk3Zjc5MDY4MzlmMDQ5NiIsIm5hbWUiOiJDbG91ZCBEZXZPcHMgSFVCIiwiYXBwTmFtZSI6IkFpU2Vuc3kiLCJjbGllbnRJZCI6IjY1ZmQyMDU2ZTk3Zjc5MDY4MzlmMDQ4ZSIsImFjdGl2ZVBsYW4iOiJQUk9fWUVBUkxZIiwiaWF0IjoxNzkwMzMzMTQxfQ.QWcqXIFOxT6aXN6N_l6EozxMao7Eprn1QWokFhjKpq0"
+
     
     # AI Engine Provider (ollama, openai, gemini, or mock)
     AI_PROVIDER: str = "mock"  # "mock", "ollama", "openai"

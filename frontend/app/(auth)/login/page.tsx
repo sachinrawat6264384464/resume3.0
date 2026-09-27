@@ -520,11 +520,6 @@ export default function LoginPage() {
               {authMode === "signin" ? "Welcome Back, Candidate! 👋" : "Create Candidate Account 🚀"}
             </h2>
             <p className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 font-medium leading-relaxed">
-          <div className="flex flex-col gap-1 sm:gap-1.5">
-            <h2 className="text-xl xs:text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
-              {authMode === "signin" ? "Welcome Back, Candidate! 👋" : "Create Candidate Account 🚀"}
-            </h2>
-            <p className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 font-medium leading-relaxed">
               {authMode === "signin"
                 ? "Sign in using Google or Mobile OTP to access your AI voice interviews & study roadmaps."
                 : "Sign up using Google or Mobile OTP to launch your CloudOps & DevOps assessment journey."}
