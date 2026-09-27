@@ -29,8 +29,8 @@ export default function LoginPage() {
   // Auth Mode: "signin" vs "signup"
   const [authMode, setAuthMode] = useState<"signin" | "signup">("signin");
 
-  // Auth Method: "mobile_otp" (default) vs "email_otp" ONLY
-  const [authMethod, setAuthMethod] = useState<"mobile_otp" | "email_otp">("mobile_otp");
+  // Auth Method: "mobile_otp" ONLY
+  const [authMethod] = useState<"mobile_otp">("mobile_otp");
 
   // OTP Step: 1 = Enter Details, 2 = Enter 6-Digit OTP Code
   const [otpStep, setOtpStep] = useState<1 | 2>(1);
@@ -204,28 +204,6 @@ export default function LoginPage() {
     }
   };
 
-  // LinkedIn Social Auth (Opens real LinkedIn Sign-In page)
-  const handleLinkedInAuth = () => {
-    setError(null);
-    setInfoMsg(null);
-    setIsLoading(true);
-
-    try {
-      const linkedinClientId = process.env.NEXT_PUBLIC_LINKEDIN_CLIENT_ID || "";
-      const redirectUri = typeof window !== "undefined" ? `${window.location.origin}/login` : "http://localhost:3000/login";
-      
-      if (linkedinClientId) {
-        const scope = encodeURIComponent("openid profile email");
-        const authUrl = `https://www.linkedin.com/oauth/v2/authorization?response_type=code&client_id=${linkedinClientId}&redirect_uri=${encodeURIComponent(redirectUri)}&state=linkedin_auth&scope=${scope}`;
-        window.location.href = authUrl;
-      } else {
-        window.location.href = "https://www.linkedin.com/login";
-      }
-    } catch (err) {
-      window.location.href = "https://www.linkedin.com/login";
-    }
-  };
-
   useEffect(() => {
     if (typeof window !== "undefined") {
       const urlParams = new URLSearchParams(window.location.search);
@@ -253,16 +231,7 @@ export default function LoginPage() {
     return () => clearInterval(interval);
   }, [isTimerActive, timer]);
 
-  // Reset OTP flow state when switching methods
-  const switchMethod = (method: "mobile_otp" | "email_otp") => {
-    setAuthMethod(method);
-    setOtpStep(1);
-    setError(null);
-    setInfoMsg(null);
-    setOtpCode("");
-  };
-
-  // Handle Send OTP (supports both Mobile SMS OTP & Email OTP)
+  // Handle Send OTP (Mobile SMS OTP)
   const handleSendOTP = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
@@ -273,108 +242,76 @@ export default function LoginPage() {
       return;
     }
 
-    if (authMethod === "mobile_otp") {
-      const cleanPhone = phoneNumber.trim().replace(/\D/g, "");
-      if (!cleanPhone || cleanPhone.length < 10) {
-        setError("Please enter a valid 10-digit mobile number.");
-        return;
-      }
+    const cleanPhone = phoneNumber.trim().replace(/\D/g, "");
+    if (!cleanPhone || cleanPhone.length < 10) {
+      setError("Please enter a valid 10-digit mobile number.");
+      return;
+    }
 
-      setIsLoading(true);
-      const fullFormattedPhone = cleanPhone.startsWith("91") ? `+${cleanPhone}` : `+91${cleanPhone}`;
+    setIsLoading(true);
+    const fullFormattedPhone = cleanPhone.startsWith("91") ? `+${cleanPhone}` : `+91${cleanPhone}`;
 
-      try {
-        // 1. Send request to backend
-        try {
-          await apiFetch("/auth/send-otp", {
-            method: "POST",
-            body: JSON.stringify({
-              phone_number: fullFormattedPhone,
-              full_name: fullName.trim(),
-              mode: authMode
-            })
-          });
-        } catch (apiErr: any) {
-          console.warn("Backend send-otp notice:", apiErr?.message);
-        }
-
-        // 2. Firebase Phone Auth Real SMS Dispatch
-        let firebaseSuccess = false;
-        if (auth && typeof window !== "undefined") {
-          try {
-            const containerEl = document.getElementById("recaptcha-container");
-            if (containerEl) {
-              containerEl.innerHTML = "";
-            }
-            if (recaptchaVerifierRef.current) {
-              try { recaptchaVerifierRef.current.clear(); } catch (e) {}
-              recaptchaVerifierRef.current = null;
-            }
-
-            recaptchaVerifierRef.current = new RecaptchaVerifier(auth, "recaptcha-container", {
-              size: "invisible",
-              callback: () => {}
-            });
-
-            const appVerifier = recaptchaVerifierRef.current;
-            const confirmation: any = await signInWithPhoneNumber(auth, fullFormattedPhone, appVerifier);
-            setConfirmationResult(confirmation);
-            firebaseSuccess = true;
-          } catch (firebaseErr: any) {
-            console.warn("Firebase Phone Auth notice:", firebaseErr?.message);
-            // Suppress technical billing / region error messages for clean candidate experience
-          }
-        }
-
-
-
-        if (firebaseSuccess) {
-          setInfoMsg(`📲 6-Digit SMS OTP verification code sent to ${fullFormattedPhone} via Firebase!`);
-          setOtpStep(2);
-          setTimer(60);
-          setIsTimerActive(true);
-        } else if (!error) {
-          setInfoMsg(`📲 6-Digit OTP verification code generated for ${fullFormattedPhone}!`);
-          setOtpStep(2);
-          setTimer(60);
-          setIsTimerActive(true);
-        }
-
-      } catch (err: any) {
-        setInfoMsg(`📲 6-Digit OTP code generated for ${fullFormattedPhone}!`);
-        setOtpStep(2);
-        setTimer(60);
-        setIsTimerActive(true);
-      } finally {
-        setIsLoading(false);
-      }
-
-    } else if (authMethod === "email_otp") {
-      const cleanEmail = email.trim().toLowerCase();
-      if (!cleanEmail || !cleanEmail.includes("@")) {
-        setError("Please enter a valid email address to receive Email OTP.");
-        return;
-      }
-
-      setIsLoading(true);
+    try {
+      // 1. Send request to backend
       try {
         await apiFetch("/auth/send-otp", {
           method: "POST",
           body: JSON.stringify({
-            email: cleanEmail,
+            phone_number: fullFormattedPhone,
             full_name: fullName.trim(),
             mode: authMode
           })
         });
-      } catch (err: any) {
-        console.warn("Email OTP backend notice:", err?.message);
-      } finally {
-        setInfoMsg(`✉️ 6-digit verification code sent to email: ${cleanEmail}! (Enter 123456 to verify)`);
+      } catch (apiErr: any) {
+        console.warn("Backend send-otp notice:", apiErr?.message);
+      }
+
+      // 2. Firebase Phone Auth Real SMS Dispatch
+      let firebaseSuccess = false;
+      if (auth && typeof window !== "undefined") {
+        try {
+          const containerEl = document.getElementById("recaptcha-container");
+          if (containerEl) {
+            containerEl.innerHTML = "";
+          }
+          if (recaptchaVerifierRef.current) {
+            try { recaptchaVerifierRef.current.clear(); } catch (e) {}
+            recaptchaVerifierRef.current = null;
+          }
+
+          recaptchaVerifierRef.current = new RecaptchaVerifier(auth, "recaptcha-container", {
+            size: "invisible",
+            callback: () => {}
+          });
+
+          const appVerifier = recaptchaVerifierRef.current;
+          const confirmation: any = await signInWithPhoneNumber(auth, fullFormattedPhone, appVerifier);
+          setConfirmationResult(confirmation);
+          firebaseSuccess = true;
+        } catch (firebaseErr: any) {
+          console.warn("Firebase Phone Auth notice:", firebaseErr?.message);
+        }
+      }
+
+      if (firebaseSuccess) {
+        setInfoMsg(`📲 6-Digit SMS OTP verification code sent to ${fullFormattedPhone} via Firebase!`);
         setOtpStep(2);
         setTimer(60);
         setIsTimerActive(true);
-        setIsLoading(false);
+      } else if (!error) {
+        setInfoMsg(`📲 6-Digit OTP verification code generated for ${fullFormattedPhone}!`);
+        setOtpStep(2);
+        setTimer(60);
+        setIsTimerActive(true);
       }
+
+    } catch (err: any) {
+      setInfoMsg(`📲 6-Digit OTP code generated for ${fullFormattedPhone}!`);
+      setOtpStep(2);
+      setTimer(60);
+      setIsTimerActive(true);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -583,13 +520,18 @@ export default function LoginPage() {
               {authMode === "signin" ? "Welcome Back, Candidate! 👋" : "Create Candidate Account 🚀"}
             </h2>
             <p className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 font-medium leading-relaxed">
+          <div className="flex flex-col gap-1 sm:gap-1.5">
+            <h2 className="text-xl xs:text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
+              {authMode === "signin" ? "Welcome Back, Candidate! 👋" : "Create Candidate Account 🚀"}
+            </h2>
+            <p className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 font-medium leading-relaxed">
               {authMode === "signin"
-                ? "Sign in using Google, LinkedIn or OTP to access your AI voice interviews & study roadmaps."
-                : "Sign up using Google, LinkedIn or OTP to launch your CloudOps & DevOps assessment journey."}
+                ? "Sign in using Google or Mobile OTP to access your AI voice interviews & study roadmaps."
+                : "Sign up using Google or Mobile OTP to launch your CloudOps & DevOps assessment journey."}
             </p>
           </div>
 
-          {/* TOP SOCIAL AUTHENTICATION BUTTONS: Google & LinkedIn */}
+          {/* TOP SOCIAL AUTHENTICATION BUTTON: Google */}
           <div className="flex flex-col gap-2.5">
             <button
               type="button"
@@ -605,54 +547,13 @@ export default function LoginPage() {
               </svg>
               <span>Continue with Google</span>
             </button>
-
-            <button
-              type="button"
-              onClick={handleLinkedInAuth}
-              disabled={isLoading}
-              className="w-full py-3 px-4 rounded-xl sm:rounded-2xl bg-slate-100 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 hover:border-[#FF6B00]/50 text-slate-800 dark:text-slate-100 font-bold text-xs flex items-center justify-center gap-3 transition-all shadow-xs cursor-pointer disabled:opacity-50"
-            >
-              <svg className="w-4 h-4 fill-[#0A66C2] shrink-0" viewBox="0 0 24 24">
-                <path d="M19 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14m-.5 15.5v-5.3a3.26 3.26 0 0 0-3.26-3.26c-.85 0-1.84.52-2.28 1.3v-1.11h-2.79v8.37h2.79v-4.93c0-.77.62-1.4 1.39-1.4a1.4 1.4 0 0 1 1.4 1.4v4.93h2.75M6.46 10.9v8.37H9.25V10.9H6.46M7.86 6.64a1.6 1.6 0 1 0 0 3.2 1.6 1.6 0 0 0 0-3.2Z"/>
-              </svg>
-              <span>Continue with LinkedIn</span>
-            </button>
           </div>
 
           <div className="relative flex items-center justify-center my-1">
             <div className="border-t border-slate-200 dark:border-slate-800 w-full" />
             <span className="bg-white dark:bg-[#070b14] px-3 text-[10px] font-mono font-bold text-slate-400 uppercase tracking-widest absolute">
-              OR CONTINUE WITH OTP
+              OR CONTINUE WITH MOBILE OTP
             </span>
-          </div>
-
-          {/* Authentication Method Selector Tabs */}
-          <div className="grid grid-cols-2 p-1 sm:p-1.5 rounded-xl sm:rounded-2xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-[11px] sm:text-xs font-black">
-            <button
-              type="button"
-              onClick={() => switchMethod("mobile_otp")}
-              className={`py-2 sm:py-2.5 rounded-lg sm:rounded-xl transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
-                authMethod === "mobile_otp" 
-                  ? "bg-[#FF6B00] text-white shadow-sm font-black" 
-                  : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
-              }`}
-            >
-              <Phone className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
-              <span>Mobile OTP</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => switchMethod("email_otp")}
-              className={`py-2 sm:py-2.5 rounded-lg sm:rounded-xl transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
-                authMethod === "email_otp" 
-                  ? "bg-[#FF6B00] text-white shadow-sm font-black" 
-                  : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
-              }`}
-            >
-              <Mail className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
-              <span>Email OTP</span>
-            </button>
           </div>
 
           {/* Single Unified Status Alert Banner */}
@@ -668,9 +569,9 @@ export default function LoginPage() {
             </div>
           )}
 
-          {/* MOBILE OTP & EMAIL OTP FLOWS */}
+          {/* MOBILE OTP FLOW */}
           {otpStep === 1 ? (
-            /* Step 1: Enter Name + Mobile / Email */
+            /* Step 1: Enter Name + Mobile Number */
             <form onSubmit={handleSendOTP} className="flex flex-col gap-3.5 sm:gap-4">
               <div id="recaptcha-container"></div>
 
@@ -689,56 +590,25 @@ export default function LoginPage() {
                 />
               </div>
 
-              {authMethod === "mobile_otp" ? (
-                <div className="flex flex-col gap-1 sm:gap-1.5">
-                  <label className="text-[11px] sm:text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
-                    <Phone className="w-3.5 h-3.5 text-[#FF6B00] shrink-0" />
-                    Mobile Number (10 Digits):
-                  </label>
-                  <div className="flex items-center gap-2">
-                    <span className="px-3 py-2.5 sm:px-3.5 sm:py-3 rounded-xl sm:rounded-2xl text-xs bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 font-mono font-bold shrink-0">
-                      +91
-                    </span>
-                    <input
-                      type="tel"
-                      required
-                      maxLength={10}
-                      value={phoneNumber}
-                      onChange={(e) => setPhoneNumber(e.target.value.replace(/\D/g, ""))}
-                      placeholder="9876543210"
-                      className="w-full px-3.5 py-2.5 sm:px-4 sm:py-3 rounded-xl sm:rounded-2xl text-xs bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white font-mono font-bold focus:outline-none focus:border-[#FF6B00]"
-                    />
-                  </div>
-                </div>
-              ) : (
-                <div className="flex flex-col gap-1 sm:gap-1.5">
-                  <label className="text-[11px] sm:text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
-                    <Mail className="w-3.5 h-3.5 text-[#FF6B00] shrink-0" />
-                    Email Address for OTP:
-                  </label>
+              <div className="flex flex-col gap-1 sm:gap-1.5">
+                <label className="text-[11px] sm:text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                  <Phone className="w-3.5 h-3.5 text-[#FF6B00] shrink-0" />
+                  Mobile Number (10 Digits):
+                </label>
+                <div className="flex items-center gap-2">
+                  <span className="px-3 py-2.5 sm:px-3.5 sm:py-3 rounded-xl sm:rounded-2xl text-xs bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 font-mono font-bold shrink-0">
+                    +91
+                  </span>
                   <input
-                    type="email"
+                    type="tel"
                     required
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="candidate@cloudops.ai"
-                    className="w-full px-3.5 py-2.5 sm:px-4 sm:py-3 rounded-xl sm:rounded-2xl text-xs bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white font-medium focus:outline-none focus:border-[#FF6B00]"
+                    maxLength={10}
+                    value={phoneNumber}
+                    onChange={(e) => setPhoneNumber(e.target.value.replace(/\D/g, ""))}
+                    placeholder="9876543210"
+                    className="w-full px-3.5 py-2.5 sm:px-4 sm:py-3 rounded-xl sm:rounded-2xl text-xs bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white font-mono font-bold focus:outline-none focus:border-[#FF6B00]"
                   />
                 </div>
-              )}
-
-              {/* Fallback button between Mobile OTP and Email OTP */}
-              <div className="p-2.5 sm:p-3 rounded-xl bg-slate-50 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 text-[10.5px] sm:text-[11px] font-bold text-slate-600 dark:text-slate-400 flex items-center justify-between gap-1 flex-wrap">
-                <span>
-                  {authMethod === "mobile_otp" ? "SMS OTP not working?" : "Prefer SMS on Phone?"}
-                </span>
-                <button
-                  type="button"
-                  onClick={() => switchMethod(authMethod === "mobile_otp" ? "email_otp" : "mobile_otp")}
-                  className="text-[#FF6B00] hover:underline font-black cursor-pointer"
-                >
-                  {authMethod === "mobile_otp" ? "Send OTP to Email ✉️" : "Send OTP to Mobile 📱"}
-                </button>
               </div>
 
               <button
@@ -765,10 +635,8 @@ export default function LoginPage() {
               
               <div className="p-3 sm:p-3.5 rounded-xl sm:rounded-2xl bg-slate-900/90 border border-slate-800 text-xs font-medium text-slate-300 flex items-center justify-between gap-2">
                 <div>
-                  <span className="font-bold text-slate-400 block">
-                    {authMethod === "mobile_otp" ? "Mobile Number:" : "Email Address:"}
-                  </span>
-                  <span className="font-mono text-[11px] sm:text-xs text-white font-bold">{authMethod === "mobile_otp" ? phoneNumber : email} ({fullName})</span>
+                  <span className="font-bold text-slate-400 block">Mobile Number:</span>
+                  <span className="font-mono text-[11px] sm:text-xs text-white font-bold">{phoneNumber} ({fullName})</span>
                 </div>
                 <button
                   type="button"
@@ -796,16 +664,8 @@ export default function LoginPage() {
                 />
               </div>
 
-              {/* Resend & Fallback Controls */}
-              <div className="flex items-center justify-between text-xs font-medium pt-1 gap-1">
-                <button
-                  type="button"
-                  onClick={() => switchMethod(authMethod === "mobile_otp" ? "email_otp" : "mobile_otp")}
-                  className="text-[10.5px] sm:text-[11px] font-bold text-slate-400 hover:text-[#FF6B00] underline cursor-pointer"
-                >
-                  {authMethod === "mobile_otp" ? "Switch to Email OTP ✉️" : "Switch to Mobile OTP 📱"}
-                </button>
-
+              {/* Resend Controls */}
+              <div className="flex items-center justify-end text-xs font-medium pt-1">
                 <button
                   type="button"
                   disabled={isTimerActive || isLoading}
