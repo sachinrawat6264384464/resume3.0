@@ -36,7 +36,7 @@ export default function PreCheckPage() {
     loadAttempt();
   }, [attemptId]);
 
-  const handleReadyToStart = (stream: MediaStream) => {
+  const handleReadyToStart = (stream: MediaStream | null) => {
     // Media stream ready -> proceed to live room
     router.push(`/interviews/${attemptId}/room`);
   };
