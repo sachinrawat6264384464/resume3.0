@@ -19,7 +19,7 @@ export function DeviceCheckModal({ templateTitle = "Technical Assessment", targe
   const authUser = useAuthStore((s) => s.user);
   
   // Extract candidate display name
-  const candidateName = authUser?.full_name || authUser?.username || "Candidate";
+  const candidateName = authUser?.full_name || authUser?.email?.split("@")[0] || "Candidate";
 
   const [stream, setStream] = useState<MediaStream | null>(null);
   const [cameraActive, setCameraActive] = useState(false);
