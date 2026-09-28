@@ -120,6 +120,13 @@ async def update_my_profile(
     
     res_data = dict(cand.resume_data_json or {})
 
+    if req.get("highest_qualification"):
+        res_data["highest_qualification"] = req["highest_qualification"].strip()
+        notes_dict["highest_qualification"] = req["highest_qualification"].strip()
+    if req.get("years_of_experience"):
+        res_data["years_of_experience"] = req["years_of_experience"].strip()
+        notes_dict["years_of_experience"] = req["years_of_experience"].strip()
+
     if req.get("designation"):
         notes_dict["designation"] = req["designation"].strip()
         res_data["designation"] = req["designation"].strip()

@@ -85,8 +85,12 @@ export default function InterviewsPage() {
   const [isSavingStage0, setIsSavingStage0] = useState(false);
   const [stage0Form, setStage0Form] = useState({
     fullName: "",
+    email: "",
+    phone: "",
     targetRole: "Senior DevOps Engineer",
     designation: "DevOps Specialist",
+    highestQualification: "Bachelor's degree",
+    yearsOfExperience: "1–2 years",
     linkedinUrl: "",
     experienceLevel: "MID",
     targetSalaryBand: "₹18–40 LPA"
@@ -166,16 +170,24 @@ export default function InterviewsPage() {
       const savedLinkedin = typeof window !== "undefined" ? localStorage.getItem("candidate_linkedin_url") : "";
       const candLinkedin = savedLinkedin || resMetrics?.data?.candidate?.resume_data_json?.linkedin_url || "";
       const savedName = resMetrics?.data?.candidate?.full_name || user?.full_name || "";
+      const savedEmail = user?.email || resMetrics?.data?.candidate?.user?.email || "";
+      const savedPhone = user?.phone_number || resMetrics?.data?.candidate?.phone || "";
       const savedRole = resMetrics?.data?.candidate?.target_role || "Senior DevOps Engineer";
       const savedDesig = resMetrics?.data?.candidate?.resume_data_json?.designation || "DevOps Specialist";
+      const savedQual = resMetrics?.data?.candidate?.resume_data_json?.highest_qualification || "Bachelor's degree";
+      const savedYears = resMetrics?.data?.candidate?.resume_data_json?.years_of_experience || "1–2 years";
       const savedExp = resMetrics?.data?.candidate?.experience_level || "MID";
       const savedBand = resMetrics?.data?.candidate?.target_salary_band || "₹18–40 LPA";
 
       setStage0Form((prev) => ({
         ...prev,
         fullName: savedName || prev.fullName,
+        email: savedEmail || prev.email,
+        phone: savedPhone || prev.phone,
         targetRole: savedRole || prev.targetRole,
         designation: savedDesig || prev.designation,
+        highestQualification: savedQual || prev.highestQualification,
+        yearsOfExperience: savedYears || prev.yearsOfExperience,
         linkedinUrl: candLinkedin || prev.linkedinUrl,
         experienceLevel: savedExp || prev.experienceLevel,
         targetSalaryBand: savedBand || prev.targetSalaryBand
@@ -377,8 +389,12 @@ export default function InterviewsPage() {
         }
         localStorage.setItem("stage0_profile_data", JSON.stringify({
           fullName: stage0Form.fullName,
+          email: stage0Form.email,
+          phone: stage0Form.phone,
           designation: stage0Form.designation,
           targetRole: stage0Form.targetRole,
+          highestQualification: stage0Form.highestQualification,
+          yearsOfExperience: stage0Form.yearsOfExperience,
           linkedinUrl: stage0Form.linkedinUrl,
           experienceLevel: stage0Form.experienceLevel,
           targetSalaryBand: stage0Form.targetSalaryBand,
@@ -401,8 +417,11 @@ export default function InterviewsPage() {
       method: "PUT",
       body: JSON.stringify({
         full_name: stage0Form.fullName,
+        phone: stage0Form.phone,
         target_role: stage0Form.targetRole,
         designation: stage0Form.designation,
+        highest_qualification: stage0Form.highestQualification,
+        years_of_experience: stage0Form.yearsOfExperience,
         linkedin_url: stage0Form.linkedinUrl.trim(),
         experience_level: stage0Form.experienceLevel,
         target_salary_band: stage0Form.targetSalaryBand,
@@ -1200,30 +1219,82 @@ export default function InterviewsPage() {
               Complete your profile details below to earn <strong>+200 XP</strong> and unlock <strong>Stage 1: Self Introduction</strong>! Stage 0 is profile configuration only (no video/room required).
             </p>
 
-            <form onSubmit={handleSaveStage0Profile} className="flex flex-col gap-4 z-10">
+            <form onSubmit={handleSaveStage0Profile} className="flex flex-col gap-4 z-10 max-h-[70vh] overflow-y-auto pr-1">
               
-              <div className="flex flex-col gap-1">
-                <label className="text-xs font-bold text-slate-700 dark:text-slate-300">Full Name *</label>
-                <input
-                  type="text"
-                  required
-                  value={stage0Form.fullName}
-                  onChange={(e) => setStage0Form({ ...stage0Form, fullName: e.target.value })}
-                  placeholder="e.g. Alex Vance"
-                  className="px-4 py-2.5 rounded-xl text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:border-[#FF6B00]"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div className="flex flex-col gap-1">
-                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300">Current Designation</label>
+                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300">Full Name *</label>
                   <input
                     type="text"
-                    value={stage0Form.designation}
-                    onChange={(e) => setStage0Form({ ...stage0Form, designation: e.target.value })}
-                    placeholder="e.g. DevOps Engineer"
-                    className="px-4 py-2.5 rounded-xl text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:border-[#FF6B00]"
+                    required
+                    value={stage0Form.fullName}
+                    onChange={(e) => setStage0Form({ ...stage0Form, fullName: e.target.value })}
+                    placeholder="e.g. Rahul Luthra"
+                    className="px-3.5 py-2.5 rounded-xl text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:border-[#FF6B00]"
                   />
+                </div>
+
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300">Email Address *</label>
+                  <input
+                    type="email"
+                    required
+                    value={stage0Form.email}
+                    onChange={(e) => setStage0Form({ ...stage0Form, email: e.target.value })}
+                    placeholder="you@example.com"
+                    className="px-3.5 py-2.5 rounded-xl text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:border-[#FF6B00]"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300">Mobile Number *</label>
+                  <input
+                    type="tel"
+                    required
+                    value={stage0Form.phone}
+                    onChange={(e) => setStage0Form({ ...stage0Form, phone: e.target.value })}
+                    placeholder="+91 98765 43210"
+                    className="px-3.5 py-2.5 rounded-xl text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white font-mono focus:outline-none focus:border-[#FF6B00]"
+                  />
+                </div>
+
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300">Highest Qualification *</label>
+                  <select
+                    value={stage0Form.highestQualification}
+                    onChange={(e) => setStage0Form({ ...stage0Form, highestQualification: e.target.value })}
+                    className="px-3 py-2.5 rounded-xl text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:border-[#FF6B00]"
+                  >
+                    <option value="Select qualification">Select qualification</option>
+                    <option value="12th / Higher Secondary">12th / Higher Secondary</option>
+                    <option value="Diploma">Diploma</option>
+                    <option value="Bachelor's degree">Bachelor's degree</option>
+                    <option value="Master's degree">Master's degree</option>
+                    <option value="Doctorate / PhD">Doctorate / PhD</option>
+                    <option value="Professional qualification">Professional qualification</option>
+                    <option value="Other">Other</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300">Years of Experience *</label>
+                  <select
+                    value={stage0Form.yearsOfExperience}
+                    onChange={(e) => setStage0Form({ ...stage0Form, yearsOfExperience: e.target.value })}
+                    className="px-3 py-2.5 rounded-xl text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:border-[#FF6B00]"
+                  >
+                    <option value="Select experience">Select experience</option>
+                    <option value="Student / No experience">Student / No experience</option>
+                    <option value="Less than 1 year">Less than 1 year</option>
+                    <option value="1–2 years">1–2 years</option>
+                    <option value="3–5 years">3–5 years</option>
+                    <option value="6–10 years">6–10 years</option>
+                    <option value="10+ years">10+ years</option>
+                  </select>
                 </div>
 
                 <div className="flex flex-col gap-1">
@@ -1234,35 +1305,21 @@ export default function InterviewsPage() {
                     value={stage0Form.targetRole}
                     onChange={(e) => setStage0Form({ ...stage0Form, targetRole: e.target.value })}
                     placeholder="e.g. Senior DevOps Specialist"
-                    className="px-4 py-2.5 rounded-xl text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:border-[#FF6B00]"
+                    className="px-3.5 py-2.5 rounded-xl text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:border-[#FF6B00]"
                   />
                 </div>
               </div>
 
-              <div className="flex flex-col gap-1">
-                <label className="text-xs font-bold text-slate-700 dark:text-slate-300">LinkedIn Profile URL</label>
-                <input
-                  type="url"
-                  value={stage0Form.linkedinUrl}
-                  onChange={(e) => setStage0Form({ ...stage0Form, linkedinUrl: e.target.value })}
-                  placeholder="https://linkedin.com/in/yourprofile"
-                  className="px-4 py-2.5 rounded-xl text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white font-mono focus:outline-none focus:border-[#FF6B00]"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div className="flex flex-col gap-1">
-                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300">Experience Level</label>
-                  <select
-                    value={stage0Form.experienceLevel}
-                    onChange={(e) => setStage0Form({ ...stage0Form, experienceLevel: e.target.value })}
-                    className="px-3 py-2.5 rounded-xl text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:border-[#FF6B00]"
-                  >
-                    <option value="ENTRY">Entry Level (0-2 Yrs)</option>
-                    <option value="MID">Mid Level (2-5 Yrs)</option>
-                    <option value="SENIOR">Senior Level (5-8 Yrs)</option>
-                    <option value="LEAD">Staff / Lead (8+ Yrs)</option>
-                  </select>
+                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300">Current Designation</label>
+                  <input
+                    type="text"
+                    value={stage0Form.designation}
+                    onChange={(e) => setStage0Form({ ...stage0Form, designation: e.target.value })}
+                    placeholder="e.g. DevOps Engineer"
+                    className="px-3.5 py-2.5 rounded-xl text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:border-[#FF6B00]"
+                  />
                 </div>
 
                 <div className="flex flex-col gap-1">
@@ -1277,6 +1334,17 @@ export default function InterviewsPage() {
                     <option value="₹40–60 LPA">₹40 – ₹60 LPA</option>
                   </select>
                 </div>
+              </div>
+
+              <div className="flex flex-col gap-1">
+                <label className="text-xs font-bold text-slate-700 dark:text-slate-300">LinkedIn Profile URL</label>
+                <input
+                  type="url"
+                  value={stage0Form.linkedinUrl}
+                  onChange={(e) => setStage0Form({ ...stage0Form, linkedinUrl: e.target.value })}
+                  placeholder="https://linkedin.com/in/yourprofile"
+                  className="px-3.5 py-2.5 rounded-xl text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white font-mono focus:outline-none focus:border-[#FF6B00]"
+                />
               </div>
 
               <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-200 dark:border-slate-800">

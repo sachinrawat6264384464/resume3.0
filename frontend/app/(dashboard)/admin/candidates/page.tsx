@@ -146,6 +146,28 @@ export default function AdminCandidatesPage() {
     }
   };
 
+  const getHighestQualification = (c: any) => {
+    if (c.resume_data_json?.highest_qualification) return c.resume_data_json.highest_qualification;
+    if (c.notes) {
+      try {
+        const parsed = typeof c.notes === "string" ? JSON.parse(c.notes) : c.notes;
+        if (parsed?.highest_qualification) return parsed.highest_qualification;
+      } catch (e) {}
+    }
+    return "Bachelor's degree";
+  };
+
+  const getYearsOfExperience = (c: any) => {
+    if (c.resume_data_json?.years_of_experience) return c.resume_data_json.years_of_experience;
+    if (c.notes) {
+      try {
+        const parsed = typeof c.notes === "string" ? JSON.parse(c.notes) : c.notes;
+        if (parsed?.years_of_experience) return parsed.years_of_experience;
+      } catch (e) {}
+    }
+    return "1–2 years";
+  };
+
   const getDesignation = (c: any) => {
     if (c.designation) return c.designation;
     if (c.resume_data_json?.designation) return c.resume_data_json.designation;
@@ -167,12 +189,14 @@ export default function AdminCandidatesPage() {
   };
 
   const generateClientCSV = () => {
-    const headers = ["Candidate ID", "Full Name", "Email", "Phone", "Current Designation", "Target Role", "Experience Level", "Target Salary Band", "LinkedIn URL", "Readiness Score (%)", "Level", "XP"];
+    const headers = ["Candidate ID", "Full Name", "Email", "Phone", "Highest Qualification", "Years of Experience", "Current Designation", "Target Role", "Experience Level", "Target Salary Band", "LinkedIn URL", "Readiness Score (%)", "Level", "XP"];
     const rows = candidates.map(c => [
       c.id,
       `"${c.user?.full_name || c.full_name || 'Candidate'}"`,
       c.user?.email || c.email || '',
       c.phone || c.user?.phone_number || '',
+      `"${getHighestQualification(c)}"`,
+      `"${getYearsOfExperience(c)}"`,
       `"${getDesignation(c)}"`,
       `"${c.target_role || 'Senior DevOps Engineer'}"`,
       `"${getExperienceLevel(c)}"`,
@@ -536,6 +560,20 @@ export default function AdminCandidatesPage() {
                 <span className="text-[10px] font-bold text-slate-400 uppercase">Level & XP</span>
                 <span className="text-xs font-mono font-bold text-slate-900 dark:text-white mt-1">
                   Lvl {selectedCandidate.level || 1} • {selectedCandidate.xp || 0} XP
+                </span>
+              </div>
+
+              <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 flex flex-col">
+                <span className="text-[10px] font-bold text-slate-400 uppercase">Highest Qualification</span>
+                <span className="text-xs font-bold text-slate-900 dark:text-white mt-1">
+                  {getHighestQualification(selectedCandidate)}
+                </span>
+              </div>
+
+              <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 flex flex-col">
+                <span className="text-[10px] font-bold text-slate-400 uppercase">Years of Experience</span>
+                <span className="text-xs font-bold text-slate-900 dark:text-white mt-1">
+                  {getYearsOfExperience(selectedCandidate)}
                 </span>
               </div>
 
