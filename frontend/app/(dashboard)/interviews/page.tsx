@@ -839,7 +839,7 @@ export default function InterviewsPage() {
               const isSelected = selectedStage?.id === s.id;
               const isCompleted = s.status === "completed";
               const isInProgress = s.status === "in_progress";
-              const isProLocked = isPaymentEnabled && (s.status === "pro_locked" || (!isSubscribed && s.id >= 6));
+              const isProLocked = isPaymentEnabled && s.status === "pro_locked";
               const isLocked = s.status === "locked" && !isProLocked;
               const isBoss = s.id === 30 || s.diff === "Boss" || s.diff === "Legendary";
 
@@ -910,7 +910,7 @@ export default function InterviewsPage() {
                           setIsPaymentModalOpen(true);
                         }}
                         className="px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-xl bg-[#FF9900] text-slate-950 text-[10px] sm:text-xs font-black flex items-center gap-1 shadow-sm hover:bg-amber-400 transition-all cursor-pointer whitespace-nowrap"
-                        title="One-Time Pass Unlocks All Stages 6-30"
+                        title={`One-Time Pass Unlocks All Stages ${paidStartStageConfig}-30`}
                       >
                         <Crown className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-slate-950" />
                         <span className="hidden xs:inline">PRO PASS</span>
@@ -1035,7 +1035,7 @@ export default function InterviewsPage() {
                   className={`w-full py-4 rounded-2xl font-black text-xs text-white shadow-lg flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer uppercase tracking-wider ${
                     selectedStage.id === 0
                       ? "bg-gradient-to-r from-[#FF6B00] to-amber-500 hover:from-orange-500 hover:to-amber-600 shadow-[#FF6B00]/30"
-                      : selectedStage.status === "pro_locked" || (isPaymentEnabled && !isSubscribed && selectedStage.id >= 6)
+                      : selectedStage.status === "pro_locked"
                       ? "bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 font-black shadow-amber-500/30"
                       : "bg-[#FF6B00] hover:bg-[#e05e00] shadow-[#FF6B00]/30"
                   }`}
@@ -1052,7 +1052,7 @@ export default function InterviewsPage() {
                         <span>Setup Profile & Complete Stage 0 🚀</span>
                       </>
                     )
-                  ) : selectedStage.status === "pro_locked" || (isPaymentEnabled && !isSubscribed && selectedStage.id >= 6) ? (
+                  ) : selectedStage.status === "pro_locked" ? (
                     <>
                       <Crown className="w-4 h-4 text-slate-950" />
                       <span>Unlock All Stages (Pay ₹{configuredFee}) 🚀</span>
@@ -1103,10 +1103,10 @@ export default function InterviewsPage() {
                     <span className="px-2.5 py-0.5 rounded-full text-[9px] font-mono font-black bg-[#FF9900] text-slate-950 uppercase tracking-widest">
                       ONE-TIME LIFETIME PASS
                     </span>
-                    <span className="text-[10px] text-slate-400 font-mono">Stage {selectedStageForPayment?.id || 6}+</span>
+                    <span className="text-[10px] text-slate-400 font-mono">Stage {selectedStageForPayment?.id || paidStartStageConfig}+</span>
                   </div>
                   <h3 className="text-lg sm:text-xl font-black text-slate-900 dark:text-white tracking-tight uppercase mt-0.5">
-                    Unlock All 30 Stages & Tracks 2-5
+                    Unlock All 30 Stages
                   </h3>
                 </div>
               </div>
@@ -1138,11 +1138,11 @@ export default function InterviewsPage() {
             <div className="flex flex-col gap-2.5 z-10 text-xs text-slate-700 dark:text-slate-300">
               <div className="flex items-center gap-2">
                 <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
-                <span><strong>Single ₹{configuredFee || "1"} Payment Unlocks Stages 6 to 30</strong> (No per-stage fee)</span>
+                <span><strong>Single ₹{configuredFee || "1"} Payment Unlocks Stages {paidStartStageConfig} to 30</strong> (No per-stage fee)</span>
               </div>
               <div className="flex items-center gap-2">
                 <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
-                <span><strong>Sequential Unlocks</strong> (Stage 6 opens after Stage 5, etc.)</span>
+                <span><strong>Sequential Unlocks</strong> (Unlocks sequentially after each stage is passed)</span>
               </div>
               <div className="flex items-center gap-2">
                 <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
