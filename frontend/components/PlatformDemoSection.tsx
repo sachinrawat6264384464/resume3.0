@@ -40,7 +40,7 @@ const STATIC_SERVICES: CandidateServiceDemo[] = [
       "Real-time Voice AI Interviewer & Evaluation Engine",
       "Firebase Secured Multi-Tenant Admin & Candidate Control"
     ],
-    mockRoute: "/dashboard",
+    mockRoute: "/interviews?demo=true",
     videoPlaceholderBg: "from-[#0F172A] via-[#1E293B] to-[#0F172A]",
     accentColor: "text-[#FF6B00]",
     videoUrl: "/vedio/candidate-dashboard.mp4",

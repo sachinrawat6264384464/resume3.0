@@ -51,7 +51,6 @@ const ALL_30_STAGES = [
   { id: 27, level: "Bonus", levelName: "Bonus Challenge", title: "Bonus 07: Project-Based CI/CD", xp: "+2,200 XP", duration: "30 Mins", questions: 1, questions_count: 1, icon: "🏗️", diff: "Extreme", desc: "Canary deployments, blue-green traffic shifting using Flagger and Istio." },
   { id: 28, level: "Bonus", levelName: "Bonus Challenge", title: "Bonus 08: Advanced DevSecOps Project", xp: "+2,300 XP", duration: "30 Mins", questions: 1, questions_count: 1, icon: "🔐", diff: "Extreme", desc: "OPA Gatekeeper policies, Kyverno admission controllers, and PCI-DSS compliance." },
   { id: 29, level: "Bonus", levelName: "Bonus Challenge", title: "Bonus 09: Multi-Cloud + AI Architecture", xp: "+2,500 XP", duration: "35 Mins", questions: 1, questions_count: 1, icon: "🌐", diff: "Extreme", desc: "Global latency routing across AWS, GCP, and Azure with AI failover." },
-  { id: 30, level: "Bonus", levelName: "Bonus Challenge", title: "👑 40 LPA Final Boss Interview Battle", xp: "+3,000 XP", duration: "45 Mins", questions: 2, questions_count: 2, icon: "👑", diff: "Legendary", desc: "The ultimate 40 LPA Staff CloudOps Engineer Boss Battle! Prove your absolute mastery." }
 ];
 
 export default function InterviewsPage() {
@@ -62,6 +61,18 @@ export default function InterviewsPage() {
   const [activeTab, setActiveTab] = useState<string>("ALL");
   const [selectedStage, setSelectedStage] = useState<any | null>(null);
   const [isStarting, setIsStarting] = useState(false);
+
+  const [isDemoGuest, setIsDemoGuest] = useState(false);
+  const [isDemoLoginModalOpen, setIsDemoLoginModalOpen] = useState(false);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get("demo") === "true") {
+        setIsDemoGuest(true);
+      }
+    }
+  }, []);
 
   // Subscription & Razorpay Payment Modal States
   const [isSubscribed, setIsSubscribed] = useState<boolean>(false);
@@ -179,7 +190,18 @@ export default function InterviewsPage() {
         let computedStatus = "locked";
         let computedScore = att ? att.score : "--";
 
-        if (stg.id === 0) {
+        if (isDemoGuest) {
+          if (stg.id === 0) {
+            computedStatus = "completed";
+            computedScore = "100%";
+          } else if (stg.id >= 1 && stg.id <= 3) {
+            computedStatus = "in_progress";
+            computedScore = "Active";
+          } else {
+            computedStatus = "demo_locked";
+            computedScore = "--";
+          }
+        } else if (stg.id === 0) {
           const stg0Att = attemptMap.get(0);
           const isStg0Completed = isCompleted || (stg0Att && (stg0Att.status === "completed" || stg0Att.status === "PASSED"));
           computedStatus = isStg0Completed ? "completed" : "in_progress";
@@ -412,6 +434,29 @@ export default function InterviewsPage() {
 
     const targetStg = stages.find((st) => st.id === stageId) || ALL_30_STAGES[stageId];
 
+    // DEMO GUEST ACCESS INTERCEPTOR
+    if (isDemoGuest) {
+      if (stageId >= 4 || targetStg?.status === "demo_locked") {
+        setIsDemoLoginModalOpen(true);
+        return;
+      }
+      // Demo guest launching Stage 1, 2, or 3: bypass backend attempt creation, load local room without saving to DB
+      const demoAttemptId = `demo-stage-${stageId}-${Date.now()}`;
+      const sessionObj = {
+        attemptId: demoAttemptId,
+        stageId: stageId,
+        stageTitle: targetStg?.title || `Stage ${stageId} (Demo Overview)`,
+        roomUrl: `/interviews/${demoAttemptId}/room?demo=true`,
+        startedAt: Date.now()
+      };
+      if (typeof window !== "undefined") {
+        localStorage.setItem("active_interview_session", JSON.stringify(sessionObj));
+      }
+      setActiveSession(sessionObj);
+      router.push(`/interviews/${demoAttemptId}/pre-check?demo=true`);
+      return;
+    }
+
     if (targetStg?.status === "pro_locked" || (isPaymentEnabled && !isSubscribed && stageId >= 6)) {
       setSelectedStageForPayment(targetStg);
       setIsPaymentModalOpen(true);
@@ -607,6 +652,30 @@ export default function InterviewsPage() {
         <div className="border-r border-slate-300 dark:border-slate-800 h-full"></div>
         <div className="border-r border-slate-300 dark:border-slate-800 h-full"></div>
       </div>
+
+      {isDemoGuest && (
+        <div className="relative z-20 p-4 sm:p-5 rounded-2xl bg-amber-500/10 border-2 border-amber-500/40 text-amber-600 dark:text-amber-400 flex flex-col sm:flex-row items-center justify-between gap-4 backdrop-blur-xl">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-amber-500/20 flex items-center justify-center text-amber-500 font-bold shrink-0">
+              👁️
+            </div>
+            <div className="flex flex-col">
+              <span className="text-xs font-mono font-black uppercase tracking-wider text-amber-500">
+                GUEST DEMO MODE ACTIVE
+              </span>
+              <p className="text-xs text-slate-700 dark:text-slate-300 font-medium">
+                You are currently previewing the candidate panel. Stages 1-3 are open for trial. No data will be saved.
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={() => router.push("/login")}
+            className="px-4 py-2 rounded-xl text-xs font-black text-white bg-[#FF6B00] hover:bg-orange-600 shadow-md transition-colors shrink-0 uppercase tracking-wider"
+          >
+            Login for Full Access →
+          </button>
+        </div>
+      )}
 
       {/* AGENCY THEME HERO BANNER */}
       <div className="relative z-10 p-6 sm:p-10 rounded-[32px] bg-white dark:bg-slate-900/90 border-2 border-slate-200 dark:border-slate-800 shadow-xl dark:shadow-2xl flex flex-col md:flex-row items-center justify-between gap-6 backdrop-blur-xl">
@@ -1297,6 +1366,55 @@ export default function InterviewsPage() {
                 className="w-full py-3 rounded-xl font-bold text-xs text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
               >
                 Close / Go Back
+              </button>
+            </div>
+
+          </div>
+        </div>
+      )}
+      {isDemoLoginModalOpen && (
+        <div className="fixed inset-0 bg-slate-950/85 backdrop-blur-md z-50 flex items-center justify-center p-4 animate-fadeIn">
+          <div className="bg-white dark:bg-slate-900 border-2 border-[#FF6B00] rounded-[32px] max-w-md w-full p-6 sm:p-8 shadow-2xl flex flex-col gap-5 relative overflow-hidden text-center items-center">
+            
+            <div className="w-16 h-16 rounded-2xl bg-[#FF6B00]/20 border border-[#FF6B00]/40 flex items-center justify-center text-[#FF6B00] shadow-lg shadow-[#FF6B00]/20">
+              <Crown className="w-8 h-8 text-[#FF6B00]" />
+            </div>
+
+            <div className="flex flex-col gap-1.5 text-center">
+              <span className="text-[11px] font-mono font-black text-[#FF6B00] uppercase tracking-widest">
+                🔒 FULL ACCESS REQUIRED
+              </span>
+              <h3 className="text-xl font-black text-slate-900 dark:text-white uppercase tracking-tight">
+                To Continue, Please Login / Register
+              </h3>
+            </div>
+
+            <div className="p-4 rounded-2xl bg-orange-50 dark:bg-orange-950/30 border border-orange-200 dark:border-orange-900/40 text-xs leading-relaxed text-slate-700 dark:text-slate-200 text-left font-medium flex flex-col gap-2">
+              <p className="font-bold text-[#FF6B00]">
+                🎯 You have reached the Demo Trial Limit!
+              </p>
+              <p>
+                Stages 4 to 30, AI voice evaluation reports, resume ATS score, and verified readiness certificates require a free candidate account.
+              </p>
+              <div className="pt-2 border-t border-orange-200 dark:border-orange-900/40 flex flex-col gap-1 text-[11px] text-slate-600 dark:text-slate-300">
+                <span>✅ <strong>Free Account:</strong> Unlocks Stages 1 to 5</span>
+                <span>✅ <strong>Save Progress:</strong> Detailed AI score audit & history</span>
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-2.5 w-full pt-1">
+              <button
+                onClick={() => router.push("/login?redirect=/interviews")}
+                className="w-full py-3.5 rounded-2xl font-black text-xs text-white bg-gradient-to-r from-[#FF6B00] via-amber-500 to-orange-500 hover:from-orange-500 hover:to-amber-600 shadow-lg shadow-[#FF6B00]/25 flex items-center justify-center gap-2 cursor-pointer uppercase tracking-wider"
+              >
+                <span>Go to Login / Create Free Account →</span>
+              </button>
+
+              <button
+                onClick={() => setIsDemoLoginModalOpen(false)}
+                className="w-full py-2.5 rounded-xl font-bold text-xs text-slate-500 hover:text-slate-900 dark:hover:text-white transition-colors cursor-pointer"
+              >
+                Continue Demo Preview
               </button>
             </div>
 
