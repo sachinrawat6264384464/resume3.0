@@ -890,7 +890,7 @@ Learn Today. Implement Today. Build Your Career for a Lifetime.
                   return (
                     <div 
                       key={stg.id}
-                      onClick={() => router.push(`/interviews/${stg.id}/room`)}
+                      onClick={() => router.push(`/interviews?stage=${stg.id}`)}
                       className={`p-3.5 rounded-2xl border flex flex-col justify-between gap-2 cursor-pointer transition-all ${
                         isDone 
                           ? "bg-emerald-50/80 dark:bg-emerald-950/40 border-emerald-500/60"

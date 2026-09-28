@@ -20,11 +20,37 @@ otp_cache = {}
 async def send_otp(req: SendOTPRequest, db: AsyncSession = Depends(get_db)):
     target_email = (req.email or "").strip().lower()
     target_phone = (req.phone_number or "").strip()
+    mode = (req.mode or "signin").lower()
 
     if not target_email and not target_phone:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Email address or Phone number is required to receive OTP."
+        )
+
+    # 1. Check existing account in DB
+    conditions = []
+    if target_email:
+        conditions.append(User.email == target_email)
+    if target_phone:
+        conditions.append(User.phone_number == target_phone)
+
+    existing_user = None
+    if conditions:
+        stmt = select(User).where(or_(*conditions))
+        res = await db.execute(stmt)
+        existing_user = res.scalar_one_or_none()
+
+    if mode == "signin" and not existing_user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="No candidate account found with this Mobile Number or Email. Please click 'Create Account' to register first!"
+        )
+
+    if mode == "signup" and existing_user:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="An account with this Mobile Number or Email is already registered. Please Sign In instead."
         )
 
     # Generate 6-digit random OTP code
@@ -45,13 +71,12 @@ async def send_otp(req: SendOTPRequest, db: AsyncSession = Depends(get_db)):
 
         try:
             from app.services.sms_service import SMSService
-            await SMSService.send_otp(target_phone, code)
+            await SMSService.send_otp(target_phone, code, candidate_name=req.full_name)
         except Exception as sms_err:
-            logger.warn(f"Fast2SMS dispatch notice: {sms_err}")
-
+            logger.warn(f"AiSensy WhatsApp dispatch notice: {sms_err}")
 
     return StandardResponse(
-        message=f"6-Digit OTP verification code sent to {target_email or target_phone} successfully!",
+        message=f"📲 6-Digit WhatsApp OTP verification code sent to {target_phone or target_email} successfully!",
         data={
             "sent": True,
             "email": target_email,
@@ -64,6 +89,7 @@ async def send_otp(req: SendOTPRequest, db: AsyncSession = Depends(get_db)):
 async def verify_otp(req: VerifyOTPRequest, db: AsyncSession = Depends(get_db)):
     target_email = (req.email or "").strip().lower()
     target_phone = (req.phone_number or "").strip()
+    mode = (req.mode or "signin").lower()
     
     cached_code_email = otp_cache.get(target_email) if target_email else None
     cached_code_phone = otp_cache.get(target_phone) if target_phone else None
@@ -80,7 +106,7 @@ async def verify_otp(req: VerifyOTPRequest, db: AsyncSession = Depends(get_db)):
     if not is_valid:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Invalid OTP verification code. Please check your email inbox and try again."
+            detail="Invalid OTP verification code. Please check your messages and try again."
         )
 
     service = AuthService(db)
@@ -97,20 +123,36 @@ async def verify_otp(req: VerifyOTPRequest, db: AsyncSession = Depends(get_db)):
         res = await db.execute(stmt)
         existing_user = res.scalar_one_or_none()
 
+    if mode == "signin" and not existing_user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="No candidate account found with this Mobile Number or Email. Please click 'Create Account' to register first!"
+        )
+
+    from app.models.candidate import Candidate
     if existing_user:
         # Update user full_name if provided
         if req.full_name and req.full_name.strip():
             existing_user.full_name = req.full_name.strip()
-            await db.flush()
 
-        try:
-            return await service.authenticate_local(
-                LoginRequest(email=existing_user.email, password=req.password or "DefaultPass@123")
+        # Ensure Candidate record exists in DB
+        stmt_cand = select(Candidate).where(Candidate.user_id == existing_user.id)
+        res_cand = await db.execute(stmt_cand)
+        cand = res_cand.scalar_one_or_none()
+        if not cand:
+            cand = Candidate(
+                user_id=existing_user.id,
+                organization_id=existing_user.organization_id,
+                target_role="CloudOps Engineer",
+                experience_level="MID",
+                phone=existing_user.phone_number
             )
-        except Exception:
-            return await service.authenticate_mock(
-                MockLoginRequest(email=existing_user.email, name=existing_user.full_name)
-            )
+            db.add(cand)
+        await db.commit()
+
+        return await service.authenticate_mock(
+            MockLoginRequest(email=existing_user.email, name=existing_user.full_name)
+        )
 
     # 2. REGISTER NEW CANDIDATE USER AUTOMATICALLY
     final_email = target_email or f"user_{target_phone[-4:]}@cloudops.internal"
@@ -137,23 +179,19 @@ async def verify_otp(req: VerifyOTPRequest, db: AsyncSession = Depends(get_db)):
     except Exception:
         pass
 
-    try:
-        login_resp = await service.authenticate_local(
-            LoginRequest(email=final_email, password=final_password)
-        )
-        return login_resp
-    except Exception:
-        return await service.authenticate_mock(
-            MockLoginRequest(email=final_email, name=final_name)
-        )
+    return await service.authenticate_mock(
+        MockLoginRequest(email=final_email, name=final_name)
+    )
 
 @router.post("/social-login", response_model=TokenResponse)
 async def social_login(req: SocialLoginRequest, db: AsyncSession = Depends(get_db)):
     target_email = (req.email or "").strip().lower()
+    mode = (req.mode or "signin").lower()
+
     if not target_email or "@" not in target_email:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="A valid email is required for Google / LinkedIn login."
+            detail="A valid email is required for Google login."
         )
 
     service = AuthService(db)
@@ -161,10 +199,31 @@ async def social_login(req: SocialLoginRequest, db: AsyncSession = Depends(get_d
     res = await db.execute(stmt)
     existing_user = res.scalar_one_or_none()
 
+    if mode == "signin" and not existing_user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="No registered candidate account found with this Google email. Please click 'Create Account' to register first!"
+        )
+
+    from app.models.candidate import Candidate
     if existing_user:
         if req.full_name and (not existing_user.full_name or existing_user.full_name.startswith("Candidate")):
             existing_user.full_name = req.full_name.strip()
-            await db.flush()
+
+        # Ensure Candidate record exists in DB
+        stmt_cand = select(Candidate).where(Candidate.user_id == existing_user.id)
+        res_cand = await db.execute(stmt_cand)
+        cand = res_cand.scalar_one_or_none()
+        if not cand:
+            cand = Candidate(
+                user_id=existing_user.id,
+                organization_id=existing_user.organization_id,
+                target_role="CloudOps Engineer",
+                experience_level="MID",
+                phone=existing_user.phone_number
+            )
+            db.add(cand)
+        await db.commit()
 
         return await service.authenticate_mock(
             MockLoginRequest(email=existing_user.email, name=existing_user.full_name)

@@ -34,6 +34,8 @@ export default function AdminPaymentGatewayPage() {
   const [webhookSecret, setWebhookSecret] = useState("");
   const [currency, setCurrency] = useState("INR");
   const [amount, setAmount] = useState("1");
+  const [paymentMode, setPaymentMode] = useState<"STAGE_WISE" | "OVERALL_ALL_STAGES">("STAGE_WISE");
+  const [paidStartStage, setPaidStartStage] = useState<number>(6);
   const [hasSecretKey, setHasSecretKey] = useState(false);
 
   const [showSecret, setShowSecret] = useState(false);
@@ -65,12 +67,14 @@ export default function AdminPaymentGatewayPage() {
 
       if (cfgRes?.data) {
         setProvider(cfgRes.data.provider_name || "razorpay");
-        setIsEnabled(cfgRes.data.is_enabled ?? false);
+        setIsEnabled(cfgRes.data.is_enabled ?? true);
         setIsTestMode(cfgRes.data.is_test_mode ?? true);
         setPublishableKey(cfgRes.data.publishable_key || "");
         setHasSecretKey(cfgRes.data.has_secret_key ?? false);
         setCurrency(cfgRes.data.currency || "INR");
         setAmount(cfgRes.data.amount || "1");
+        setPaymentMode(cfgRes.data.payment_mode || "STAGE_WISE");
+        setPaidStartStage(cfgRes.data.paid_start_stage ?? 6);
       }
       if (txRes?.data) {
         setTransactions(Array.isArray(txRes.data) ? txRes.data : []);
@@ -98,7 +102,9 @@ export default function AdminPaymentGatewayPage() {
           publishable_key: publishableKey,
           webhook_secret: webhookSecret,
           currency: currency,
-          amount: amount
+          amount: amount,
+          payment_mode: paymentMode,
+          paid_start_stage: paidStartStage
         })
       });
       if (res?.data && res.data.is_enabled !== undefined) {
@@ -106,7 +112,7 @@ export default function AdminPaymentGatewayPage() {
       }
       setMsg({
         type: "success",
-        text: `Payment Gateway is now ${newVal ? "ENABLED (Payment Required for Stages)" : "DISABLED (Free Access to All Stages)"} in Database!`
+        text: `Payment Gateway is now ${newVal ? "ENABLED (Payment Required for Candidates)" : "DISABLED (Free Access to ALL Stages for ALL Candidates)"} in Database!`
       });
     } catch (err: any) {
       setIsEnabled(!newVal);
@@ -129,7 +135,9 @@ export default function AdminPaymentGatewayPage() {
           publishable_key: publishableKey,
           webhook_secret: webhookSecret,
           currency: currency,
-          amount: amount
+          amount: amount,
+          payment_mode: paymentMode,
+          paid_start_stage: paidStartStage
         })
       });
       if (res?.data && res.data.is_test_mode !== undefined) {
@@ -164,13 +172,15 @@ export default function AdminPaymentGatewayPage() {
           secret_key: secretKey,
           webhook_secret: webhookSecret,
           currency: currency,
-          amount: amount
+          amount: amount,
+          payment_mode: paymentMode,
+          paid_start_stage: paidStartStage
         })
       });
 
       setMsg({
         type: "success",
-        text: res?.message || "Razorpay Gateway credentials & assessment fee saved successfully to database."
+        text: res?.message || "Razorpay Gateway credentials, payment mode & stage pricing configuration saved successfully to database."
       });
       setHasSecretKey(true);
       setSecretKey("");
@@ -312,35 +322,41 @@ export default function AdminPaymentGatewayPage() {
             </div>
           )}
 
-          {/* Active Status Badge & Mode Toggle */}
+          {/* 1. MASTER PAYMENT GATEWAY SWITCH & ENVIRONMENT MODE */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             
-          {/* PERMANENT ACTIVE PAYMENT GATEWAY SYSTEM STATUS BAR */}
-          <div className="p-4 rounded-2xl border border-emerald-500/50 bg-gradient-to-r from-emerald-950/90 via-emerald-900/40 to-slate-900/90 shadow-md flex items-center justify-between gap-3 min-w-0">
-            <div className="flex items-center gap-2.5 min-w-0">
-              <div className="w-9 h-9 rounded-xl flex items-center justify-center text-white font-black bg-emerald-600 shadow-sm shrink-0">
-                <ShieldCheck className="w-5 h-5 text-white" />
-              </div>
-
+            {/* MASTER GATEWAY SWITCH BUTTON (ENABLE / DISABLE PAYMENT FOR ALL CANDIDATES) */}
+            <div className={`p-4 rounded-2xl border transition-all flex items-center justify-between gap-3 ${
+              isEnabled 
+                ? "border-emerald-500/50 bg-gradient-to-r from-emerald-950/90 via-emerald-900/40 to-slate-900/90" 
+                : "border-rose-500/50 bg-gradient-to-r from-rose-950/90 via-rose-900/40 to-slate-900/90"
+            }`}>
               <div className="flex flex-col min-w-0">
-                <div className="flex items-center gap-1.5 flex-wrap">
-                  <span className="text-xs font-black text-white uppercase tracking-tight">
-                    STATUS:
-                  </span>
-                  <span className="px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider bg-emerald-500 text-slate-950 shrink-0">
-                    🟢 ACTIVE
-                  </span>
-                  <span className="px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-wider bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 shrink-0">
-                    ALWAYS ON
-                  </span>
-                </div>
-                <span className="text-[10.5px] font-medium text-slate-300 truncate">
-                  Fee required for Stages 6-30
+                <span className="text-xs font-black text-white uppercase tracking-tight flex items-center gap-1.5">
+                  <ShieldCheck className={`w-4 h-4 ${isEnabled ? "text-emerald-400" : "text-rose-400"}`} />
+                  MASTER PAYMENT SWITCH:
+                </span>
+                <span className="text-[10px] font-medium text-slate-300 truncate mt-0.5">
+                  {isEnabled 
+                    ? `Payment ACTIVE starting at Stage ${paidStartStage}` 
+                    : "Payment OFF: All Stages 100% FREE for ALL Candidates"}
                 </span>
               </div>
-            </div>
-          </div>
 
+              <button
+                type="button"
+                onClick={() => handleToggleEnabled(!isEnabled)}
+                className={`px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider cursor-pointer border transition-all shrink-0 ${
+                  isEnabled
+                    ? "bg-emerald-500 text-slate-950 border-emerald-400 hover:bg-emerald-400 shadow-md shadow-emerald-500/30"
+                    : "bg-rose-600 text-white border-rose-500 hover:bg-rose-500 shadow-md shadow-rose-600/30"
+                }`}
+              >
+                {isEnabled ? "🟢 GATEWAY ON" : "🔴 GATEWAY OFF"}
+              </button>
+            </div>
+
+            {/* ENVIRONMENT MODE SWITCH */}
             <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 flex items-center justify-between">
               <div className="flex flex-col">
                 <span className="text-xs font-bold text-slate-900 dark:text-white">Environment Mode</span>
@@ -361,30 +377,104 @@ export default function AdminPaymentGatewayPage() {
 
           </div>
 
-          {/* Candidate Assessment Prep Fee Input */}
-          <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 flex flex-col gap-2">
-            <div className="flex items-center justify-between">
+          {/* 2. PAYMENT MODE STRATEGY SELECTOR (STAGE-WISE vs ONE-TIME OVERALL ACCESS) */}
+          <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 flex flex-col gap-3">
+            <label className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-1.5">
+              <Settings className="w-3.5 h-3.5 text-[#FF6B00]" />
+              Select Candidate Payment Access Strategy:
+            </label>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <button
+                type="button"
+                onClick={() => setPaymentMode("STAGE_WISE")}
+                className={`p-3 rounded-xl border text-left flex flex-col gap-1 transition-all cursor-pointer ${
+                  paymentMode === "STAGE_WISE"
+                    ? "bg-[#FF6B00]/15 border-[#FF6B00] text-slate-900 dark:text-white shadow-sm"
+                    : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:border-slate-400"
+                }`}
+              >
+                <span className="text-xs font-black uppercase flex items-center justify-between">
+                  <span>🎯 Stage-Wise Payment</span>
+                  {paymentMode === "STAGE_WISE" && <span className="text-[10px] text-[#FF6B00] font-mono">SELECTED</span>}
+                </span>
+                <span className="text-[10px] text-slate-400 leading-snug">
+                  Candidates pay per locked stage starting at Stage {paidStartStage}.
+                </span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setPaymentMode("OVERALL_ALL_STAGES")}
+                className={`p-3 rounded-xl border text-left flex flex-col gap-1 transition-all cursor-pointer ${
+                  paymentMode === "OVERALL_ALL_STAGES"
+                    ? "bg-[#FF6B00]/15 border-[#FF6B00] text-slate-900 dark:text-white shadow-sm"
+                    : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:border-slate-400"
+                }`}
+              >
+                <span className="text-xs font-black uppercase flex items-center justify-between">
+                  <span>👑 One-Time Overall Access</span>
+                  {paymentMode === "OVERALL_ALL_STAGES" && <span className="text-[10px] text-[#FF6B00] font-mono">SELECTED</span>}
+                </span>
+                <span className="text-[10px] text-slate-400 leading-snug">
+                  One-time fee (₹{amount}) unlocks ALL 30 interview stages at once.
+                </span>
+              </button>
+            </div>
+          </div>
+
+          {/* 3. EDITABLE PAID STAGE THRESHOLD RANGE & PRICE INPUT */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            
+            {/* Paid Stage Threshold Input */}
+            <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 flex flex-col gap-2">
               <label className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-1.5">
-                <Tag className="w-3.5 h-3.5 text-[#FF6B00]" />
-                Candidate Prep Fee / Stage Access Price (INR ₹):
+                <Lock className="w-3.5 h-3.5 text-[#FF6B00]" />
+                Paid Stages Start At Stage #:
               </label>
-              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-black bg-[#FF6B00]/15 text-[#FF6B00] border border-[#FF6B00]/30">
-                ₹{amount || "1"} per Candidate
+              <select
+                value={paidStartStage}
+                onChange={(e) => setPaidStartStage(parseInt(e.target.value, 10))}
+                className="w-full px-3 py-2.5 rounded-xl text-xs font-mono font-bold bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:border-[#FF6B00] cursor-pointer"
+              >
+                {Array.from({ length: 30 }, (_, i) => i + 1).map((stgNum) => (
+                  <option key={stgNum} value={stgNum}>
+                    Stage {stgNum} {stgNum === 1 ? "(All Stages Paid)" : stgNum === 6 ? "(Default: Stages 1-5 Free, 6+ Paid)" : `(Stages 1-${stgNum - 1} Free)`}
+                  </option>
+                ))}
+              </select>
+              <span className="text-[10px] text-slate-400 font-medium leading-normal">
+                {paidStartStage > 1 
+                  ? `Stages 1 to ${paidStartStage - 1} are 100% FREE. Stage ${paidStartStage} onwards requires payment when Gateway is ON.` 
+                  : "All Stages require payment when Gateway is ON."}
               </span>
             </div>
-            <div className="relative">
-              <span className="absolute left-3.5 top-2.5 text-xs font-black text-[#FF6B00] font-mono">₹</span>
-              <input
-                type="text"
-                value={amount}
-                onChange={(e) => setAmount(e.target.value)}
-                placeholder="1"
-                className="w-full pl-8 pr-4 py-2.5 rounded-xl text-xs font-mono font-bold bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:border-[#FF6B00]"
-              />
+
+            {/* Candidate Assessment Prep Fee Input */}
+            <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 flex flex-col gap-2">
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-1.5">
+                  <Tag className="w-3.5 h-3.5 text-[#FF6B00]" />
+                  Fee / Access Price (INR ₹):
+                </label>
+                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-black bg-[#FF6B00]/15 text-[#FF6B00] border border-[#FF6B00]/30">
+                  ₹{amount || "1"}
+                </span>
+              </div>
+              <div className="relative">
+                <span className="absolute left-3.5 top-2.5 text-xs font-black text-[#FF6B00] font-mono">₹</span>
+                <input
+                  type="text"
+                  value={amount}
+                  onChange={(e) => setAmount(e.target.value)}
+                  placeholder="1"
+                  className="w-full pl-8 pr-4 py-2.5 rounded-xl text-xs font-mono font-bold bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:border-[#FF6B00]"
+                />
+              </div>
+              <span className="text-[10px] text-slate-400 font-medium">
+                Specify the price candidates pay ({paymentMode === "STAGE_WISE" ? "per locked stage" : "one-time for all stages"}).
+              </span>
             </div>
-            <span className="text-[10px] text-slate-400 font-medium">
-              Specify the payment amount (in ₹ INR) candidates must pay to unlock stages when payment gateway is enabled.
-            </span>
+
           </div>
 
           {/* Active Provider Card */}

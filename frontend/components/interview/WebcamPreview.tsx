@@ -24,7 +24,8 @@ export function WebcamPreview({
   const dragStartRef = useRef({ x: 0, y: 0 });
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const blurCanvasRef = useRef<HTMLCanvasElement | null>(null);
-  const [isBlurEnabled, setIsBlurEnabled] = useState(true);
+  const maskCanvasRef = useRef<HTMLCanvasElement | null>(null);
+  const [blurMode, setBlurMode] = useState<"BACKGROUND" | "FULL" | "OFF">("BACKGROUND");
 
   // Callback Ref ensures video plays immediately when element mounts or stream arrives
   const setVideoRef = useCallback((node: HTMLVideoElement | null) => {
@@ -74,46 +75,65 @@ export function WebcamPreview({
           canvas.height = height;
         }
 
+        if (!maskCanvasRef.current) {
+          maskCanvasRef.current = document.createElement("canvas");
+        }
+        const maskCanvas = maskCanvasRef.current;
+        if (maskCanvas.width !== width || maskCanvas.height !== height) {
+          maskCanvas.width = width;
+          maskCanvas.height = height;
+        }
+
         const ctx = canvas.getContext("2d");
         if (ctx) {
-          if (isBlurEnabled) {
-            // 1. Blurred background
+          if (blurMode === "FULL") {
+            // Full Privacy Camera Blur
             ctx.save();
-            ctx.filter = "blur(18px) brightness(0.92) contrast(1.05)";
+            ctx.filter = "blur(24px) brightness(0.9) contrast(1.1)";
             ctx.drawImage(video, 0, 0, width, height);
             ctx.restore();
+          } else if (blurMode === "BACKGROUND") {
+            // 1. Draw 100% CRYSTAL CLEAR SHARP video on base canvas
+            ctx.filter = "none";
+            ctx.drawImage(video, 0, 0, width, height);
 
-            // 2. Composite sharp subject
-            const maskCanvas = document.createElement("canvas");
-            maskCanvas.width = width;
-            maskCanvas.height = height;
-            const mCtx = maskCanvas.getContext("2d");
+            // 2. Render Blurred Background layer on offscreen maskCanvas
+            const bCtx = maskCanvas.getContext("2d");
+            if (bCtx) {
+              bCtx.clearRect(0, 0, width, height);
+              bCtx.filter = "blur(22px) brightness(0.9) contrast(1.05)";
+              bCtx.drawImage(video, 0, 0, width, height);
+              bCtx.filter = "none";
 
-            if (mCtx) {
-              mCtx.drawImage(video, 0, 0, width, height);
-              mCtx.globalCompositeOperation = "destination-in";
+              // 3. Cut out face & body portrait from the blurred layer (destination-out)
+              bCtx.globalCompositeOperation = "destination-out";
 
-              const centerX = width / 2;
-              const centerY = height * 0.52;
-              const rx = width * 0.36;
+              const centerX = width * 0.5;
+              const centerY = height * 0.5;
+              const rx = width * 0.32;
               const ry = height * 0.48;
 
-              const grad = mCtx.createRadialGradient(
-                centerX, centerY, rx * 0.35,
+              const grad = bCtx.createRadialGradient(
+                centerX, centerY, rx * 0.25,
                 centerX, centerY, rx
               );
               grad.addColorStop(0, "rgba(0,0,0,1)");
-              grad.addColorStop(0.7, "rgba(0,0,0,0.95)");
+              grad.addColorStop(0.65, "rgba(0,0,0,0.85)");
+              grad.addColorStop(0.9, "rgba(0,0,0,0.3)");
               grad.addColorStop(1, "rgba(0,0,0,0)");
 
-              mCtx.fillStyle = grad;
-              mCtx.beginPath();
-              mCtx.ellipse(centerX, centerY, rx, ry, 0, 0, 2 * Math.PI);
-              mCtx.fill();
+              bCtx.fillStyle = grad;
+              bCtx.beginPath();
+              bCtx.ellipse(centerX, centerY, rx, ry, 0, 0, 2 * Math.PI);
+              bCtx.fill();
 
+              bCtx.globalCompositeOperation = "source-over";
+
+              // 4. Overlay blurred room background (Face area remains 100% sharp from base video!)
               ctx.drawImage(maskCanvas, 0, 0);
             }
           } else {
+            // Raw Camera Feed
             ctx.drawImage(video, 0, 0, width, height);
           }
         }
@@ -126,7 +146,7 @@ export function WebcamPreview({
     return () => {
       cancelAnimationFrame(animId);
     };
-  }, [stream, isActive, isBlurEnabled]);
+  }, [stream, isActive, blurMode]);
 
   // Dragging Handlers for Moveable Widget
   const handleMouseDown = (e: React.MouseEvent) => {
@@ -185,15 +205,21 @@ export function WebcamPreview({
             <>
               <button
                 type="button"
-                onClick={() => setIsBlurEnabled(!isBlurEnabled)}
+                onClick={() => {
+                  if (blurMode === "BACKGROUND") setBlurMode("FULL");
+                  else if (blurMode === "FULL") setBlurMode("OFF");
+                  else setBlurMode("BACKGROUND");
+                }}
                 className={`px-2 py-0.5 rounded text-[10px] font-mono font-bold border transition-all ${
-                  isBlurEnabled
+                  blurMode === "BACKGROUND"
                     ? "bg-amber-500/20 text-amber-300 border-amber-500/40"
+                    : blurMode === "FULL"
+                    ? "bg-purple-500/20 text-purple-300 border-purple-500/40"
                     : "bg-slate-800 text-slate-400 border-slate-700"
                 }`}
                 title="Toggle Background Blur Mode"
               >
-                {isBlurEnabled ? "✨ Blur: ON" : "📷 Blur: OFF"}
+                {blurMode === "BACKGROUND" ? "✨ BG Blur: ON" : blurMode === "FULL" ? "🙈 Full Privacy Blur" : "📷 Blur: OFF"}
               </button>
 
               <button

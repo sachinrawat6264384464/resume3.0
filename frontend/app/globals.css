@@ -114,6 +114,37 @@ html.dark .glass-card-elevated {
   box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.7);
 }
 
+/* Glass Input Styles */
+.glass-input {
+  background: rgba(15, 23, 42, 0.85);
+  color: #f8fafc;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.glass-input:focus {
+  outline: none;
+  border-color: #FF9900 !important;
+  box-shadow: 0 0 15px rgba(255, 153, 0, 0.3) !important;
+  background: rgba(15, 23, 42, 0.95);
+}
+
+.glass-input::placeholder {
+  color: #64748b;
+}
+
+html.light .glass-input {
+  background: #ffffff;
+  color: #0f172a;
+  border: 1px solid rgba(15, 23, 42, 0.2);
+}
+
+html.light .glass-input::placeholder {
+  color: #94a3b8;
+}
+
 /* AWS Orange Buttons */
 .btn-royal-blue,
 .btn-orange-glow {

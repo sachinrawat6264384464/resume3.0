@@ -108,6 +108,9 @@ export default function InterviewsPage() {
       ]);
 
       const gatewayEnabled = resGatewayCfg?.data?.is_enabled ?? false;
+      const paidStartStage = resGatewayCfg?.data?.paid_start_stage ?? 6;
+      const paymentMode = resGatewayCfg?.data?.payment_mode ?? "STAGE_WISE";
+      
       setIsPaymentEnabled(gatewayEnabled);
       if (resGatewayCfg?.data?.amount) {
         setConfiguredFee(resGatewayCfg.data.amount.toString());
@@ -182,8 +185,8 @@ export default function InterviewsPage() {
           computedStatus = isStg0Completed ? "completed" : "in_progress";
           computedScore = isStg0Completed ? "100%" : "Active";
           if (isStg0Completed) completedSet.add(0);
-        } else if (stg.id >= 1 && stg.id <= 5) {
-          // Track 1 (Free Sequential Unlock)
+        } else if (stg.id < paidStartStage) {
+          // Free Stage range configured dynamically by Admin!
           if (isCompleted) {
             computedStatus = "completed";
           } else if (completedSet.has(stg.id - 1)) {
@@ -193,7 +196,7 @@ export default function InterviewsPage() {
             computedStatus = "locked";
           }
         } else {
-          // Track 2+ (Stages 6 to 30) - PRO Subscription Required if Payment Gateway is ENABLED!
+          // Paid stage range (starting from paidStartStage to 30) - PRO Pass / Payment required if Gateway is ENABLED!
           if (isCompleted) {
             computedStatus = "completed";
           } else if (!effectiveSubscribed) {
@@ -225,6 +228,15 @@ export default function InterviewsPage() {
 
       setStages(merged);
       setSelectedStage((prev: any) => {
+        if (typeof window !== "undefined") {
+          const params = new URLSearchParams(window.location.search);
+          const qStage = params.get("stage");
+          if (qStage) {
+            const stageNum = parseInt(qStage, 10);
+            const found = merged.find((m) => m.id === stageNum);
+            if (found) return found;
+          }
+        }
         if (!prev) return merged[0];
         const match = merged.find((m) => m.id === prev.id);
         return match || merged[0];
@@ -257,6 +269,20 @@ export default function InterviewsPage() {
     checkActiveSession();
     fetchStagesData();
   }, []);
+
+  useEffect(() => {
+    if (typeof window !== "undefined" && stages.length > 0) {
+      const params = new URLSearchParams(window.location.search);
+      const qStage = params.get("stage");
+      if (qStage) {
+        const stageNum = parseInt(qStage, 10);
+        const found = stages.find((s: any) => s.id === stageNum);
+        if (found) {
+          setSelectedStage(found);
+        }
+      }
+    }
+  }, [stages]);
 
   const handleDropOutActiveSession = async () => {
     if (!activeSession) return;

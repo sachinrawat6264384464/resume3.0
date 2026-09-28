@@ -129,7 +129,7 @@ class InterviewService:
             .options(
                 selectinload(InterviewAttempt.template),
                 selectinload(InterviewAttempt.candidate).selectinload(Candidate.user),
-                selectinload(InterviewAttempt.stage_attempts).selectinload(StageAttempt.stage),
+                selectinload(InterviewAttempt.stage_attempts).selectinload(StageAttempt.stage).selectinload(InterviewStage.questions),
                 selectinload(InterviewAttempt.stage_attempts).selectinload(StageAttempt.question_attempts).selectinload(QuestionAttempt.question),
                 selectinload(InterviewAttempt.recordings)
             )

@@ -22,12 +22,18 @@ async def get_candidate_payment_config(
     from app.api.v1.payment_gateway import get_or_create_singleton_config
     config = await get_or_create_singleton_config(db)
 
+    settings_dict = dict(config.additional_settings or {})
+    payment_mode = settings_dict.get("payment_mode", "STAGE_WISE")
+    paid_start_stage = settings_dict.get("paid_start_stage", 6)
+
     return StandardResponse(
         message="Payment gateway configuration fetched for candidate",
         data={
             "is_enabled": config.is_enabled,
             "amount": getattr(config, "amount", "1") or "1",
-            "publishable_key": config.publishable_key or ""
+            "publishable_key": config.publishable_key or "",
+            "payment_mode": payment_mode,
+            "paid_start_stage": paid_start_stage
         }
     )
 

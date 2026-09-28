@@ -97,52 +97,31 @@ export default function ResumeATSPage() {
 
     setIsExtractingLinkedIn(true);
     try {
-      // 1. Save LinkedIn URL to local storage & Candidate DB profile cleanly
-      try {
-        localStorage.setItem("candidate_linkedin_url", cleanUrl);
-        await apiFetch("/candidates/me/profile", {
-          method: "PUT",
-          body: JSON.stringify({
-            linkedin_url: cleanUrl
-          })
-        });
-      } catch (pErr) {
-        console.warn("LinkedIn profile save notice:", pErr);
+      localStorage.setItem("candidate_linkedin_url", cleanUrl);
+
+      // 1. Call backend API to extract structured profile info from LinkedIn URL
+      const res = await apiFetch("/linkedin/extract-profile", {
+        method: "POST",
+        body: JSON.stringify({
+          linkedin_url: cleanUrl
+        })
+      });
+
+      if (res?.data?.extracted_text) {
+        setResumeText(res.data.extracted_text);
+        showToast(`✅ Extracted LinkedIn Profile Info for ${res.data.parsed_name || "Candidate"}!`);
+      } else {
+        showToast("✅ LinkedIn Profile URL Saved to Profile!");
       }
-
-      let parsedName = user?.full_name || "Sachin Rawat";
-      const match = cleanUrl.match(/\/in\/([^\/\?#]+)/);
-      if (match && match[1]) {
-        const slug = match[1].replace(/[-_]+/g, " ").replace(/\d+$/g, "").trim();
-        if (slug.length > 2) {
-          parsedName = slug.split(" ").map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(" ");
-        }
-      }
-
-      setResumeText(`${parsedName}
-${user?.email || "candidate@cloudops.internal"} | LinkedIn: ${cleanUrl}
-Target Role: Senior Cloud & DevOps Specialist
-
-SUMMARY
-Experienced DevOps & CloudOps Professional. Linked Profile: ${cleanUrl}
-
-SKILLS
-Cloud & Infrastructure: AWS, Docker, Kubernetes, Terraform, Linux, CI/CD, DevSecOps
-Automation: GitHub Actions, Python, Bash, Helm
-
-EXPERIENCE
-CloudOps Engineering Specialist (2022 - Present)
-- Automated AWS EKS and Infrastructure deployments using Terraform & GitHub Actions.
-- Optimized microservice container pipelines, reducing release downtime by 40%.`);
 
       setIsLinkedInModalOpen(false);
-      showToast("✅ LinkedIn Profile URL Saved to Profile!");
 
       setTimeout(() => {
         handleAnalyze();
-      }, 150);
+      }, 200);
     } catch (err: any) {
-      console.warn("LinkedIn save notice:", err);
+      console.warn("LinkedIn extract notice:", err);
+      showToast("⚠️ Could not fetch full LinkedIn bio. Saved link to profile.");
       setIsLinkedInModalOpen(false);
     } finally {
       setIsExtractingLinkedIn(false);

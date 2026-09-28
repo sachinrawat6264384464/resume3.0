@@ -3,7 +3,7 @@
 import { useEffect, useState, useRef, useCallback } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { 
-  Loader2, Sparkles, CheckCircle2, AlertTriangle, XCircle,
+  Loader2, Sparkles, CheckCircle2, AlertTriangle, XCircle, X,
   Volume2, ShieldAlert, ArrowRight, CornerDownRight,
   HelpCircle, Lightbulb, Lock, Unlock, Star, Flame, Eye, EyeOff,
   Camera, CameraOff, Clock, Mic, Database, HardDrive, FileText,
@@ -17,59 +17,18 @@ import { AIInterviewerAvatar } from "@/components/interview/AIInterviewerAvatar"
 import { AnswerControls } from "@/components/interview/AnswerControls";
 import { InterviewAttempt, StageAttempt, QuestionAttempt, QuestionEvaluationResult } from "@/types";
 
-// 10 Official Stage 1 Benchmark Questions & 2-Line Model Answers
-const STAGE_1_BENCHMARKS = [
-  {
-    q: "Demonstrate your background in CloudOps engineering. Explain how you automate AWS infrastructure deployments using Terraform and CI/CD pipelines.",
-    ideal: "I write modular Terraform HCL code for AWS VPC, EC2, and IAM with S3 remote state. I automate deployments using GitHub Actions pipelines running terraform plan and terraform apply.",
-    keywords: ["terraform", "aws", "vpc", "ci/cd", "pipeline", "s3", "github actions", "deploy"]
-  },
-  {
-    q: "Walk us through your Linux system troubleshooting methodology when a production server exhibits high memory utilization or kernel panic errors.",
-    ideal: "I check memory usage using top and free -m to identify leaking processes, then inspect dmesg and journalctl for kernel panic stack traces before restarting or scaling daemon services.",
-    keywords: ["top", "free", "memory", "journalctl", "dmesg", "kernel panic", "process", "linux", "triage"]
-  },
-  {
-    q: "How do you configure high availability and multi-region failover across AWS EC2, S3, and RDS database clusters?",
-    ideal: "I deploy EC2 Auto Scaling Groups across Multi-AZs behind an ALB, with S3 Cross-Region Replication and RDS Aurora Global Databases for automated multi-region failover.",
-    keywords: ["multi-az", "auto scaling", "alb", "load balancer", "s3 replication", "rds", "aurora", "failover", "aws"]
-  },
-  {
-    q: "Explain IAM security best practices when configuring service accounts and IRSA for Kubernetes workloads.",
-    ideal: "I enforce zero-trust principle of least privilege using IAM Roles for Service Accounts (IRSA) with OIDC on EKS. Pods assume temporary scoped AWS IAM credentials without static secret keys.",
-    keywords: ["irsa", "iam", "oidc", "eks", "kubernetes", "least privilege", "service account", "zero-trust"]
-  },
-  {
-    q: "How do you manage secrets and environment variables securely in Docker containerized microservice deployments?",
-    ideal: "I fetch secrets at runtime from AWS Secrets Manager or HashiCorp Vault into container memory, mounting Kubernetes Secret objects as temporary in-memory volume files rather than baking them into Docker images.",
-    keywords: ["secrets manager", "vault", "docker", "kubernetes secrets", "environment variables", "security", "microservices"]
-  },
-  {
-    q: "Describe how you monitor microservice health telemetry using Prometheus metrics and Grafana dashboards.",
-    ideal: "I configure Prometheus to scrape /metrics endpoints from microservices and Node Exporters. I build Grafana dashboard panels for CPU, RAM, and HTTP latency, setting Alertmanager triggers for threshold breaches.",
-    keywords: ["prometheus", "grafana", "metrics", "alertmanager", "monitoring", "telemetry", "latency"]
-  },
-  {
-    q: "Explain how you handle a database connection pool exhaustion incident under sudden user traffic spikes.",
-    ideal: "I configure connection pooling proxies like PgBouncer and optimize database connection limits. Upstream, I introduce Redis caching to offload read queries from the primary RDS instance.",
-    keywords: ["connection pool", "pgbouncer", "rds", "redis", "caching", "traffic spike", "timeout"]
-  },
-  {
-    q: "How do you perform zero-downtime rolling deployments and canary rollouts using Kubernetes deployment strategies?",
-    ideal: "I use Kubernetes Deployment rolling updates with MaxSurge and MaxUnavailable parameters alongside readiness probes. For canary releases, I shift traffic gradually using Argo Rollouts or Istio service mesh.",
-    keywords: ["rolling update", "canary", "kubernetes", "argo rollouts", "istio", "readiness probe", "zero-downtime"]
-  },
-  {
-    q: "Explain how you configure cloud cost alerts and anomaly detection to prevent unexpected AWS cloud bill spikes.",
-    ideal: "I set up AWS Budgets with SNS notifications for threshold alerts. I enable AWS Cost Anomaly Detection to catch unattached EBS volumes or runaway EC2 instances automatically.",
-    keywords: ["aws budgets", "sns", "cost anomaly detection", "finops", "ebs", "ec2", "cost"]
-  },
-  {
-    q: "Describe a critical production outage incident you resolved under tight SLA pressure and the post-mortem steps you took.",
-    ideal: "During a 502 Bad Gateway outage caused by pod OOMKills, I temporarily scaled pod memory limits to restore service within 6 minutes, followed by a root cause analysis and automated alert tuning.",
-    keywords: ["502 bad gateway", "oomkill", "outage", "root cause analysis", "post-mortem", "sla", "autoscaling"]
-  }
-];
+// Dynamic Helper to extract keywords from ANY stage question text if expected_topics is empty
+const extractKeywordsFromText = (qText: string): string[] => {
+  if (!qText) return ["cloudops", "infrastructure", "automation"];
+  const words = qText.toLowerCase().replace(/[^a-z0-9\s]/g, "").split(/\s+/);
+  const stopWords = new Set([
+    "what", "how", "explain", "describe", "your", "with", "this", "that", "from", "using", 
+    "have", "been", "were", "when", "which", "would", "could", "should", "demonstrate", 
+    "background", "walk", "through", "manage", "configure", "perform", "handle", "critical"
+  ]);
+  const filtered = words.filter(w => w.length > 3 && !stopWords.has(w));
+  return filtered.length > 0 ? Array.from(new Set(filtered)).slice(0, 8) : ["cloudops", "infrastructure", "automation"];
+};
 
 interface StageSummaryData {
   overallScore: number;
@@ -87,9 +46,8 @@ export default function InterviewRoomPage() {
   const [activeStage, setActiveStage] = useState<StageAttempt | null>(null);
   const [currentQIndex, setCurrentQIndex] = useState(0);
 
-  // Chamber Mode: Practice (3 Qs, No DB Save) vs Real Interview (10 Qs, DB Save)
-  const [chamberMode, setChamberMode] = useState<"PRACTICE" | "INTERVIEW">("PRACTICE");
-  const [showHintDrawer, setShowHintDrawer] = useState(false);
+  // Real Interview Chamber (DB Save Always Enabled)
+  const chamberMode = "INTERVIEW";
 
   const [stream, setStream] = useState<MediaStream | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
@@ -252,9 +210,15 @@ export default function InterviewRoomPage() {
     };
   }, []);
 
-  // Dynamic DB Question Count Resolution
-  const dbTotalQCount = activeStage?.question_attempts?.length || 10;
-  const maxQCount = chamberMode === "PRACTICE" ? Math.min(3, dbTotalQCount) : dbTotalQCount;
+  const allQAttempts = activeStage?.question_attempts || [];
+  const stageQuestions = (activeStage?.stage as any)?.questions || [];
+
+  // Determine total questions count for the stage: use stageQuestions from DB if available, else allQAttempts
+  const dbTotalQCount = stageQuestions.length > 0
+    ? stageQuestions.length
+    : (allQAttempts.length > 0 ? allQAttempts.length : 1);
+
+  const maxQCount = dbTotalQCount;
 
   // Camera Stream Active & Validated State
   const isCameraLive = Boolean(
@@ -302,18 +266,31 @@ export default function InterviewRoomPage() {
     return () => clearInterval(timer);
   }, [timeLeftSeconds, isRecording, stageSummary, isProcessing, accumulatedScores, maxQCount, isCameraLive]);
 
-  const allQAttempts = activeStage?.question_attempts || [];
+  // Active question from stageQuestions (Admin/DB updated questions) or allQAttempts
+  const activeStageQuestion = stageQuestions[currentQIndex];
   const activeQuestionAttempt = allQAttempts[currentQIndex];
 
-  // Resolve dynamic DB questions configured by Admin, fallback to STAGE_1_BENCHMARKS template
-  const dbQuestionText = activeQuestionAttempt?.question?.question_text || (activeQuestionAttempt as any)?.question_text;
-  const dbIdealAnswer = activeQuestionAttempt?.question?.reference_answer || (activeQuestionAttempt as any)?.reference_answer;
-  const dbKeywords = activeQuestionAttempt?.question?.expected_topics || (activeQuestionAttempt as any)?.expected_topics;
+  // Resolve dynamic DB questions configured by Admin for this specific Stage
+  const dbQuestionText = activeStageQuestion?.question_text ||
+    activeQuestionAttempt?.question_text_snapshot ||
+    activeQuestionAttempt?.question?.question_text ||
+    (activeQuestionAttempt as any)?.question_text;
+
+  const dbIdealAnswer = activeStageQuestion?.reference_answer ||
+    activeQuestionAttempt?.question?.reference_answer ||
+    (activeQuestionAttempt as any)?.reference_answer;
+
+  const dbKeywords = activeStageQuestion?.expected_topics ||
+    activeQuestionAttempt?.question?.expected_topics ||
+    (activeQuestionAttempt as any)?.expected_topics;
+
+  const rawQText = dbQuestionText || `Explain your technical architecture, tooling, and operational methodology for Stage ${activeStage?.stage_number || 1} Assessment.`;
+  const derivedKeywords = extractKeywordsFromText(rawQText);
 
   const currentBenchmark = {
-    q: dbQuestionText || STAGE_1_BENCHMARKS[currentQIndex % STAGE_1_BENCHMARKS.length].q,
-    ideal: dbIdealAnswer || STAGE_1_BENCHMARKS[currentQIndex % STAGE_1_BENCHMARKS.length].ideal,
-    keywords: (dbKeywords && dbKeywords.length > 0) ? dbKeywords : STAGE_1_BENCHMARKS[currentQIndex % STAGE_1_BENCHMARKS.length].keywords
+    q: rawQText,
+    ideal: dbIdealAnswer || `Demonstrate end-to-end technical execution, security best practices, and outage recovery procedures for: ${rawQText}`,
+    keywords: (dbKeywords && dbKeywords.length > 0) ? dbKeywords : derivedKeywords
   };
   const questionText = currentBenchmark.q;
 
@@ -401,11 +378,12 @@ export default function InterviewRoomPage() {
   };
 
   // Evaluate Semantic Technical Concept Match (60%+ Pass Threshold)
-  const evaluateSpeechMatch = (transcriptText: string, benchmark: typeof STAGE_1_BENCHMARKS[0]) => {
+  const evaluateSpeechMatch = (transcriptText: string, benchmark: any) => {
     const lower = transcriptText.toLowerCase();
-    const matched = benchmark.keywords.filter((kw) => lower.includes(kw.toLowerCase()));
-    const missing = benchmark.keywords.filter((kw) => !lower.includes(kw.toLowerCase()));
-    const matchPercentage = Math.round((matched.length / benchmark.keywords.length) * 100);
+    const keywords: string[] = benchmark?.keywords || [];
+    const matched = keywords.filter((kw: string) => lower.includes(kw.toLowerCase()));
+    const missing = keywords.filter((kw: string) => !lower.includes(kw.toLowerCase()));
+    const matchPercentage = keywords.length > 0 ? Math.round((matched.length / keywords.length) * 100) : 80;
 
     const isPassed = matchPercentage >= 60;
     const finalScore = isPassed
@@ -518,56 +496,56 @@ export default function InterviewRoomPage() {
       setLastEvalResult(finalEvalData);
       setXpToast(`+${Math.floor(finalEvalData.overall_score / 5)} XP Earned!`);
       setTimeout(() => setXpToast(null), 3000);
-
-      const nextIdx = currentQIndex + 1;
-
-      setTimeout(async () => {
-        if (nextIdx < maxQCount) {
-          setCurrentQIndex(nextIdx);
-          setLastEvalResult(null);
-          setLastMatchScore(null);
-          setSpokenTranscript("");
-          setIsProcessing(false);
-        } else {
-          // Final Question Completed -> Calculate Stage Average & Gatekeeper Rules!
-          const avgScore = Math.round(newAccumulated.reduce((a, b) => a + b, 0) / newAccumulated.length);
-          const correctQuestionsCount = newAccumulated.filter((s) => s >= 60.0).length;
-          const totalDurationSeconds = 780 - timeLeftSeconds;
-          const requiredPassCount = Math.ceil(maxQCount * 0.75);
-
-          // Dynamic Stage Gatekeeper Rules:
-          // 1. Overall Score >= 80.0%
-          // 2. At least 75% of questions correct (>= 60% concept match each)
-          // 3. Time Duration <= 13 Minutes (780 Seconds)
-          const isPassedStage = (avgScore >= 80.0) && (correctQuestionsCount >= requiredPassCount) && (totalDurationSeconds <= 780);
-
-          if (chamberMode === "INTERVIEW" && activeStage) {
-            try {
-              await apiFetch(`/attempts/${attemptId}/stages/${activeStage.id}/evaluate-and-advance`, {
-                method: "POST"
-              });
-            } catch (e) {
-              console.warn("Evaluate stage notice:", e);
-            }
-          }
-
-          stopCameraCompletely();
-          forceStopAllWebcams();
-
-          const finalSummary: StageSummaryData = {
-            overallScore: avgScore,
-            passed: isPassedStage,
-            totalQuestions: maxQCount,
-            xpEarned: isPassedStage ? 150 : Math.floor(avgScore * 1.5)
-          };
-
-          setStageSummary(finalSummary);
-          setIsProcessing(false);
-        }
-      }, 1200);
+      setIsProcessing(false);
     } catch (err: any) {
       console.warn("Processed answer evaluation notice:", err);
       setIsProcessing(false);
+    }
+  };
+
+  // Explicit Candidate Action to Proceed to Next Question (Prevents evaluation banner from disappearing automatically)
+  const handleProceedToNextQuestion = async () => {
+    const nextIdx = currentQIndex + 1;
+    if (nextIdx < maxQCount) {
+      setCurrentQIndex(nextIdx);
+      setLastEvalResult(null);
+      setLastMatchScore(null);
+      setSpokenTranscript("");
+    } else {
+      // Final Question Completed -> Calculate Stage Average & Gatekeeper Rules!
+      const allScores = accumulatedScores.length > 0 ? accumulatedScores : [0];
+      const avgScore = Math.round(allScores.reduce((a, b) => a + b, 0) / allScores.length);
+      const correctQuestionsCount = allScores.filter((s) => s >= 60.0).length;
+      const totalDurationSeconds = 780 - timeLeftSeconds;
+      const requiredPassCount = Math.ceil(maxQCount * 0.75);
+
+      // Dynamic Stage Gatekeeper Rules:
+      // 1. Overall Score >= 80.0%
+      // 2. At least 75% of questions correct (>= 60% concept match each)
+      // 3. Time Duration <= 13 Minutes (780 Seconds)
+      const isPassedStage = (avgScore >= 80.0) && (correctQuestionsCount >= requiredPassCount) && (totalDurationSeconds <= 780);
+
+      if (chamberMode === "INTERVIEW" && activeStage) {
+        try {
+          await apiFetch(`/attempts/${attemptId}/stages/${activeStage.id}/evaluate-and-advance`, {
+            method: "POST"
+          });
+        } catch (e) {
+          console.warn("Evaluate stage notice:", e);
+        }
+      }
+
+      stopCameraCompletely();
+      forceStopAllWebcams();
+
+      const finalSummary: StageSummaryData = {
+        overallScore: avgScore,
+        passed: isPassedStage,
+        totalQuestions: maxQCount,
+        xpEarned: isPassedStage ? 150 : Math.floor(avgScore * 1.5)
+      };
+
+      setStageSummary(finalSummary);
     }
   };
 
@@ -583,39 +561,12 @@ export default function InterviewRoomPage() {
       {/* Top Header Bar */}
       <div className="flex flex-wrap items-center justify-between gap-4 p-4 rounded-[28px] bg-slate-900 text-white border border-slate-800 shadow-2xl">
         
-        {/* Chamber Mode Switcher (Index Preserved on Click) */}
+        {/* Chamber Mode Indicator */}
         <div className="flex items-center gap-3">
           <span className="text-xs font-mono font-bold text-slate-400">CHAMBER MODE:</span>
-          <div className="flex items-center p-1 rounded-xl bg-slate-950 border border-slate-800">
-            <button
-              onClick={() => {
-                setChamberMode("PRACTICE");
-                setLastEvalResult(null);
-                setLastMatchScore(null);
-              }}
-              className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all ${
-                chamberMode === "PRACTICE"
-                  ? "bg-blue-600 text-white shadow-md"
-                  : "text-slate-400 hover:text-white"
-              }`}
-            >
-              🎯 Practice Mode ({Math.min(3, dbTotalQCount)} Qs)
-            </button>
-            <button
-              onClick={() => {
-                setChamberMode("INTERVIEW");
-                setShowHintDrawer(false);
-                setLastEvalResult(null);
-                setLastMatchScore(null);
-              }}
-              className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all ${
-                chamberMode === "INTERVIEW"
-                  ? "bg-rose-600 text-white shadow-md"
-                  : "text-slate-400 hover:text-white"
-              }`}
-            >
-              🎥 Real Interview Mode ({dbTotalQCount} Qs)
-            </button>
+          <div className="flex items-center px-3.5 py-1.5 rounded-xl bg-slate-950 border border-slate-800 text-xs font-bold text-rose-400 gap-2">
+            <Database className="w-4 h-4 text-rose-400" />
+            <span>🎥 Real Interview Mode ({dbTotalQCount} Qs)</span>
           </div>
         </div>
 
@@ -657,56 +608,6 @@ export default function InterviewRoomPage() {
             <span>Drop Out</span>
           </button>
         </div>
-      </div>
-
-      {/* 🚨 CAMERA PAUSED WARNING BANNER */}
-      {!isCameraLive && (
-        <div className="p-4 rounded-2xl bg-amber-950/90 border border-amber-500/60 text-amber-200 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-2xl animate-fadeIn">
-          <div className="flex items-center gap-3">
-            <div className="p-2 rounded-xl bg-amber-500/20 text-amber-400">
-              <CameraOff className="w-5 h-5 animate-pulse" />
-            </div>
-            <div className="flex flex-col">
-              <span className="text-xs font-black text-amber-300 uppercase tracking-wide">
-                ⚠️ Camera Feed Inactive — Interview Timer Paused
-              </span>
-              <span className="text-xs text-amber-200/90 font-medium">
-                The 13-minute interview countdown timer is currently paused. Please turn on your webcam to resume the timer & assessment.
-              </span>
-            </div>
-          </div>
-          <button
-            onClick={enableCameraStream}
-            className="px-4 py-2.5 rounded-xl text-xs font-black text-slate-950 bg-gradient-to-r from-amber-400 to-orange-400 hover:from-amber-300 hover:to-orange-300 shadow-md flex items-center gap-1.5 shrink-0 cursor-pointer"
-          >
-            <Camera className="w-4 h-4" />
-            <span>Enable Camera Stream 📷</span>
-          </button>
-        </div>
-      )}
-
-      {/* Mode Banner Indicator */}
-      <div className={`px-4 py-2.5 rounded-2xl border text-xs font-bold flex items-center justify-between shadow-sm ${
-        chamberMode === "PRACTICE"
-          ? "bg-blue-50 dark:bg-blue-950/50 border-blue-200 dark:border-blue-800 text-blue-900 dark:text-blue-300"
-          : "bg-rose-50 dark:bg-rose-950/50 border-rose-200 dark:border-rose-800 text-rose-900 dark:text-rose-300"
-      }`}>
-        <div className="flex items-center gap-2">
-          {chamberMode === "PRACTICE" ? (
-            <>
-              <Sparkles className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-              <span>🎯 PRACTICE MODE ACTIVE: {Math.min(3, dbTotalQCount)} Questions • AI Hints & Model Answer Active • No Data Saved</span>
-            </>
-          ) : (
-            <>
-              <Database className="w-4 h-4 text-rose-600 dark:text-rose-400" />
-              <span>🎥 REAL INTERVIEW MODE ACTIVE: {dbTotalQCount} Stage Questions • 60%+ Semantic Match Threshold • Saved to Database</span>
-            </>
-          )}
-        </div>
-        <span className="font-mono text-[11px] bg-white/60 dark:bg-slate-900/60 px-2.5 py-0.5 rounded-md border font-bold">
-          {chamberMode === "PRACTICE" ? `PRACTICE RUN (${Math.min(3, dbTotalQCount)} Qs)` : `NEON DB SAVING (${dbTotalQCount} Qs)`}
-        </span>
       </div>
 
       {/* 📊 REAL-TIME 1-TO-10 QUESTION ACCURACY & COUNTER TRACKER */}
@@ -768,45 +669,6 @@ export default function InterviewRoomPage() {
         </div>
       </div>
 
-      {/* Benchmark Ideal Model Answer & 3-Level Hint Drawer for Practice Mode */}
-      {chamberMode === "PRACTICE" && (
-        <div className="p-5 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-200 flex flex-col gap-3 animate-fadeIn">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2 font-bold text-sm text-amber-300">
-              <Lightbulb className="w-4 h-4" />
-              <span>🎯 Practice Mode AI Hint Assistant</span>
-            </div>
-            <button 
-              onClick={() => setShowHintDrawer(!showHintDrawer)}
-              className="text-xs font-extrabold px-3 py-1 rounded-xl bg-amber-500/20 hover:bg-amber-500/40 text-amber-300 border border-amber-500/40"
-            >
-              {showHintDrawer ? "Hide Hints 🙈" : "Show AI Hints 💡"}
-            </button>
-          </div>
-
-          {showHintDrawer && (
-            <div className="flex flex-col gap-3 pt-2 border-t border-amber-500/30">
-              {/* Level 1: General Strategy */}
-              <div className="p-3 rounded-xl bg-slate-900/90 border border-amber-500/20 text-xs flex flex-col gap-1">
-                <span className="font-mono font-bold text-amber-400">💡 Hint Level 1 — Strategic Angle:</span>
-                <span className="text-slate-300">Start with high-level architecture/workflow, then name the specific AWS service or CLI tool.</span>
-              </div>
-
-              {/* Level 2: Core Keywords */}
-              <div className="p-3 rounded-xl bg-slate-900/90 border border-amber-500/20 text-xs flex flex-col gap-1">
-                <span className="font-mono font-bold text-amber-400">🔑 Hint Level 2 — Target Concept Keywords:</span>
-                <span className="font-mono text-emerald-400 font-bold">{currentBenchmark.keywords.join(", ")}</span>
-              </div>
-
-              {/* Level 3: Model Answer */}
-              <div className="p-3 rounded-xl bg-slate-900/90 border border-amber-500/20 text-xs flex flex-col gap-1">
-                <span className="font-mono font-bold text-amber-400">👑 Hint Level 3 — 2-Line Ideal Solution:</span>
-                <span className="font-mono text-amber-200 italic">"{currentBenchmark.ideal}"</span>
-              </div>
-            </div>
-          )}
-        </div>
-      )}
 
       {/* XP Toast Banner */}
       {xpToast && (
@@ -905,24 +767,20 @@ export default function InterviewRoomPage() {
                 <span className="font-mono text-slate-200">"{currentBenchmark.ideal}"</span>
               </div>
 
-              {/* Human Review Upgrade Request */}
-              <div className="p-3.5 rounded-2xl bg-gradient-to-r from-purple-950/60 to-slate-900 border border-purple-500/40 flex flex-col sm:flex-row sm:items-center justify-between gap-3 mt-1">
-                <div className="flex flex-col">
-                  <span className="text-xs font-black text-purple-300 flex items-center gap-1.5">
-                    <Award className="w-4 h-4 text-purple-400" />
-                    Request Human Mentor Review (+500 XP)
-                  </span>
-                  <span className="text-[10.5px] text-slate-400">
-                    Get 1:1 human expert review on communication, architecture depth & hiring readiness.
-                  </span>
-                </div>
-                <button
-                  onClick={() => alert("Human Review Requested! A senior CloudOps mentor will review your submission within 24 hours.")}
-                  className="px-4 py-2 rounded-xl text-xs font-black text-white bg-purple-600 hover:bg-purple-500 shadow-md transition-all shrink-0 cursor-pointer"
-                >
-                  👨‍💻 Request Human Review
-                </button>
-              </div>
+
+
+              {/* 🚀 PROCEED TO NEXT QUESTION BUTTON (Keeps Evaluation Card on screen until candidate clicks) */}
+              <button
+                onClick={handleProceedToNextQuestion}
+                className="w-full py-4 px-6 rounded-2xl font-black text-xs text-slate-950 bg-gradient-to-r from-[#FF6B00] via-amber-400 to-orange-400 hover:from-amber-400 hover:to-orange-500 shadow-xl shadow-[#FF6B00]/30 flex items-center justify-center gap-2.5 transition-all cursor-pointer uppercase tracking-wider mt-2 border-2 border-amber-300/40 hover:scale-[1.01]"
+              >
+                <span>
+                  {currentQIndex + 1 < maxQCount
+                    ? `Proceed to Question ${currentQIndex + 2} of ${maxQCount} ➔`
+                    : "View Final Stage Performance Summary 🏆"}
+                </span>
+                <ArrowRight className="w-4 h-4 text-slate-950 stroke-[3]" />
+              </button>
             </div>
           )}
 
@@ -1001,10 +859,19 @@ export default function InterviewRoomPage() {
                   <Award className="w-7 h-7" />
                 </div>
                 <div>
-                  <h2 className="text-xl font-black text-white">Stage 1 Assessment Finished!</h2>
-                  <span className="text-xs text-slate-400 font-mono">10 / 10 Technical Questions Evaluated</span>
+                  <h2 className="text-xl font-black text-white">Stage {activeStage?.stage_number || 1} Assessment Finished!</h2>
+                  <span className="text-xs text-slate-400 font-mono">{maxQCount} / {maxQCount} Technical Questions Evaluated</span>
                 </div>
               </div>
+
+              {/* Close ✕ Button to dismiss modal and stay in room */}
+              <button
+                onClick={() => setStageSummary(null)}
+                className="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white transition-colors cursor-pointer"
+                title="Dismiss Summary & Remain in Room"
+              >
+                <X className="w-5 h-5" />
+              </button>
             </div>
 
             {/* Overall Stage Score Card */}

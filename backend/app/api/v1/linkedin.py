@@ -77,6 +77,8 @@ async def extract_linkedin_profile(
     if slug:
         clean_slug = re.sub(r"[-_]+", " ", slug)
         clean_slug = re.sub(r"\d+$", "", clean_slug).strip()
+        # Clean stray trailing single letter (e.g., 'b' in 'sachin rawatb')
+        clean_slug = re.sub(r"\s+[a-zA-Z]$", "", clean_slug).strip()
         if len(clean_slug) > 1:
             parsed_name = " ".join([w.capitalize() for w in clean_slug.split()])
 

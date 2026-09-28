@@ -70,4 +70,5 @@ class SocialLoginRequest(BaseModel):
     full_name: str
     provider_id: Optional[str] = None
     avatar_url: Optional[str] = None
+    mode: Optional[str] = "signin"
 

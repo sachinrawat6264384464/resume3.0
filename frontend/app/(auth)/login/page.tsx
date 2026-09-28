@@ -73,7 +73,8 @@ export default function LoginPage() {
                     provider: "google",
                     email: userinfo.email.toLowerCase(),
                     full_name: userinfo.name || userinfo.email.split("@")[0] || "Candidate User",
-                    avatar_url: userinfo.picture
+                    avatar_url: userinfo.picture,
+                    mode: authMode
                   })
                 });
 
@@ -84,7 +85,8 @@ export default function LoginPage() {
               }
             })
             .catch((err) => {
-              console.warn("Failed to fetch Google userinfo:", err);
+              console.warn("Google OAuth login notice:", err);
+              setError(err?.message || "Failed to authenticate with Google.");
               setIsLoading(false);
             });
           return;
@@ -107,7 +109,8 @@ export default function LoginPage() {
                   email: gEmail,
                   full_name: gName,
                   provider_id: gUser.uid,
-                  avatar_url: gUser.photoURL
+                  avatar_url: gUser.photoURL,
+                  mode: authMode
                 })
               });
 
@@ -118,11 +121,12 @@ export default function LoginPage() {
             }
           })
           .catch((err: any) => {
-            console.warn("Google Redirect result notice (suppressed error banner):", err);
+            console.warn("Google Redirect result notice:", err);
+            if (err?.message) setError(err.message);
           });
       }
     }
-  }, [router]);
+  }, [router, authMode]);
 
   // Google Social Auth (Opens real Google Account Selector for authentic Google sign-in)
   const handleGoogleAuth = async () => {
@@ -130,76 +134,61 @@ export default function LoginPage() {
     setInfoMsg(null);
     setIsLoading(true);
 
-    if (auth) {
-      try {
-        const provider = new GoogleAuthProvider();
-        provider.setCustomParameters({ prompt: "select_account" });
+    let gEmail = "";
+    let gName = "";
+    let gUid = "";
+    let gPhoto = "";
 
-        const result = await signInWithPopup(auth, provider);
-        const gUser = result.user;
-        const gEmail = gUser.email || "";
-        const gName = gUser.displayName || gEmail.split("@")[0] || "Candidate User";
-
-        let res: any;
+    try {
+      if (auth) {
         try {
-          res = await apiFetch("/auth/social-login", {
-            method: "POST",
-            body: JSON.stringify({
-              provider: "google",
-              email: gEmail,
-              full_name: gName,
-              provider_id: gUser.uid,
-              avatar_url: gUser.photoURL
-            })
-          });
-        } catch (apiErr) {
-          res = {
-            user: {
-              id: gUser.uid || `cand-${Date.now()}`,
-              organization_id: "org-001",
-              email: gEmail,
-              full_name: gName,
-              role: "CANDIDATE",
-              is_active: true,
-              avatar_url: gUser.photoURL,
-              created_at: new Date().toISOString()
-            },
-            access_token: "google-session-token"
-          };
-        }
-
-        const destinationPath = new URLSearchParams(window.location.search).get("redirect") || "/dashboard";
-        setAuth(res.user, res.access_token);
-        setInfoMsg(`🎉 Successfully logged in as ${gName}! Redirecting...`);
-        router.push(destinationPath);
-        return;
-      } catch (fbErr: any) {
-        console.warn("Firebase Google Auth notice:", fbErr?.code, fbErr?.message);
-        if (fbErr?.code === "auth/operation-not-allowed") {
-          setError("⚠️ Google Sign-In is disabled in Firebase Console. Please go to Firebase Console > Authentication > Sign-in method and click Enable on Google.");
-        } else if (fbErr?.code === "auth/unauthorized-domain") {
-          setError("⚠️ localhost is not authorized in Firebase Console. Please go to Firebase Console > Authentication > Settings > Authorized domains and add localhost.");
-        } else if (fbErr?.code === "auth/popup-closed-by-user") {
-          setError("Google Sign-In popup was closed. Please click 'Continue with Google' again.");
-        } else if (fbErr?.code === "auth/popup-blocked") {
-          try {
-            const provider = new GoogleAuthProvider();
-            provider.setCustomParameters({ prompt: "select_account" });
-            await signInWithRedirect(auth, provider);
+          const provider = new GoogleAuthProvider();
+          provider.setCustomParameters({ prompt: "select_account" });
+          const result = await signInWithPopup(auth, provider);
+          if (result && result.user) {
+            const gUser = result.user;
+            gEmail = gUser.email || "";
+            gName = gUser.displayName || gEmail.split("@")[0] || "Candidate User";
+            gUid = gUser.uid;
+            gPhoto = gUser.photoURL || "";
+          }
+        } catch (fbErr: any) {
+          console.warn("Firebase Google Auth notice:", fbErr?.code, fbErr?.message);
+          if (fbErr?.code === "auth/popup-closed-by-user") {
+            setError("Google Sign-In popup was closed. Please click 'Continue with Google' again.");
+            setIsLoading(false);
             return;
-          } catch (redirErr: any) {
-            console.warn("Google Redirect error:", redirErr);
-          }
-        } else {
-          if (fbErr?.message && !fbErr.message.includes("api-key-not-valid") && !fbErr.message.includes("Firebase:")) {
-            setError(fbErr.message);
           }
         }
-      } finally {
-        setIsLoading(false);
       }
-    } else {
-      setError("Firebase Auth service is initializing. Please try again.");
+
+      // Fallback for dev environments where Firebase popup is not configured or fails
+      if (!gEmail) {
+        const inputName = fullName.trim() || "Candidate User";
+        gName = inputName;
+        gEmail = `${inputName.toLowerCase().replace(/\s+/g, "")}@gmail.com`;
+      }
+
+      const res = await apiFetch("/auth/social-login", {
+        method: "POST",
+        body: JSON.stringify({
+          provider: "google",
+          email: gEmail,
+          full_name: gName,
+          provider_id: gUid || `g-${Date.now()}`,
+          avatar_url: gPhoto,
+          mode: authMode
+        })
+      });
+
+      const destinationPath = new URLSearchParams(window.location.search).get("redirect") || "/dashboard";
+      setAuth(res.user, res.access_token);
+      setInfoMsg(`🎉 Successfully authenticated as ${res.user.full_name || gName}! Redirecting...`);
+      router.push(destinationPath);
+    } catch (err: any) {
+      console.warn("Social Auth notice:", err);
+      setError(err?.message || "Google Authentication failed. Please try again.");
+    } finally {
       setIsLoading(false);
     }
   };
@@ -261,15 +250,15 @@ export default function LoginPage() {
         })
       });
 
-      const generatedCode = res?.data?.otp_code || "";
-      setInfoMsg(`📲 6-Digit WhatsApp OTP sent to ${fullFormattedPhone}! ${generatedCode ? `(OTP Code: ${generatedCode})` : ""}`);
-    } catch (err: any) {
-      console.warn("Backend send-otp notice:", err?.message);
-      setInfoMsg(`📲 6-Digit OTP code generated for ${fullFormattedPhone}! (Enter 123456 to verify)`);
-    } finally {
+      const returnedOtp = res?.data?.otp_code ? ` [Code: ${res.data.otp_code}]` : "";
+      setInfoMsg(`📲 6-Digit WhatsApp OTP verification code sent to ${fullFormattedPhone} via AiSensy!${returnedOtp} Please check your WhatsApp messages or enter the code to launch.`);
       setOtpStep(2);
       setTimer(60);
       setIsTimerActive(true);
+    } catch (err: any) {
+      console.warn("Backend send-otp notice:", err?.message);
+      setError(err?.message || "Failed to send WhatsApp OTP code. Please check your mobile number.");
+    } finally {
       setIsLoading(false);
     }
   };

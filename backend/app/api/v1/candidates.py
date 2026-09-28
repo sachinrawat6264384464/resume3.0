@@ -816,6 +816,7 @@ async def get_my_performance(
             "structural_clarity": comm_avg,
             "confidence_signals": round(min(98.0, tech_avg * 0.95), 1)
         },
+        "progression": progression,
         "admin_feedback": admin_fb_list
     }
 
@@ -832,8 +833,20 @@ async def submit_candidate_feedback(
     auth_svc = AuthService(db)
     user = await auth_svc.get_current_user_from_payload(payload)
 
-    # Check candidate by ID or user_id
-    stmt = select(Candidate).where(or_(Candidate.id == candidate_id, Candidate.user_id == candidate_id))
+    # Check candidate by ID, user_id, or User.email
+    stmt = (
+        select(Candidate)
+        .options(selectinload(Candidate.user))
+        .join(User, Candidate.user_id == User.id, isouter=True)
+        .where(
+            or_(
+                Candidate.id == candidate_id,
+                Candidate.user_id == candidate_id,
+                Candidate.email == candidate_id,
+                User.email == candidate_id
+            )
+        )
+    )
     res = await db.execute(stmt)
     cand = res.scalar_one_or_none()
 
@@ -862,9 +875,14 @@ async def submit_candidate_feedback(
         "created_at": datetime.now(timezone.utc).isoformat()
     }
 
+    # Prepend new feedback so candidate sees latest first, without overwriting previous feedback history (up to 50 entries)
     fb_list.insert(0, new_fb)
+    fb_list = fb_list[:50]
     res_json["admin_feedback"] = fb_list
-    cand.resume_data_json = res_json
+    cand.resume_data_json = dict(res_json)
+
+    from sqlalchemy.orm.attributes import flag_modified
+    flag_modified(cand, "resume_data_json")
 
     db.add(cand)
     await db.commit()

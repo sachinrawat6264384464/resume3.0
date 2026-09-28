@@ -74,6 +74,8 @@ class AuthService:
             self.db.add(candidate)
             await self.db.flush()
 
+        await self.db.commit()
+        await self.db.refresh(user)
         return user
 
     async def authenticate_local(self, login_data: LoginRequest) -> TokenResponse:
@@ -92,6 +94,22 @@ class AuthService:
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Incorrect email or password"
             )
+
+        # Ensure Candidate profile exists
+        if user.role == UserRole.CANDIDATE.value:
+            stmt_cand = select(Candidate).where(Candidate.user_id == user.id)
+            res_cand = await self.db.execute(stmt_cand)
+            cand = res_cand.scalar_one_or_none()
+            if not cand:
+                cand = Candidate(
+                    user_id=user.id,
+                    organization_id=user.organization_id,
+                    target_role="CloudOps Engineer",
+                    experience_level="JUNIOR",
+                    phone=user.phone_number
+                )
+                self.db.add(cand)
+                await self.db.commit()
 
         token_data = {
             "sub": user.id,
@@ -137,18 +155,35 @@ class AuthService:
                 )
                 self.db.add(cand)
                 await self.db.flush()
+            await self.db.commit()
         else:
+            # Ensure candidate record exists in DB
+            if user.role == UserRole.CANDIDATE.value:
+                stmt_cand = select(Candidate).where(Candidate.user_id == user.id)
+                res_cand = await self.db.execute(stmt_cand)
+                cand = res_cand.scalar_one_or_none()
+                if not cand:
+                    cand = Candidate(
+                        user_id=user.id,
+                        organization_id=user.organization_id,
+                        target_role="CloudOps Engineer",
+                        experience_level="MID",
+                        phone=user.phone_number
+                    )
+                    self.db.add(cand)
+                    await self.db.commit()
+
             # Overwrite legacy "Demo Candidate" or default name with real name or email prefix
             new_name = mock_req.name or (email.split('@')[0].capitalize() if '@' in email else None)
             if new_name and not new_name.lower().startswith("demo candidate"):
                 user.full_name = new_name
-                await self.db.flush()
+                await self.db.commit()
             elif user.full_name and (user.full_name.lower().startswith("demo candidate") or user.full_name.lower().startswith("demo ")):
                 if email and "@" in email:
                     prefix = email.split("@")[0]
                     if prefix not in ["candidate", "demo", "admin"]:
                         user.full_name = prefix.capitalize()
-                        await self.db.flush()
+                        await self.db.commit()
 
         token_data = {
             "sub": user.id,

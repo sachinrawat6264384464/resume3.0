@@ -136,22 +136,32 @@ export default function CandidatePerformancePage() {
     async function loadData() {
       try {
         const res: any = await apiFetch("/candidates/me/performance");
-        if (res?.data) {
-          setPerfData(res.data);
-          const userBadges = res.data?.badges || [];
-          const completedStagesCount = typeof res.data?.completed_stages_count === "number" ? res.data.completed_stages_count : 0;
+        let data = res?.data || {};
 
-          setBadgesList((prev) =>
-            prev.map((b) => {
-              const isUnlockedByStage = completedStagesCount >= b.reqStages || userBadges.includes(b.title);
-              return {
-                ...b,
-                unlocked: isUnlockedByStage,
-                claimed: userBadges.includes(b.title)
-              };
-            })
-          );
+        // Also fetch feedback list directly to guarantee fresh admin feedback entries
+        try {
+          const fbRes: any = await apiFetch("/candidates/me/feedback");
+          if (fbRes?.data && Array.isArray(fbRes.data) && fbRes.data.length > 0) {
+            data.admin_feedback = fbRes.data;
+          }
+        } catch (fbErr) {
+          console.warn("Direct feedback fetch notice:", fbErr);
         }
+
+        setPerfData(data);
+        const userBadges = data?.badges || [];
+        const completedStagesCount = typeof data?.completed_stages_count === "number" ? data.completed_stages_count : 0;
+
+        setBadgesList((prev) =>
+          prev.map((b) => {
+            const isUnlockedByStage = completedStagesCount >= b.reqStages || userBadges.includes(b.title);
+            return {
+              ...b,
+              unlocked: isUnlockedByStage,
+              claimed: userBadges.includes(b.title)
+            };
+          })
+        );
       } catch (e) {
         console.warn("Candidate performance load notice:", e);
       } finally {

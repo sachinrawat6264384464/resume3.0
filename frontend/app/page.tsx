@@ -134,64 +134,64 @@ export default function LandingPage() {
         </div>
       </header>
 
-      {/* SECTION 1: HERO (FULL SCREEN HEIGHT + IMPACTFUL BIG TYPOGRAPHY) */}
-      <section className="relative z-10 min-h-[calc(100vh-80px)] flex flex-col justify-center py-12 sm:py-16 lg:py-20 overflow-hidden w-full">
+      {/* SECTION 1: HERO (PERFECT RESPONSIVE SPACING & BALANCED VERTICAL FLOW) */}
+      <section className="relative z-10 pt-4 sm:pt-10 pb-8 sm:pb-16 overflow-hidden w-full">
         
-        {/* HERO MAIN CONTAINER - STRETCHED FULL WIDTH */}
-        <div className="w-full px-4 sm:px-8 lg:px-20 flex flex-col justify-center my-auto">
+        {/* HERO MAIN CONTAINER */}
+        <div className="w-full px-4 sm:px-8 lg:px-20 flex flex-col justify-between gap-4 sm:gap-6">
           
           {/* TOP ACCENT BADGE */}
-          <div className="w-max max-w-full inline-flex items-center gap-2 text-[#FF6B00] text-xs sm:text-sm font-black tracking-wider uppercase mb-6 sm:mb-10 leading-tight bg-[#FF6B00]/10 border border-[#FF6B00]/30 px-4 py-2 rounded-full">
-            <Sparkles className="w-4 h-4 text-[#FF6B00] shrink-0" />
+          <div className="w-max max-w-full inline-flex items-center gap-1.5 sm:gap-2 text-[#FF6B00] text-[11px] xs:text-xs sm:text-sm font-black tracking-wider uppercase mb-2 sm:mb-6 leading-tight bg-[#FF6B00]/10 border border-[#FF6B00]/30 px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-full">
+            <Sparkles className="w-3.5 h-3.5 text-[#FF6B00] shrink-0" />
             <span className="truncate">Multi-Cloud + DevOps + DevSecOps + AI Careers</span>
           </div>
 
-          {/* DISPLAY TYPOGRAPHY WITH PRODUCT DOCUMENTATION HEADLINE - ENLARGED FONT SIZES */}
-          <div className="flex flex-col tracking-tighter uppercase font-black select-none w-full">
+          {/* DISPLAY TYPOGRAPHY WITH PRODUCT DOCUMENTATION HEADLINE */}
+          <div className="flex flex-col tracking-tighter uppercase font-black select-none w-full gap-1 sm:gap-2">
             
             {/* LINE 1: EXACT DOCUMENTATION HEADLINE PART 1 */}
-            <h1 className="text-3xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-black text-slate-900 dark:text-white leading-[0.96] tracking-tight">
+            <h1 className="text-3xl xs:text-4xl sm:text-6xl md:text-7xl lg:text-8xl font-black text-slate-900 dark:text-white leading-[1.0] tracking-tight">
               NO SHORTCUT.
             </h1>
 
-            {/* LINE 2: ORANGE ARROW ICON + HOLLOW OUTLINED STROKE TYPEWRITER TEXT */}
-            <div className="flex items-center gap-3 sm:gap-4 my-2 sm:my-3 flex-wrap">
-              <ArrowUpRight className="w-8 h-8 sm:w-14 sm:h-14 lg:w-16 lg:h-16 text-[#FF6B00] stroke-[3.5] shrink-0 hover:scale-110 transition-transform duration-300 drop-shadow-[0_4px_20px_rgba(255,107,0,0.35)]" />
-              <span className="text-3xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-black leading-[0.96] hollow-stroke tracking-tight inline-flex items-center">
+            {/* LINE 2: ORANGE ARROW ICON + SOLID COLOR TYPEWRITER TEXT */}
+            <div className="flex items-center gap-2 sm:gap-4 my-1 sm:my-2 flex-nowrap overflow-hidden">
+              <ArrowUpRight className="w-7 h-7 sm:w-14 sm:h-14 lg:w-16 lg:h-16 text-[#FF6B00] stroke-[3.5] shrink-0 hover:scale-110 transition-transform duration-300 drop-shadow-[0_4px_20px_rgba(255,107,0,0.35)]" />
+              <span className="text-2xl xs:text-3xl sm:text-6xl md:text-7xl lg:text-8xl font-black leading-[1.0] text-[#FF6B00] tracking-tight inline-flex items-center whitespace-nowrap overflow-hidden">
                 {typedText || "\u00A0"}
-                <span className="animate-pulse text-[#FF6B00] font-normal border-r-4 sm:border-r-8 border-[#FF6B00] h-[0.75em] inline-block ml-1" />
+                <span className="animate-pulse text-[#FF6B00] font-normal border-r-3 sm:border-r-8 border-[#FF6B00] h-[0.7em] inline-block ml-1" />
               </span>
             </div>
 
             {/* LINE 3: EXACT DOCUMENTATION HEADLINE PART 2 */}
-            <h1 className="text-3xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-black text-slate-900 dark:text-white leading-[0.96] tracking-tight">
+            <h1 className="text-3xl xs:text-4xl sm:text-6xl md:text-7xl lg:text-8xl font-black text-slate-900 dark:text-white leading-[1.0] tracking-tight">
               INTERVIEW PREP.
             </h1>
 
           </div>
 
-          {/* SUBTEXT & GET STARTED ACTION BAR - FULL WIDTH GRID */}
-          <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-center mt-10 sm:mt-14 pt-8 border-t border-slate-200 dark:border-transparent w-full">
+          {/* SUBTEXT & GET STARTED ACTION BAR */}
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-5 sm:gap-6 items-center mt-4 sm:mt-10 pt-5 sm:pt-8 border-t border-slate-200 dark:border-transparent w-full">
             
-            {/* Left Narrative from Documentation */}
+            {/* Left Narrative */}
             <div className="md:col-span-8 flex flex-col gap-2">
-              <p className="text-base sm:text-xl lg:text-2xl text-slate-900 dark:text-slate-100 font-extrabold leading-relaxed max-w-3xl">
-                "Learn Today. Implement Today. Build Your Career for a Lifetime."
+              <p className="text-base sm:text-xl lg:text-2xl text-slate-900 dark:text-slate-100 font-extrabold leading-snug sm:leading-relaxed max-w-3xl">
+                &ldquo;Learn Today. Implement Today. Build Your Career for a Lifetime.&rdquo;
               </p>
-              <p className="text-xs sm:text-base text-slate-600 dark:text-slate-400 font-semibold max-w-3xl">
+              <p className="text-xs sm:text-base text-slate-600 dark:text-slate-400 font-medium leading-relaxed max-w-3xl">
                 Upload Resume → Match with JD → Fix Resume with STAR Formula → Practice Voice AI → Land High-Paying Multi-Cloud & DevOps Roles.
               </p>
             </div>
 
-            {/* Right Quick Action Circular / Pill Glass Button */}
-            <div className="md:col-span-4 flex items-center justify-start md:justify-end gap-3">
+            {/* Right Quick Action Button */}
+            <div className="md:col-span-4 flex items-center justify-start md:justify-end gap-3 mt-3 sm:mt-0">
               <Link 
                 href="/register" 
-                className="relative group px-8 py-4 rounded-full bg-white dark:bg-slate-900/90 border-2 border-slate-300 dark:border-slate-700 hover:border-[#FF6B00] dark:hover:border-[#FF6B00] text-slate-900 dark:text-white font-black text-xs sm:text-sm uppercase tracking-widest transition-all duration-300 shadow-xl hover:shadow-[#FF6B00]/25 flex items-center gap-3 backdrop-blur-xl"
+                className="relative group px-7 py-4 sm:px-8 sm:py-4 rounded-full bg-white dark:bg-slate-900/90 border-2 border-slate-300 dark:border-slate-700 hover:border-[#FF6B00] dark:hover:border-[#FF6B00] text-slate-900 dark:text-white font-black text-xs sm:text-sm uppercase tracking-widest transition-all duration-300 shadow-xl hover:shadow-[#FF6B00]/25 flex items-center gap-3 backdrop-blur-xl w-full sm:w-auto justify-center"
               >
                 <span>GET IN TOUCH & START FREE</span>
-                <div className="w-7 h-7 rounded-full bg-[#FF6B00] text-white flex items-center justify-center group-hover:translate-x-1 transition-transform">
-                  <ArrowRight className="w-4 h-4 stroke-[3]" />
+                <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-[#FF6B00] text-white flex items-center justify-center group-hover:translate-x-1 transition-transform shrink-0">
+                  <ArrowRight className="w-3.5 h-3.5 sm:w-4 sm:h-4 stroke-[3]" />
                 </div>
               </Link>
             </div>
@@ -204,8 +204,8 @@ export default function LandingPage() {
       {/* SECTION 1.5: INTERACTIVE PLATFORM DEMO & CANDIDATE SERVICES TOUR */}
       <PlatformDemoSection />
 
-      {/* SECTION 2: THE 2 PRIMARY JOURNEY CARDS (PUSHED DOWN BELOW THE FOLD) */}
-      <section className="relative z-10 py-16 sm:py-24 border-t border-slate-200/80 dark:border-transparent w-full bg-slate-50/50 dark:bg-transparent">
+      {/* SECTION 2: THE 2 PRIMARY JOURNEY CARDS */}
+      <section className="relative z-10 py-8 sm:py-16 lg:py-24 border-t border-slate-200/80 dark:border-transparent w-full bg-slate-50/50 dark:bg-transparent">
         <div className="w-full px-4 sm:px-8 lg:px-20">
           
           <div className="flex flex-col gap-1 mb-8 text-center sm:text-left">

@@ -22,6 +22,8 @@ class GatewayConfigRequest(BaseModel):
     webhook_secret: Optional[str] = None
     currency: str = "INR"
     amount: Optional[str] = None
+    payment_mode: Optional[str] = "STAGE_WISE"  # "STAGE_WISE" or "OVERALL_ALL_STAGES"
+    paid_start_stage: Optional[int] = 6  # Stage number from which payment is required
 
 class CreateTransactionRequest(BaseModel):
     candidate_name: str
@@ -65,6 +67,10 @@ async def get_or_create_singleton_config(db: AsyncSession) -> PaymentGatewayConf
                 webhook_secret=old.webhook_secret,
                 currency=old.currency or "INR",
                 amount=getattr(old, "amount", "1") or "1",
+                additional_settings={
+                    "payment_mode": "STAGE_WISE",
+                    "paid_start_stage": 6
+                },
                 updated_at=datetime.now(timezone.utc)
             )
             db.add(config)
@@ -84,6 +90,10 @@ async def get_or_create_singleton_config(db: AsyncSession) -> PaymentGatewayConf
                 webhook_secret="",
                 currency="INR",
                 amount="1",
+                additional_settings={
+                    "payment_mode": "STAGE_WISE",
+                    "paid_start_stage": 6
+                },
                 updated_at=now
             )
             db.add(config)
@@ -113,6 +123,10 @@ async def get_payment_config(
 
     config = await get_or_create_singleton_config(db)
     has_secret = bool(config.encrypted_secret_key and len(config.encrypted_secret_key) > 3)
+    
+    settings_dict = dict(config.additional_settings or {})
+    payment_mode = settings_dict.get("payment_mode", "STAGE_WISE")
+    paid_start_stage = settings_dict.get("paid_start_stage", 6)
 
     return StandardResponse(
         message="Payment gateway configuration fetched",
@@ -125,7 +139,9 @@ async def get_payment_config(
             "webhook_secret": config.webhook_secret or "",
             "has_secret_key": has_secret,
             "currency": config.currency or "INR",
-            "amount": getattr(config, "amount", "1") or "1"
+            "amount": getattr(config, "amount", "1") or "1",
+            "payment_mode": payment_mode,
+            "paid_start_stage": paid_start_stage
         }
     )
 
@@ -144,7 +160,8 @@ async def update_payment_config(
     config = await get_or_create_singleton_config(db)
     now = datetime.now(timezone.utc)
 
-    config.is_enabled = True
+    # Master Toggle ON / OFF
+    config.is_enabled = req.is_enabled
     config.is_test_mode = req.is_test_mode
     
     if req.publishable_key is not None and req.publishable_key.strip():
@@ -157,6 +174,14 @@ async def update_payment_config(
         config.currency = req.currency
     if req.amount is not None and req.amount.strip() != "":
         config.amount = req.amount.strip()
+        
+    settings_dict = dict(config.additional_settings or {})
+    if req.payment_mode:
+        settings_dict["payment_mode"] = req.payment_mode
+    if req.paid_start_stage is not None:
+        settings_dict["paid_start_stage"] = req.paid_start_stage
+    config.additional_settings = settings_dict
+    
     config.updated_at = now
 
     await db.commit()
@@ -175,7 +200,9 @@ async def update_payment_config(
             "webhook_secret": config.webhook_secret or "",
             "has_secret_key": has_secret,
             "currency": config.currency or "INR",
-            "amount": getattr(config, "amount", "1") or "1"
+            "amount": getattr(config, "amount", "1") or "1",
+            "payment_mode": settings_dict.get("payment_mode", "STAGE_WISE"),
+            "paid_start_stage": settings_dict.get("paid_start_stage", 6)
         }
     )
 

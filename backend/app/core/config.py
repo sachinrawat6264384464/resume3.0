@@ -52,7 +52,8 @@ class Settings(BaseSettings):
 
     # AiSensy WhatsApp Business API
     AISENSY_PROJECT_KEY: Optional[str] = "22a9ef31d8d75d621ff5e"
-    AISENSY_API_KEY: Optional[str] = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY1ZmQyMDU2ZTk3Zjc5MDY4MzlmMDQ5NiIsIm5hbWUiOiJDbG91ZCBEZXZPcHMgSFVCIiwiYXBwTmFtZSI6IkFpU2Vuc3kiLCJjbGllbnRJZCI6IjY1ZmQyMDU2ZTk3Zjc5MDY4MzlmMDQ4ZSIsImFjdGl2ZVBsYW4iOiJQUk9fWUVBUkxZIiwiaWF0IjoxNzkwMzMzMTQxfQ.QWcqXIFOxT6aXN6N_l6EozxMao7Eprn1QWokFhjKpq0"
+    AISENSY_API_KEY: Optional[str] = "65fd2056e97f7906839f0496"
+    AISENSY_CAMPAIGN_NAME: Optional[str] = "22a9ef31d8d75d621ff5e"
 
     
     # AI Engine Provider (ollama, openai, gemini, or mock)

@@ -517,7 +517,7 @@ export default function AdminAnalyticsPage() {
         onClose={() => setIsJDModalOpen(false)}
         onSuccess={() => {
           loadAnalytics();
-          alert("Interview blueprint successfully generated from Job Description!");
+          showAlert("Interview blueprint successfully generated from Job Description!", "success", "Blueprint Created");
         }}
       />
     </div>
