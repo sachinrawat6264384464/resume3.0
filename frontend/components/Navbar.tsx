@@ -31,7 +31,7 @@ export function Navbar() {
   };
 
   return (
-    <header className="sticky top-0 z-50 w-full glass-panel border-b border-slate-200/80 dark:border-white/10 transition-colors duration-300">
+    <header className="sticky top-0 z-50 w-full bg-transparent border-b border-slate-300/40 dark:border-slate-800/60 transition-colors duration-300">
       <div className="w-full px-4 sm:px-6 lg:px-8 xl:px-12 h-16 flex items-center justify-between">
         {/* Brand Logo */}
         <Link prefetch={false} href="/" className="flex items-center gap-2.5 group">

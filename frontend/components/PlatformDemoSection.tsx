@@ -275,7 +275,7 @@ export function PlatformDemoSection() {
   };
 
   return (
-    <section className="relative z-10 py-8 sm:py-16 lg:py-24 w-full bg-slate-50/90 dark:bg-[#070b14]/90 border-t border-b border-slate-200 dark:border-slate-800/80 backdrop-blur-xl transition-colors">
+    <section className="relative z-10 py-8 sm:py-16 lg:py-24 w-full bg-transparent dark:bg-transparent border-t border-b border-slate-200/80 dark:border-slate-800/80 transition-colors">
       <div className="w-full px-4 sm:px-8 lg:px-20 flex flex-col gap-6 sm:gap-10">
         
         {/* Section Header */}

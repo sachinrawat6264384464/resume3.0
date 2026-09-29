@@ -136,6 +136,9 @@ export default function ResumeATSPage() {
         const res = await apiFetch("/resumes/latest");
         if (res?.data) {
           setAtsResult(res.data);
+          if (res.data.extracted_text) {
+            setResumeText(res.data.extracted_text);
+          }
         }
       } catch (err) {
         console.warn("Notice: No saved resume audit found in DB yet:", err);
@@ -235,6 +238,9 @@ CERTIFICATIONS
 
       if (res?.data) {
         setAtsResult(res.data);
+        if (res.data.extracted_text) {
+          setResumeText(res.data.extracted_text);
+        }
         if (typeof window !== "undefined") {
           window.dispatchEvent(new Event("userProfileUpdated"));
         }
@@ -466,6 +472,18 @@ Real-Time AWS & Kubernetes Outage Resilience Platform
                 if (e.target.files && e.target.files[0]) {
                   const file = e.target.files[0];
                   setSelectedFile(file);
+
+                  // Instant client-side text extraction for text files
+                  if (file.type.includes("text") || file.name.endsWith(".txt") || file.name.endsWith(".md")) {
+                    const reader = new FileReader();
+                    reader.onload = (evt) => {
+                      if (evt.target?.result) {
+                        setResumeText(evt.target.result as string);
+                      }
+                    };
+                    reader.readAsText(file);
+                  }
+
                   handleAnalyze(file); // 🚀 Automatic instant analysis on upload!
                 }
               }}

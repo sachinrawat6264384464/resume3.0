@@ -83,6 +83,7 @@ async def parse_and_match_resume(
 
     result.cloudinary_url = cloud_url
     result.job_title = job_title or "Senior Cloud & DevOps Engineer"
+    result.extracted_text = text
 
     # Persist ResumeAudit into Database
     try:
@@ -144,6 +145,7 @@ async def parse_text_resume(
         job_description=req.job_description
     )
     result.job_title = req.job_title or "Senior Cloud & DevOps Engineer"
+    result.extracted_text = req.resume_text
 
     try:
         auth_svc = AuthService(db)
@@ -222,7 +224,8 @@ async def get_latest_resume_audit(
         candidate_profile=latest_audit.profile_data_json or {},
         bullet_suggestions=latest_audit.bullet_rewrites_json or [],
         cloudinary_url=latest_audit.cloudinary_url,
-        job_title=latest_audit.job_title or cand.target_role or "Senior DevOps Engineer"
+        job_title=latest_audit.job_title or cand.target_role or "Senior DevOps Engineer",
+        extracted_text=latest_audit.resume_text
     )
     return StandardResponse(data=resp)
 

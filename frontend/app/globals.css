@@ -59,13 +59,11 @@
 html.light body,
 body {
   color: #0f172a;
-  background-color: #f8fafc;
+  background-color: #f1f2f4;
   background-image: 
-    linear-gradient(to right, rgba(15, 23, 42, 0.08) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(15, 23, 42, 0.08) 1px, transparent 1px),
-    radial-gradient(circle at 10% 10%, rgba(255, 153, 0, 0.1) 0%, transparent 40%),
-    radial-gradient(circle at 90% 80%, rgba(249, 115, 22, 0.07) 0%, transparent 50%);
-  background-size: 60px 60px, 60px 60px, 100% 100%, 100% 100%;
+    linear-gradient(to right, rgba(0, 0, 0, 0.14) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(0, 0, 0, 0.14) 1px, transparent 1px);
+  background-size: 50px 50px;
   font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
   min-height: 100vh;
   transition: background-color 0.3s ease, color 0.3s ease;
@@ -76,13 +74,28 @@ html.dark body {
   color: #f8fafc;
   background-color: #070b14;
   background-image: 
-    linear-gradient(to right, rgba(255, 255, 255, 0.05) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(255, 255, 255, 0.05) 1px, transparent 1px),
-    radial-gradient(circle at 15% 15%, rgba(255, 153, 0, 0.18) 0%, transparent 45%),
-    radial-gradient(circle at 85% 85%, rgba(234, 88, 12, 0.12) 0%, transparent 50%);
-  background-size: 60px 60px, 60px 60px, 100% 100%, 100% 100%;
+    linear-gradient(to right, rgba(255, 255, 255, 0.08) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.08) 1px, transparent 1px);
+  background-size: 50px 50px;
   font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
 }
+
+.bg-grid-pattern {
+  background-color: #f1f2f4;
+  background-image: 
+    linear-gradient(to right, rgba(0, 0, 0, 0.14) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(0, 0, 0, 0.14) 1px, transparent 1px);
+  background-size: 50px 50px;
+}
+
+.dark .bg-grid-pattern {
+  background-color: #050811;
+  background-image: 
+    linear-gradient(to right, rgba(255, 255, 255, 0.08) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.08) 1px, transparent 1px);
+  background-size: 50px 50px;
+}
+
 
 /* Glass Panels */
 .glass-panel {

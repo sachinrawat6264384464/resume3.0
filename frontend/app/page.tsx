@@ -64,7 +64,7 @@ export default function LandingPage() {
   }, [typedText, isDeleting, loopNum]);
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] dark:bg-[#050811] text-slate-900 dark:text-slate-100 font-sans selection:bg-[#FF6B00] selection:text-white overflow-x-hidden relative transition-colors duration-300 w-full">
+    <div className="min-h-screen bg-grid-pattern text-slate-900 dark:text-slate-100 font-sans selection:bg-[#FF6B00] selection:text-white overflow-x-hidden relative transition-colors duration-300 w-full">
       
       {/* CONTINUOUS DYNAMIC SPACE ANIMATED STARFIELD & NEBULA BACKGROUND */}
       <SpaceBackground />
@@ -84,8 +84,8 @@ export default function LandingPage() {
         }
       `}</style>
 
-      {/* 1. TOP NAVBAR (FULL-WIDTH Ultra-Sleek Glassmorphism Header with Working ThemeToggle) */}
-      <header className="sticky top-0 z-50 backdrop-blur-2xl bg-white/90 dark:bg-[#050811]/90 border-b border-slate-200/90 dark:border-transparent shadow-sm dark:shadow-2xl transition-all duration-300 w-full overflow-x-hidden">
+      {/* 1. TOP NAVBAR (Transparent Floating Navbar - Grid Background Visible) */}
+      <header className="sticky top-0 z-50 bg-transparent border-b border-slate-300/40 dark:border-slate-800/60 transition-all duration-300 w-full overflow-x-hidden">
         <div className="w-full px-2 sm:px-8 lg:px-20 h-14 sm:h-20 flex items-center justify-between gap-1 sm:gap-4 max-w-full">
           
           {/* Logo */}
@@ -116,7 +116,7 @@ export default function LandingPage() {
 
             <Link prefetch={false} 
               href="/login" 
-              className="text-[10px] sm:text-xs font-black text-slate-700 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white px-1.5 py-1 sm:px-5 sm:py-2.5 rounded-full hover:bg-slate-100 dark:hover:bg-slate-900 border border-transparent sm:border-slate-800 transition-all uppercase tracking-wider whitespace-nowrap shrink-0"
+              className="text-[10px] sm:text-xs font-black text-slate-800 hover:text-slate-950 dark:text-slate-300 dark:hover:text-white px-1.5 py-1 sm:px-5 sm:py-2.5 rounded-full hover:bg-slate-200/50 dark:hover:bg-slate-900 border border-slate-300 dark:border-slate-800 transition-all uppercase tracking-wider whitespace-nowrap shrink-0"
             >
               Sign In
             </Link>
@@ -205,7 +205,7 @@ export default function LandingPage() {
       <PlatformDemoSection />
 
       {/* SECTION 2: THE 2 PRIMARY JOURNEY CARDS */}
-      <section className="relative z-10 py-8 sm:py-16 lg:py-24 border-t border-slate-200/80 dark:border-transparent w-full bg-slate-50/50 dark:bg-transparent">
+      <section className="relative z-10 py-8 sm:py-16 lg:py-24 border-t border-slate-200/80 dark:border-transparent w-full bg-transparent">
         <div className="w-full px-4 sm:px-8 lg:px-20">
           
           <div className="flex flex-col gap-1 mb-8 text-center sm:text-left">
@@ -317,7 +317,7 @@ export default function LandingPage() {
       </section>
 
       {/* SECTION 3: HOW IT WORKS WORKFLOW - FULL WIDTH */}
-      <section className="relative z-10 py-20 bg-slate-100/80 dark:bg-transparent border-t border-slate-200 dark:border-transparent transition-colors w-full">
+      <section className="relative z-10 py-20 bg-transparent border-t border-slate-200 dark:border-transparent transition-colors w-full">
         <div className="w-full px-6 sm:px-12 lg:px-20 flex flex-col gap-12">
           
           <div className="text-center max-w-4xl mx-auto">
