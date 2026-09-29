@@ -115,7 +115,6 @@ export default function AdminLeaderboardPage() {
   const [selectedTech, setSelectedTech] = useState<string>("AWS");
   const [selectedBatchFilter, setSelectedBatchFilter] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState("");
-  const [isLoading, setIsLoading] = useState(true);
 
   // Candidate Audit Modal State
   const [selectedCandidateAudit, setSelectedCandidateAudit] = useState<any | null>(null);
@@ -123,88 +122,97 @@ export default function AdminLeaderboardPage() {
   const [claimedBonus, setClaimedBonus] = useState(false);
 
   // Leaderboard Members List
-  const [members, setMembers] = useState<any[]>([
-    {
-      rank: 1,
-      name: "Sachin Rawat",
-      initials: "SR",
-      linkedinUrl: "https://www.linkedin.com/in/sachin-rawat/",
-      batch: "Batch 45",
-      allClaimedBadges: MODULE_BADGES.slice(0, 5),
-      badges: MODULE_BADGES.slice(0, 3),
-      extraBadgesCount: 2,
-      pts: 4200,
-      badgeCountTotal: 5,
-      role: "Senior DevOps Engineer",
-      readinessScore: 88,
-      salaryBand: "₹25–40 LPA",
-      streak: 15
-    },
-    {
-      rank: 2,
-      name: "Neha Nair",
-      initials: "NN",
-      linkedinUrl: "https://www.linkedin.com/in/neha-nair/",
-      batch: "Batch 45",
-      allClaimedBadges: MODULE_BADGES.slice(0, 4),
-      badges: MODULE_BADGES.slice(0, 3),
-      extraBadgesCount: 1,
-      pts: 1600,
-      badgeCountTotal: 4,
-      role: "Multi-Cloud Architect",
-      readinessScore: 94,
-      salaryBand: "₹25–40 LPA",
-      streak: 20
-    },
-    {
-      rank: 3,
-      name: "Aarav Sharma",
-      initials: "AS",
-      linkedinUrl: "https://www.linkedin.com/in/aarav-sharma/",
-      batch: "Batch 45",
-      allClaimedBadges: MODULE_BADGES.slice(0, 3),
-      badges: MODULE_BADGES.slice(0, 3),
-      extraBadgesCount: 0,
-      pts: 1450,
-      badgeCountTotal: 3,
-      role: "Senior DevOps Engineer",
-      readinessScore: 92.5,
-      salaryBand: "₹25–40 LPA",
-      streak: 1
-    },
-    {
-      rank: 4,
-      name: "Ananya Verma",
-      initials: "AV",
-      linkedinUrl: "https://www.linkedin.com/in/ananya-verma/",
-      batch: "Batch 45",
-      allClaimedBadges: MODULE_BADGES.slice(0, 3),
-      badges: MODULE_BADGES.slice(0, 3),
-      extraBadgesCount: 0,
-      pts: 1300,
-      badgeCountTotal: 3,
-      role: "Site Reliability Engineer",
-      readinessScore: 90,
-      salaryBand: "₹25–40 LPA",
-      streak: 15
-    },
-    {
-      rank: 5,
-      name: "Rohan Gupta",
-      initials: "RG",
-      linkedinUrl: "https://www.linkedin.com/in/rohan-gupta/",
-      batch: "Batch 45",
-      allClaimedBadges: MODULE_BADGES.slice(0, 2),
-      badges: MODULE_BADGES.slice(0, 2),
-      extraBadgesCount: 0,
-      pts: 950,
-      badgeCountTotal: 2,
-      role: "Kubernetes & SRE Specialist",
-      readinessScore: 84,
-      salaryBand: "₹18–25 LPA",
-      streak: 6
+  const [members, setMembers] = useState<any[]>(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const stored = sessionStorage.getItem("admin_cache_leaderboard");
+        if (stored) return JSON.parse(stored);
+      } catch {}
     }
-  ]);
+    return [
+      {
+        rank: 1,
+        name: "Sachin Rawat",
+        initials: "SR",
+        linkedinUrl: "https://www.linkedin.com/in/sachin-rawat/",
+        batch: "Batch 45",
+        allClaimedBadges: MODULE_BADGES.slice(0, 5),
+        badges: MODULE_BADGES.slice(0, 3),
+        extraBadgesCount: 2,
+        pts: 4200,
+        badgeCountTotal: 5,
+        role: "Senior DevOps Engineer",
+        readinessScore: 88,
+        salaryBand: "₹25–40 LPA",
+        streak: 15
+      },
+      {
+        rank: 2,
+        name: "Neha Nair",
+        initials: "NN",
+        linkedinUrl: "https://www.linkedin.com/in/neha-nair/",
+        batch: "Batch 45",
+        allClaimedBadges: MODULE_BADGES.slice(0, 4),
+        badges: MODULE_BADGES.slice(0, 3),
+        extraBadgesCount: 1,
+        pts: 1600,
+        badgeCountTotal: 4,
+        role: "Multi-Cloud Architect",
+        readinessScore: 94,
+        salaryBand: "₹25–40 LPA",
+        streak: 20
+      },
+      {
+        rank: 3,
+        name: "Aarav Sharma",
+        initials: "AS",
+        linkedinUrl: "https://www.linkedin.com/in/aarav-sharma/",
+        batch: "Batch 45",
+        allClaimedBadges: MODULE_BADGES.slice(0, 3),
+        badges: MODULE_BADGES.slice(0, 3),
+        extraBadgesCount: 0,
+        pts: 1450,
+        badgeCountTotal: 3,
+        role: "Senior DevOps Engineer",
+        readinessScore: 92.5,
+        salaryBand: "₹25–40 LPA",
+        streak: 1
+      },
+      {
+        rank: 4,
+        name: "Ananya Verma",
+        initials: "AV",
+        linkedinUrl: "https://www.linkedin.com/in/ananya-verma/",
+        batch: "Batch 45",
+        allClaimedBadges: MODULE_BADGES.slice(0, 3),
+        badges: MODULE_BADGES.slice(0, 3),
+        extraBadgesCount: 0,
+        pts: 1300,
+        badgeCountTotal: 3,
+        role: "Site Reliability Engineer",
+        readinessScore: 90,
+        salaryBand: "₹25–40 LPA",
+        streak: 15
+      },
+      {
+        rank: 5,
+        name: "Rohan Gupta",
+        initials: "RG",
+        linkedinUrl: "https://www.linkedin.com/in/rohan-gupta/",
+        batch: "Batch 45",
+        allClaimedBadges: MODULE_BADGES.slice(0, 2),
+        badges: MODULE_BADGES.slice(0, 2),
+        extraBadgesCount: 0,
+        pts: 950,
+        badgeCountTotal: 2,
+        role: "Kubernetes & SRE Specialist",
+        readinessScore: 84,
+        salaryBand: "₹18–25 LPA",
+        streak: 6
+      }
+    ];
+  });
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     async function loadLeaderboardData() {
@@ -251,6 +259,11 @@ export default function AdminLeaderboardPage() {
             };
           });
           setMembers(formatted);
+          if (typeof window !== "undefined") {
+            try {
+              sessionStorage.setItem("admin_cache_leaderboard", JSON.stringify(formatted));
+            } catch {}
+          }
         }
       } catch (e) {
         console.warn("Admin Leaderboard live sync notice:", e);

@@ -14,8 +14,16 @@ import { JDParserModal } from "@/components/admin/JDParserModal";
 import { AlertModal } from "@/components/ui/AlertModal";
 
 export default function AdminTemplatesPage() {
-  const [templates, setTemplates] = useState<InterviewTemplate[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [templates, setTemplates] = useState<InterviewTemplate[]>(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const stored = sessionStorage.getItem("admin_cache_templates");
+        if (stored) return JSON.parse(stored);
+      } catch {}
+    }
+    return [];
+  });
+  const [isLoading, setIsLoading] = useState(() => templates.length === 0);
   const [isJDModalOpen, setIsJDModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<string>("ALL");
   const [searchQuery, setSearchQuery] = useState("");
@@ -78,9 +86,16 @@ export default function AdminTemplatesPage() {
   };
 
   const loadTemplates = async () => {
+    if (templates.length === 0) setIsLoading(true);
     try {
       const res = await apiFetch("/interviews/templates");
-      setTemplates(res.data || []);
+      const list = res.data || [];
+      setTemplates(list);
+      if (typeof window !== "undefined") {
+        try {
+          sessionStorage.setItem("admin_cache_templates", JSON.stringify(list));
+        } catch {}
+      }
     } catch (e) {
       console.warn("Failed to load templates:", e);
     } finally {

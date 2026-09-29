@@ -10,12 +10,28 @@ import {
 import { apiFetch } from "@/lib/api";
 
 export default function AdminLiveSessionsPage() {
-  const [sessions, setSessions] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [sessions, setSessions] = useState<any[]>(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const stored = sessionStorage.getItem("admin_cache_live_sessions");
+        if (stored) return JSON.parse(stored);
+      } catch {}
+    }
+    return [];
+  });
+  const [loading, setLoading] = useState(() => sessions.length === 0);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingSession, setEditingSession] = useState<any | null>(null);
 
-  const [clickLogs, setClickLogs] = useState<any[]>([]);
+  const [clickLogs, setClickLogs] = useState<any[]>(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const stored = sessionStorage.getItem("admin_cache_live_clicks");
+        if (stored) return JSON.parse(stored);
+      } catch {}
+    }
+    return [];
+  });
   const [loadingClicks, setLoadingClicks] = useState(false);
 
   // Form inputs
@@ -151,14 +167,14 @@ export default function AdminLiveSessionsPage() {
   };
 
   const fetchSessions = async () => {
-    setLoading(true);
+    if (sessions.length === 0) setLoading(true);
     try {
       const res = await apiFetch("/live-sessions/admin/list");
+      let processed = [];
       if (res?.data && Array.isArray(res.data) && res.data.length > 0) {
-        setSessions(processAndSortSessions(res.data));
+        processed = processAndSortSessions(res.data);
       } else {
-        // Fallback session
-        setSessions(processAndSortSessions([{
+        processed = processAndSortSessions([{
           id: "live-default-001",
           title: "👑 40 LPA DevOps Architecture & Outage Troubleshooting Masterclass",
           description: "Live Q&A, mock interview feedback & ATS resume review session with Vikas Sir and Sachin Rawat.",
@@ -168,21 +184,16 @@ export default function AdminLiveSessionsPage() {
           is_active: true,
           status: "UPCOMING",
           host_name: "Vikas Sir & Sachin Rawat"
-        }]));
+        }]);
+      }
+      setSessions(processed);
+      if (typeof window !== "undefined") {
+        try {
+          sessionStorage.setItem("admin_cache_live_sessions", JSON.stringify(processed));
+        } catch {}
       }
     } catch (e) {
       console.warn("Failed to fetch live sessions from API, using default state:", e);
-      setSessions(processAndSortSessions([{
-        id: "live-default-001",
-        title: "👑 40 LPA DevOps Architecture & Outage Troubleshooting Masterclass",
-        description: "Live Q&A, mock interview feedback & ATS resume review session with Vikas Sir and Sachin Rawat.",
-        session_date: "Tomorrow • 8:15 PM IST",
-        meeting_url: "https://meet.google.com/xyz-cloudops-live",
-        whatsapp_group_url: "https://chat.whatsapp.com/AIInterviewCommunity",
-        is_active: true,
-        status: "UPCOMING",
-        host_name: "Vikas Sir & Sachin Rawat"
-      }]));
     } finally {
       setLoading(false);
     }

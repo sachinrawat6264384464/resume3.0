@@ -13,6 +13,8 @@ from app.schemas.admin import (
 from app.schemas.attempt import StageAttemptOut
 from app.schemas.common import StandardResponse
 
+from app.core.admin_cache import admin_ttl_cache
+
 router = APIRouter(prefix="/admin", tags=["Admin Suite & Analytics"])
 
 @router.get("/analytics/overview", response_model=StandardResponse[AdminDashboardMetrics])
@@ -23,8 +25,14 @@ async def get_analytics_overview(
     auth_svc = AuthService(db)
     user = await auth_svc.get_current_user_from_payload(payload)
     
+    cache_key = f"admin_analytics:{user.organization_id}"
+    cached_metrics = admin_ttl_cache.get(cache_key)
+    if cached_metrics is not None:
+        return StandardResponse(data=cached_metrics)
+
     admin_svc = AdminService(db)
     metrics = await admin_svc.get_dashboard_analytics(user.organization_id)
+    admin_ttl_cache.set(cache_key, metrics)
     return StandardResponse(
         data=metrics
     )
@@ -47,6 +55,7 @@ async def override_stage(
         override_reason=req.override_reason,
         admin_user_id=user.id
     )
+    admin_ttl_cache.invalidate("admin_analytics")
     return StandardResponse(
         message="Stage decision overridden by administrator",
         data=StageAttemptOut.model_validate(stage_att)
@@ -89,6 +98,11 @@ async def get_all_support_tickets_admin(
     payload: dict = Depends(verify_auth_token),
     db: AsyncSession = Depends(get_db)
 ):
+    cache_key = "admin_support_tickets"
+    cached_tickets = admin_ttl_cache.get(cache_key)
+    if cached_tickets is not None:
+        return StandardResponse(data=cached_tickets)
+
     from sqlalchemy import select, desc
     from sqlalchemy.orm import selectinload
     from app.models import SupportTicket, Candidate, User
@@ -138,16 +152,19 @@ async def get_all_support_tickets_admin(
             "created_at": t.created_at.strftime("%b %d, %Y %H:%M") if t.created_at else "Recently"
         })
 
+    result_data = {
+        "metrics": {
+            "total": total_count,
+            "open": open_count,
+            "in_progress": in_progress_count,
+            "resolved": resolved_count
+        },
+        "tickets": ticket_list
+    }
+    admin_ttl_cache.set(cache_key, result_data)
+
     return StandardResponse(
-        data={
-            "metrics": {
-                "total": total_count,
-                "open": open_count,
-                "in_progress": in_progress_count,
-                "resolved": resolved_count
-            },
-            "tickets": ticket_list
-        }
+        data=result_data
     )
 
 @router.patch("/support/tickets/{ticket_id}/status", response_model=StandardResponse[dict])
@@ -174,6 +191,8 @@ async def update_support_ticket_status_admin(
     ticket.status = new_status
     await db.commit()
     await db.refresh(ticket)
+
+    admin_ttl_cache.invalidate("admin_support_tickets")
 
     return StandardResponse(
         message=f"Support ticket status updated to {new_status}",

@@ -29,8 +29,16 @@ const SERVICE_CATEGORIES = [
 
 export default function AdminVideoManagementPage() {
   const user = useAuthStore((state) => state.user);
-  const [videos, setVideos] = useState<VideoWalkthroughItem[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [videos, setVideos] = useState<VideoWalkthroughItem[]>(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const stored = sessionStorage.getItem("admin_cache_videos");
+        if (stored) return JSON.parse(stored);
+      } catch {}
+    }
+    return [];
+  });
+  const [loading, setLoading] = useState(() => videos.length === 0);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingVideo, setEditingVideo] = useState<VideoWalkthroughItem | null>(null);
   const [previewVideo, setPreviewVideo] = useState<VideoWalkthroughItem | null>(null);
@@ -53,16 +61,22 @@ export default function AdminVideoManagementPage() {
   const [isUploading, setIsUploading] = useState(false);
 
   const loadVideos = async () => {
-    setLoading(true);
+    if (videos.length === 0) setLoading(true);
     try {
       // 1. Fetch from PostgreSQL Database API
       const res = await fetch("/api/v1/walkthrough-videos").then(r => r.json()).catch(() => null);
+      let listToSave: VideoWalkthroughItem[] = [];
       if (res?.data && Array.isArray(res.data) && res.data.length > 0) {
-        setVideos(res.data);
+        listToSave = res.data;
       } else {
         // Fallback to Firebase Store
-        const data = await getFirebaseVideos();
-        setVideos(data);
+        listToSave = await getFirebaseVideos();
+      }
+      setVideos(listToSave);
+      if (typeof window !== "undefined") {
+        try {
+          sessionStorage.setItem("admin_cache_videos", JSON.stringify(listToSave));
+        } catch {}
       }
     } catch (e) {
       const data = await getFirebaseVideos();

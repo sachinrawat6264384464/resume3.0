@@ -9,8 +9,16 @@ import {
 import { apiFetch } from "@/lib/api";
 
 export default function AdminCandidatesPage() {
-  const [candidates, setCandidates] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [candidates, setCandidates] = useState<any[]>(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const stored = sessionStorage.getItem("admin_cache_candidates");
+        if (stored) return JSON.parse(stored);
+      } catch {}
+    }
+    return [];
+  });
+  const [loading, setLoading] = useState<boolean>(() => candidates.length === 0);
   const [exporting, setExporting] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCandidate, setSelectedCandidate] = useState<any | null>(null);
@@ -96,7 +104,7 @@ export default function AdminCandidatesPage() {
   };
 
   const fetchCandidates = async () => {
-    setLoading(true);
+    if (candidates.length === 0) setLoading(true);
     try {
       const res = await apiFetch("/candidates");
       if (res) {
@@ -104,6 +112,11 @@ export default function AdminCandidatesPage() {
           ? res 
           : (res.items ? res.items : (res.data ? (Array.isArray(res.data) ? res.data : (res.data.items || [])) : []));
         setCandidates(rawList);
+        if (typeof window !== "undefined") {
+          try {
+            sessionStorage.setItem("admin_cache_candidates", JSON.stringify(rawList));
+          } catch {}
+        }
       }
     } catch (e) {
       console.warn("Failed to fetch candidates:", e);

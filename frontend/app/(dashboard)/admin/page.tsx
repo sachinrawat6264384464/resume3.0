@@ -20,8 +20,16 @@ export default function AdminAnalyticsPage() {
   const router = useRouter();
   const user = useAuthStore((state) => state.user);
 
-  const [metrics, setMetrics] = useState<AdminDashboardMetrics | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [metrics, setMetrics] = useState<AdminDashboardMetrics | null>(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const stored = sessionStorage.getItem("admin_cache_analytics");
+        if (stored) return JSON.parse(stored);
+      } catch {}
+    }
+    return null;
+  });
+  const [isLoading, setIsLoading] = useState(() => !metrics);
   const [isCleaning, setIsCleaning] = useState(false);
   const [isJDModalOpen, setIsJDModalOpen] = useState(false);
   const [timeRange, setTimeRange] = useState("This Week");
@@ -52,6 +60,11 @@ export default function AdminAnalyticsPage() {
       const res = await apiFetch("/admin/analytics/overview");
       if (res?.data) {
         setMetrics(res.data);
+        if (typeof window !== "undefined") {
+          try {
+            sessionStorage.setItem("admin_cache_analytics", JSON.stringify(res.data));
+          } catch {}
+        }
       }
     } catch (e) {
       console.warn("Failed to load admin analytics:", e);

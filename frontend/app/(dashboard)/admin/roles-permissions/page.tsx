@@ -34,9 +34,25 @@ const ALL_SIDEBAR_SERVICES = [
 export default function AdminRolesPermissionsPage() {
   const user = useAuthStore((state) => state.user);
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
-  const [roles, setRoles] = useState<SystemRoleItem[]>([]);
-  const [auditLogs, setAuditLogs] = useState<AdminAuditLogItem[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [roles, setRoles] = useState<SystemRoleItem[]>(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const stored = sessionStorage.getItem("admin_cache_roles");
+        if (stored) return JSON.parse(stored);
+      } catch {}
+    }
+    return [];
+  });
+  const [auditLogs, setAuditLogs] = useState<AdminAuditLogItem[]>(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const stored = sessionStorage.getItem("admin_cache_audit_logs");
+        if (stored) return JSON.parse(stored);
+      } catch {}
+    }
+    return [];
+  });
+  const [loading, setLoading] = useState(() => roles.length === 0);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingRole, setEditingRole] = useState<SystemRoleItem | null>(null);
   const [alertMsg, setAlertMsg] = useState<{ type: "success" | "error"; text: string } | null>(null);
@@ -52,7 +68,7 @@ export default function AdminRolesPermissionsPage() {
   });
 
   const loadData = async () => {
-    setLoading(true);
+    if (roles.length === 0) setLoading(true);
     try {
       const [rData, lData] = await Promise.all([
         getFirebaseRoles(),
@@ -60,6 +76,12 @@ export default function AdminRolesPermissionsPage() {
       ]);
       setRoles(rData);
       setAuditLogs(lData);
+      if (typeof window !== "undefined") {
+        try {
+          sessionStorage.setItem("admin_cache_roles", JSON.stringify(rData));
+          sessionStorage.setItem("admin_cache_audit_logs", JSON.stringify(lData));
+        } catch {}
+      }
     } catch (e) {
       console.warn("Failed to load roles & audit data:", e);
     } finally {

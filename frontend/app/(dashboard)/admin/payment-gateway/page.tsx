@@ -39,11 +39,19 @@ export default function AdminPaymentGatewayPage() {
   const [hasSecretKey, setHasSecretKey] = useState(false);
 
   const [showSecret, setShowSecret] = useState(false);
-  const [loading, setLoading] = useState(true);
+  const [transactions, setTransactions] = useState<PaymentTx[]>(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const stored = sessionStorage.getItem("admin_cache_transactions");
+        if (stored) return JSON.parse(stored);
+      } catch {}
+    }
+    return [];
+  });
+  const [loading, setLoading] = useState(() => transactions.length === 0);
   const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
-  const [transactions, setTransactions] = useState<PaymentTx[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
 
@@ -58,7 +66,7 @@ export default function AdminPaymentGatewayPage() {
   const [creatingTx, setCreatingTx] = useState(false);
 
   const fetchConfig = async () => {
-    setLoading(true);
+    if (transactions.length === 0) setLoading(true);
     try {
       const [cfgRes, txRes] = await Promise.all([
         apiFetch("/admin/payment-gateway/config").catch(() => null),
@@ -76,8 +84,13 @@ export default function AdminPaymentGatewayPage() {
         setPaymentMode(cfgRes.data.payment_mode || "STAGE_WISE");
         setPaidStartStage(cfgRes.data.paid_start_stage ?? 6);
       }
-      if (txRes?.data) {
-        setTransactions(Array.isArray(txRes.data) ? txRes.data : []);
+      if (txRes?.data && Array.isArray(txRes.data)) {
+        setTransactions(txRes.data);
+        if (typeof window !== "undefined") {
+          try {
+            sessionStorage.setItem("admin_cache_transactions", JSON.stringify(txRes.data));
+          } catch {}
+        }
       }
     } catch (e: any) {
       console.warn("Failed to fetch payment config/transactions:", e);

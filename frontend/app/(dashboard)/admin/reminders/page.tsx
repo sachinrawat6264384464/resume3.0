@@ -22,8 +22,16 @@ interface AdminReminder {
 }
 
 export default function AdminRemindersPage() {
-  const [reminders, setReminders] = useState<AdminReminder[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [reminders, setReminders] = useState<AdminReminder[]>(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const stored = sessionStorage.getItem("admin_cache_reminders");
+        if (stored) return JSON.parse(stored);
+      } catch {}
+    }
+    return [];
+  });
+  const [loading, setLoading] = useState(() => reminders.length === 0);
   const [searchQuery, setSearchQuery] = useState("");
   const [typeFilter, setTypeFilter] = useState("all");
 
@@ -42,11 +50,16 @@ export default function AdminRemindersPage() {
   const [isDeleting, setIsDeleting] = useState(false);
 
   const fetchReminders = async () => {
-    setLoading(true);
+    if (reminders.length === 0) setLoading(true);
     try {
       const res = await apiFetch("/reminders/admin/all");
       if (res?.data && Array.isArray(res.data)) {
         setReminders(res.data);
+        if (typeof window !== "undefined") {
+          try {
+            sessionStorage.setItem("admin_cache_reminders", JSON.stringify(res.data));
+          } catch {}
+        }
       } else {
         setReminders([]);
       }

@@ -67,9 +67,25 @@ const ALL_31_STAGES_REPORT: StageReportItem[] = [
 ];
 
 export default function AdminReportsPage() {
-  const [metrics, setMetrics] = useState<any>(null);
-  const [candidates, setCandidates] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [metrics, setMetrics] = useState<any>(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const stored = sessionStorage.getItem("admin_cache_analytics");
+        if (stored) return JSON.parse(stored);
+      } catch {}
+    }
+    return null;
+  });
+  const [candidates, setCandidates] = useState<any[]>(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const stored = sessionStorage.getItem("admin_cache_candidates");
+        if (stored) return JSON.parse(stored);
+      } catch {}
+    }
+    return [];
+  });
+  const [loading, setLoading] = useState(() => !metrics && candidates.length === 0);
   
   // Filter States
   const [activeTab, setActiveTab] = useState<string>("ALL");
@@ -78,7 +94,7 @@ export default function AdminReportsPage() {
   const [viewMode, setViewMode] = useState<"grid" | "list" | "roadmap">("grid");
 
   const fetchReports = async () => {
-    setLoading(true);
+    if (!metrics && candidates.length === 0) setLoading(true);
     try {
       const [resOverview, resCand] = await Promise.all([
         apiFetch("/admin/analytics/overview"),
@@ -87,6 +103,11 @@ export default function AdminReportsPage() {
 
       if (resOverview?.data) {
         setMetrics(resOverview.data);
+        if (typeof window !== "undefined") {
+          try {
+            sessionStorage.setItem("admin_cache_analytics", JSON.stringify(resOverview.data));
+          } catch {}
+        }
       }
 
       if (resCand) {
@@ -94,6 +115,11 @@ export default function AdminReportsPage() {
           ? resCand 
           : (resCand.items ? resCand.items : (resCand.data ? (Array.isArray(resCand.data) ? resCand.data : (resCand.data.items || [])) : []));
         setCandidates(rawList);
+        if (typeof window !== "undefined") {
+          try {
+            sessionStorage.setItem("admin_cache_candidates", JSON.stringify(rawList));
+          } catch {}
+        }
       }
     } catch (e) {
       console.warn("Failed to fetch reports:", e);
