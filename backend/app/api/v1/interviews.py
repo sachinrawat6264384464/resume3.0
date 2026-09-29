@@ -47,6 +47,8 @@ _STAGES_CACHE = {
 def invalidate_stages_cache():
     _STAGES_CACHE["data"] = None
     _STAGES_CACHE["timestamp"] = 0
+    from app.core.admin_cache import admin_ttl_cache
+    admin_ttl_cache.invalidate("admin_templates")
 
 @router.get("/stages", response_model=StandardResponse[List[dict]])
 async def get_candidate_stages(
@@ -253,6 +255,8 @@ async def create_stage(
         }
     )
 
+from app.core.admin_cache import admin_ttl_cache
+
 @router.get("/templates", response_model=StandardResponse[List[TemplateAdminOut]])
 async def list_templates(
     payload: dict = Depends(verify_auth_token),
@@ -261,6 +265,11 @@ async def list_templates(
     auth_svc = AuthService(db)
     user = await auth_svc.get_current_user_from_payload(payload)
     
+    cache_key = f"admin_templates:{user.organization_id}"
+    cached_templates = admin_ttl_cache.get(cache_key)
+    if cached_templates is not None:
+        return StandardResponse(data=cached_templates)
+
     interview_svc = InterviewService(db)
     templates = await interview_svc.list_templates(user.organization_id)
 
@@ -272,8 +281,10 @@ async def list_templates(
         except Exception as e:
             print(f"Auto-seed warning on list_templates: {e}")
 
+    result_data = [TemplateAdminOut.model_validate(t) for t in templates]
+    admin_ttl_cache.set(cache_key, result_data)
     return StandardResponse(
-        data=[TemplateAdminOut.model_validate(t) for t in templates]
+        data=result_data
     )
 
 @router.get("/templates/{template_id}", response_model=StandardResponse[TemplateAdminOut])
