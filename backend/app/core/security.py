@@ -37,13 +37,29 @@ def get_password_hash(password: str) -> str:
     salt = bcrypt.gensalt()
     return bcrypt.hashpw(password.encode('utf-8'), salt).decode('utf-8')
 
+import time
+
+_CANDIDATE_REVOCATION = {
+    "version": 1,
+    "revoked_at": 0
+}
+
+def revoke_all_candidate_sessions():
+    _CANDIDATE_REVOCATION["version"] += 1
+    _CANDIDATE_REVOCATION["revoked_at"] = time.time()
+
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -> str:
     to_encode = data.copy()
+    now_ts = int(time.time())
     if expires_delta:
         expire = datetime.now(timezone.utc) + expires_delta
     else:
         expire = datetime.now(timezone.utc) + timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
-    to_encode.update({"exp": expire})
+    to_encode.update({
+        "exp": expire,
+        "iat": now_ts,
+        "auth_version": _CANDIDATE_REVOCATION["version"]
+    })
     encoded_jwt = jwt.encode(to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
     return encoded_jwt
 
@@ -51,6 +67,7 @@ async def verify_auth_token(credentials: Optional[HTTPAuthorizationCredentials] 
     """
     Verifies Firebase token or local JWT token depending on payload.
     Supports local mock dev authentication as well with seamless fallback for candidates.
+    Revokes candidate tokens if payment gateway policies are updated by admin.
     """
     if credentials and credentials.credentials:
         token = credentials.credentials
@@ -58,6 +75,19 @@ async def verify_auth_token(credentials: Optional[HTTPAuthorizationCredentials] 
         # 1. Check if it's our internal JWT
         try:
             payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
+            user_role = (payload.get("role") or "").upper()
+
+            # Revoke candidate tokens if issued before global admin policy change
+            if user_role not in ["ADMIN", "SUPER_ADMIN"]:
+                token_ver = payload.get("auth_version", 1)
+                token_iat = payload.get("iat", 0)
+
+                if token_ver < _CANDIDATE_REVOCATION["version"] or (token_iat > 0 and token_iat < _CANDIDATE_REVOCATION["revoked_at"]):
+                    raise HTTPException(
+                        status_code=status.HTTP_401_UNAUTHORIZED,
+                        detail="Session expired due to payment policy update. Please sign in again."
+                    )
+
             return payload
         except JWTError:
             pass
@@ -79,15 +109,27 @@ async def verify_auth_token(credentials: Optional[HTTPAuthorizationCredentials] 
         # 3. Fallback for mock/dev token format "mock:user_id:role"
         if token.startswith("mock:"):
             parts = token.split(":")
+            role = parts[2].upper() if len(parts) >= 3 else "CANDIDATE"
+            if role not in ["ADMIN", "SUPER_ADMIN"] and (_CANDIDATE_REVOCATION["version"] > 1 or _CANDIDATE_REVOCATION["revoked_at"] > 0):
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail="Session expired due to payment policy update. Please sign in again."
+                )
             if len(parts) >= 3:
                 return {
                     "sub": parts[1],
                     "email": f"{parts[1]}@cloudops.internal",
-                    "role": parts[2].upper(),
-                    "name": f"Mock {parts[2].capitalize()}"
+                    "role": role,
+                    "name": f"Mock {role.capitalize()}"
                 }
 
-    # 4. Default Fallback Candidate Payload (prevents 401 blocking candidate actions)
+    # 4. Default Fallback Candidate Payload (revoked if admin updated policy)
+    if _CANDIDATE_REVOCATION["version"] > 1 or _CANDIDATE_REVOCATION["revoked_at"] > 0:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Session expired due to payment policy update. Please sign in again."
+        )
+
     return {
         "sub": "candidate-default-id",
         "email": "candidate@cloudops.internal",

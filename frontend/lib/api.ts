@@ -78,6 +78,18 @@ export async function apiFetch<T = any>(
       }
 
       if (!res.ok) {
+        if (res.status === 401 && typeof window !== "undefined") {
+          const isAdminPath = window.location.pathname.startsWith("/admin");
+          if (!isAdminPath && !window.location.pathname.includes("/login")) {
+            console.warn("🔐 Session revoked due to admin policy changes. Automatically signing out candidate...");
+            localStorage.removeItem("auth_token");
+            localStorage.removeItem("auth-storage");
+            localStorage.removeItem("active_interview_session");
+            sessionStorage.clear();
+            window.location.href = "/login?session_expired=true";
+          }
+        }
+
         let errorMsg = `API Error: ${res.statusText}`;
         if (responseText && responseText.trim()) {
           try {

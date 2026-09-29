@@ -57,17 +57,29 @@ const ALL_30_STAGES = [
 export default function InterviewsPage() {
   const router = useRouter();
   const user = useAuthStore((state) => state.user);
-  const [stages, setStages] = useState<any[]>([]);
-  const [isLoadingStages, setIsLoadingStages] = useState<boolean>(true);
+  const [mounted, setMounted] = useState(false);
+  const [stages, setStages] = useState<any[]>(ALL_30_STAGES);
+  const [isLoadingStages, setIsLoadingStages] = useState<boolean>(false);
   const [activeTab, setActiveTab] = useState<string>("ALL");
-  const [selectedStage, setSelectedStage] = useState<any | null>(null);
+  const [selectedStage, setSelectedStage] = useState<any | null>(ALL_30_STAGES[0]);
   const [isStarting, setIsStarting] = useState(false);
 
   const [isDemoGuest, setIsDemoGuest] = useState(false);
   const [isDemoLoginModalOpen, setIsDemoLoginModalOpen] = useState(false);
 
   useEffect(() => {
+    setMounted(true);
     if (typeof window !== "undefined") {
+      try {
+        const cached = sessionStorage.getItem("cached_interviews_stages");
+        if (cached) {
+          const parsed = JSON.parse(cached);
+          if (parsed.data && Array.isArray(parsed.data) && parsed.data.length > 0) {
+            setStages(parsed.data);
+          }
+        }
+      } catch (e) {}
+
       const params = new URLSearchParams(window.location.search);
       if (params.get("demo") === "true") {
         setIsDemoGuest(true);
@@ -264,6 +276,14 @@ export default function InterviewsPage() {
       });
 
       setStages(merged);
+      if (typeof window !== "undefined") {
+        try {
+          sessionStorage.setItem("cached_interviews_stages", JSON.stringify({
+            data: merged,
+            timestamp: Date.now()
+          }));
+        } catch (e) {}
+      }
       setSelectedStage((prev: any) => {
         if (typeof window !== "undefined") {
           const params = new URLSearchParams(window.location.search);
@@ -721,7 +741,7 @@ export default function InterviewsPage() {
           <div className="flex flex-col">
             <span className="text-[10px] font-mono font-black text-slate-400 uppercase tracking-widest">UNLOCKED STAGES</span>
             <span className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white">
-              {completedCount + 1} <span className="text-slate-400 text-sm font-bold">/ 30</span>
+              {mounted ? completedCount + 1 : 1} <span className="text-slate-400 text-sm font-bold">/ 30</span>
             </span>
           </div>
         </div>

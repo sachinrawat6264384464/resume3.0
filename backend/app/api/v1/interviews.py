@@ -37,11 +37,26 @@ async def get_candidate_payment_config(
         }
     )
 
+import time
+
+_STAGES_CACHE = {
+    "data": None,
+    "timestamp": 0
+}
+
+def invalidate_stages_cache():
+    _STAGES_CACHE["data"] = None
+    _STAGES_CACHE["timestamp"] = 0
+
 @router.get("/stages", response_model=StandardResponse[List[dict]])
 async def get_candidate_stages(
     payload: Optional[dict] = Depends(verify_auth_token),
     db: AsyncSession = Depends(get_db)
 ):
+    now = time.time()
+    if _STAGES_CACHE["data"] is not None and (now - _STAGES_CACHE["timestamp"] < 60):
+        return StandardResponse(data=_STAGES_CACHE["data"])
+
     stmt = (
         select(InterviewStage)
         .options(selectinload(InterviewStage.questions))
@@ -80,6 +95,8 @@ async def get_candidate_stages(
                 } for q in active_q
             ]
         })
+    _STAGES_CACHE["data"] = data
+    _STAGES_CACHE["timestamp"] = now
     return StandardResponse(data=data)
 
 @router.put("/stages/{stage_id}", response_model=StandardResponse[dict])
@@ -89,6 +106,7 @@ async def update_stage(
     payload: dict = Depends(verify_auth_token),
     db: AsyncSession = Depends(get_db)
 ):
+    invalidate_stages_cache()
     stmt = select(InterviewStage).where(InterviewStage.id == stage_id)
     res = await db.execute(stmt)
     stage = res.scalar_one_or_none()
@@ -158,6 +176,7 @@ async def delete_stage(
     payload: dict = Depends(verify_auth_token),
     db: AsyncSession = Depends(get_db)
 ):
+    invalidate_stages_cache()
     stmt = select(InterviewStage).where(InterviewStage.id == stage_id)
     res = await db.execute(stmt)
     stage = res.scalar_one_or_none()
@@ -195,6 +214,7 @@ async def create_stage(
     payload: dict = Depends(verify_auth_token),
     db: AsyncSession = Depends(get_db)
 ):
+    invalidate_stages_cache()
     t_stmt = select(InterviewTemplate).limit(1)
     t_res = await db.execute(t_stmt)
     template = t_res.scalar_one_or_none()

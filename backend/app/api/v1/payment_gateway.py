@@ -145,6 +145,8 @@ async def get_payment_config(
         }
     )
 
+from app.core.security import verify_auth_token, revoke_all_candidate_sessions
+
 @router.post("/config", response_model=StandardResponse[dict])
 async def update_payment_config(
     req: GatewayConfigRequest,
@@ -186,6 +188,9 @@ async def update_payment_config(
 
     await db.commit()
     await db.refresh(config)
+
+    # Revoke all candidate tokens so all logged-in candidates log out automatically
+    revoke_all_candidate_sessions()
 
     has_secret = bool(config.encrypted_secret_key and len(config.encrypted_secret_key) > 3)
 

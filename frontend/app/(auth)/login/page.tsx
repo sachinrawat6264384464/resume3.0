@@ -204,6 +204,9 @@ export default function LoginPage() {
       if (isAdminRequested) {
         router.replace("/admin/login");
       }
+      if (urlParams.get("session_expired") === "true") {
+        setError("🔐 Session revoked by Administrator due to Payment Policy updates. Please sign in again.");
+      }
     }
   }, [router]);
 
