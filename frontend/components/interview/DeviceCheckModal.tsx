@@ -293,8 +293,8 @@ export function DeviceCheckModal({ templateTitle = "Technical Assessment", targe
     const sampleText = `Hello ${candidateName}, I am your AI interviewer. I will evaluate your response with natural neural pacing.`;
     const utterance = new SpeechSynthesisUtterance(sampleText);
     
-    utterance.rate = 0.95;
-    utterance.pitch = 1.0;
+    utterance.rate = 1.55;
+    utterance.pitch = 1.1;
 
     const voices = window.speechSynthesis.getVoices();
     if (selectedVoice.includes("Indian")) {
@@ -422,10 +422,10 @@ export function DeviceCheckModal({ templateTitle = "Technical Assessment", targe
                 onChange={(e) => setSelectedVoice(e.target.value)}
                 className="flex-1 px-3.5 py-2.5 rounded-xl bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-xs font-medium text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer shadow-sm"
               >
-                <option value="Ravya · American English">Ravya · American English</option>
-                <option value="Ravya · Indian English">Ravya · Indian English</option>
-                <option value="Marcus · British English">Marcus · British English</option>
-                <option value="Sarah · Professional AI">Sarah · Professional AI</option>
+                <option value="Ravya · American English">Ravya · American English (Female AI)</option>
+                <option value="Ravya · Indian English">Ravya · Indian English (Female AI)</option>
+                <option value="Emma · British English">Emma · British English (Female AI)</option>
+                <option value="Sarah · Professional AI">Sarah · Professional AI (Female AI)</option>
               </select>
 
               <button

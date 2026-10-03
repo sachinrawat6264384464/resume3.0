@@ -35,14 +35,36 @@ export function FloatingWhatsAppCommunity() {
       }
     } catch (e) {}
 
-    // Fetch active live session URLs configured by Admin in /admin/live-sessions
-    apiFetch("/live-sessions/active")
-      .then((res) => {
-        if (res?.data && Array.isArray(res.data) && res.data.length > 0) {
-          setActiveSession(res.data[0]);
-        }
-      })
-      .catch(() => {});
+    const fetchActiveSession = () => {
+      apiFetch("/live-sessions/active")
+        .then((res) => {
+          if (res?.data && Array.isArray(res.data) && res.data.length > 0) {
+            setActiveSession(res.data[0]);
+          }
+        })
+        .catch(() => {});
+    };
+
+    fetchActiveSession();
+
+    const handleSessionUpdated = () => fetchActiveSession();
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === "latest_live_session_updated") fetchActiveSession();
+    };
+
+    if (typeof window !== "undefined") {
+      window.addEventListener("liveSessionUpdated", handleSessionUpdated);
+      window.addEventListener("storage", handleStorageChange);
+      window.addEventListener("focus", fetchActiveSession);
+    }
+
+    return () => {
+      if (typeof window !== "undefined") {
+        window.removeEventListener("liveSessionUpdated", handleSessionUpdated);
+        window.removeEventListener("storage", handleStorageChange);
+        window.removeEventListener("focus", fetchActiveSession);
+      }
+    };
   }, []);
 
   useEffect(() => {
@@ -142,12 +164,36 @@ export function FloatingWhatsAppCommunity() {
   const openWhatsApp = (e: React.MouseEvent) => {
     e.stopPropagation();
     const url = activeSession?.whatsapp_group_url || "https://chat.whatsapp.com/AIInterviewCommunity";
+    try {
+      apiFetch("/live-sessions/track-click", {
+        method: "POST",
+        body: JSON.stringify({
+          live_session_id: activeSession?.id || "live-default-001",
+          session_title: activeSession?.title || "👑 WhatsApp Community Group",
+          candidate_name: user?.full_name || "Candidate",
+          candidate_email: user?.email || "candidate@cloudops.internal",
+          platform_clicked: "WHATSAPP"
+        })
+      }).catch(() => {});
+    } catch {}
     window.open(url, "_blank", "noopener,noreferrer");
   };
 
   const openZoomMeet = (e: React.MouseEvent) => {
     e.stopPropagation();
     const url = activeSession?.meeting_url || "https://meet.google.com/xyz-cloudops-live";
+    try {
+      apiFetch("/live-sessions/track-click", {
+        method: "POST",
+        body: JSON.stringify({
+          live_session_id: activeSession?.id || "live-default-001",
+          session_title: activeSession?.title || "👑 Zoom Live Support Room",
+          candidate_name: user?.full_name || "Candidate",
+          candidate_email: user?.email || "candidate@cloudops.internal",
+          platform_clicked: "ZOOM"
+        })
+      }).catch(() => {});
+    } catch {}
     window.open(url, "_blank", "noopener,noreferrer");
   };
 

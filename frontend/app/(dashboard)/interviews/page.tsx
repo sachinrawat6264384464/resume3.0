@@ -312,7 +312,14 @@ export default function InterviewsPage() {
       try {
         const raw = localStorage.getItem("active_interview_session");
         if (raw) {
-          setActiveSession(JSON.parse(raw));
+          const parsed = JSON.parse(raw);
+          if (parsed && user && (parsed.userId === user.id || parsed.userEmail === user.email)) {
+            setActiveSession(parsed);
+          } else {
+            // Active session belongs to a different candidate or is stale -> remove it!
+            localStorage.removeItem("active_interview_session");
+            setActiveSession(null);
+          }
         } else {
           setActiveSession(null);
         }
@@ -325,7 +332,7 @@ export default function InterviewsPage() {
   useEffect(() => {
     checkActiveSession();
     fetchStagesData();
-  }, []);
+  }, [user]);
 
   useEffect(() => {
     if (typeof window !== "undefined" && stages.length > 0) {
@@ -520,6 +527,8 @@ export default function InterviewsPage() {
       });
       const newAttemptId = res?.data?.id || stageId;
       const sessionObj = {
+        userId: user?.id,
+        userEmail: user?.email,
         attemptId: String(newAttemptId),
         stageId: stageId,
         stageTitle: targetStg?.title || `Stage ${stageId} Assessment`,
@@ -533,6 +542,8 @@ export default function InterviewsPage() {
       router.push(`/interviews/${newAttemptId}/pre-check`);
     } catch (e) {
       const sessionObj = {
+        userId: user?.id,
+        userEmail: user?.email,
         attemptId: String(stageId),
         stageId: stageId,
         stageTitle: targetStg?.title || `Stage ${stageId} Assessment`,

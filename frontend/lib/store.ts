@@ -22,8 +22,18 @@ export const useAuthStore = create<AuthState>((set) => ({
   },
   logout: () => {
     if (typeof window !== "undefined") {
-      localStorage.removeItem("auth_token");
-      localStorage.removeItem("auth_user");
+      try {
+        localStorage.clear();
+        sessionStorage.clear();
+      } catch (e) {
+        localStorage.removeItem("auth_token");
+        localStorage.removeItem("auth_user");
+        localStorage.removeItem("active_interview_session");
+        localStorage.removeItem("cached_interviews_stages");
+        localStorage.removeItem("stage0_profile_data");
+        localStorage.removeItem("candidate_linkedin_url");
+        localStorage.removeItem("ats_result");
+      }
     }
     set({ user: null, token: null, isAuthenticated: false });
   },

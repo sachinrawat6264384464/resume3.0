@@ -90,7 +90,7 @@ async def extract_linkedin_profile(
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
             "Accept-Language": "en-US,en;q=0.9"
         }
-        async with httpx.AsyncClient(timeout=4.0, follow_redirects=True) as client:
+        async with httpx.AsyncClient(timeout=2.5, follow_redirects=True) as client:
             resp = await client.get(url, headers=headers)
             if resp.status_code == 200:
                 html = resp.text
@@ -129,7 +129,7 @@ async def extract_linkedin_profile(
 
     # 4. Format Structured Extracted Resume Text with Bio, Experience, Education & Skills
     url_lower = url.lower()
-    is_sachin = "sachin" in url_lower or "rawat" in url_lower or (payload and "sachin" in str(payload).lower())
+    is_sachin = "sachin" in url_lower or "rawat" in url_lower
 
     if is_sachin:
         parsed_name = "Sachin Rawat"
@@ -174,6 +174,11 @@ EDUCATION & CERTIFICATIONS
 • Dr. Bhim Rao Ambedkar Polytechnic College Gwalior — Diploma in Information Technology (2022 - 2025)
   Specialization: PostgreSQL, Database Management, and Prompt Engineering."""
 
+    elif not meta_title and not meta_desc:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"🔒 The LinkedIn profile for '{parsed_name}' is private or restricted by LinkedIn (HTTP 999 anti-bot protection). Unable to extract profile text automatically. Please paste your resume text directly into the text box below."
+        )
     else:
         combined = f"{meta_title} {meta_desc}".lower()
         role = "Software & Cloud Engineer"
@@ -205,6 +210,7 @@ EDUCATION & CERTIFICATIONS
             f"Accomplished {role} passionate about building scalable, high-performance web applications, "
             f"cloud infrastructure, and modern software solutions."
         )
+        extracted_summary = bio_text
 
         company_name = "Tech Solutions & Software Systems"
         if "at " in meta_title.lower():

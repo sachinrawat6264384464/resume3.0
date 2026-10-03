@@ -297,6 +297,11 @@ export default function AdminLiveSessionsPage() {
     } catch (e) {
       console.warn("API toggle live notice:", e);
     }
+
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new Event("liveSessionUpdated"));
+      localStorage.setItem("latest_live_session_updated", String(Date.now()));
+    }
   };
 
   const handleSaveSession = async (e: React.FormEvent) => {
@@ -351,6 +356,11 @@ export default function AdminLiveSessionsPage() {
       return list;
     });
 
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new Event("liveSessionUpdated"));
+      localStorage.setItem("latest_live_session_updated", String(Date.now()));
+    }
+
     setSaving(false);
     setIsModalOpen(false);
   };
@@ -363,6 +373,10 @@ export default function AdminLiveSessionsPage() {
       console.warn("Delete API warning:", err);
     }
     setSessions((prev) => prev.filter((item) => item.id !== id));
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new Event("liveSessionUpdated"));
+      localStorage.setItem("latest_live_session_updated", String(Date.now()));
+    }
   };
 
   return (

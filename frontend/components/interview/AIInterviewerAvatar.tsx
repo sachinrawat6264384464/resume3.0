@@ -21,28 +21,36 @@ export function AIInterviewerAvatar({
     <div className="flex flex-col items-center text-center p-8 rounded-[32px] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xl relative overflow-hidden">
       
       {/* Background soft glow orb */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-[#FF9900]/10 rounded-full blur-3xl pointer-events-none" />
+      <div className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-80 h-80 rounded-full blur-3xl pointer-events-none transition-all duration-500 ${
+        isSpeaking ? "bg-[#FF9900]/35 scale-125" : "bg-[#FF9900]/15"
+      }`} />
 
-      {/* Animated Avatar Core */}
+      {/* Animated Avatar Core with Large Custom Image, Zoom & Movement Effects */}
       <div className="relative mb-6">
         {isSpeaking && (
           <>
-            <div className="absolute inset-0 rounded-full bg-[#FF9900]/30 animate-ping opacity-75" />
-            <div className="absolute -inset-3 rounded-full border border-[#FF9900]/40 animate-pulse" />
+            <div className="absolute -inset-5 rounded-full bg-[#FF9900]/30 animate-ping opacity-75 pointer-events-none" />
+            <div className="absolute -inset-3 rounded-full border-2 border-[#FF9900]/60 animate-pulse pointer-events-none" />
           </>
         )}
 
-        <div className={`w-24 h-24 rounded-full p-[2.5px] transition-all duration-500 ${
+        <div className={`w-48 h-48 sm:w-56 sm:h-56 rounded-full p-1 transition-all duration-500 relative ${
           isSpeaking
-            ? "bg-gradient-to-tr from-[#FF9900] via-amber-400 to-orange-500 shadow-2xl shadow-[#FF9900]/40 scale-105"
-            : "bg-[#232F3E] shadow-lg"
+            ? "bg-gradient-to-tr from-[#FF9900] via-amber-400 to-orange-500 shadow-2xl shadow-[#FF9900]/60 animate-avatar-speaking ring-4 ring-[#FF9900]/30"
+            : "bg-[#232F3E] shadow-xl hover:scale-105"
         }`}>
-          <div className="w-full h-full rounded-full bg-[#232F3E] flex items-center justify-center relative">
-            <Bot className={`w-10 h-10 transition-colors duration-300 ${isSpeaking ? 'text-[#FF9900]' : 'text-white'}`} />
+          <div className="w-full h-full rounded-full overflow-hidden bg-slate-950 relative border-4 border-slate-900 flex items-center justify-center shadow-inner">
+            <img
+              src="/images/ai_avatar_interviewer.jpg"
+              alt="AI Technical Interviewer"
+              className={`w-full h-full object-cover transition-transform duration-300 ${
+                isSpeaking ? "scale-110" : "scale-100 hover:scale-105"
+              }`}
+            />
             {isSpeaking && (
-              <span className="absolute bottom-1 right-1 flex h-3 w-3">
+              <span className="absolute bottom-3 right-3 flex h-5 w-5 z-10">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#FF9900] opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-3 w-3 bg-[#FF9900]"></span>
+                <span className="relative inline-flex rounded-full h-5 w-5 bg-[#FF9900] border-2 border-slate-900"></span>
               </span>
             )}
           </div>
@@ -69,7 +77,7 @@ export function AIInterviewerAvatar({
                 ? "bg-rose-950/90 text-rose-300 border border-rose-500 animate-pulse hover:bg-rose-900"
                 : "bg-[#FF9900]/10 text-[#FF9900] border border-[#FF9900]/40 hover:bg-[#FF9900] hover:text-slate-950"
             }`}
-            title={isSpeaking ? "Click to Stop / Mute AI Voice immediately" : "Read question out loud in Male AI Voice"}
+            title={isSpeaking ? "Click to Stop / Mute AI Voice immediately" : "Read question out loud in Female AI Voice"}
           >
             {isSpeaking ? (
               <>
@@ -89,7 +97,7 @@ export function AIInterviewerAvatar({
           {isSpeaking ? (
             <>
               <Volume2 className="w-3.5 h-3.5 text-rose-400 animate-pulse" />
-              <span className="text-slate-900 dark:text-white font-bold">Male AI Voice Speaking...</span>
+              <span className="text-slate-900 dark:text-white font-bold">Female AI Voice Speaking...</span>
             </>
           ) : (
             <>

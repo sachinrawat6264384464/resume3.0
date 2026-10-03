@@ -16,6 +16,25 @@ router = APIRouter(prefix="/auth", tags=["Authentication"])
 # In-memory OTP cache for email/phone verification
 otp_cache = {}
 
+async def find_user_by_email_or_phone(db: AsyncSession, target_email: str, target_phone: str) -> Optional[User]:
+    conditions = []
+    if target_email and target_email.strip():
+        conditions.append(User.email == target_email.strip().lower())
+    if target_phone and target_phone.strip():
+        digits = "".join(filter(str.isdigit, target_phone))
+        if len(digits) >= 10:
+            last10 = digits[-10:]
+            conditions.append(User.phone_number.like(f"%{last10}%"))
+        else:
+            conditions.append(User.phone_number == target_phone.strip())
+
+    if not conditions:
+        return None
+
+    stmt = select(User).where(or_(*conditions))
+    res = await db.execute(stmt)
+    return res.scalars().first()
+
 @router.post("/send-otp", response_model=StandardResponse[dict])
 async def send_otp(req: SendOTPRequest, db: AsyncSession = Depends(get_db)):
     target_email = (req.email or "").strip().lower()
@@ -29,17 +48,7 @@ async def send_otp(req: SendOTPRequest, db: AsyncSession = Depends(get_db)):
         )
 
     # 1. Check existing account in DB
-    conditions = []
-    if target_email:
-        conditions.append(User.email == target_email)
-    if target_phone:
-        conditions.append(User.phone_number == target_phone)
-
-    existing_user = None
-    if conditions:
-        stmt = select(User).where(or_(*conditions))
-        res = await db.execute(stmt)
-        existing_user = res.scalar_one_or_none()
+    existing_user = await find_user_by_email_or_phone(db, target_email, target_phone)
 
     if mode == "signin" and not existing_user:
         raise HTTPException(
@@ -71,7 +80,13 @@ async def send_otp(req: SendOTPRequest, db: AsyncSession = Depends(get_db)):
 
         try:
             from app.services.sms_service import SMSService
-            await SMSService.send_otp(target_phone, code, candidate_name=req.full_name)
+            await SMSService.send_otp(
+                target_phone,
+                code,
+                candidate_name=req.full_name,
+                campaign_name=req.campaign_name,
+                api_key=req.api_key
+            )
         except Exception as sms_err:
             logger.warn(f"AiSensy WhatsApp dispatch notice: {sms_err}")
 
@@ -82,6 +97,39 @@ async def send_otp(req: SendOTPRequest, db: AsyncSession = Depends(get_db)):
             "email": target_email,
             "phone_number": target_phone,
             "otp_code": code
+        }
+    )
+
+@router.post("/test-whatsapp-otp", response_model=StandardResponse[dict])
+async def test_whatsapp_otp(req: SendOTPRequest):
+    """
+    Diagnostic endpoint to test AiSensy WhatsApp OTP dispatch for any phone number.
+    Returns complete API status, raw response body, payload sent, and config status.
+    """
+    target_phone = (req.phone_number or "").strip()
+    if not target_phone:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Phone number is required for WhatsApp OTP testing."
+        )
+
+    code = str(secrets.randbelow(900000) + 100000)
+    otp_cache[target_phone] = code
+
+    from app.services.sms_service import SMSService
+    diag = await SMSService.test_aisensy_dispatch(
+        phone_number=target_phone,
+        otp_code=code,
+        candidate_name=req.full_name,
+        campaign_name=req.campaign_name,
+        api_key=req.api_key
+    )
+
+    return StandardResponse(
+        message=diag["message"],
+        data={
+            "otp_code": code,
+            "diagnostic": diag
         }
     )
 
@@ -110,23 +158,18 @@ async def verify_otp(req: VerifyOTPRequest, db: AsyncSession = Depends(get_db)):
         )
 
     service = AuthService(db)
-
-    conditions = []
-    if target_email:
-        conditions.append(User.email == target_email)
-    if target_phone:
-        conditions.append(User.phone_number == target_phone)
-
-    existing_user = None
-    if conditions:
-        stmt = select(User).where(or_(*conditions))
-        res = await db.execute(stmt)
-        existing_user = res.scalar_one_or_none()
+    existing_user = await find_user_by_email_or_phone(db, target_email, target_phone)
 
     if mode == "signin" and not existing_user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="No candidate account found with this Mobile Number or Email. Please click 'Create Account' to register first!"
+        )
+
+    if mode == "signup" and existing_user:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="An account with this Mobile Number or Email is already registered. Please Sign In instead."
         )
 
     from app.models.candidate import Candidate

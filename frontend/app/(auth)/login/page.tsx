@@ -411,7 +411,7 @@ export default function LoginPage() {
           <div className="flex items-center gap-1 p-1 rounded-xl sm:rounded-2xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-[11px] sm:text-xs font-black">
             <button
               type="button"
-              onClick={() => { setAuthMode("signin"); setError(null); setInfoMsg(null); }}
+              onClick={() => { setAuthMode("signin"); setOtpStep(1); setError(null); setInfoMsg(null); }}
               className={`px-3 sm:px-4 py-1.5 rounded-lg sm:rounded-xl transition-all cursor-pointer ${
                 authMode === "signin"
                   ? "bg-[#FF6B00] text-white shadow-xs"
@@ -422,7 +422,7 @@ export default function LoginPage() {
             </button>
             <button
               type="button"
-              onClick={() => { setAuthMode("signup"); setError(null); setInfoMsg(null); }}
+              onClick={() => { setAuthMode("signup"); setOtpStep(1); setError(null); setInfoMsg(null); }}
               className={`px-3 sm:px-4 py-1.5 rounded-lg sm:rounded-xl transition-all cursor-pointer ${
                 authMode === "signup"
                   ? "bg-[#FF6B00] text-white shadow-xs"
@@ -626,6 +626,7 @@ export default function LoginPage() {
                 type="button"
                 onClick={() => {
                   setAuthMode(authMode === "signin" ? "signup" : "signin");
+                  setOtpStep(1);
                   setError(null);
                   setInfoMsg(null);
                 }}

@@ -107,21 +107,19 @@ export default function ResumeATSPage() {
         })
       });
 
-      if (res?.data?.extracted_text) {
-        setResumeText(res.data.extracted_text);
+      const extracted = res?.data?.extracted_text || "";
+      if (extracted) {
+        setSelectedFile(null); // Clear any uploaded file so text analysis is prioritized!
+        setResumeText(extracted);
         showToast(`✅ Extracted LinkedIn Profile Info for ${res.data.parsed_name || "Candidate"}!`);
+        setIsLinkedInModalOpen(false);
       } else {
         showToast("✅ LinkedIn Profile URL Saved to Profile!");
+        setIsLinkedInModalOpen(false);
       }
-
-      setIsLinkedInModalOpen(false);
-
-      setTimeout(() => {
-        handleAnalyze();
-      }, 200);
     } catch (err: any) {
       console.warn("LinkedIn extract notice:", err);
-      showToast("⚠️ Could not fetch full LinkedIn bio. Saved link to profile.");
+      showToast(err?.message || "⚠️ This profile is private or restricted by LinkedIn. Please paste your resume text manually.");
       setIsLinkedInModalOpen(false);
     } finally {
       setIsExtractingLinkedIn(false);
@@ -185,8 +183,8 @@ CERTIFICATIONS
     { step: 3, title: "Generating STAR Framework Bullet Point Rewrites", desc: "Synthesizing quantifiable impact metrics & active verbs" }
   ];
 
-  const handleAnalyze = async (fileOverride?: File) => {
-    const targetFile = fileOverride || selectedFile;
+  const handleAnalyze = async (fileOverride?: File, textOverride?: string) => {
+    const targetFile = fileOverride !== undefined ? fileOverride : (textOverride !== undefined ? null : selectedFile);
     setIsLocalLoading(true);
     setIsAnalyzing(true);
     setAnalysisError(null);
@@ -219,7 +217,7 @@ CERTIFICATIONS
           body: formData
         });
       } else {
-        const textToAnalyze = resumeText.trim() || sampleResumeContent;
+        const textToAnalyze = (textOverride !== undefined ? textOverride : resumeText).trim() || sampleResumeContent;
         res = await apiFetch("/resumes/parse-text", {
           method: "POST",
           body: JSON.stringify({
@@ -1151,74 +1149,6 @@ Real-Time AWS & Kubernetes Outage Resilience Platform
                   <span>Download Improved Resume (.txt)</span>
                 </button>
               </div>
-            </div>
-
-          </div>
-        </div>
-      )}
-
-      {/* FULL SCREEN ANIMATED AI PROCESSING MODAL OVERLAY */}
-      {isBusy && (
-        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 flex items-center justify-center p-4 animate-fadeIn">
-          <div className="bg-slate-900 border-2 border-[#FF6B00]/40 rounded-[32px] p-8 max-w-md w-full shadow-2xl flex flex-col items-center gap-6 text-center text-white relative overflow-hidden">
-            
-            <div className="absolute -top-20 -left-20 w-44 h-44 bg-[#FF6B00]/20 rounded-full blur-3xl pointer-events-none" />
-            <div className="absolute -bottom-20 -right-20 w-44 h-44 bg-orange-500/20 rounded-full blur-3xl pointer-events-none" />
-
-            <div className="relative w-24 h-24 flex items-center justify-center">
-              <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
-                <circle cx="50" cy="50" r="42" stroke="currentColor" strokeWidth="8" fill="transparent" className="text-slate-800" />
-                <circle
-                  cx="50" cy="50" r="42"
-                  stroke="currentColor" strokeWidth="8" fill="transparent"
-                  strokeDasharray={`${progressPercent * 2.64} 264`}
-                  strokeLinecap="round"
-                  className="text-[#FF6B00] transition-all duration-300"
-                />
-              </svg>
-              <div className="absolute inset-0 flex flex-col items-center justify-center">
-                <span className="text-2xl font-black font-mono text-white">{progressPercent}%</span>
-                <span className="text-[9px] font-bold text-[#FF6B00] uppercase tracking-widest">ANALYZING</span>
-              </div>
-            </div>
-
-            <div className="flex flex-col gap-1 z-10">
-              <h3 className="text-lg font-black text-white flex items-center justify-center gap-2 uppercase tracking-tight">
-                <Sparkles className="w-5 h-5 text-[#FF6B00] animate-pulse" />
-                <span>AI ATS Engine Processing...</span>
-              </h3>
-              <p className="text-xs text-slate-400 font-medium">
-                Scanning document, benchmarking 6 ATS factors & rewriting STAR bullets.
-              </p>
-            </div>
-
-            <div className="w-full flex flex-col gap-2.5 z-10 text-left">
-              {processingSteps.map((s, idx) => {
-                const isCurrent = idx === currentStepIndex;
-                const isDone = idx < currentStepIndex || progressPercent >= 95;
-                return (
-                  <div
-                    key={s.step}
-                    className={`p-3 rounded-xl border flex items-center gap-3 transition-all ${
-                      isDone
-                        ? "bg-emerald-950/40 border-emerald-500/40 text-emerald-300"
-                        : isCurrent
-                        ? "bg-amber-950/60 border-[#FF6B00] text-amber-200 ring-1 ring-[#FF6B00]/30 shadow-md shadow-[#FF6B00]/10"
-                        : "bg-slate-800/40 border-slate-800 text-slate-500 opacity-60"
-                    }`}
-                  >
-                    <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-black shrink-0 ${
-                      isDone ? "bg-emerald-500 text-slate-950" : isCurrent ? "bg-[#FF6B00] text-slate-950" : "bg-slate-800 text-slate-500"
-                    }`}>
-                      {isDone ? <Check className="w-3.5 h-3.5 stroke-[3]" /> : isCurrent ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : s.step}
-                    </div>
-                    <div className="flex flex-col min-w-0">
-                      <span className="text-xs font-bold truncate">{s.title}</span>
-                      <span className="text-[10px] opacity-75 truncate">{s.desc}</span>
-                    </div>
-                  </div>
-                );
-              })}
             </div>
 
           </div>

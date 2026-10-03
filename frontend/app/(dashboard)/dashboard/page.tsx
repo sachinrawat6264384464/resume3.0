@@ -218,18 +218,32 @@ export default function CandidateDashboardPage() {
   }, []);
 
   useEffect(() => {
-    // 1. Fetch Active Live Sessions immediately & sort chronologically
-    apiFetch("/live-sessions/active")
-      .then((res) => {
-        if (res?.data && Array.isArray(res.data)) {
-          processSessions(res.data);
-        } else {
+    const fetchLiveSessions = () => {
+      apiFetch("/live-sessions/active")
+        .then((res) => {
+          if (res?.data && Array.isArray(res.data)) {
+            processSessions(res.data);
+          } else {
+            processSessions([defaultLiveSession]);
+          }
+        })
+        .catch(() => {
           processSessions([defaultLiveSession]);
-        }
-      })
-      .catch(() => {
-        processSessions([defaultLiveSession]);
-      });
+        });
+    };
+
+    fetchLiveSessions();
+
+    const handleSessionUpdated = () => fetchLiveSessions();
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === "latest_live_session_updated") fetchLiveSessions();
+    };
+
+    if (typeof window !== "undefined") {
+      window.addEventListener("liveSessionUpdated", handleSessionUpdated);
+      window.addEventListener("storage", handleStorageChange);
+      window.addEventListener("focus", fetchLiveSessions);
+    }
 
     // 2. Fetch Real User DB Metrics & Profile data
     const fetchUserData = async () => {
@@ -294,6 +308,9 @@ export default function CandidateDashboardPage() {
     return () => {
       if (typeof window !== "undefined") {
         window.removeEventListener("userProfileUpdated", handleProfileUpdate);
+        window.removeEventListener("liveSessionUpdated", handleSessionUpdated);
+        window.removeEventListener("storage", handleStorageChange);
+        window.removeEventListener("focus", fetchLiveSessions);
       }
     };
   }, []);

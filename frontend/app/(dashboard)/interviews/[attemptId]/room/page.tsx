@@ -10,6 +10,7 @@ import {
   LogOut, Award, BarChart3, RefreshCw
 } from "lucide-react";
 import { apiFetch } from "@/lib/api";
+import { useAuthStore } from "@/lib/store";
 import { QuestionRecorder, speakText, forceStopAllWebcams } from "@/lib/media-recorder";
 import { WebcamPreview } from "@/components/interview/WebcamPreview";
 import { AudioWaveformVisualizer } from "@/components/interview/AudioWaveformVisualizer";
@@ -41,6 +42,7 @@ export default function InterviewRoomPage() {
   const router = useRouter();
   const params = useParams();
   const attemptId = params.attemptId as string;
+  const user = useAuthStore((state) => state.user);
 
   const [attempt, setAttempt] = useState<InterviewAttempt | null>(null);
   const [activeStage, setActiveStage] = useState<StageAttempt | null>(null);
@@ -75,6 +77,7 @@ export default function InterviewRoomPage() {
   // Drop Out & Final Summary Modal States
   const [showDropOutModal, setShowDropOutModal] = useState(false);
   const [stageSummary, setStageSummary] = useState<StageSummaryData | null>(null);
+  const [isSummaryDismissed, setIsSummaryDismissed] = useState(false);
 
   const recorderRef = useRef<QuestionRecorder | null>(null);
   const cancelSpeechRef = useRef<(() => void) | null>(null);
@@ -148,6 +151,8 @@ export default function InterviewRoomPage() {
 
           if (typeof window !== "undefined") {
             const sessionData = {
+              userId: user?.id,
+              userEmail: user?.email,
               attemptId,
               stageId: current?.stage_number ?? 1,
               stageTitle: att.template?.title || current?.stage?.title || `Stage ${current?.stage_number || 1} Assessment`,
@@ -162,6 +167,8 @@ export default function InterviewRoomPage() {
       console.warn("Attempt load fallback notice:", err);
       if (typeof window !== "undefined" && attemptId) {
         const fallbackObj = {
+          userId: user?.id,
+          userEmail: user?.email,
           attemptId,
           stageId: 1,
           stageTitle: "Live Mock Interview",
@@ -230,7 +237,7 @@ export default function InterviewRoomPage() {
 
   // 13-Minute Countdown Timer with Automatic Expiration & Camera Pause Protection
   useEffect(() => {
-    if (timeLeftSeconds <= 0 && !stageSummary && !isProcessing) {
+    if (timeLeftSeconds <= 0 && !stageSummary && !isSummaryDismissed && !isProcessing) {
       // 🚨 TIME EXPIRED! Stop recording, stop camera hardware, calculate scores for answered questions & show final summary!
       stopCameraCompletely();
       forceStopAllWebcams();
@@ -264,7 +271,7 @@ export default function InterviewRoomPage() {
       }
     }, 1000);
     return () => clearInterval(timer);
-  }, [timeLeftSeconds, isRecording, stageSummary, isProcessing, accumulatedScores, maxQCount, isCameraLive]);
+  }, [timeLeftSeconds, isRecording, stageSummary, isSummaryDismissed, isProcessing, accumulatedScores, maxQCount, isCameraLive]);
 
   // Active question from stageQuestions (Admin/DB updated questions) or allQAttempts
   const activeStageQuestion = stageQuestions[currentQIndex];
@@ -319,7 +326,7 @@ export default function InterviewRoomPage() {
     );
   }, [questionText, isSpeaking]);
 
-  // Manual Voice Player — Candidate can click 'Listen Question 🔊' to hear question in Male AI Voice
+  // Manual Voice Player — Candidate can click 'Listen Question 🔊' to hear question in Female AI Voice
   useEffect(() => {
     // Ensure any previously playing voice is stopped when switching questions
     return () => {
@@ -866,7 +873,10 @@ export default function InterviewRoomPage() {
 
               {/* Close ✕ Button to dismiss modal and stay in room */}
               <button
-                onClick={() => setStageSummary(null)}
+                onClick={() => {
+                  setStageSummary(null);
+                  setIsSummaryDismissed(true);
+                }}
                 className="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white transition-colors cursor-pointer"
                 title="Dismiss Summary & Remain in Room"
               >

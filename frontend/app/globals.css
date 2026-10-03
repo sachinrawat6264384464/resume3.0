@@ -236,3 +236,20 @@ html, body {
   animation: marquee 25s linear infinite;
 }
 
+/* Animated Speaking Avatar Gentle Micro-Movement Effect (Subtle & Slow) */
+@keyframes avatarSpeakingZoom {
+  0% {
+    transform: scale(1) translateY(0px) rotate(0deg);
+  }
+  50% {
+    transform: scale(1.03) translateY(-2px) rotate(0.4deg);
+  }
+  100% {
+    transform: scale(1) translateY(0px) rotate(0deg);
+  }
+}
+
+.animate-avatar-speaking {
+  animation: avatarSpeakingZoom 3.0s ease-in-out infinite;
+}
+

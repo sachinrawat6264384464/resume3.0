@@ -105,7 +105,7 @@ async def get_active_live_sessions(db: AsyncSession = Depends(get_db)):
             "title": s.title,
             "description": s.description,
             "session_date": s.session_date,
-            "meeting_url": s.meeting_url or "#",
+            "meeting_url": s.meeting_url or "https://meet.google.com/xyz-cloudops-live",
             "whatsapp_group_url": s.whatsapp_group_url or "https://chat.whatsapp.com/AIInterviewCommunity",
             "banner_url": s.banner_url,
             "status": s.status,

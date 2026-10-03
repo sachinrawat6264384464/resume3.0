@@ -55,6 +55,16 @@ class SendOTPRequest(BaseModel):
     phone_number: Optional[str] = None
     channel: Optional[str] = "email"
     mode: Optional[str] = "signin"
+    full_name: Optional[str] = None
+    campaign_name: Optional[str] = None
+    api_key: Optional[str] = None
+
+class TestWhatsAppOTPRequest(BaseModel):
+    phone_number: str
+    otp_code: Optional[str] = None
+    candidate_name: Optional[str] = None
+    campaign_name: Optional[str] = None
+    api_key: Optional[str] = None
 
 class VerifyOTPRequest(BaseModel):
     email: Optional[str] = None

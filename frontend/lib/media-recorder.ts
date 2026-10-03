@@ -125,8 +125,8 @@ export function speakText(
   window.speechSynthesis.cancel();
 
   const utterance = new SpeechSynthesisUtterance(text);
-  utterance.rate = 0.95; // Clear, articulate speaking pace
-  utterance.pitch = 0.9;  // Deep, masculine tone
+  utterance.rate = 1.55; // Super-fast, smooth, crisp female AI voice speed
+  utterance.pitch = 1.1;  // Clear female AI tone
   utterance.lang = "en-US";
 
   // List of female names to strictly exclude
@@ -143,23 +143,21 @@ export function speakText(
     "google uk english male", "google us english male"
   ];
 
-  const selectMaleVoice = () => {
+  const selectFemaleVoice = () => {
     const voices = window.speechSynthesis.getVoices();
     if (!voices || voices.length === 0) return null;
 
-    // 1. Explicit Male name match in English
+    // 1. Explicit Female name or female keyword match in English
     let selected = voices.find((v) => {
       const nameLower = v.name.toLowerCase();
-      const isFemale = femaleNames.some((f) => nameLower.includes(f));
-      if (isFemale) return false;
-      return maleNames.some((m) => nameLower.includes(m)) && v.lang.startsWith("en");
+      return femaleNames.some((f) => nameLower.includes(f)) && v.lang.startsWith("en");
     });
 
-    // 2. Fallback: Any English voice that is NOT female
+    // 2. Fallback: Any English voice that is NOT explicitly male
     if (!selected) {
       selected = voices.find((v) => {
         const nameLower = v.name.toLowerCase();
-        return !femaleNames.some((f) => nameLower.includes(f)) && v.lang.startsWith("en");
+        return !maleNames.some((m) => nameLower.includes(m)) && v.lang.startsWith("en");
       });
     }
 
@@ -174,12 +172,12 @@ export function speakText(
   const executeSpeech = () => {
     try {
       window.speechSynthesis.cancel();
-      const voice = selectMaleVoice();
+      const voice = selectFemaleVoice();
       if (voice) {
         utterance.voice = voice;
       }
-      utterance.pitch = 0.9; // Enforce masculine pitch
-      utterance.rate = 0.95;
+      utterance.pitch = 1.1; // Enforce clear female AI voice pitch
+      utterance.rate = 1.55;
 
       utterance.onstart = () => onStart?.();
       utterance.onend = () => onEnd?.();
