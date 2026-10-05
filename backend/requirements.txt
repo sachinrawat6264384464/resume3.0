@@ -28,3 +28,4 @@ openai>=1.14.0
 faster-whisper>=1.0.0
 gunicorn>=21.2.0
 python-dotenv>=1.0.1
+scikit-learn>=1.4.0

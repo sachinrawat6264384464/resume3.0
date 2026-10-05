@@ -832,45 +832,75 @@ Real-Time AWS & Kubernetes Outage Resilience Platform
           {/* AI EXPLANATIONS: MISSING SKILLS & WEAK RESUME AREAS */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             
-            {/* Missing Critical Skills */}
-            <div className="p-6 rounded-[28px] bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-800 shadow-xl flex flex-col gap-4">
-              <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
-                <h3 className="text-sm font-black text-rose-600 dark:text-rose-400 uppercase tracking-tight flex items-center gap-2">
-                  <AlertTriangle className="w-4.5 h-4.5" />
-                  Missing Critical Skills
-                </h3>
-                <div className="flex items-center gap-2">
-                  {atsResult.missing_skills && atsResult.missing_skills.length > 0 && (
-                    <button
-                      onClick={() => {
-                        const skillsStr = atsResult.missing_skills.join(", ");
-                        navigator.clipboard.writeText(skillsStr);
-                        showToast("Copied missing ATS skills to clipboard! ✓");
-                      }}
-                      className="px-2.5 py-1 rounded-lg text-[10px] font-black bg-rose-100 dark:bg-rose-950 text-rose-700 dark:text-rose-300 border border-rose-300 hover:bg-rose-600 hover:text-white transition-all flex items-center gap-1 cursor-pointer uppercase"
-                    >
-                      <Copy className="w-3 h-3" />
-                      <span>Copy All</span>
-                    </button>
-                  )}
-                  <span className="text-[10px] font-mono font-black text-slate-400">
-                    {atsResult.missing_skills.length} Detected
+            {/* Matching & Missing Skills Analysis Card */}
+            <div className="p-6 rounded-[28px] bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-800 shadow-xl flex flex-col gap-5">
+              
+              {/* 1. MATCHING SKILLS DETECTED (GREEN BADGES) */}
+              <div className="flex flex-col gap-3 border-b border-slate-100 dark:border-slate-800 pb-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-sm font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-tight flex items-center gap-2">
+                    <CheckCircle2 className="w-4.5 h-4.5 text-emerald-500" />
+                    Matching Skills Found
+                  </h3>
+                  <span className="text-[10px] font-mono font-black text-emerald-700 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-950 px-2.5 py-1 rounded-lg border border-emerald-300 dark:border-emerald-800">
+                    {atsResult.matching_skills ? atsResult.matching_skills.length : 0} Matched
                   </span>
+                </div>
+
+                {atsResult.matching_skills && atsResult.matching_skills.length > 0 ? (
+                  <div className="flex flex-wrap gap-2">
+                    {atsResult.matching_skills.map((sk: any, idx: number) => (
+                      <span key={idx} className="px-3 py-1.5 rounded-xl text-xs font-black bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border-2 border-emerald-300 dark:border-emerald-800/80 flex items-center gap-1.5">
+                        <span>✅</span>
+                        <span>{sk}</span>
+                      </span>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="p-3 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-800/80 text-xs font-bold text-amber-900 dark:text-amber-200 flex items-center gap-2">
+                    <span>⚠️</span>
+                    <span>No matching technical skills found in resume. Add technical skills required by Job Description!</span>
+                  </div>
+                )}
+              </div>
+
+              {/* 2. MISSING CRITICAL SKILLS (RED BADGES) */}
+              <div className="flex flex-col gap-3">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-sm font-black text-rose-600 dark:text-rose-400 uppercase tracking-tight flex items-center gap-2">
+                    <AlertTriangle className="w-4.5 h-4.5" />
+                    Missing Critical Skills
+                  </h3>
+                  <div className="flex items-center gap-2">
+                    {atsResult.missing_skills && atsResult.missing_skills.length > 0 && (
+                      <button
+                        onClick={() => {
+                          const skillsStr = atsResult.missing_skills.join(", ");
+                          navigator.clipboard.writeText(skillsStr);
+                          showToast("Copied missing ATS skills to clipboard! ✓");
+                        }}
+                        className="px-2.5 py-1 rounded-lg text-[10px] font-black bg-rose-100 dark:bg-rose-950 text-rose-700 dark:text-rose-300 border border-rose-300 hover:bg-rose-600 hover:text-white transition-all flex items-center gap-1 cursor-pointer uppercase"
+                      >
+                        <Copy className="w-3 h-3" />
+                        <span>Copy All</span>
+                      </button>
+                    )}
+                    <span className="text-[10px] font-mono font-black text-slate-400">
+                      {atsResult.missing_skills ? atsResult.missing_skills.length : 0} Missing
+                    </span>
+                  </div>
+                </div>
+
+                <div className="flex flex-wrap gap-2">
+                  {atsResult.missing_skills && atsResult.missing_skills.map((sk: any, idx: number) => (
+                    <span key={idx} className="px-3 py-1.5 rounded-xl text-xs font-black bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 border-2 border-rose-300 dark:border-rose-800/80 flex items-center gap-1.5">
+                      <span>❌</span>
+                      <span>{sk}</span>
+                    </span>
+                  ))}
                 </div>
               </div>
 
-              <p className="text-xs text-slate-600 dark:text-slate-400 font-medium leading-relaxed">
-                The following required skills from the Job Description were not found in your resume text:
-              </p>
-
-              <div className="flex flex-wrap gap-2">
-                {atsResult.missing_skills.map((sk: any, idx: number) => (
-                  <span key={idx} className="px-3 py-1.5 rounded-xl text-xs font-black bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 border-2 border-rose-300 dark:border-rose-800/80 flex items-center gap-1.5">
-                    <span>❌</span>
-                    <span>{sk}</span>
-                  </span>
-                ))}
-              </div>
             </div>
 
             {/* Weak Resume Areas & Impact Diagnostics */}

@@ -3,7 +3,8 @@ from typing import Optional, Dict, Any, List
 from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi import HTTPException, status
 from app.ai import get_ai_provider
-from app.services.langchain_matcher import LangChainMatcher
+from app.services.jd_cleaner import JDCleaner
+from app.services.tfidf_matcher import TFIDFResumeMatcher
 from app.schemas.resume import (
     ResumeProfile, ATSScoreBreakdown, RecommendedInterviewStage,
     BulletImprovementItem, ResumeATSResponse
@@ -92,12 +93,13 @@ class ResumeService:
         job_description: Optional[str] = None
     ) -> ResumeATSResponse:
         import asyncio
-        import concurrent.futures
 
-        jd_text = (job_description.strip() if (job_description and job_description.strip()) else DEFAULT_CLOUDOPS_JD)
+        # 1. Clean Job Description (Strips company boilerplate noise like EEO disclosures, perks, salary filler)
+        raw_jd = (job_description.strip() if (job_description and job_description.strip()) else DEFAULT_CLOUDOPS_JD)
+        cleaned_jd = JDCleaner.clean_job_description(raw_jd)
         loop = asyncio.get_event_loop()
 
-        # 1. Extract sample bullet points directly from raw text instantly (0ms)
+        # 2. Extract sample bullet points directly from raw text instantly (0ms)
         sample_bullets = []
         raw_lines = [l.strip().lstrip("-•*").strip() for l in resume_text.split("\n") if len(l.strip()) > 20]
         for l in raw_lines:
@@ -114,30 +116,32 @@ class ResumeService:
                 "Handled server troubleshooting and infrastructure monitoring."
             ]
 
-        # 2. RUN ALL AI & SEMANTIC WORK IN A SINGLE PARALLEL GATHER (Eliminates 3 sequential network hops!)
-        def _langchain_sync():
-            return LangChainMatcher.run_semantic_ats_match(
+        # 3. RUN LOCAL TF-IDF MATCHER (0 OpenAI API Cost, 2.5x Skills Section Weight Boosting)
+        def _tfidf_sync():
+            return TFIDFResumeMatcher.analyze_resume_ats(
                 resume_text=resume_text,
-                job_title=job_title,
-                job_description=jd_text
+                job_description=cleaned_jd,
+                job_title=job_title
             )
 
-        lc_future = loop.run_in_executor(None, _langchain_sync)
-        profile_data_task = self.ai.extract_resume_profile(resume_text)
+        tfidf_future = loop.run_in_executor(None, _tfidf_sync)
+
+        # 4. OpenAI / AI Provider is invoked ONLY for Candidate Bullet Rewrites in Suggestions Container
         bullet_tasks = [
             self.ai.improve_resume_bullet(role=job_title, current_bullet=b)
             for b in sample_bullets[:3]
         ]
+        profile_data_task = self.ai.extract_resume_profile(resume_text)
 
         all_results = await asyncio.gather(
+            tfidf_future,
             profile_data_task,
-            lc_future,
             *bullet_tasks,
             return_exceptions=True
         )
 
-        profile_data = all_results[0] if isinstance(all_results[0], dict) else {}
-        lc_match = all_results[1] if isinstance(all_results[1], dict) else {}
+        tfidf_match = all_results[0] if isinstance(all_results[0], dict) else {}
+        profile_data = all_results[1] if isinstance(all_results[1], dict) else {}
         bullet_results = all_results[2:]
 
         if not isinstance(profile_data, dict):
@@ -149,11 +153,11 @@ class ResumeService:
 
         candidate_profile = ResumeProfile.model_validate(profile_data)
 
-        # LangChain Semantic Output is authoritative
-        breakdown_data = lc_match.get("breakdown", {})
-        matching_skills = lc_match.get("matching_skills", [])
-        missing_skills = lc_match.get("missing_skills", [])
-        overall_ats = lc_match.get("ats_score", 78.5)
+        # Local TF-IDF Matcher output is authoritative for score, breakdown, and skill match
+        breakdown_data = tfidf_match.get("breakdown", {})
+        matching_skills = tfidf_match.get("matching_skills", [])
+        missing_skills = tfidf_match.get("missing_skills", [])
+        overall_ats = tfidf_match.get("ats_score", 78.5)
 
         breakdown = ATSScoreBreakdown(
             skills_match=float(breakdown_data.get("skills_match", 75.0)),
@@ -190,8 +194,8 @@ class ResumeService:
             breakdown=breakdown,
             matching_skills=matching_skills,
             missing_skills=missing_skills,
-            weak_areas=lc_match.get("weak_areas", []),
-            strong_areas=lc_match.get("strong_areas", []),
+            weak_areas=tfidf_match.get("weak_areas", []),
+            strong_areas=tfidf_match.get("strong_areas", []),
             recommended_interview_stages=recommended_stages,
             candidate_profile=candidate_profile,
             bullet_suggestions=bullet_suggestions
