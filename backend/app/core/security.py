@@ -132,9 +132,9 @@ async def verify_auth_token(credentials: Optional[HTTPAuthorizationCredentials] 
 
     return {
         "sub": "candidate-default-id",
-        "email": "candidate@cloudops.internal",
+        "email": "sachin@cloudops.internal",
         "role": "CANDIDATE",
-        "name": "aarav"
+        "name": "sachin"
     }
 
 async def verify_optional_auth_token(credentials: Optional[HTTPAuthorizationCredentials] = Depends(security_scheme)) -> Optional[Dict[str, Any]]:
