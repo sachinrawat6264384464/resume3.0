@@ -54,7 +54,28 @@ export default function AdminCandidatesPage() {
     setIsDeleting(true);
     setAlertMsg(null);
     try {
-      await apiFetch(`/candidates/${candidateToDelete.id}`, { method: "DELETE" });
+      const deleteId = candidateToDelete.id || candidateToDelete.user_id;
+      const res = await apiFetch(`/candidates/${deleteId}`, { method: "DELETE" });
+      
+      const deletedName = candidateToDelete.user?.full_name || candidateToDelete.full_name || "Candidate";
+      setAlertMsg({
+        type: "success",
+        text: res?.message || `Candidate account '${deletedName}' permanently deleted.`
+      });
+
+      const targetId = candidateToDelete.id;
+      const targetUserId = candidateToDelete.user_id;
+
+      // Update state immediately
+      setCandidates(prev => prev.filter(c => c.id !== targetId && c.user_id !== targetUserId));
+      
+      // Clear sessionStorage cache so deleted candidates don't reappear on reload
+      if (typeof window !== "undefined") {
+        try {
+          sessionStorage.removeItem("admin_cache_candidates");
+        } catch {}
+      }
+
       setCandidateToDelete(null);
       await fetchCandidates();
     } catch (err: any) {
