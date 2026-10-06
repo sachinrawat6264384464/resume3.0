@@ -87,18 +87,26 @@ export default function AdminTemplatesPage() {
 
   const loadTemplates = async () => {
     if (templates.length === 0) setIsLoading(true);
+
+    const timeoutTimer = setTimeout(() => {
+      setIsLoading(false);
+    }, 1200);
+
     try {
       const res = await apiFetch("/interviews/templates");
       const list = res.data || [];
-      setTemplates(list);
-      if (typeof window !== "undefined") {
-        try {
-          sessionStorage.setItem("admin_cache_templates", JSON.stringify(list));
-        } catch {}
+      if (list.length > 0) {
+        setTemplates(list);
+        if (typeof window !== "undefined") {
+          try {
+            sessionStorage.setItem("admin_cache_templates", JSON.stringify(list));
+          } catch {}
+        }
       }
     } catch (e) {
       console.warn("Failed to load templates:", e);
     } finally {
+      clearTimeout(timeoutTimer);
       setIsLoading(false);
     }
   };

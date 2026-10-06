@@ -273,11 +273,17 @@ async def list_templates(
     interview_svc = InterviewService(db)
     templates = await interview_svc.list_templates(user.organization_id)
 
-    if not templates or (templates and len(templates[0].stages) < 10):
+    # Sort templates so primary 30-stage challenge template comes first
+    if templates:
+        templates = sorted(templates, key=lambda t: len(t.stages), reverse=True)
+
+    if not templates:
         try:
             from app.seeds.initial_data import seed_database
             await seed_database()
             templates = await interview_svc.list_templates(user.organization_id)
+            if templates:
+                templates = sorted(templates, key=lambda t: len(t.stages), reverse=True)
         except Exception as e:
             print(f"Auto-seed warning on list_templates: {e}")
 
