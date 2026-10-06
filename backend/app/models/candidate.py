@@ -32,3 +32,12 @@ class Candidate(TimeStampedModel):
     user = relationship("User", back_populates="candidate_profile")
     organization = relationship("Organization", back_populates="candidates")
     attempts = relationship("InterviewAttempt", back_populates="candidate", cascade="all, delete-orphan")
+
+    @property
+    def email(self) -> Optional[str]:
+        return self.user.email if self.user else None
+
+    @property
+    def full_name(self) -> str:
+        return self.user.full_name if self.user and self.user.full_name else "Candidate"
+
