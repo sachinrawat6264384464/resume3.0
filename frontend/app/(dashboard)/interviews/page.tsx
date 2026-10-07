@@ -94,13 +94,10 @@ export default function InterviewsPage() {
   const router = useRouter();
   const user = useAuthStore((state) => state.user);
   const [mounted, setMounted] = useState(false);
-  const [stages, setStages] = useState<any[]>(() => getInitialStages());
+  const [stages, setStages] = useState<any[]>(ALL_30_STAGES);
   const [isLoadingStages, setIsLoadingStages] = useState<boolean>(false);
   const [activeTab, setActiveTab] = useState<string>("ALL");
-  const [selectedStage, setSelectedStage] = useState<any | null>(() => {
-    const initStgs = getInitialStages();
-    return getInitialSelectedStage(initStgs);
-  });
+  const [selectedStage, setSelectedStage] = useState<any | null>(ALL_30_STAGES[0]);
   const [isStarting, setIsStarting] = useState(false);
 
   const [isDemoGuest, setIsDemoGuest] = useState(false);
@@ -109,6 +106,9 @@ export default function InterviewsPage() {
   useEffect(() => {
     setMounted(true);
     if (typeof window !== "undefined") {
+      const initialStages = getInitialStages();
+      setStages(initialStages);
+      setSelectedStage(getInitialSelectedStage(initialStages));
       const params = new URLSearchParams(window.location.search);
       if (params.get("demo") === "true") {
         setIsDemoGuest(true);
