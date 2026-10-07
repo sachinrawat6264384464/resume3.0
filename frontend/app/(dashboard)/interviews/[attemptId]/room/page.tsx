@@ -617,8 +617,7 @@ export default function InterviewRoomPage() {
       }
 
       setLastEvalResult(finalEvalData);
-      setXpToast(`+${Math.floor(finalEvalData.overall_score / 5)} XP Earned!`);
-      setTimeout(() => setXpToast(null), 3000);
+      // setXpToast(`+${Math.floor(finalEvalData.overall_score / 5)} XP Earned!`);
     } catch (err: any) {
       console.warn("Processed answer evaluation notice:", err);
     } finally {
@@ -1064,17 +1063,11 @@ export default function InterviewRoomPage() {
             </div>
 
             {/* Breakdown Stats */}
-            <div className="grid grid-cols-2 gap-3">
-              <div className="p-3.5 rounded-2xl bg-slate-950 border border-slate-800 flex flex-col gap-1">
-                <span className="text-[10px] font-mono text-slate-400">XP EARNED</span>
-                <span className="text-lg font-black text-amber-400 font-mono">+{stageSummary.xpEarned} XP</span>
-              </div>
-              <div className="p-3.5 rounded-2xl bg-slate-950 border border-slate-800 flex flex-col gap-1">
-                <span className="text-[10px] font-mono text-slate-400">STAGE GATE STATUS</span>
-                <span className="text-xs font-extrabold text-blue-400">
-                  {stageSummary.passed ? "Stage 2 Unlocked" : "Stage 1 Active"}
-                </span>
-              </div>
+            <div className="p-4 rounded-2xl bg-slate-950 border border-slate-800 flex items-center justify-between px-5">
+              <span className="text-xs font-mono font-bold text-slate-400">STAGE GATE STATUS</span>
+              <span className="text-xs font-extrabold text-blue-400 font-mono">
+                {stageSummary.passed ? `Stage ${(activeStage?.stage_number || 1) + 1} Unlocked` : `Stage ${activeStage?.stage_number || 1} Active`}
+              </span>
             </div>
 
             {/* Action Buttons */}
