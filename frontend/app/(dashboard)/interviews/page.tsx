@@ -56,14 +56,51 @@ const ALL_30_STAGES = [
   { id: 30, level: "Bonus", levelName: "Bonus Challenge", title: "👑 40 LPA Final Boss Interview Battle", xp: "+3,000 XP", duration: "45 Mins", questions: 2, questions_count: 2, icon: "👑", diff: "Legendary", desc: "The ultimate 40 LPA Staff CloudOps Engineer Boss Battle! Prove your absolute mastery.", status: "pro_locked", score: "--" }
 ];
 
+const getInitialStages = () => {
+  if (typeof window === "undefined") return ALL_30_STAGES;
+  try {
+    const rawList = localStorage.getItem("completed_stages_list");
+    const completedSet = new Set<number>();
+    if (rawList) {
+      const parsed = JSON.parse(rawList);
+      if (Array.isArray(parsed)) {
+        parsed.forEach((id: number) => completedSet.add(id));
+      }
+    }
+    completedSet.add(0);
+
+    return ALL_30_STAGES.map((stg) => {
+      if (stg.id === 0) return { ...stg, status: "completed", score: "100%" };
+      const isCompleted = completedSet.has(stg.id);
+      if (isCompleted) {
+        return { ...stg, status: "completed", score: "95%" };
+      }
+      if (completedSet.has(stg.id - 1)) {
+        return { ...stg, status: "in_progress", score: "Active" };
+      }
+      return stg;
+    });
+  } catch (e) {
+    return ALL_30_STAGES;
+  }
+};
+
+const getInitialSelectedStage = (initialStages: any[]) => {
+  const activeOrUnlocked = initialStages.find((m) => m.status === "in_progress" && m.id > 0);
+  return activeOrUnlocked || initialStages[1] || initialStages[0];
+};
+
 export default function InterviewsPage() {
   const router = useRouter();
   const user = useAuthStore((state) => state.user);
   const [mounted, setMounted] = useState(false);
-  const [stages, setStages] = useState<any[]>(ALL_30_STAGES);
+  const [stages, setStages] = useState<any[]>(() => getInitialStages());
   const [isLoadingStages, setIsLoadingStages] = useState<boolean>(false);
   const [activeTab, setActiveTab] = useState<string>("ALL");
-  const [selectedStage, setSelectedStage] = useState<any | null>(ALL_30_STAGES[0]);
+  const [selectedStage, setSelectedStage] = useState<any | null>(() => {
+    const initStgs = getInitialStages();
+    return getInitialSelectedStage(initStgs);
+  });
   const [isStarting, setIsStarting] = useState(false);
 
   const [isDemoGuest, setIsDemoGuest] = useState(false);
@@ -376,6 +413,12 @@ export default function InterviewsPage() {
   useEffect(() => {
     checkActiveSession();
     fetchStagesData();
+
+    const pollInterval = setInterval(() => {
+      fetchStagesData();
+    }, 5000);
+
+    return () => clearInterval(pollInterval);
   }, [user]);
 
   useEffect(() => {
