@@ -56,10 +56,10 @@ class StageService:
         started = started or now_naive
         total_duration = max(0.0, (now_naive - started).total_seconds())
 
-        # Strict Gatekeeper Rule: 80%+ Threshold AND required correct questions count
-        threshold = 80.0
-        min_required_correct = min(8, len(q_attempts)) if len(q_attempts) >= 8 else 1
-        passed = (stage_score >= threshold) and (correct_count >= min_required_correct) and (total_duration <= 900.0)
+        # Standard Stage Gatekeeper Rule: 60%+ Threshold AND at least 50% of questions correct
+        threshold = 60.0
+        min_required_correct = max(1, len(q_attempts) // 2)
+        passed = (stage_score >= threshold) and (correct_count >= min_required_correct)
 
         stage_att.status = "PASSED" if passed else "FAILED"
 
@@ -122,7 +122,7 @@ class StageService:
         except Exception as e:
             print(f"Stage XP award failed: {e}")
 
-        await self.db.flush()
+        await self.db.commit()
 
         feedback = (
             f"Stage {current_num} completed with a score of {stage_score}%. "

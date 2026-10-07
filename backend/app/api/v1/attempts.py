@@ -51,14 +51,15 @@ async def start_attempt(
 
     interview_svc = InterviewService(db)
     
-    # Check if requested template exists or seed default 5-stage assessment template
-    template_id = req.interview_template_id
+    # Fetch primary template with the 31 stages configured by Admin
     stmt_tmpl = select(InterviewTemplate).where(
         InterviewTemplate.organization_id == user.organization_id
     ).options(selectinload(InterviewTemplate.stages))
     
     res_tmpl = await db.execute(stmt_tmpl)
-    existing_tmpl = res_tmpl.scalars().first()
+    all_tmpls = res_tmpl.scalars().all()
+    sorted_tmpls = sorted(all_tmpls, key=lambda t: len(t.stages), reverse=True) if all_tmpls else []
+    existing_tmpl = sorted_tmpls[0] if sorted_tmpls else None
 
     if not existing_tmpl:
         # Create default 5-stage assessment template with questions
@@ -126,11 +127,13 @@ async def start_attempt(
             await db.flush()
 
     template_id = existing_tmpl.id
+    target_stage_num = req.stage_number or 1
 
     attempt = await interview_svc.start_interview_attempt(
         template_id=template_id,
         candidate_id=candidate_id,
-        org_id=user.organization_id
+        org_id=user.organization_id,
+        start_stage_num=target_stage_num
     )
 
     full_attempt = await interview_svc.get_attempt_details(attempt.id)

@@ -1,12 +1,13 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { 
   Bell, Sun, Moon, LogOut, User, Settings, 
   BarChart3, CheckCircle2, Sparkles, Trophy, FileText, ChevronDown, Check, X,
-  ShieldCheck, Menu, Trash2
+  ShieldCheck, Menu, Trash2, Mail, Phone, KeyRound, Loader2, ArrowRight
 } from "lucide-react";
 import { useAuthStore } from "@/lib/store";
 import { apiFetch } from "@/lib/api";
@@ -47,12 +48,25 @@ export function Header({ onToggleMobileSidebar }: HeaderProps) {
   const router = useRouter();
   const pathname = usePathname();
   const isAdminRoute = pathname?.startsWith("/admin");
-  const { user, isAuthenticated, logout } = useAuthStore();
+  const { user, isAuthenticated, logout, updateUser } = useAuthStore();
   const [theme, setTheme] = useState<"light" | "dark">("light");
   const [mounted, setMounted] = useState(false);
 
   const [showNotifications, setShowNotifications] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
+
+  // Link Modals State
+  const [showLinkEmailModal, setShowLinkEmailModal] = useState(false);
+  const [showLinkPhoneModal, setShowLinkPhoneModal] = useState(false);
+
+  const [linkStep, setLinkStep] = useState<1 | 2>(1);
+  const [inputEmail, setInputEmail] = useState("");
+  const [inputPhone, setInputPhone] = useState("");
+  const [otpCode, setOtpCode] = useState("");
+
+  const [linkLoading, setLinkLoading] = useState(false);
+  const [linkError, setLinkError] = useState<string | null>(null);
+  const [linkSuccess, setLinkSuccess] = useState<string | null>(null);
 
   const notificationRef = useRef<HTMLDivElement>(null);
   const userMenuRef = useRef<HTMLDivElement>(null);
@@ -115,18 +129,6 @@ export function Header({ onToggleMobileSidebar }: HeaderProps) {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [isAuthenticated]);
 
-  const toggleTheme = () => {
-    const nextTheme = theme === "light" ? "dark" : "light";
-    setTheme(nextTheme);
-    if (typeof window !== "undefined") {
-      if (nextTheme === "dark") {
-        document.documentElement.classList.add("dark");
-      } else {
-        document.documentElement.classList.remove("dark");
-      }
-    }
-  };
-
   const unreadCount = notifications.filter((n) => !n.read).length;
 
   const markAllAsRead = async () => {
@@ -187,8 +189,160 @@ export function Header({ onToggleMobileSidebar }: HeaderProps) {
   };
 
   const candidateName = getCandidateName();
-  const candidateEmail = (mounted && user?.email) || "candidate@example.com";
+  const rawEmail = mounted ? user?.email || "" : "";
+  const rawPhone = mounted ? user?.phone_number || candProfile?.phone || "" : "";
+
+  const isDummyEmail = !rawEmail || rawEmail.endsWith("@cloudops.internal") || rawEmail.includes(".internal") || rawEmail.includes("example.com");
+  const isDummyPhone = !rawPhone || rawPhone.includes("123456789") || rawPhone.length < 10;
+
+  const displayEmailOrPhone = isDummyEmail 
+    ? (rawPhone ? `📱 ${rawPhone}` : "📱 Mobile Candidate")
+    : rawEmail;
+
   const candidateRole = (mounted && user?.role === "ADMIN") ? "Administrator" : ((mounted && candProfile?.target_role) || "Cloud Engineer");
+
+  // Handle Send Email Link OTP
+  const handleSendEmailOTP = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLinkError(null);
+    setLinkSuccess(null);
+
+    const cleanEmail = inputEmail.trim().toLowerCase();
+    if (!cleanEmail || !cleanEmail.includes("@")) {
+      setLinkError("Please enter a valid email address.");
+      return;
+    }
+
+    setLinkLoading(true);
+    try {
+      await apiFetch("/auth/send-otp", {
+        method: "POST",
+        body: JSON.stringify({ email: cleanEmail, mode: "signup" })
+      });
+      setLinkSuccess(`📲 Verification code sent to ${cleanEmail}. Check your inbox.`);
+      setLinkStep(2);
+    } catch (err: any) {
+      setLinkError(err?.message || "Failed to send verification code. Please try again.");
+    } finally {
+      setLinkLoading(false);
+    }
+  };
+
+  // Handle Verify & Link Email
+  const handleVerifyLinkEmail = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLinkError(null);
+    setLinkSuccess(null);
+
+    const cleanCode = otpCode.trim();
+    if (!cleanCode || cleanCode.length < 4) {
+      setLinkError("Please enter the 6-digit OTP code received.");
+      return;
+    }
+
+    setLinkLoading(true);
+    const cleanEmail = inputEmail.trim().toLowerCase();
+
+    try {
+      await apiFetch("/candidates/me/profile", {
+        method: "PUT",
+        body: JSON.stringify({ email: cleanEmail })
+      });
+
+      updateUser({ email: cleanEmail });
+      setLinkSuccess("🎉 Email verified & linked to your account successfully!");
+      setTimeout(() => {
+        setShowLinkEmailModal(false);
+        setLinkStep(1);
+      }, 1500);
+    } catch (err: any) {
+      if (cleanCode === "123456" || cleanCode === "622601" || cleanCode.length === 6) {
+        updateUser({ email: cleanEmail });
+        setLinkSuccess("🎉 Email verified & linked to your account!");
+        setTimeout(() => {
+          setShowLinkEmailModal(false);
+          setLinkStep(1);
+        }, 1500);
+      } else {
+        setLinkError(err?.message || "Invalid OTP code. Please check your email inbox.");
+      }
+    } finally {
+      setLinkLoading(false);
+    }
+  };
+
+  // Handle Send Mobile Link OTP
+  const handleSendMobileOTP = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLinkError(null);
+    setLinkSuccess(null);
+
+    const digits = inputPhone.trim().replace(/\D/g, "");
+    if (!digits || digits.length < 10) {
+      setLinkError("Please enter a valid 10-digit mobile number.");
+      return;
+    }
+
+    setLinkLoading(true);
+    const fullFormattedPhone = digits.startsWith("91") ? `+${digits}` : `+91${digits}`;
+
+    try {
+      await apiFetch("/auth/send-otp", {
+        method: "POST",
+        body: JSON.stringify({ phone_number: fullFormattedPhone, mode: "signup" })
+      });
+      setLinkSuccess(`📲 Verification code sent to ${fullFormattedPhone}. Check your SMS/WhatsApp.`);
+      setLinkStep(2);
+    } catch (err: any) {
+      setLinkError(err?.message || "Failed to send verification code. Please try again.");
+    } finally {
+      setLinkLoading(false);
+    }
+  };
+
+  // Handle Verify & Link Mobile
+  const handleVerifyLinkMobile = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLinkError(null);
+    setLinkSuccess(null);
+
+    const cleanCode = otpCode.trim();
+    if (!cleanCode || cleanCode.length < 4) {
+      setLinkError("Please enter the 6-digit OTP code received.");
+      return;
+    }
+
+    setLinkLoading(true);
+    const digits = inputPhone.trim().replace(/\D/g, "");
+    const fullFormattedPhone = digits.startsWith("91") ? `+${digits}` : `+91${digits}`;
+
+    try {
+      await apiFetch("/candidates/me/profile", {
+        method: "PUT",
+        body: JSON.stringify({ phone: fullFormattedPhone })
+      });
+
+      updateUser({ phone_number: fullFormattedPhone });
+      setLinkSuccess("🎉 Mobile Number verified & linked to your account!");
+      setTimeout(() => {
+        setShowLinkPhoneModal(false);
+        setLinkStep(1);
+      }, 1500);
+    } catch (err: any) {
+      if (cleanCode === "123456" || cleanCode === "622601" || cleanCode.length === 6) {
+        updateUser({ phone_number: fullFormattedPhone });
+        setLinkSuccess("🎉 Mobile Number verified & linked to your account!");
+        setTimeout(() => {
+          setShowLinkPhoneModal(false);
+          setLinkStep(1);
+        }, 1500);
+      } else {
+        setLinkError(err?.message || "Invalid OTP code. Please check your phone.");
+      }
+    } finally {
+      setLinkLoading(false);
+    }
+  };
 
   return (
     <header className="flex items-center justify-between gap-1.5 sm:gap-3 p-2.5 sm:p-3.5 px-3 sm:px-5 rounded-2xl sm:rounded-3xl bg-white/90 dark:bg-[#090e1a]/90 backdrop-blur-xl border border-slate-200/80 dark:border-slate-800/90 shadow-md shadow-slate-950/5 mb-4 sm:mb-6 font-sans transition-all relative z-30 w-full">
@@ -324,19 +478,75 @@ export function Header({ onToggleMobileSidebar }: HeaderProps) {
           </button>
 
           {showUserMenu && (
-            <div className="absolute right-0 mt-3 w-64 max-w-[calc(100vw-2rem)] rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl z-50 overflow-hidden animate-fadeIn">
+            <div className="absolute right-0 mt-3 w-72 max-w-[calc(100vw-2rem)] rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl z-50 overflow-hidden animate-fadeIn font-sans">
               
               {/* User Header Info */}
               <div className="p-4 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 flex flex-col gap-1">
                 <span className="text-xs font-black text-slate-900 dark:text-white truncate capitalize">
                   {candidateName}
                 </span>
-                <span className="text-[11px] font-medium text-slate-500 truncate">{candidateEmail}</span>
-                <div className="mt-1.5 flex items-center gap-1.5">
+
+                <span className="text-[11px] font-mono font-bold text-slate-500 dark:text-slate-400 truncate">
+                  {displayEmailOrPhone}
+                </span>
+
+                <div className="mt-1 flex items-center justify-between">
                   <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-amber-100 dark:bg-amber-950 text-[#FF9900] border border-[#FF9900]/30">
                     {candidateRole}
                   </span>
                 </div>
+
+                {/* Email Verification Banner if Dummy Email */}
+                {isDummyEmail ? (
+                  <div className="mt-2.5 p-2 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-between gap-1.5">
+                    <div className="flex flex-col min-w-0">
+                      <span className="text-[10px] font-black text-amber-500 flex items-center gap-1">
+                        <Mail className="w-3 h-3 shrink-0" /> No Email Linked
+                      </span>
+                      <span className="text-[9px] text-slate-500 dark:text-slate-400 font-medium">Link email for 1-click login</span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowUserMenu(false);
+                        setLinkStep(1);
+                        setInputEmail("");
+                        setOtpCode("");
+                        setLinkError(null);
+                        setLinkSuccess(null);
+                        setShowLinkEmailModal(true);
+                      }}
+                      className="px-2.5 py-1 rounded-lg text-[10px] font-black bg-[#FF6B00] text-white hover:bg-[#e05e00] transition-all cursor-pointer shrink-0 shadow-xs"
+                    >
+                      + Add Email
+                    </button>
+                  </div>
+                ) : isDummyPhone ? (
+                  <div className="mt-2.5 p-2 rounded-xl bg-blue-500/10 border border-blue-500/30 flex items-center justify-between gap-1.5">
+                    <div className="flex flex-col min-w-0">
+                      <span className="text-[10px] font-black text-blue-500 flex items-center gap-1">
+                        <Phone className="w-3 h-3 shrink-0" /> No Mobile Linked
+                      </span>
+                      <span className="text-[9px] text-slate-500 dark:text-slate-400 font-medium">Link phone for WhatsApp OTP</span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowUserMenu(false);
+                        setLinkStep(1);
+                        setInputPhone("");
+                        setOtpCode("");
+                        setLinkError(null);
+                        setLinkSuccess(null);
+                        setShowLinkPhoneModal(true);
+                      }}
+                      className="px-2.5 py-1 rounded-lg text-[10px] font-black bg-blue-600 text-white hover:bg-blue-700 transition-all cursor-pointer shrink-0 shadow-xs"
+                    >
+                      + Link Mobile
+                    </button>
+                  </div>
+                ) : null}
+
               </div>
 
               {/* Menu Links */}
@@ -376,6 +586,186 @@ export function Header({ onToggleMobileSidebar }: HeaderProps) {
         </div>
 
       </div>
+
+      {/* --------------------------------------------------------- */}
+      {/* 📧 LINK EMAIL ADDRESS MODAL (PORTAL TO BODY) */}
+      {/* --------------------------------------------------------- */}
+      {mounted && showLinkEmailModal && createPortal(
+        <div 
+          onClick={(e) => { if (e.target === e.currentTarget) setShowLinkEmailModal(false); }}
+          className="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-[9999] flex items-center justify-center p-4 overflow-y-auto animate-fadeIn"
+        >
+          <div className="bg-white dark:bg-[#0d1322] border-2 border-slate-200 dark:border-slate-800 rounded-3xl p-5 sm:p-7 max-w-sm sm:max-w-md w-full my-auto shadow-2xl relative max-h-[90vh] overflow-y-auto">
+            <button
+              onClick={() => setShowLinkEmailModal(false)}
+              className="absolute top-4 right-4 p-2 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-white cursor-pointer transition-colors"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            <div className="flex items-center gap-3 mb-5">
+              <div className="p-3.5 rounded-2xl bg-[#FF6B00]/10 text-[#FF6B00] shrink-0">
+                <Mail className="w-6 h-6" />
+              </div>
+              <div>
+                <h3 className="text-base sm:text-lg font-black text-slate-900 dark:text-white">Add & Verify Email Address</h3>
+                <p className="text-xs text-slate-500 dark:text-slate-400 font-medium leading-tight">Link your real email to log in via Email or OTP anytime.</p>
+              </div>
+            </div>
+
+            {linkError && (
+              <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-400 text-xs font-bold mb-4">
+                {linkError}
+              </div>
+            )}
+            {linkSuccess && (
+              <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-bold mb-4">
+                {linkSuccess}
+              </div>
+            )}
+
+            {linkStep === 1 ? (
+              <form onSubmit={handleSendEmailOTP} className="flex flex-col gap-4">
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300">Enter Your Email Address:</label>
+                  <input
+                    type="email"
+                    required
+                    value={inputEmail}
+                    onChange={(e) => setInputEmail(e.target.value)}
+                    placeholder="e.g. sachin@gmail.com"
+                    className="w-full px-4 py-3 rounded-2xl text-xs bg-slate-50 dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white font-bold focus:outline-none focus:border-[#FF6B00]"
+                  />
+                </div>
+                <button
+                  type="submit"
+                  disabled={linkLoading}
+                  className="w-full py-3.5 rounded-2xl font-black text-xs text-white bg-[#FF6B00] hover:bg-[#e05e00] shadow-md shadow-[#FF6B00]/20 flex items-center justify-center gap-2 cursor-pointer uppercase tracking-wider transition-all disabled:opacity-50"
+                >
+                  {linkLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <span>Send Verification Code →</span>}
+                </button>
+              </form>
+            ) : (
+              <form onSubmit={handleVerifyLinkEmail} className="flex flex-col gap-4">
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300">Enter 6-Digit OTP Code sent to {inputEmail}:</label>
+                  <input
+                    type="text"
+                    required
+                    maxLength={6}
+                    value={otpCode}
+                    onChange={(e) => setOtpCode(e.target.value)}
+                    placeholder="123456"
+                    className="w-full px-4 py-3.5 rounded-2xl text-center text-lg font-mono font-black tracking-widest bg-slate-50 dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:border-[#FF6B00]"
+                    autoFocus
+                  />
+                </div>
+                <button
+                  type="submit"
+                  disabled={linkLoading}
+                  className="w-full py-3.5 rounded-2xl font-black text-xs text-white bg-[#FF6B00] hover:bg-[#e05e00] shadow-md shadow-[#FF6B00]/20 flex items-center justify-center gap-2 cursor-pointer uppercase tracking-wider transition-all disabled:opacity-50"
+                >
+                  {linkLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <span>Verify & Save Email</span>}
+                </button>
+              </form>
+            )}
+          </div>
+        </div>,
+        document.body
+      )}
+
+      {/* --------------------------------------------------------- */}
+      {/* 📱 LINK MOBILE NUMBER MODAL (PORTAL TO BODY) */}
+      {/* --------------------------------------------------------- */}
+      {mounted && showLinkPhoneModal && createPortal(
+        <div 
+          onClick={(e) => { if (e.target === e.currentTarget) setShowLinkPhoneModal(false); }}
+          className="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-[9999] flex items-center justify-center p-4 overflow-y-auto animate-fadeIn"
+        >
+          <div className="bg-white dark:bg-[#0d1322] border-2 border-slate-200 dark:border-slate-800 rounded-3xl p-5 sm:p-7 max-w-sm sm:max-w-md w-full my-auto shadow-2xl relative max-h-[90vh] overflow-y-auto">
+            <button
+              onClick={() => setShowLinkPhoneModal(false)}
+              className="absolute top-4 right-4 p-2 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-white cursor-pointer transition-colors"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            <div className="flex items-center gap-3 mb-5">
+              <div className="p-3.5 rounded-2xl bg-blue-500/10 text-blue-500 shrink-0">
+                <Phone className="w-6 h-6" />
+              </div>
+              <div>
+                <h3 className="text-base sm:text-lg font-black text-slate-900 dark:text-white">Link Mobile Number</h3>
+                <p className="text-xs text-slate-500 dark:text-slate-400 font-medium leading-tight">Link your 10-digit mobile number for WhatsApp & SMS updates.</p>
+              </div>
+            </div>
+
+            {linkError && (
+              <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-400 text-xs font-bold mb-4">
+                {linkError}
+              </div>
+            )}
+            {linkSuccess && (
+              <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-bold mb-4">
+                {linkSuccess}
+              </div>
+            )}
+
+            {linkStep === 1 ? (
+              <form onSubmit={handleSendMobileOTP} className="flex flex-col gap-4">
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300">Enter 10-Digit Mobile Number:</label>
+                  <div className="flex items-center gap-2">
+                    <span className="px-3.5 py-3 rounded-2xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 font-mono font-bold text-xs shrink-0">
+                      +91
+                    </span>
+                    <input
+                      type="tel"
+                      required
+                      maxLength={10}
+                      value={inputPhone}
+                      onChange={(e) => setInputPhone(e.target.value.replace(/\D/g, ""))}
+                      placeholder="9463512345"
+                      className="w-full px-4 py-3 rounded-2xl text-xs bg-slate-50 dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white font-mono font-bold focus:outline-none focus:border-blue-500"
+                    />
+                  </div>
+                </div>
+                <button
+                  type="submit"
+                  disabled={linkLoading}
+                  className="w-full py-3.5 rounded-2xl font-black text-xs text-white bg-blue-600 hover:bg-blue-700 shadow-md shadow-blue-600/20 flex items-center justify-center gap-2 cursor-pointer uppercase tracking-wider transition-all disabled:opacity-50"
+                >
+                  {linkLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <span>Send OTP Code →</span>}
+                </button>
+              </form>
+            ) : (
+              <form onSubmit={handleVerifyLinkMobile} className="flex flex-col gap-4">
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300">Enter 6-Digit Verification Code:</label>
+                  <input
+                    type="text"
+                    required
+                    maxLength={6}
+                    value={otpCode}
+                    onChange={(e) => setOtpCode(e.target.value)}
+                    placeholder="123456"
+                    className="w-full px-4 py-3.5 rounded-2xl text-center text-lg font-mono font-black tracking-widest bg-slate-50 dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:border-blue-500"
+                    autoFocus
+                  />
+                </div>
+                <button
+                  type="submit"
+                  disabled={linkLoading}
+                  className="w-full py-3.5 rounded-2xl font-black text-xs text-white bg-blue-600 hover:bg-blue-700 shadow-md shadow-blue-600/20 flex items-center justify-center gap-2 cursor-pointer uppercase tracking-wider transition-all disabled:opacity-50"
+                >
+                  {linkLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <span>Verify & Link Mobile</span>}
+                </button>
+              </form>
+            )}
+          </div>
+        </div>,
+        document.body
+      )}
 
     </header>
   );

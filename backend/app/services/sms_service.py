@@ -89,7 +89,7 @@ class SMSService:
         masked_key = f"{key[:10]}...{key[-6:]}" if key and len(key) > 16 else key
 
         try:
-            async with httpx.AsyncClient(timeout=10.0) as client:
+            async with httpx.AsyncClient(timeout=3.0) as client:
                 response = await client.post(url, headers=headers, json=payload)
                 status_code = response.status_code
                 res_text = response.text
@@ -171,7 +171,7 @@ class SMSService:
         formatted_phone = diag["formatted_phone"]
 
         print(f"\n========================================")
-        print(f"[AISENSY WHATSAPP SERVICE] 📲 Target Phone: {formatted_phone} | Code: [{otp_code}]")
+        print(f"[AISENSY WHATSAPP SERVICE] [OTP] Target Phone: {formatted_phone} | Code: [{otp_code}]")
         print(f"Campaign: {diag['campaign_used']} | Key: {diag['api_key_used']}")
         print(f"Result: {diag['message']}")
         print(f"========================================\n")

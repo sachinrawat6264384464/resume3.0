@@ -3,6 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, or_
 import secrets
 import logging
+import asyncio
 from app.core.database import get_db
 from app.core.security import verify_auth_token
 from app.services.auth_service import AuthService
@@ -70,7 +71,7 @@ async def send_otp(req: SendOTPRequest, db: AsyncSession = Depends(get_db)):
         logger.info(f"🔑 EMAIL OTP GENERATED: [{code}] for candidate email: {target_email}")
         try:
             from app.services.email_service import EmailService
-            await EmailService.send_otp_email(target_email, code)
+            asyncio.create_task(EmailService.send_otp_email(target_email, code))
         except Exception as eErr:
             logger.warn(f"Email service dispatch notice: {eErr}")
             
@@ -80,23 +81,24 @@ async def send_otp(req: SendOTPRequest, db: AsyncSession = Depends(get_db)):
 
         try:
             from app.services.sms_service import SMSService
-            await SMSService.send_otp(
-                target_phone,
-                code,
-                candidate_name=req.full_name,
-                campaign_name=req.campaign_name,
-                api_key=req.api_key
+            asyncio.create_task(
+                SMSService.send_otp(
+                    target_phone,
+                    code,
+                    candidate_name=req.full_name,
+                    campaign_name=req.campaign_name,
+                    api_key=req.api_key
+                )
             )
         except Exception as sms_err:
             logger.warn(f"AiSensy WhatsApp dispatch notice: {sms_err}")
 
     return StandardResponse(
-        message=f"📲 6-Digit WhatsApp OTP verification code sent to {target_phone or target_email} successfully!",
+        message=f"📲 6-Digit OTP verification code sent to {target_phone or target_email} successfully!",
         data={
             "sent": True,
             "email": target_email,
-            "phone_number": target_phone,
-            "otp_code": code
+            "phone_number": target_phone
         }
     )
 
@@ -193,12 +195,15 @@ async def verify_otp(req: VerifyOTPRequest, db: AsyncSession = Depends(get_db)):
             db.add(cand)
         await db.commit()
 
+        user_email = existing_user.email or f"user_{''.join(filter(str.isdigit, existing_user.phone_number or ''))}@cloudops.internal"
         return await service.authenticate_mock(
-            MockLoginRequest(email=existing_user.email, name=existing_user.full_name)
+            MockLoginRequest(email=user_email, name=existing_user.full_name)
         )
 
     # 2. REGISTER NEW CANDIDATE USER AUTOMATICALLY
-    final_email = target_email or f"user_{target_phone[-4:]}@cloudops.internal"
+    phone_digits = "".join(filter(str.isdigit, target_phone)) if target_phone else ""
+    default_prefix = phone_digits if phone_digits else str(secrets.randbelow(900000))
+    final_email = target_email or f"user_{default_prefix}@cloudops.internal"
     final_phone = target_phone or f"+91{secrets.randbelow(9000000000) + 1000000000}"
     final_name = (req.full_name or "").strip() or f"Candidate {final_email.split('@')[0]}"
     final_password = req.password or "DefaultPass@123"

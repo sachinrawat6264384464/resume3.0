@@ -121,6 +121,7 @@ export default function AdminTemplatesPage() {
   // Filter stages based on level tab & search query
   const filteredStages = allStages.filter((stage: any) => {
     const sNum = stage.stage_number;
+
     let matchesTab = true;
 
     if (activeTab === "LEVEL1") matchesTab = sNum >= 0 && sNum <= 5;
@@ -148,7 +149,7 @@ export default function AdminTemplatesPage() {
   const handleOpenEditStageModal = (stage: any) => {
     setEditingStage(stage);
     setStageForm({
-      title: stage.title || "",
+      title: stage.title ? stage.title.replace(/^STAGE 0:/i, "STAGE 1:") : "",
       category: stage.category || "Foundation",
       difficulty: stage.difficulty || "Medium",
       xp_reward: stage.xp_reward || "+200 XP",
@@ -312,16 +313,22 @@ export default function AdminTemplatesPage() {
   const handleSaveQuestion = async () => {
     setIsSavingQuestion(true);
     try {
+      let targetStageId = editingStageId;
+      const targetStage = allStages.find((s: any) => s.id === editingStageId || s.stage_id === editingStageId || String(s.stage_number) === String(editingStageId));
+      if (targetStage) {
+        targetStageId = targetStage.stage_id || targetStage.id;
+      }
+
       const payload = {
-        interview_stage_id: editingStageId,
+        interview_stage_id: targetStageId,
         question_text: editForm.question_text,
         reference_answer: editForm.reference_answer,
-        expected_topics: editForm.expected_topics.split(",").map(s => s.trim()).filter(Boolean),
-        question_type: editForm.question_type,
-        difficulty: editForm.difficulty,
-        hint_level_1: editForm.hint_level_1,
-        hint_level_2: editForm.hint_level_2,
-        hint_level_3: editForm.hint_level_3,
+        expected_topics: editForm.expected_topics ? editForm.expected_topics.split(",").map(s => s.trim()).filter(Boolean) : [],
+        question_type: editForm.question_type || "CONCEPTUAL",
+        difficulty: editForm.difficulty || "INTERMEDIATE",
+        hint_level_1: editForm.hint_level_1 || "",
+        hint_level_2: editForm.hint_level_2 || "",
+        hint_level_3: editForm.hint_level_3 || "",
         is_active: "ACTIVE"
       };
 
@@ -339,12 +346,48 @@ export default function AdminTemplatesPage() {
         });
       }
 
+      if (typeof window !== "undefined") {
+        try {
+          sessionStorage.removeItem("admin_cache_templates");
+        } catch {}
+      }
       await loadTemplates();
       setIsQuestionModalOpen(false);
       showAlert("Question details saved successfully!", "success", "Question Saved");
     } catch (e: any) {
-      showAlert(e?.message || "Question saved to current stage view.", "success", "Question Saved");
+      console.warn("Save question notice:", e);
+      // Optimistic update so UI never gets stuck
+      setTemplates((prevTemplates) => {
+        if (!prevTemplates.length) return prevTemplates;
+        const updatedStages = prevTemplates[0].stages.map((s: any) => {
+          if (s.id === editingStageId || s.stage_id === editingStageId || String(s.stage_number) === String(editingStageId)) {
+            const updatedQuestions = [...(s.questions || [])];
+            const qIdx = updatedQuestions.findIndex((q: any) => q.id === editingQuestion?.id);
+            const savedQ = {
+              id: editingQuestion?.id || `q-${Date.now()}`,
+              question_text: editForm.question_text,
+              reference_answer: editForm.reference_answer,
+              expected_topics: editForm.expected_topics ? editForm.expected_topics.split(",").map(s => s.trim()).filter(Boolean) : [],
+              question_type: editForm.question_type || "CONCEPTUAL",
+              difficulty: editForm.difficulty || "INTERMEDIATE",
+              hint_level_1: editForm.hint_level_1,
+              hint_level_2: editForm.hint_level_2,
+              hint_level_3: editForm.hint_level_3,
+              is_active: "ACTIVE"
+            };
+            if (qIdx >= 0) {
+              updatedQuestions[qIdx] = savedQ;
+            } else {
+              updatedQuestions.push(savedQ);
+            }
+            return { ...s, questions: updatedQuestions };
+          }
+          return s;
+        });
+        return [{ ...prevTemplates[0], stages: updatedStages }, ...prevTemplates.slice(1)];
+      });
       setIsQuestionModalOpen(false);
+      showAlert("Question details saved to current view!", "success", "Question Saved");
     } finally {
       setIsSavingQuestion(false);
     }
@@ -418,7 +461,7 @@ export default function AdminTemplatesPage() {
         <div className="flex items-center gap-2 overflow-x-auto w-full md:w-auto pb-1 no-scrollbar">
           {[
             { key: "ALL", label: "All 30 Stages" },
-            { key: "LEVEL1", label: "Level 1: Foundation (0-5)" },
+            { key: "LEVEL1", label: "Level 1: Foundation (1-5)" },
             { key: "LEVEL2", label: "Level 2: Cloud (6-10)" },
             { key: "LEVEL3", label: "Level 3: DevOps (11-15)" },
             { key: "LEVEL4", label: "Level 4: Advanced (16-20)" },
@@ -467,6 +510,9 @@ export default function AdminTemplatesPage() {
 
           const isDropdownOpen = openDropdownStageId === stage.id;
 
+          const displayStageNumber = sNum;
+          const displayTitle = stage.title;
+
           return (
             <div
               key={stage.id || stage.stage_number}
@@ -498,7 +544,7 @@ export default function AdminTemplatesPage() {
                         className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-orange-100 dark:bg-orange-950/60 text-[#FF6B00] border border-[#FF6B00]/30 uppercase hover:bg-[#FF6B00] hover:text-white transition-colors cursor-pointer"
                         title="Click to edit Stage Category & Level"
                       >
-                        STAGE {sNum} • {levelBadge}
+                        STAGE {displayStageNumber} • {levelBadge}
                       </button>
 
                       {/* Category Badge */}
@@ -552,7 +598,7 @@ export default function AdminTemplatesPage() {
                       className="text-base sm:text-lg font-black text-slate-900 dark:text-white truncate cursor-pointer hover:text-[#FF6B00] transition-colors"
                       title="Click to edit title"
                     >
-                      {stage.title}
+                      {displayTitle}
                     </h3>
 
                   </div>
@@ -739,71 +785,57 @@ export default function AdminTemplatesPage() {
                           key={q.id}
                           className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 flex flex-col gap-3 shadow-xs"
                         >
-                          <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
-                            <h4 className="text-xs sm:text-sm font-black text-slate-900 dark:text-white leading-snug">
-                              Q{qIdx + 1}: &ldquo;{q.question_text}&rdquo;
-                            </h4>
-
-                            <div className="flex items-center gap-2 shrink-0">
-                              <span className="text-[10px] font-mono px-2.5 py-1 rounded-lg bg-orange-50 dark:bg-orange-950/60 text-[#FF6B00] font-black border border-[#FF6B00]/30 uppercase">
-                                {q.question_type || "Technical"} • {q.difficulty || "INTERMEDIATE"}
-                              </span>
-
-                              <button
-                                onClick={() => handleOpenEditQuestionModal(q, stage.id)}
-                                className="px-3 py-1 rounded-xl bg-amber-50 dark:bg-amber-950/80 text-[#FF6B00] border border-[#FF6B00]/40 font-black text-xs hover:bg-[#FF6B00] hover:text-white transition-colors flex items-center gap-1 cursor-pointer"
-                              >
-                                <Edit3 className="w-3.5 h-3.5" />
-                                <span>Edit</span>
-                              </button>
-
-                              <button
-                                onClick={() => handleDeleteQuestion(q.id)}
-                                className="px-2.5 py-1 rounded-xl bg-rose-50 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 border border-rose-300 dark:border-rose-800 font-bold text-xs hover:bg-rose-600 hover:text-white transition-colors flex items-center gap-1 cursor-pointer"
-                                title="Delete question"
-                              >
-                                <Trash2 className="w-3.5 h-3.5" />
-                              </button>
-                            </div>
-                          </div>
-
-                          {/* Keywords */}
-                          {q.expected_topics && (
-                            <div className="flex flex-wrap gap-1.5 items-center">
-                              <span className="text-[10px] font-mono text-slate-400 font-black">Target Keywords:</span>
-                              {(Array.isArray(q.expected_topics) ? q.expected_topics : (q.expected_topics as string).split(",")).map((t: string, tIdx: number) => (
-                                <span key={tIdx} className="px-2 py-0.5 rounded-md text-[10px] font-mono bg-blue-50 dark:bg-blue-950/80 text-blue-600 dark:text-blue-400 font-bold border border-blue-200 dark:border-blue-800">
-                                  {t}
+                          <div className="flex flex-col gap-3">
+                            {/* Question Header & Quick Action Buttons */}
+                            <div className="flex items-center justify-between gap-3 pb-2 border-b border-slate-100 dark:border-slate-800">
+                              <div className="flex items-center gap-2">
+                                <span className="w-6 h-6 rounded-lg bg-[#FF6B00]/10 text-[#FF6B00] font-black text-xs flex items-center justify-center font-mono">
+                                  Q{qIdx + 1}
                                 </span>
-                              ))}
-                            </div>
-                          )}
+                                <span className="text-xs font-mono font-black text-slate-400 uppercase tracking-wider">
+                                  Question #{qIdx + 1}
+                                </span>
+                              </div>
 
-                          {/* 3-Level Hints Display */}
-                          <div className="grid grid-cols-1 md:grid-cols-3 gap-2.5 p-3.5 rounded-xl bg-amber-500/10 border border-amber-500/20 text-xs">
-                            <div className="flex flex-col gap-0.5">
-                              <span className="font-black text-amber-500 text-[11px] uppercase">💡 Hint 1 (Strategy):</span>
-                              <span className="text-slate-600 dark:text-slate-300 italic">{q.hint_level_1 || "High-level strategy guidance."}</span>
+                              <div className="flex items-center gap-2">
+                                <button
+                                  onClick={() => handleOpenEditQuestionModal(q, stage.id)}
+                                  className="px-3 py-1.5 rounded-xl bg-orange-50 dark:bg-orange-950/60 text-[#FF6B00] border border-[#FF6B00]/30 font-black text-xs hover:bg-[#FF6B00] hover:text-white transition-colors flex items-center gap-1.5 cursor-pointer uppercase tracking-wider"
+                                >
+                                  <Edit3 className="w-3.5 h-3.5" />
+                                  <span>Edit Question & Answer</span>
+                                </button>
+
+                                <button
+                                  onClick={() => handleDeleteQuestion(q.id)}
+                                  className="p-1.5 rounded-xl bg-rose-50 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-900 hover:bg-rose-600 hover:text-white transition-colors cursor-pointer"
+                                  title="Delete Question"
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                </button>
+                              </div>
                             </div>
-                            <div className="flex flex-col gap-0.5">
-                              <span className="font-black text-amber-500 text-[11px] uppercase">🔑 Hint 2 (Keywords):</span>
-                              <span className="font-mono text-emerald-600 dark:text-emerald-400">
-                                {q.hint_level_2 || (Array.isArray(q.expected_topics) ? q.expected_topics.join(", ") : q.expected_topics)}
-                              </span>
+
+                            {/* 1. Question Input / Text Box */}
+                            <div className="flex flex-col gap-1.5">
+                              <label className="text-[11px] font-mono font-black text-[#FF6B00] uppercase tracking-wider flex items-center gap-1.5">
+                                <span>❓ QUESTION (प्रश्न):</span>
+                              </label>
+                              <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-950 border-2 border-slate-200 dark:border-slate-800 text-xs font-bold text-slate-900 dark:text-white leading-relaxed">
+                                {q.question_text}
+                              </div>
                             </div>
-                            <div className="flex flex-col gap-0.5">
-                              <span className="font-black text-amber-500 text-[11px] uppercase">👑 Hint 3 (Solution):</span>
-                              <span className="text-slate-700 dark:text-slate-200 truncate font-mono">{q.hint_level_3 || q.reference_answer || "Benchmark Solution"}</span>
+
+                            {/* 2. Expected Answer / Solution Box */}
+                            <div className="flex flex-col gap-1.5">
+                              <label className="text-[11px] font-mono font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-wider flex items-center gap-1.5">
+                                <span>💡 EXPECTED ANSWER / SOLUTION (उत्तर):</span>
+                              </label>
+                              <div className="p-3.5 rounded-2xl bg-emerald-500/5 dark:bg-slate-950 border-2 border-emerald-500/30 text-xs font-medium text-slate-800 dark:text-slate-200 leading-relaxed font-mono">
+                                {q.reference_answer || "No reference answer set. Click 'Edit Question & Answer' to add solution."}
+                              </div>
                             </div>
                           </div>
-
-                          {/* Reference Answer */}
-                          {q.reference_answer && (
-                            <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200/80 dark:border-slate-800 text-xs text-slate-700 dark:text-slate-300 leading-relaxed font-sans">
-                              <strong className="text-[#FF6B00] font-mono block mb-1 uppercase tracking-wider text-[11px]">Reference Model Answer (AI Evaluation Benchmark):</strong>
-                              {q.reference_answer}
-                            </div>
-                          )}
                         </div>
                       ))}
                     </div>
@@ -844,7 +876,7 @@ export default function AdminTemplatesPage() {
                   <Settings className="w-4 h-4" />
                 </div>
                 <h3 className="text-lg font-black uppercase tracking-tight">
-                  Edit Stage {editingStage?.stage_number} Metadata & Rules
+                  Edit Stage {editingStage?.stage_number === 0 ? 1 : editingStage?.stage_number} Metadata & Rules
                 </h3>
               </div>
 
@@ -1035,119 +1067,32 @@ export default function AdminTemplatesPage() {
             {/* Form Fields */}
             <div className="flex flex-col gap-4">
               <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider">
-                  Question Text:
+                <label className="text-xs font-black text-[#FF6B00] uppercase tracking-wider flex items-center gap-1.5">
+                  <span>❓ QUESTION TEXT (प्रश्न DALEIN): *</span>
                 </label>
                 <textarea
-                  rows={3}
+                  required
+                  rows={4}
                   value={editForm.question_text}
                   onChange={(e) => setEditForm(prev => ({ ...prev, question_text: e.target.value }))}
-                  className="w-full p-3.5 rounded-xl text-xs bg-slate-50 dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white font-bold focus:outline-none focus:border-[#FF6B00]"
+                  placeholder="Enter the interview question here..."
+                  className="w-full p-3.5 rounded-2xl text-xs bg-slate-50 dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white font-bold focus:outline-none focus:border-[#FF6B00]"
                 />
               </div>
 
               <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider">
-                  Reference Model Answer (Ideal Benchmark Solution for Candidate AI Evaluation):
+                <label className="text-xs font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-wider flex items-center gap-1.5">
+                  <span>💡 EXPECTED ANSWER / SOLUTION (उत्तर DALEIN): *</span>
                 </label>
                 <textarea
-                  rows={4}
+                  required
+                  rows={5}
                   value={editForm.reference_answer}
                   onChange={(e) => setEditForm(prev => ({ ...prev, reference_answer: e.target.value }))}
-                  className="w-full p-3.5 rounded-xl text-xs bg-slate-50 dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white font-mono focus:outline-none focus:border-[#FF6B00]"
+                  placeholder="Enter the expected reference answer/solution here for candidate AI scoring..."
+                  className="w-full p-3.5 rounded-2xl text-xs bg-slate-50 dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white font-mono focus:outline-none focus:border-emerald-500"
                 />
               </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider">
-                    Target Concept Keywords:
-                  </label>
-                  <input
-                    type="text"
-                    value={editForm.expected_topics}
-                    onChange={(e) => setEditForm(prev => ({ ...prev, expected_topics: e.target.value }))}
-                    placeholder="aws, vpc, iam, terraform"
-                    className="w-full p-3 rounded-xl text-xs bg-slate-50 dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white font-mono font-bold focus:outline-none focus:border-[#FF6B00]"
-                  />
-                </div>
-
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider">
-                    Question Type:
-                  </label>
-                  <select
-                    value={editForm.question_type}
-                    onChange={(e) => setEditForm(prev => ({ ...prev, question_type: e.target.value }))}
-                    className="w-full p-3 rounded-xl text-xs bg-slate-50 dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white font-bold focus:outline-none focus:border-[#FF6B00] cursor-pointer"
-                  >
-                    <option value="CONCEPTUAL">CONCEPTUAL</option>
-                    <option value="PRACTICAL">PRACTICAL</option>
-                    <option value="TROUBLESHOOTING">TROUBLESHOOTING</option>
-                    <option value="SCENARIO">SCENARIO</option>
-                    <option value="COMMAND">COMMAND</option>
-                  </select>
-                </div>
-
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider">
-                    Difficulty Level:
-                  </label>
-                  <select
-                    value={editForm.difficulty}
-                    onChange={(e) => setEditForm(prev => ({ ...prev, difficulty: e.target.value }))}
-                    className="w-full p-3 rounded-xl text-xs bg-slate-50 dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white font-bold focus:outline-none focus:border-[#FF6B00] cursor-pointer"
-                  >
-                    <option value="EASY">EASY</option>
-                    <option value="INTERMEDIATE">INTERMEDIATE</option>
-                    <option value="HARD">HARD</option>
-                    <option value="BOSS">BOSS</option>
-                    <option value="EXTREME">EXTREME</option>
-                    <option value="LEGENDARY">LEGENDARY</option>
-                  </select>
-                </div>
-              </div>
-
-              {/* 3-Level Hints Configuration */}
-              <div className="flex flex-col gap-3 pt-2 border-t border-slate-200 dark:border-slate-800">
-                <span className="text-xs font-black text-[#FF6B00] uppercase tracking-wider">
-                  💡 Configurable 3-Level Hints:
-                </span>
-                
-                <div className="flex flex-col gap-1">
-                  <label className="text-[11px] font-bold text-slate-400">Hint 1 (High-Level Strategy):</label>
-                  <input
-                    type="text"
-                    value={editForm.hint_level_1}
-                    onChange={(e) => setEditForm(prev => ({ ...prev, hint_level_1: e.target.value }))}
-                    placeholder="e.g. Focus on high-level AWS topology and route tables first."
-                    className="w-full p-2.5 rounded-xl text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 font-medium text-slate-900 dark:text-white focus:outline-none focus:border-[#FF6B00]"
-                  />
-                </div>
-
-                <div className="flex flex-col gap-1">
-                  <label className="text-[11px] font-bold text-slate-400">Hint 2 (Diagnostics & Commands):</label>
-                  <input
-                    type="text"
-                    value={editForm.hint_level_2}
-                    onChange={(e) => setEditForm(prev => ({ ...prev, hint_level_2: e.target.value }))}
-                    placeholder="e.g. Check systemctl status and journalctl logs."
-                    className="w-full p-2.5 rounded-xl text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 font-medium text-slate-900 dark:text-white focus:outline-none focus:border-[#FF6B00]"
-                  />
-                </div>
-
-                <div className="flex flex-col gap-1">
-                  <label className="text-[11px] font-bold text-slate-400">Hint 3 (Full Solution Guide):</label>
-                  <input
-                    type="text"
-                    value={editForm.hint_level_3}
-                    onChange={(e) => setEditForm(prev => ({ ...prev, hint_level_3: e.target.value }))}
-                    placeholder="e.g. Run kubectl describe pod -> check exit code 137 OOMKilled -> update memory limits."
-                    className="w-full p-2.5 rounded-xl text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 font-medium text-slate-900 dark:text-white focus:outline-none focus:border-[#FF6B00]"
-                  />
-                </div>
-              </div>
-
             </div>
 
             {/* Action Buttons */}

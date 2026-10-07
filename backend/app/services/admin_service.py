@@ -20,7 +20,6 @@ class AdminService:
         cand_stmt = (
             select(func.count(Candidate.id))
             .join(User, Candidate.user_id == User.id)
-            .where(~User.email.like("%@cloudops.internal%"))
         )
         total_candidates = (await self.db.execute(cand_stmt)).scalar() or 0
 
@@ -192,8 +191,8 @@ class AdminService:
             if a.decision in ("NEEDS_IMPROVEMENT", "FAILED") or (a.overall_score is not None and a.overall_score < 80.0):
                 attention_items.append(item)
 
-        # Filter out dummy seeded test accounts from recent items
-        recent_items = [item for item in recent_items if not (item.candidate_email and "@cloudops.internal" in item.candidate_email)]
+        # Filter out dummy seeded test accounts from recent items if any
+        recent_items = [item for item in recent_items if not (item.candidate_email and item.candidate_email.startswith("demo@"))]
 
         # Query top performing candidates dynamically based on real interview attempts in Neon PostgreSQL DB
         top_att_stmt = (
@@ -236,8 +235,8 @@ class AdminService:
                 c_name = cand_u.full_name if (cand_u and cand_u.full_name) else "Candidate"
                 c_email = cand_u.email if cand_u else ""
 
-                # Skip dummy seeded test accounts if email contains @cloudops.internal
-                if "@cloudops.internal" in c_email:
+                # Skip dummy demo test accounts
+                if c_email and c_email.startswith("demo@"):
                     continue
 
                 # Find latest attempt for stage title
@@ -260,7 +259,7 @@ class AdminService:
                     break
 
         if not top_candidates_list:
-            # Fallback to registered candidates in DB ordered by readiness_score, excluding @cloudops.internal
+            # Fallback to registered candidates in DB ordered by readiness_score
             top_cand_stmt = (
                 select(Candidate)
                 .options(selectinload(Candidate.user))
@@ -275,7 +274,7 @@ class AdminService:
                 c_name = cand_u.full_name if (cand_u and cand_u.full_name) else "Candidate"
                 c_email = cand_u.email if cand_u else ""
 
-                if "@cloudops.internal" in c_email:
+                if c_email and c_email.startswith("demo@"):
                     continue
 
                 r_score = tc.readiness_score or 0.0

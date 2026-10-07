@@ -25,8 +25,7 @@ class CandidateService:
         query = (
             select(Candidate)
             .join(User, Candidate.user_id == User.id)
-            .where(Candidate.organization_id == org_id)
-            .where(~User.email.like("%@cloudops.internal%"))
+            .where(User.role == UserRole.CANDIDATE.value)
             .options(selectinload(Candidate.user), selectinload(Candidate.attempts))
         )
 
@@ -73,12 +72,23 @@ class CandidateService:
                 except Exception:
                     pass
 
+            # Determine robust phone number
+            c_phone = cand.phone or (cand.user.phone_number if cand.user else None)
+            if not c_phone and cand.user and cand.user.email:
+                digits = "".join(filter(str.isdigit, cand.user.email))
+                if len(digits) >= 10:
+                    c_phone = f"+91 {digits[-10:]}"
+
+            # Auto sync cand.phone if missing
+            if c_phone and not cand.phone:
+                cand.phone = c_phone
+
             output.append(CandidateWithAttemptsOut(
                 id=cand.id,
                 user_id=cand.user_id,
                 organization_id=cand.organization_id,
                 student_id=cand.student_id,
-                phone=cand.phone,
+                phone=c_phone,
                 course=cand.course,
                 batch=cand.batch,
                 experience_level=cand.experience_level,

@@ -19,7 +19,7 @@ export default function AdminLoginPage() {
 
   const [availableRoles, setAvailableRoles] = useState<SystemRoleItem[]>([]);
   const [selectedRoleId, setSelectedRoleId] = useState<string>("");
-  const [email, setEmail] = useState("admin@cloudops.internal");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -32,9 +32,6 @@ export default function AdminLoginPage() {
         if (fetchedRoles.length > 0) {
           const defaultRole = fetchedRoles[0];
           setSelectedRoleId(defaultRole.id);
-          if (defaultRole.assignedEmail) {
-            setEmail(defaultRole.assignedEmail);
-          }
         }
       } catch (e) {
         console.warn("Failed to fetch roles for login selector:", e);
@@ -45,10 +42,6 @@ export default function AdminLoginPage() {
 
   const handleRoleSelect = (roleId: string) => {
     setSelectedRoleId(roleId);
-    const chosenRole = availableRoles.find(r => r.id === roleId);
-    if (chosenRole?.assignedEmail) {
-      setEmail(chosenRole.assignedEmail);
-    }
   };
 
   const handleGoogleAuth = async () => {
@@ -80,6 +73,7 @@ export default function AdminLoginPage() {
       // System Admin Whitelist Fallback
       const isSystemAdminEmail = 
         gEmail === "admin@cloudops.internal" || 
+        gEmail === "admin@cloudops.ai" || 
         gEmail === "sachinrawat6264384464@gmail.com" ||
         gEmail.startsWith("admin");
 
@@ -123,8 +117,13 @@ export default function AdminLoginPage() {
     if (e) e.preventDefault();
     setError(null);
 
-    const loginEmail = (email || "admin@cloudops.internal").trim().toLowerCase();
-    const loginPassword = (password || "AdminPass@123").trim();
+    const loginEmail = email.trim().toLowerCase();
+    const loginPassword = password.trim();
+
+    if (!loginEmail || !loginPassword) {
+      setError("Please enter both Administrator Email Address and Password.");
+      return;
+    }
 
     setIsLoading(true);
 
@@ -134,26 +133,12 @@ export default function AdminLoginPage() {
     const roleCodeToAssign = activeRole ? activeRole.roleCode : "SUPER_ADMIN";
     const roleName = activeRole ? activeRole.roleName : "Super Admin";
 
-    // Instant direct admin session authorization
-    const adminUserObj = {
-      id: `admin-${Date.now()}`,
-      organization_id: "org-001",
-      email: loginEmail,
-      full_name: roleName,
-      role: roleCodeToAssign as any,
-      is_active: true,
-      created_at: new Date().toISOString()
-    };
-
     try {
-      // 1. Try real API auth with 2s timeout
-      const authPromise = apiFetch("/auth/login", {
+      const res: any = await apiFetch("/auth/login", {
         method: "POST",
         body: JSON.stringify({ email: loginEmail, password: loginPassword })
       });
-      const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout")), 2000));
-      
-      const res: any = await Promise.race([authPromise, timeoutPromise]);
+
       if (res?.user && res?.access_token) {
         setAuth({ ...res.user, role: roleCodeToAssign }, res.access_token);
         if (typeof window !== "undefined") {
@@ -164,15 +149,39 @@ export default function AdminLoginPage() {
         return;
       }
     } catch (err: any) {
-      console.warn("Backend auth notice, using instant admin OS session:", err);
-    }
+      console.warn("Backend auth verification result:", err);
+      const errMsg = err?.message || "";
 
-    // Direct Instant Fallback Authorization
-    setAuth(adminUserObj, "admin-token-123");
-    if (typeof window !== "undefined") {
-      window.location.href = "/admin";
-    } else {
-      router.push("/admin");
+      // Check if server explicitly rejected credentials
+      if (errMsg.toLowerCase().includes("incorrect") || errMsg.toLowerCase().includes("invalid") || errMsg.toLowerCase().includes("unauthorized") || errMsg.toLowerCase().includes("401")) {
+        setError("❌ Invalid Admin Email or Password. Access Denied!");
+        setIsLoading(false);
+        return;
+      }
+
+      // Offline network failure fallback ONLY if exact admin credentials match valid hardcoded credentials
+      const validAdminEmails = ["admin@cloudops.internal", "admin@cloudops.ai", "sachinrawat6264384464@gmail.com"];
+      if (validAdminEmails.includes(loginEmail) && loginPassword === "AdminPass@123") {
+        const adminUserObj = {
+          id: `admin-${Date.now()}`,
+          organization_id: "org-001",
+          email: loginEmail,
+          full_name: roleName,
+          role: roleCodeToAssign as any,
+          is_active: true,
+          created_at: new Date().toISOString()
+        };
+        setAuth(adminUserObj, "admin-token-123");
+        if (typeof window !== "undefined") {
+          window.location.href = "/admin";
+        } else {
+          router.push("/admin");
+        }
+        return;
+      }
+
+      setError("❌ Incorrect Admin Email or Password. Access Denied!");
+      setIsLoading(false);
     }
   };
 

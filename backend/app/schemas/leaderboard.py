@@ -17,6 +17,7 @@ class LeaderboardEntry(BaseSchema):
     target_salary_band: str = "₹12–18 LPA"
     badges: List[str] = []
     weekly_xp_gained: Optional[int] = 0
+    linkedin_url: Optional[str] = None
 
 class LeaderboardResponse(BaseSchema):
     global_ranking: List[LeaderboardEntry]

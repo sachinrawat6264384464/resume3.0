@@ -47,66 +47,23 @@ class EvaluationService:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Question attempt not found")
 
         q = q_att.question
-        now = datetime.now(timezone.utc)
-        q_att.started_at = q_att.started_at or now
+        if q_att.question_id:
+            q_res = await self.db.execute(select(Question).where(Question.id == q_att.question_id))
+            live_q = q_res.scalar_one_or_none()
+            if live_q:
+                q = live_q
 
-        # 1. Handle Recording upload if video/audio bytes provided
-        recording_id = None
-        if recording_bytes and len(recording_bytes) > 0:
-            rec_filename = file_name or f"q_att_{q_att.id}.webm"
-            # Fetch candidate ID from interview attempt
-            stmt_attempt = select(InterviewAttempt).where(InterviewAttempt.id == q_att.interview_attempt_id)
-            att_res = await self.db.execute(stmt_attempt)
-            interview_att = att_res.scalar_one_or_none()
-            
-            cand_id = interview_att.candidate_id if interview_att else "candidate"
-            org_id = interview_att.organization_id if interview_att else "default"
+        eval_q_text = (q.question_text if q and q.question_text else None) or q_att.question_text_snapshot
+        eval_ref_ans = (q.reference_answer if q and q.reference_answer else None) or ""
+        eval_topics = (q.expected_topics if q and q.expected_topics else None) or []
 
-            upload_result = await self.storage.upload_file(
-                file_bytes=recording_bytes,
-                file_name=rec_filename,
-                org_id=org_id,
-                candidate_id=cand_id,
-                attempt_id=q_att.interview_attempt_id,
-                mime_type=mime_type
-            )
-
-            expires_at = now + timedelta(days=settings.RECORDING_RETENTION_DAYS)
-            rec = Recording(
-                candidate_id=cand_id,
-                interview_attempt_id=q_att.interview_attempt_id,
-                storage_provider=upload_result["storage_provider"],
-                google_drive_file_id=upload_result["file_identifier"] if upload_result["storage_provider"] == "google_drive" else None,
-                google_drive_view_link=upload_result.get("view_url") if upload_result["storage_provider"] == "google_drive" else None,
-                local_file_path=upload_result["file_identifier"] if upload_result["storage_provider"] == "local" else None,
-                file_name=rec_filename,
-                mime_type=mime_type,
-                file_size_bytes=upload_result["file_size_bytes"],
-                duration_seconds=duration_seconds,
-                expires_at=expires_at,
-                deletion_status="ACTIVE"
-            )
-            self.db.add(rec)
-            await self.db.flush()
-            recording_id = rec.id
-            q_att.recording_id = rec.id
-
-            # If transcript was empty, perform Speech-To-Text transcription from local file
-            if not transcript and upload_result.get("file_identifier") and upload_result["storage_provider"] == "local":
-                stt_res = await self.stt.transcribe(upload_result["file_identifier"])
-                transcript = stt_res.get("transcript", "")
-                if not duration_seconds:
-                    duration_seconds = stt_res.get("duration", 30.0)
-
-        final_transcript = transcript or ""
-
-        # 2. Run AI Answer Evaluation
+        # 2. Run AI Answer Evaluation against fresh Live DB Question
         eval_result = await self.ai.evaluate_answer(
-            question_text=q_att.question_text_snapshot,
-            expected_topics=q.expected_topics or [],
-            reference_answer=q.reference_answer or "",
+            question_text=eval_q_text,
+            expected_topics=eval_topics,
+            reference_answer=eval_ref_ans,
             candidate_transcript=final_transcript,
-            rubric=q.evaluation_rubric or {},
+            rubric=q.evaluation_rubric if q else {},
             duration_seconds=duration_seconds
         )
 
@@ -139,5 +96,5 @@ class EvaluationService:
         except Exception as e:
             print(f"XP award failed: {e}")
 
-        await self.db.flush()
+        await self.db.commit()
         return eval_result

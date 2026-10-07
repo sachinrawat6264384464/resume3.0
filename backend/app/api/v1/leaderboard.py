@@ -31,9 +31,8 @@ async def get_leaderboard(
         select(Candidate)
         .options(selectinload(Candidate.user))
         .join(User, Candidate.user_id == User.id)
-        .where(User.role != "admin")
+        .where(User.role == "CANDIDATE")
         .where(~User.full_name.ilike("%admin%"))
-        .where(~User.full_name.ilike("%alex vance%"))
         .order_by(desc(Candidate.xp), desc(Candidate.readiness_score))
         .limit(limit)
     )
@@ -46,6 +45,18 @@ async def get_leaderboard(
         score = cand.readiness_score or 0.0
         sal_band = cand.target_salary_band if (cand.target_salary_band and cand.target_salary_band != "₹18–25 LPA") else compute_salary_band(score)
         
+        linkedin_url = None
+        if cand.resume_data_json and isinstance(cand.resume_data_json, dict):
+            linkedin_url = cand.resume_data_json.get("linkedin_url")
+        if not linkedin_url and cand.notes:
+            try:
+                import json
+                n_dict = json.loads(cand.notes)
+                if isinstance(n_dict, dict):
+                    linkedin_url = n_dict.get("linkedin_url")
+            except Exception:
+                pass
+
         global_ranking.append(LeaderboardEntry(
             rank=idx,
             candidate_id=cand.id,
@@ -60,7 +71,8 @@ async def get_leaderboard(
             readiness_score=score,
             target_salary_band=sal_band,
             badges=cand.badges_json or ["Registered Engineer"],
-            weekly_xp_gained=int((cand.xp or 0) * 0.45)
+            weekly_xp_gained=int((cand.xp or 0) * 0.45),
+            linkedin_url=linkedin_url
         ))
 
     # Weekly Sprint (sorted by weekly xp)

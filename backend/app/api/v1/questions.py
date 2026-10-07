@@ -59,8 +59,37 @@ async def create_question(
     payload: dict = Depends(verify_auth_token),
     db: AsyncSession = Depends(get_db)
 ):
+    from app.api.v1.interviews import invalidate_stages_cache
+    from app.models.interview_stage import InterviewStage
+
+    target_stage_id = q_in.interview_stage_id
+    
+    # Verify or resolve stage_id in database
+    stmt = select(InterviewStage).where(InterviewStage.id == target_stage_id)
+    res = await db.execute(stmt)
+    stage = res.scalar_one_or_none()
+
+    if not stage and target_stage_id:
+        # Search by stage number if string is numeric or formatted like stage-X
+        num_str = target_stage_id.replace("stage-new-", "").replace("stage-", "").replace("stage_", "")
+        if num_str.isdigit():
+            stmt = select(InterviewStage).where(InterviewStage.stage_number == int(num_str))
+            res = await db.execute(stmt)
+            stage = res.scalar_one_or_none()
+
+    if not stage:
+        # Fallback to first available stage
+        stmt = select(InterviewStage).order_by(InterviewStage.stage_number).limit(1)
+        res = await db.execute(stmt)
+        stage = res.scalar_one_or_none()
+
+    if not stage:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No interview stage found to assign question")
+
+    target_stage_id = stage.id
+
     q = Question(
-        interview_stage_id=q_in.interview_stage_id,
+        interview_stage_id=target_stage_id,
         order_index=q_in.order_index,
         question_text=q_in.question_text,
         question_type=q_in.question_type,
@@ -76,9 +105,11 @@ async def create_question(
         is_active=q_in.is_active
     )
     db.add(q)
-    await db.flush()
+    await db.commit()
+    await db.refresh(q)
+    invalidate_stages_cache()
     return StandardResponse(
-        message="Question created",
+        message="Question created successfully",
         data=QuestionAdminOut.model_validate(q)
     )
 
@@ -89,6 +120,7 @@ async def update_question(
     payload: dict = Depends(verify_auth_token),
     db: AsyncSession = Depends(get_db)
 ):
+    from app.api.v1.interviews import invalidate_stages_cache
     stmt = select(Question).where(Question.id == question_id)
     res = await db.execute(stmt)
     q = res.scalar_one_or_none()
@@ -100,7 +132,9 @@ async def update_question(
         if hasattr(q, field) and val is not None:
             setattr(q, field, val)
 
-    await db.flush()
+    await db.commit()
+    await db.refresh(q)
+    invalidate_stages_cache()
     return StandardResponse(
         message="Question updated successfully",
         data=QuestionAdminOut.model_validate(q)
@@ -112,6 +146,7 @@ async def delete_question(
     payload: dict = Depends(verify_auth_token),
     db: AsyncSession = Depends(get_db)
 ):
+    from app.api.v1.interviews import invalidate_stages_cache
     stmt = select(Question).where(Question.id == question_id)
     res = await db.execute(stmt)
     q = res.scalar_one_or_none()
@@ -119,7 +154,8 @@ async def delete_question(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Question not found")
 
     await db.delete(q)
-    await db.flush()
+    await db.commit()
+    invalidate_stages_cache()
     return StandardResponse(
         message="Question deleted successfully",
         data={"deleted_id": question_id}

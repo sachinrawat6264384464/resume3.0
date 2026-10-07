@@ -11,6 +11,8 @@ from app.models.job_description import JobDescription
 from app.models.interview_template import InterviewTemplate
 from app.models.interview_stage import InterviewStage
 from app.models.question import Question
+from app.models.stage_attempt import StageAttempt
+from app.models.question_attempt import QuestionAttempt
 from app.models.payment_gateway import PaymentGatewayConfig, PaymentTransaction
 
 # 31 STAGES DATA (Stage 0 to Stage 30)
@@ -18,21 +20,14 @@ STAGES_DATA = [
     # LEVEL 1 — FOUNDATION (0 - 5)
     {
         "stage_number": 0, "title": "Setup Your Interview Profile", "category": "Foundation", "level_name": "Level 1: Foundation",
-        "description": "Configure your target role, salary band, and initial baseline skills profile.",
+        "description": "Complete candidate profile, phone, target role & LinkedIn verification form to unlock all interview stages.",
         "questions": [
             {
-                "question_text": "Please state your target engineering role, primary technical stack, and career goals for this assessment.",
-                "question_type": "CONCEPTUAL", "difficulty": "EASY", "skill_category": "Profile",
-                "expected_topics": ["target role", "technical stack", "career goals", "experience level"],
-                "reference_answer": "Clear statement of target role (e.g., Senior DevOps / CloudOps Engineer), core skills (AWS, Kubernetes, Terraform, Python), and career growth objectives.",
-                "hint_level_1": "State your target role and main technologies.", "hint_level_2": "Connect your background to your target salary band.", "hint_level_3": "Mention 3 core tools you specialize in."
-            },
-            {
-                "question_text": "What is your target salary band and key technical areas you wish to demonstrate during this interview journey?",
-                "question_type": "CONCEPTUAL", "difficulty": "EASY", "skill_category": "Profile",
-                "expected_topics": ["target salary", "key technical areas", "cloud infrastructure", "automation"],
-                "reference_answer": "Specification of target compensation band and focus areas such as AWS architecture, Kubernetes orchestration, and CI/CD pipelines.",
-                "hint_level_1": "Provide your target range clearly.", "hint_level_2": "Highlight key engineering strengths.", "hint_level_3": "Mention cloud platforms you have operated."
+                "question_text": "Please confirm your full name, target role, phone number, experience level, and LinkedIn profile URL to initialize your interview roadmap.",
+                "question_type": "CONCEPTUAL", "difficulty": "BEGINNER", "skill_category": "Candidate Profile",
+                "expected_topics": ["full name", "phone number", "target role", "linkedin url", "experience level"],
+                "reference_answer": "Profile setup baseline completed by candidate.",
+                "hint_level_1": "Fill out your candidate profile form.", "hint_level_2": "Provide active mobile number and valid LinkedIn URL.", "hint_level_3": "Click save to unlock Stage 1."
             }
         ]
     },
@@ -611,7 +606,7 @@ async def seed_database():
                 organization_id=org.id,
                 email="admin@cloudops.internal",
                 full_name="Alex Vance (Admin)",
-                hashed_password=get_password_hash("Admin@12345"),
+                hashed_password=get_password_hash("AdminPass@123"),
                 role=UserRole.ADMIN.value,
                 is_active=True
             )
@@ -620,14 +615,17 @@ async def seed_database():
 
         # 3. Candidate User (Sachin Rawat)
         sachin_user_stmt = select(User).where(User.email == "sachin@cloudops.internal")
+        # 3. Seed Candidates (Sachin Rawat & Alex Vance)
+        sachin_user_stmt = select(User).where(User.email == "sachin.rawat@cloudops.ai")
         res = await db.execute(sachin_user_stmt)
         sachin_user = res.scalar_one_or_none()
         if not sachin_user:
             sachin_user = User(
                 organization_id=org.id,
-                email="sachin@cloudops.internal",
+                email="sachin.rawat@cloudops.ai",
                 full_name="Sachin Rawat",
-                hashed_password=get_password_hash("Sachin@12345"),
+                phone_number="+916264384464",
+                hashed_password=get_password_hash("CandidatePass@123"),
                 role=UserRole.CANDIDATE.value,
                 is_active=True
             )
@@ -637,25 +635,62 @@ async def seed_database():
             sachin_profile = Candidate(
                 user_id=sachin_user.id,
                 organization_id=org.id,
-                student_id="STU-2026-099",
-                phone="+91 99999 88888",
+                student_id="STU-2026-6264",
+                phone="+91 6264384464",
                 course="Multi-Cloud & DevOps Mastery",
                 batch="Cohort 2026-A",
                 experience_level="MID",
-                target_role="Senior DevOps Engineer",
-                notes="Sachin Rawat Candidate Profile.",
-                xp=0,
-                level=1,
-                streak_days=1,
-                readiness_score=0.0,
-                target_salary_band="₹18–40 LPA",
-                skills_matrix_json={"Linux": 0, "AWS": 0, "Docker": 0, "Kubernetes": 0, "Terraform": 0},
-                badges_json=["Registered Engineer"]
+                target_role="Senior DevOps & CloudOps Engineer",
+                notes="Candidate profile registered.",
+                xp=1850,
+                level=3,
+                streak_days=7,
+                readiness_score=88.5,
+                target_salary_band="₹18 - ₹40 LPA",
+                skills_matrix_json={"Linux": 90, "AWS": 85, "Docker": 92, "Kubernetes": 80, "Terraform": 86},
+                badges_json=["Registered Engineer", "AWS Certified", "Docker Specialist"]
             )
             db.add(sachin_profile)
             await db.flush()
 
-        # Purge all non-admin @cloudops.internal dummy candidates
+        alex_user_stmt = select(User).where(User.email == "alex.vance@cloudops.ai")
+        res = await db.execute(alex_user_stmt)
+        alex_user = res.scalar_one_or_none()
+        if not alex_user:
+            alex_user = User(
+                organization_id=org.id,
+                email="alex.vance@cloudops.ai",
+                full_name="Alex Vance",
+                phone_number="+919876543210",
+                hashed_password=get_password_hash("CandidatePass@123"),
+                role=UserRole.CANDIDATE.value,
+                is_active=True
+            )
+            db.add(alex_user)
+            await db.flush()
+
+            alex_profile = Candidate(
+                user_id=alex_user.id,
+                organization_id=org.id,
+                student_id="STU-2026-9876",
+                phone="+91 9876543210",
+                course="Cloud Architecture & DevSecOps",
+                batch="Cohort 2026-A",
+                experience_level="SENIOR",
+                target_role="AWS & Kubernetes Infrastructure Lead",
+                notes="Candidate profile registered.",
+                xp=2900,
+                level=5,
+                streak_days=14,
+                readiness_score=94.0,
+                target_salary_band="₹25 - ₹45 LPA",
+                skills_matrix_json={"Linux": 95, "AWS": 96, "Docker": 94, "Kubernetes": 92, "Terraform": 90},
+                badges_json=["Top Performer", "Kubernetes Master", "Security Hero"]
+            )
+            db.add(alex_profile)
+            await db.flush()
+
+        # Purge legacy dummy candidates
         dummy_res = await db.execute(select(User).where(User.email.like("%@cloudops.internal%")))
         dummy_users = dummy_res.scalars().all()
         for bad_u in dummy_users:
@@ -713,7 +748,23 @@ async def seed_database():
             template.description = "Comprehensive 30-Stage gamified interview pipeline covering Linux, Multi-Cloud, DevOps, DevSecOps, AIOps, MLOps, and the 40 LPA Final Boss Battle."
             await db.flush()
 
-        # Populate/Update ALL 31 Stages and Questions
+        # Clean up legacy stage 0 if exists
+        s0_stmt = select(InterviewStage).where(InterviewStage.stage_number == 0)
+        s0_res = await db.execute(s0_stmt)
+        for s0 in s0_res.scalars().all():
+            sa_res = await db.execute(select(StageAttempt).where(StageAttempt.interview_stage_id == s0.id))
+            for sa in sa_res.scalars().all():
+                qa_res = await db.execute(select(QuestionAttempt).where(QuestionAttempt.stage_attempt_id == sa.id))
+                for qa in qa_res.scalars().all():
+                    await db.delete(qa)
+                await db.delete(sa)
+            q_res = await db.execute(select(Question).where(Question.interview_stage_id == s0.id))
+            for q in q_res.scalars().all():
+                await db.delete(q)
+            await db.delete(s0)
+        await db.flush()
+
+        # Populate/Update ALL 30 Stages and Questions
         for s_info in STAGES_DATA:
             s_num = s_info["stage_number"]
             stage_stmt = select(InterviewStage).where(

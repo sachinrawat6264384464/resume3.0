@@ -67,6 +67,7 @@ export interface Question {
 
 export interface InterviewStage {
   id: string;
+  stage_id?: string;
   interview_template_id: string;
   stage_number: number;
   title: string;
@@ -74,6 +75,10 @@ export interface InterviewStage {
   category: string;
   minimum_score: number;
   unlock_rule: string;
+  difficulty?: string;
+  xp_reward?: string;
+  duration?: string;
+  icon?: string;
   questions?: Question[];
   questions_count?: number;
 }

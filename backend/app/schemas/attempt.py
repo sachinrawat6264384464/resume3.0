@@ -2,7 +2,8 @@ from typing import Optional, List, Dict, Any
 from datetime import datetime
 from pydantic import BaseModel
 from app.schemas.common import BaseSchema
-from app.schemas.question import QuestionCandidateOut
+from app.schemas.question import QuestionCandidateOut, QuestionAdminOut
+from app.schemas.interview import StageAdminOut
 from app.schemas.evaluation import QuestionEvaluationResult
 
 class QuestionAttemptOut(BaseSchema):
@@ -23,6 +24,7 @@ class QuestionAttemptOut(BaseSchema):
     evaluation_json: Optional[Dict[str, Any]] = None
     started_at: Optional[datetime] = None
     completed_at: Optional[datetime] = None
+    question: Optional[QuestionAdminOut] = None
 
 class StageAttemptOut(BaseSchema):
     id: str
@@ -37,6 +39,7 @@ class StageAttemptOut(BaseSchema):
     override_reason: Optional[str] = None
     started_at: Optional[datetime] = None
     completed_at: Optional[datetime] = None
+    stage: Optional[StageAdminOut] = None
     question_attempts: List[QuestionAttemptOut] = []
 
 class InterviewAttemptOut(BaseSchema):
@@ -60,6 +63,7 @@ class InterviewAttemptOut(BaseSchema):
 class StartInterviewRequest(BaseModel):
     interview_template_id: str
     candidate_id: Optional[str] = None
+    stage_number: Optional[int] = 1
 
 class SubmitAnswerRequest(BaseModel):
     transcript: Optional[str] = None

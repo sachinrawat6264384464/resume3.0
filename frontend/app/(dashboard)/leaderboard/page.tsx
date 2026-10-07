@@ -154,7 +154,7 @@ export default function LeaderboardPage() {
           // Filter out dummy or admin entries (e.g. Alex Vance or Admin)
           const candidateList = list.filter((item: any) => {
             const n = (item.candidate_name || "").toLowerCase();
-            return !n.includes("alex vance") && !n.includes("admin");
+            return !n.includes("super admin") && !n.includes("administrator");
           });
 
           formatted = candidateList.map((item: any, idx: number) => {

@@ -6,6 +6,7 @@ interface AuthState {
   token: string | null;
   isAuthenticated: boolean;
   setAuth: (user: User, token: string) => void;
+  updateUser: (updatedFields: Partial<User>) => void;
   logout: () => void;
 }
 
@@ -15,10 +16,30 @@ export const useAuthStore = create<AuthState>((set) => ({
   isAuthenticated: false,
   setAuth: (user, token) => {
     if (typeof window !== "undefined") {
+      try {
+        const prevUserRaw = localStorage.getItem("auth_user");
+        if (prevUserRaw) {
+          const prevUser = JSON.parse(prevUserRaw);
+          if (prevUser.id && prevUser.id !== user.id) {
+            localStorage.clear();
+            sessionStorage.clear();
+          }
+        }
+      } catch (e) {}
       localStorage.setItem("auth_token", token);
       localStorage.setItem("auth_user", JSON.stringify(user));
     }
     set({ user, token, isAuthenticated: true });
+  },
+  updateUser: (updatedFields) => {
+    set((state) => {
+      if (!state.user) return state;
+      const newUser = { ...state.user, ...updatedFields };
+      if (typeof window !== "undefined") {
+        localStorage.setItem("auth_user", JSON.stringify(newUser));
+      }
+      return { user: newUser };
+    });
   },
   logout: () => {
     if (typeof window !== "undefined") {

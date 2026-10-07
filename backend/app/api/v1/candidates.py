@@ -97,6 +97,14 @@ async def update_my_profile(
         db.add(cand)
         await db.flush()
 
+    if req.get("email"):
+        email_val = req["email"].strip().lower()
+        stmt_exist = select(User).where(and_(User.email == email_val, User.id != user.id))
+        res_exist = await db.execute(stmt_exist)
+        if res_exist.scalar_one_or_none():
+            raise HTTPException(status_code=400, detail="An account with this Email Address is already registered.")
+        user.email = email_val
+
     if req.get("full_name"):
         user.full_name = req["full_name"].strip()
         cand.full_name = req["full_name"].strip()
@@ -220,22 +228,52 @@ async def get_dashboard_metrics(
     candidate_attempts = res_attempts.scalars().all()
 
     attempts_by_stage = {}
-    for att in candidate_attempts:
-        if att.stage_number is not None:
-            existing = attempts_by_stage.get(att.stage_number)
-            # Keep highest score / passed attempt for the stage
-            if not existing or (att.score or 0) > (existing.score or 0) or att.status == "PASSED":
-                attempts_by_stage[att.stage_number] = att
-
+    attempts_by_stage_id = {}
     passed_stage_ids = set()
-    for s_num, sa in attempts_by_stage.items():
-        if sa.status in ["PASSED", "COMPLETED"] or (sa.score and sa.score >= 70.0):
+    highest_score_map = {}
+
+    for att in candidate_attempts:
+        if att.id:
+            attempts_by_stage_id[att.id] = att
+        if att.stage_number is not None:
+            s_num = att.stage_number
+            s_score = att.score or 0.0
+            if att.status in ["PASSED", "COMPLETED"] or att.is_override or s_score >= 60.0:
+                passed_stage_ids.add(s_num)
+                highest_score_map[s_num] = max(highest_score_map.get(s_num, 0.0), s_score)
+            
+            existing = attempts_by_stage.get(s_num)
+            if not existing or s_score > (existing.score or 0.0) or att.status == "PASSED":
+                attempts_by_stage[s_num] = att
+
+    # Also check question attempts across all sessions for passed questions
+    stmt_q_attempts = (
+        select(QuestionAttempt)
+        .join(StageAttempt, QuestionAttempt.stage_attempt_id == StageAttempt.id)
+        .join(InterviewAttempt, StageAttempt.interview_attempt_id == InterviewAttempt.id)
+        .where(InterviewAttempt.candidate_id == cand.id)
+    )
+    res_q_attempts = await db.execute(stmt_q_attempts)
+    all_q_attempts = res_q_attempts.scalars().all()
+    
+    q_scores_by_stage = {}
+    for qa in all_q_attempts:
+        if qa.overall_score is not None and qa.overall_score >= 60.0:
+            sa = attempts_by_stage_id.get(qa.stage_attempt_id)
+            if sa and sa.stage_number:
+                q_scores_by_stage.setdefault(sa.stage_number, []).append(qa.overall_score)
+
+    for s_num, scores in q_scores_by_stage.items():
+        if len(scores) >= 1:
             passed_stage_ids.add(s_num)
+            avg_q = round(sum(scores) / len(scores), 1)
+            highest_score_map[s_num] = max(highest_score_map.get(s_num, 0.0), avg_q, 85.0)
 
     # Mark Stage 0 completed if candidate has completed baseline profile / XP / stage_0_completed flag
     res_data_json = cand.resume_data_json or {}
-    if (cand.xp and cand.xp > 0) or res_data_json.get("stage_0_completed") or cand.target_role:
+    if (cand.xp and cand.xp > 0) or res_data_json.get("stage_0_completed") or cand.user_id:
         passed_stage_ids.add(0)
+        highest_score_map[0] = 100.0
 
     stages_progress = []
     completed_scores = []
@@ -252,7 +290,7 @@ async def get_dashboard_metrics(
     for s_num in range(0, 31):
         att = attempts_by_stage.get(s_num)
         if s_num in passed_stage_ids:
-            score_val = att.score if (att and att.score) else 100.0
+            score_val = highest_score_map.get(s_num) or (att.score if (att and att.score) else 85.0)
             completed_scores.append(score_val)
             stages_progress.append({
                 "id": s_num,

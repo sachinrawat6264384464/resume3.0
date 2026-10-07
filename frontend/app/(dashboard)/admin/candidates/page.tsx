@@ -38,15 +38,24 @@ export default function AdminCandidatesPage() {
   const [fbSuccessMsg, setFbSuccessMsg] = useState<string | null>(null);
 
   const getLinkedinUrl = (c: any) => {
-    if (c.linkedin_url) return c.linkedin_url;
-    if (c.resume_data_json?.linkedin_url) return c.resume_data_json.linkedin_url;
-    if (c.notes) {
+    let rawUrl = c.linkedin_url || c.resume_data_json?.linkedin_url;
+    if (!rawUrl && c.notes) {
       try {
         const parsed = typeof c.notes === "string" ? JSON.parse(c.notes) : c.notes;
-        if (parsed?.linkedin_url) return parsed.linkedin_url;
+        if (parsed?.linkedin_url) rawUrl = parsed.linkedin_url;
       } catch (e) {}
     }
-    return null;
+
+    if (!rawUrl || typeof rawUrl !== "string" || !rawUrl.trim()) {
+      return null;
+    }
+
+    const cleaned = rawUrl.trim();
+    if (cleaned.includes("example.com") || cleaned.toLowerCase() === "null" || cleaned.toLowerCase() === "undefined") {
+      return null;
+    }
+
+    return cleaned.startsWith("http") ? cleaned : `https://${cleaned}`;
   };
 
   const handleDeleteCandidate = async () => {
@@ -125,7 +134,7 @@ export default function AdminCandidatesPage() {
   };
 
   const fetchCandidates = async () => {
-    if (candidates.length === 0) setLoading(true);
+    setLoading(true);
     try {
       const res = await apiFetch("/candidates");
       if (res) {
@@ -218,6 +227,18 @@ export default function AdminCandidatesPage() {
     return c.experience_level || c.resume_data_json?.experience_level || "MID";
   };
 
+  const getPhoneDisplay = (c: any) => {
+    if (!c) return "No Phone";
+    if (c.phone && c.phone.trim()) return c.phone.trim();
+    if (c.user?.phone_number && c.user.phone_number.trim()) return c.user.phone_number.trim();
+    const emailStr = c.user?.email || c.email || "";
+    const digits = emailStr.replace(/\D/g, "");
+    if (digits.length >= 10) {
+      return `+91 ${digits.slice(-10)}`;
+    }
+    return "No Phone";
+  };
+
   const getTargetSalaryBand = (c: any) => {
     return c.target_salary_band || c.resume_data_json?.target_salary_band || "₹18 – ₹40 LPA";
   };
@@ -228,7 +249,7 @@ export default function AdminCandidatesPage() {
       c.id,
       `"${c.user?.full_name || c.full_name || 'Candidate'}"`,
       c.user?.email || c.email || '',
-      c.phone || c.user?.phone_number || '',
+      getPhoneDisplay(c),
       `"${getHighestQualification(c)}"`,
       `"${getYearsOfExperience(c)}"`,
       `"${getDesignation(c)}"`,
@@ -415,8 +436,14 @@ export default function AdminCandidatesPage() {
 
                       <td className="py-4 px-4 font-mono text-slate-600 dark:text-slate-300">
                         <div className="flex flex-col">
-                          <span>{c.user?.email || c.email || "sachin@cloudops.internal"}</span>
-                          <span className="text-[10px] text-slate-400">{c.phone || c.user?.phone_number || "+91 99999 88888"}</span>
+                          <span className="font-bold text-slate-900 dark:text-white">
+                            {c.user?.email && !c.user.email.endsWith("@cloudops.internal") 
+                              ? c.user.email 
+                              : (c.email && !c.email.endsWith("@cloudops.internal") ? c.email : "📱 Mobile Registered")}
+                          </span>
+                          <span className="text-[10px] text-[#FF6B00] font-mono font-bold">
+                            {getPhoneDisplay(c)}
+                          </span>
                         </div>
                       </td>
 
@@ -425,7 +452,7 @@ export default function AdminCandidatesPage() {
                           {desig}
                         </span>
                       </td>
-
+                      
                       <td className="py-4 px-4">
                         <div className="flex flex-col">
                           <span className="font-extrabold text-slate-900 dark:text-white">
@@ -547,14 +574,16 @@ export default function AdminCandidatesPage() {
               <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 flex flex-col">
                 <span className="text-[10px] font-bold text-slate-400 uppercase">Email Address</span>
                 <span className="text-xs font-mono font-bold text-slate-900 dark:text-white truncate mt-1">
-                  {selectedCandidate.user?.email || selectedCandidate.email || "sachin@cloudops.internal"}
+                  {selectedCandidate.user?.email && !selectedCandidate.user.email.endsWith("@cloudops.internal")
+                    ? selectedCandidate.user.email
+                    : (selectedCandidate.email && !selectedCandidate.email.endsWith("@cloudops.internal") ? selectedCandidate.email : "📱 Mobile Registered")}
                 </span>
               </div>
 
               <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 flex flex-col">
                 <span className="text-[10px] font-bold text-slate-400 uppercase">Mobile Contact</span>
-                <span className="text-xs font-mono font-bold text-slate-900 dark:text-white truncate mt-1">
-                  {selectedCandidate.phone || selectedCandidate.user?.phone_number || "+91 99999 88888"}
+                <span className="text-xs font-mono font-bold text-[#FF6B00] truncate mt-1">
+                  {getPhoneDisplay(selectedCandidate)}
                 </span>
               </div>
 
@@ -569,7 +598,7 @@ export default function AdminCandidatesPage() {
                 <span className="text-[10px] font-bold text-slate-400 uppercase">LinkedIn Profile</span>
                 {getLinkedinUrl(selectedCandidate) ? (
                   <a
-                    href={getLinkedinUrl(selectedCandidate)?.startsWith("http") ? getLinkedinUrl(selectedCandidate) : `https://${getLinkedinUrl(selectedCandidate)}`}
+                    href={getLinkedinUrl(selectedCandidate)?.startsWith("http") ? (getLinkedinUrl(selectedCandidate) || undefined) : `https://${getLinkedinUrl(selectedCandidate)}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-xs font-bold text-[#0A66C2] hover:underline flex items-center gap-1 mt-1 truncate"

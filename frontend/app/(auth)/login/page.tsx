@@ -253,14 +253,13 @@ export default function LoginPage() {
         })
       });
 
-      const returnedOtp = res?.data?.otp_code ? ` [Code: ${res.data.otp_code}]` : "";
-      setInfoMsg(`📲 6-Digit WhatsApp OTP verification code sent to ${fullFormattedPhone} via AiSensy!${returnedOtp} Please check your WhatsApp messages or enter the code to launch.`);
+      setInfoMsg(`📲 6-Digit OTP verification code sent to ${fullFormattedPhone}. Please check your SMS or WhatsApp messages to proceed.`);
       setOtpStep(2);
       setTimer(60);
       setIsTimerActive(true);
     } catch (err: any) {
       console.warn("Backend send-otp notice:", err?.message);
-      setError(err?.message || "Failed to send WhatsApp OTP code. Please check your mobile number.");
+      setError(err?.message || "Failed to send OTP code. Please verify your details.");
     } finally {
       setIsLoading(false);
     }
@@ -522,10 +521,18 @@ export default function LoginPage() {
                   <input
                     type="tel"
                     required
-                    maxLength={10}
+                    maxLength={15}
                     value={phoneNumber}
-                    onChange={(e) => setPhoneNumber(e.target.value.replace(/\D/g, ""))}
-                    placeholder="9876543210"
+                    onChange={(e) => {
+                      let digits = e.target.value.replace(/\D/g, "");
+                      if (digits.startsWith("91") && digits.length > 10) {
+                        digits = digits.slice(2);
+                      } else if (digits.startsWith("0") && digits.length > 10) {
+                        digits = digits.slice(1);
+                      }
+                      setPhoneNumber(digits.slice(0, 10));
+                    }}
+                    placeholder="9463512345"
                     className="w-full px-3.5 py-2.5 sm:px-4 sm:py-3 rounded-xl sm:rounded-2xl text-xs bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white font-mono font-bold focus:outline-none focus:border-[#FF6B00]"
                   />
                 </div>

@@ -129,93 +129,13 @@ export default function AdminLeaderboardPage() {
         if (stored) return JSON.parse(stored);
       } catch {}
     }
-    return [
-      {
-        rank: 1,
-        name: "Sachin Rawat",
-        initials: "SR",
-        linkedinUrl: "https://www.linkedin.com/in/sachin-rawat/",
-        batch: "Batch 45",
-        allClaimedBadges: MODULE_BADGES.slice(0, 5),
-        badges: MODULE_BADGES.slice(0, 3),
-        extraBadgesCount: 2,
-        pts: 4200,
-        badgeCountTotal: 5,
-        role: "Senior DevOps Engineer",
-        readinessScore: 88,
-        salaryBand: "₹25–40 LPA",
-        streak: 15
-      },
-      {
-        rank: 2,
-        name: "Neha Nair",
-        initials: "NN",
-        linkedinUrl: "https://www.linkedin.com/in/neha-nair/",
-        batch: "Batch 45",
-        allClaimedBadges: MODULE_BADGES.slice(0, 4),
-        badges: MODULE_BADGES.slice(0, 3),
-        extraBadgesCount: 1,
-        pts: 1600,
-        badgeCountTotal: 4,
-        role: "Multi-Cloud Architect",
-        readinessScore: 94,
-        salaryBand: "₹25–40 LPA",
-        streak: 20
-      },
-      {
-        rank: 3,
-        name: "Aarav Sharma",
-        initials: "AS",
-        linkedinUrl: "https://www.linkedin.com/in/aarav-sharma/",
-        batch: "Batch 45",
-        allClaimedBadges: MODULE_BADGES.slice(0, 3),
-        badges: MODULE_BADGES.slice(0, 3),
-        extraBadgesCount: 0,
-        pts: 1450,
-        badgeCountTotal: 3,
-        role: "Senior DevOps Engineer",
-        readinessScore: 92.5,
-        salaryBand: "₹25–40 LPA",
-        streak: 1
-      },
-      {
-        rank: 4,
-        name: "Ananya Verma",
-        initials: "AV",
-        linkedinUrl: "https://www.linkedin.com/in/ananya-verma/",
-        batch: "Batch 45",
-        allClaimedBadges: MODULE_BADGES.slice(0, 3),
-        badges: MODULE_BADGES.slice(0, 3),
-        extraBadgesCount: 0,
-        pts: 1300,
-        badgeCountTotal: 3,
-        role: "Site Reliability Engineer",
-        readinessScore: 90,
-        salaryBand: "₹25–40 LPA",
-        streak: 15
-      },
-      {
-        rank: 5,
-        name: "Rohan Gupta",
-        initials: "RG",
-        linkedinUrl: "https://www.linkedin.com/in/rohan-gupta/",
-        batch: "Batch 45",
-        allClaimedBadges: MODULE_BADGES.slice(0, 2),
-        badges: MODULE_BADGES.slice(0, 2),
-        extraBadgesCount: 0,
-        pts: 950,
-        badgeCountTotal: 2,
-        role: "Kubernetes & SRE Specialist",
-        readinessScore: 84,
-        salaryBand: "₹18–25 LPA",
-        streak: 6
-      }
-    ];
+    return [];
   });
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     async function loadLeaderboardData() {
+      setIsLoading(true);
       try {
         const res: any = await apiFetch("/leaderboard?limit=100");
         const list = res?.data?.global_ranking || res?.global_ranking;
@@ -223,7 +143,7 @@ export default function AdminLeaderboardPage() {
         if (Array.isArray(list) && list.length > 0) {
           const candidateList = list.filter((item: any) => {
             const n = (item.candidate_name || "").toLowerCase();
-            return !n.includes("alex vance") && !n.includes("admin");
+            return !n.includes("super admin") && !n.includes("administrator");
           });
 
           const formatted = candidateList.map((item: any, idx: number) => {
@@ -241,11 +161,13 @@ export default function AdminLeaderboardPage() {
             const visibleBadges = claimed.slice(0, 3);
             const extraCount = Math.max(0, claimed.length - 3);
 
+            const realLinkedin = item.linkedin_url && typeof item.linkedin_url === "string" && item.linkedin_url.trim() && !item.linkedin_url.includes("sachin-rawat") && !item.linkedin_url.includes("alex-vance") ? item.linkedin_url : null;
+
             return {
               rank: idx + 1,
               name: nameStr,
               initials: init,
-              linkedinUrl: `https://www.linkedin.com/in/${nameStr.toLowerCase().replace(/\s+/g, "-")}`,
+              linkedinUrl: realLinkedin,
               batch: item.batch || "Batch 45",
               allClaimedBadges: claimed,
               badges: visibleBadges,
@@ -547,15 +469,19 @@ export default function AdminLeaderboardPage() {
                           <span className="text-[10px] font-medium text-slate-500 dark:text-slate-400 truncate">
                             {m.role}
                           </span>
-                          <a
-                            href={m.linkedinUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-[10px] font-bold text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-0.5 mt-0.5"
-                          >
-                            <span>LinkedIn Profile</span>
-                            <ExternalLink className="w-3 h-3" />
-                          </a>
+                          {m.linkedinUrl ? (
+                            <a
+                              href={m.linkedinUrl.startsWith("http") ? m.linkedinUrl : `https://${m.linkedinUrl}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-[10px] font-bold text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-0.5 mt-0.5"
+                            >
+                              <span>LinkedIn Profile</span>
+                              <ExternalLink className="w-3 h-3" />
+                            </a>
+                          ) : (
+                            <span className="text-[10px] font-medium text-slate-400 italic mt-0.5">Not Provided</span>
+                          )}
                         </div>
                       </div>
                     </td>

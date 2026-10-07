@@ -12,46 +12,48 @@ import { apiFetch } from "@/lib/api";
 import { useAuthStore } from "@/lib/store";
 
 const ALL_30_STAGES = [
+  // STAGE 0 — PROFILE SETUP & VERIFICATION FORM
+  { id: 0, level: "Level 1", levelName: "Foundation", title: "STAGE 0: SETUP YOUR INTERVIEW PROFILE", xp: "+100 XP", duration: "5 Mins", questions: 1, questions_count: 1, icon: "📋", diff: "Easy", desc: "Complete candidate profile, phone, target role & LinkedIn verification form to unlock all interview stages.", status: "completed", score: "100%" },
+
   // LEVEL 1 — FOUNDATION (TRACK 1)
-  { id: 0, level: "Level 1", levelName: "Foundation", title: "STAGE 0: SETUP YOUR INTERVIEW PROFILE", xp: "+200 XP", duration: "10 Mins", questions: 2, questions_count: 2, icon: "🏆", diff: "Easy", desc: "Configure your target role, salary band, and initial baseline skills profile." },
-  { id: 1, level: "Level 1", levelName: "Foundation", title: "🏆 CHALLENGE 01 — INTRODUCE YOURSELF & PROFILE", xp: "+70 XP", duration: "12 Mins", questions: 2, questions_count: 2, icon: "🏆", diff: "Easy", desc: "Master your 60-second pitch, STAR background intro, and career story." },
-  { id: 2, level: "Level 1", levelName: "Foundation", title: "STAGE 2: TECHNICAL INTRODUCTION", xp: "+200 XP", duration: "15 Mins", questions: 2, questions_count: 2, icon: "🏆", diff: "Easy", desc: "Explain your daily technical workflow, tool stack, and architecture experience." },
-  { id: 3, level: "Level 1", levelName: "Foundation", title: "☁️ CHALLENGE 03 — CLOUD INFRASTRUCTURE ENGINEER", xp: "+200 XP", duration: "18 Mins", questions: 2, questions_count: 2, icon: "☁️", diff: "Medium", desc: "Process signals, memory triage, top/htop/iotop, and bash scripting." },
-  { id: 4, level: "Level 1", levelName: "Foundation", title: "STAGE 4: LINUX FOR DEVOPS ENGINEERS", xp: "+200 XP", duration: "20 Mins", questions: 2, questions_count: 2, icon: "🐧", diff: "Medium", desc: "Systemd service units, kernel tuning, disk I/O bottlenecks, and cron automation." },
-  { id: 5, level: "Level 1", levelName: "Foundation", title: "STAGE 5: CLOUD + DEVOPS FUNDAMENTALS", xp: "+200 XP", duration: "20 Mins", questions: 2, questions_count: 2, icon: "☁️", diff: "Medium", desc: "Core cloud models, virtualization vs containerization, and IaC basics." },
+  { id: 1, level: "Level 1", levelName: "Foundation", title: "STAGE 1: SELF INTRODUCTION", xp: "+200 XP", duration: "12 Mins", questions: 2, questions_count: 2, icon: "🏆", diff: "Easy", desc: "Master your 60-second pitch, STAR background intro, and career story.", status: "in_progress", score: "Active" },
+  { id: 2, level: "Level 1", levelName: "Foundation", title: "STAGE 2: TECHNICAL INTRODUCTION", xp: "+200 XP", duration: "15 Mins", questions: 2, questions_count: 2, icon: "🏆", diff: "Easy", desc: "Explain your daily technical workflow, tool stack, and architecture experience.", status: "locked", score: "--" },
+  { id: 3, level: "Level 1", levelName: "Foundation", title: "☁️ CHALLENGE 03 — CLOUD INFRASTRUCTURE ENGINEER", xp: "+200 XP", duration: "18 Mins", questions: 2, questions_count: 2, icon: "☁️", diff: "Medium", desc: "Process signals, memory triage, top/htop/iotop, and bash scripting.", status: "locked", score: "--" },
+  { id: 4, level: "Level 1", levelName: "Foundation", title: "STAGE 4: LINUX FOR DEVOPS ENGINEERS", xp: "+200 XP", duration: "20 Mins", questions: 2, questions_count: 2, icon: "🐧", diff: "Medium", desc: "Systemd service units, kernel tuning, disk I/O bottlenecks, and cron automation.", status: "locked", score: "--" },
+  { id: 5, level: "Level 1", levelName: "Foundation", title: "STAGE 5: CLOUD + DEVOPS FUNDAMENTALS", xp: "+200 XP", duration: "20 Mins", questions: 2, questions_count: 2, icon: "☁️", diff: "Medium", desc: "Core cloud models, virtualization vs containerization, and IaC basics.", status: "locked", score: "--" },
 
   // LEVEL 2 — CLOUD (TRACK 2)
-  { id: 6, level: "Level 2", levelName: "Cloud", title: "AWS Cloud Engineer", xp: "+400 XP", duration: "22 Mins", questions: 2, questions_count: 2, icon: "☁️", diff: "Medium", desc: "VPC networking, subnets, NAT Gateways, IAM policies, and S3 lifecycle." },
-  { id: 7, level: "Level 2", levelName: "Cloud", title: "GCP Cloud Engineer", xp: "+450 XP", duration: "22 Mins", questions: 2, questions_count: 2, icon: "☁️", diff: "Medium", desc: "Google Cloud IAM, VPC Service Controls, GKE basics, and BigQuery Ops." },
-  { id: 8, level: "Level 2", levelName: "Cloud", title: "Azure Cloud Engineer", xp: "+450 XP", duration: "22 Mins", questions: 2, questions_count: 2, icon: "☁️", diff: "Medium", desc: "Azure VNets, Entra ID, Virtual Machine Scale Sets, and Resource Groups." },
-  { id: 9, level: "Level 2", levelName: "Cloud", title: "Multi-Cloud Architecture", xp: "+500 XP", duration: "25 Mins", questions: 2, questions_count: 2, icon: "⚡", diff: "Hard", desc: "Inter-cloud VPN peering, multi-cloud IAM federation, and cost optimization." },
-  { id: 10, level: "Level 2", levelName: "Cloud", title: "Cloud Real-Time Scenarios", xp: "+550 XP", duration: "25 Mins", questions: 2, questions_count: 2, icon: "🔥", diff: "Hard", desc: "Cross-region failover, DNS failover with Route53, and storage outage triage." },
+  { id: 6, level: "Level 2", levelName: "Cloud", title: "AWS Cloud Engineer", xp: "+400 XP", duration: "22 Mins", questions: 2, questions_count: 2, icon: "☁️", diff: "Medium", desc: "VPC networking, subnets, NAT Gateways, IAM policies, and S3 lifecycle.", status: "pro_locked", score: "--" },
+  { id: 7, level: "Level 2", levelName: "Cloud", title: "GCP Cloud Engineer", xp: "+450 XP", duration: "22 Mins", questions: 2, questions_count: 2, icon: "☁️", diff: "Medium", desc: "Google Cloud IAM, VPC Service Controls, GKE basics, and BigQuery Ops.", status: "pro_locked", score: "--" },
+  { id: 8, level: "Level 2", levelName: "Cloud", title: "Azure Cloud Engineer", xp: "+450 XP", duration: "22 Mins", questions: 2, questions_count: 2, icon: "☁️", diff: "Medium", desc: "Azure VNets, Entra ID, Virtual Machine Scale Sets, and Resource Groups.", status: "pro_locked", score: "--" },
+  { id: 9, level: "Level 2", levelName: "Cloud", title: "Multi-Cloud Architecture", xp: "+500 XP", duration: "25 Mins", questions: 2, questions_count: 2, icon: "⚡", diff: "Hard", desc: "Inter-cloud VPN peering, multi-cloud IAM federation, and cost optimization.", status: "pro_locked", score: "--" },
+  { id: 10, level: "Level 2", levelName: "Cloud", title: "Cloud Real-Time Scenarios", xp: "+550 XP", duration: "25 Mins", questions: 2, questions_count: 2, icon: "🔥", diff: "Hard", desc: "Cross-region failover, DNS failover with Route53, and storage outage triage.", status: "pro_locked", score: "--" },
 
   // LEVEL 3 — DEVOPS (TRACK 3)
-  { id: 11, level: "Level 3", levelName: "DevOps", title: "Git + GitHub Workflow", xp: "+600 XP", duration: "25 Mins", questions: 2, questions_count: 2, icon: "🚀", diff: "Medium", desc: "Git rebase vs merge, git bisect, branch protection rules, and merge conflicts." },
-  { id: 12, level: "Level 3", levelName: "DevOps", title: "Jenkins + CI/CD Pipelines", xp: "+650 XP", duration: "28 Mins", questions: 2, questions_count: 2, icon: "🚀", diff: "Hard", desc: "Multibranch Jenkinsfiles, shared libraries, matrix builds, and caching." },
-  { id: 13, level: "Level 3", levelName: "DevOps", title: "Docker Containerization", xp: "+700 XP", duration: "28 Mins", questions: 2, questions_count: 2, icon: "📦", diff: "Hard", desc: "Multi-stage Dockerfiles, image minimization, cgroups, and container networking." },
-  { id: 14, level: "Level 3", levelName: "DevOps", title: "Kubernetes Orchestration", xp: "+800 XP", duration: "30 Mins", questions: 2, questions_count: 2, icon: "☸️", diff: "Hard", desc: "Pods, Deployments, StatefulSets, Ingress Controllers, HPA, and CrashLoopBackOff." },
-  { id: 15, level: "Level 3", levelName: "DevOps", title: "Ansible + Terraform IaC", xp: "+850 XP", duration: "30 Mins", questions: 2, questions_count: 2, icon: "🛠️", diff: "Hard", desc: "Remote state locking, Terraform modules, drift detection, and Ansible playbooks." },
+  { id: 11, level: "Level 3", levelName: "DevOps", title: "Git + GitHub Workflow", xp: "+600 XP", duration: "25 Mins", questions: 2, questions_count: 2, icon: "🚀", diff: "Medium", desc: "Git rebase vs merge, git bisect, branch protection rules, and merge conflicts.", status: "pro_locked", score: "--" },
+  { id: 12, level: "Level 3", levelName: "DevOps", title: "Jenkins + CI/CD Pipelines", xp: "+650 XP", duration: "28 Mins", questions: 2, questions_count: 2, icon: "🚀", diff: "Hard", desc: "Multibranch Jenkinsfiles, shared libraries, matrix builds, and caching.", status: "pro_locked", score: "--" },
+  { id: 13, level: "Level 3", levelName: "DevOps", title: "Docker Containerization", xp: "+700 XP", duration: "28 Mins", questions: 2, questions_count: 2, icon: "📦", diff: "Hard", desc: "Multi-stage Dockerfiles, image minimization, cgroups, and container networking.", status: "pro_locked", score: "--" },
+  { id: 14, level: "Level 3", levelName: "DevOps", title: "Kubernetes Orchestration", xp: "+800 XP", duration: "30 Mins", questions: 2, questions_count: 2, icon: "☸️", diff: "Hard", desc: "Pods, Deployments, StatefulSets, Ingress Controllers, HPA, and CrashLoopBackOff.", status: "pro_locked", score: "--" },
+  { id: 15, level: "Level 3", levelName: "DevOps", title: "Ansible + Terraform IaC", xp: "+850 XP", duration: "30 Mins", questions: 2, questions_count: 2, icon: "🛠️", diff: "Hard", desc: "Remote state locking, Terraform modules, drift detection, and Ansible playbooks.", status: "pro_locked", score: "--" },
 
   // LEVEL 4 — ADVANCED DEVOPS (TRACK 4)
-  { id: 16, level: "Level 4", levelName: "Advanced DevOps", title: "End-to-End CI/CD Project", xp: "+900 XP", duration: "32 Mins", questions: 2, questions_count: 2, icon: "🌐", diff: "Boss", desc: "Production GitHub Actions pipeline to EKS with ArgoCD GitOps sync." },
-  { id: 17, level: "Level 4", levelName: "Advanced DevOps", title: "Production Troubleshooting", xp: "+1,000 XP", duration: "35 Mins", questions: 2, questions_count: 2, icon: "🚨", diff: "Boss", desc: "Live memory leak triage, high CPU load debugging, and 502 bad gateway fix." },
-  { id: 18, level: "Level 4", levelName: "Advanced DevOps", title: "DevSecOps & Hardening", xp: "+1,100 XP", duration: "35 Mins", questions: 2, questions_count: 2, icon: "🛡️", diff: "Boss", desc: "Container image scanning (Trivy), SAST/DAST, and HashiCorp Vault integration." },
-  { id: 19, level: "Level 4", levelName: "Advanced DevOps", title: "Real-Time DevOps Architecture", xp: "+1,200 XP", duration: "35 Mins", questions: 2, questions_count: 2, icon: "🏗️", diff: "Boss", desc: "High-throughput microservices architecture with zero-downtime rolling updates." },
-  { id: 20, level: "Level 4", levelName: "Advanced DevOps", title: "Final DevOps Mock Interview", xp: "+1,500 XP", duration: "40 Mins", questions: 2, questions_count: 2, icon: "🎓", diff: "Boss", desc: "Full-spectrum senior panel simulation covering all 4 level pillars." },
+  { id: 16, level: "Level 4", levelName: "Advanced DevOps", title: "End-to-End CI/CD Project", xp: "+900 XP", duration: "32 Mins", questions: 2, questions_count: 2, icon: "🌐", diff: "Boss", desc: "Production GitHub Actions pipeline to EKS with ArgoCD GitOps sync.", status: "pro_locked", score: "--" },
+  { id: 17, level: "Level 4", levelName: "Advanced DevOps", title: "Production Troubleshooting", xp: "+1,000 XP", duration: "35 Mins", questions: 2, questions_count: 2, icon: "🚨", diff: "Boss", desc: "Live memory leak triage, high CPU load debugging, and 502 bad gateway fix.", status: "pro_locked", score: "--" },
+  { id: 18, level: "Level 4", levelName: "Advanced DevOps", title: "DevSecOps & Hardening", xp: "+1,100 XP", duration: "35 Mins", questions: 2, questions_count: 2, icon: "🛡️", diff: "Boss", desc: "Container image scanning (Trivy), SAST/DAST, and HashiCorp Vault integration.", status: "pro_locked", score: "--" },
+  { id: 19, level: "Level 4", levelName: "Advanced DevOps", title: "Real-Time DevOps Architecture", xp: "+1,200 XP", duration: "35 Mins", questions: 2, questions_count: 2, icon: "🏗️", diff: "Boss", desc: "High-throughput microservices architecture with zero-downtime rolling updates.", status: "pro_locked", score: "--" },
+  { id: 20, level: "Level 4", levelName: "Advanced DevOps", title: "Final DevOps Mock Interview", xp: "+1,500 XP", duration: "40 Mins", questions: 2, questions_count: 2, icon: "🎓", diff: "Boss", desc: "Full-spectrum senior panel simulation covering all 4 level pillars.", status: "pro_locked", score: "--" },
 
   // 10 BONUS AI & ADVANCED CHALLENGES
-  { id: 21, level: "Bonus", levelName: "Bonus Challenge", title: "Bonus 01: AIOps Challenge", xp: "+1,600 XP", duration: "30 Mins", questions: 1, questions_count: 1, icon: "🤖", diff: "Extreme", desc: "AI anomaly detection in Prometheus metrics and automated log clustering." },
-  { id: 22, level: "Bonus", levelName: "Bonus Challenge", title: "Bonus 02: MLOps Challenge", xp: "+1,700 XP", duration: "30 Mins", questions: 1, questions_count: 1, icon: "🤖", diff: "Extreme", desc: "ML model serving infrastructure, Kubeflow pipelines, and feature stores." },
-  { id: 23, level: "Bonus", levelName: "Bonus Challenge", title: "Bonus 03: AI Integration Challenge", xp: "+1,800 XP", duration: "30 Mins", questions: 1, questions_count: 1, icon: "🤖", diff: "Extreme", desc: "LLM API gateway rate limiting, streaming responses, and vector DB ops." },
-  { id: 24, level: "Bonus", levelName: "Bonus Challenge", title: "Bonus 04: AI + DevOps Automation", xp: "+1,900 XP", duration: "30 Mins", questions: 1, questions_count: 1, icon: "⚡", diff: "Extreme", desc: "AI-driven self-healing infrastructure scripts and automated PR remediation." },
-  { id: 25, level: "Bonus", levelName: "Bonus Challenge", title: "Bonus 05: AI MCP Challenge", xp: "+2,000 XP", duration: "30 Mins", questions: 1, questions_count: 1, icon: "🔌", diff: "Extreme", desc: "Model Context Protocol tools integration for infrastructure management." },
-  { id: 26, level: "Bonus", levelName: "Bonus Challenge", title: "Bonus 06: Azure DevOps Project", xp: "+2,100 XP", duration: "30 Mins", questions: 1, questions_count: 1, icon: "🔷", diff: "Extreme", desc: "Azure Pipelines YAML, Artifacts, and Azure Kubernetes Service (AKS)." },
-  { id: 27, level: "Bonus", levelName: "Bonus Challenge", title: "Bonus 07: Project-Based CI/CD", xp: "+2,200 XP", duration: "30 Mins", questions: 1, questions_count: 1, icon: "🏗️", diff: "Extreme", desc: "Canary deployments, blue-green traffic shifting using Flagger and Istio." },
-  { id: 28, level: "Bonus", levelName: "Bonus Challenge", title: "Bonus 08: Advanced DevSecOps Project", xp: "+2,300 XP", duration: "30 Mins", questions: 1, questions_count: 1, icon: "🔐", diff: "Extreme", desc: "OPA Gatekeeper policies, Kyverno admission controllers, and PCI-DSS compliance." },
-  { id: 29, level: "Bonus", levelName: "Bonus Challenge", title: "Bonus 09: Multi-Cloud + AI Architecture", xp: "+2,500 XP", duration: "35 Mins", questions: 1, questions_count: 1, icon: "🌐", diff: "Extreme", desc: "Global latency routing across AWS, GCP, and Azure with AI failover." },
-  { id: 30, level: "Bonus", levelName: "Bonus Challenge", title: "👑 40 LPA Final Boss Interview Battle", xp: "+3,000 XP", duration: "45 Mins", questions: 2, questions_count: 2, icon: "👑", diff: "Legendary", desc: "The ultimate 40 LPA Staff CloudOps Engineer Boss Battle! Prove your absolute mastery." }
+  { id: 21, level: "Bonus", levelName: "Bonus Challenge", title: "Bonus 01: AIOps Challenge", xp: "+1,600 XP", duration: "30 Mins", questions: 1, questions_count: 1, icon: "🤖", diff: "Extreme", desc: "AI anomaly detection in Prometheus metrics and automated log clustering.", status: "pro_locked", score: "--" },
+  { id: 22, level: "Bonus", levelName: "Bonus Challenge", title: "Bonus 02: MLOps Challenge", xp: "+1,700 XP", duration: "30 Mins", questions: 1, questions_count: 1, icon: "🤖", diff: "Extreme", desc: "ML model serving infrastructure, Kubeflow pipelines, and feature stores.", status: "pro_locked", score: "--" },
+  { id: 23, level: "Bonus", levelName: "Bonus Challenge", title: "Bonus 03: AI Integration Challenge", xp: "+1,800 XP", duration: "30 Mins", questions: 1, questions_count: 1, icon: "🤖", diff: "Extreme", desc: "LLM API gateway rate limiting, streaming responses, and vector DB ops.", status: "pro_locked", score: "--" },
+  { id: 24, level: "Bonus", levelName: "Bonus Challenge", title: "Bonus 04: AI + DevOps Automation", xp: "+1,900 XP", duration: "30 Mins", questions: 1, questions_count: 1, icon: "⚡", diff: "Extreme", desc: "AI-driven self-healing infrastructure scripts and automated PR remediation.", status: "pro_locked", score: "--" },
+  { id: 25, level: "Bonus", levelName: "Bonus Challenge", title: "Bonus 05: AI MCP Challenge", xp: "+2,000 XP", duration: "30 Mins", questions: 1, questions_count: 1, icon: "🔌", diff: "Extreme", desc: "Model Context Protocol tools integration for infrastructure management.", status: "pro_locked", score: "--" },
+  { id: 26, level: "Bonus", levelName: "Bonus Challenge", title: "Bonus 06: Azure DevOps Project", xp: "+2,100 XP", duration: "30 Mins", questions: 1, questions_count: 1, icon: "🔷", diff: "Extreme", desc: "Azure Pipelines YAML, Artifacts, and Azure Kubernetes Service (AKS).", status: "pro_locked", score: "--" },
+  { id: 27, level: "Bonus", levelName: "Bonus Challenge", title: "Bonus 07: Project-Based CI/CD", xp: "+2,200 XP", duration: "30 Mins", questions: 1, questions_count: 1, icon: "🏗️", diff: "Extreme", desc: "Canary deployments, blue-green traffic shifting using Flagger and Istio.", status: "pro_locked", score: "--" },
+  { id: 28, level: "Bonus", levelName: "Bonus Challenge", title: "Bonus 08: Advanced DevSecOps Project", xp: "+2,300 XP", duration: "30 Mins", questions: 1, questions_count: 1, icon: "🔐", diff: "Extreme", desc: "OPA Gatekeeper policies, Kyverno admission controllers, and PCI-DSS compliance.", status: "pro_locked", score: "--" },
+  { id: 29, level: "Bonus", levelName: "Bonus Challenge", title: "Bonus 09: Multi-Cloud + AI Architecture", xp: "+2,500 XP", duration: "35 Mins", questions: 1, questions_count: 1, icon: "🌐", diff: "Extreme", desc: "Global latency routing across AWS, GCP, and Azure with AI failover.", status: "pro_locked", score: "--" },
+  { id: 30, level: "Bonus", levelName: "Bonus Challenge", title: "👑 40 LPA Final Boss Interview Battle", xp: "+3,000 XP", duration: "45 Mins", questions: 2, questions_count: 2, icon: "👑", diff: "Legendary", desc: "The ultimate 40 LPA Staff CloudOps Engineer Boss Battle! Prove your absolute mastery.", status: "pro_locked", score: "--" }
 ];
 
 export default function InterviewsPage() {
@@ -70,16 +72,6 @@ export default function InterviewsPage() {
   useEffect(() => {
     setMounted(true);
     if (typeof window !== "undefined") {
-      try {
-        const cached = sessionStorage.getItem("cached_interviews_stages");
-        if (cached) {
-          const parsed = JSON.parse(cached);
-          if (parsed.data && Array.isArray(parsed.data) && parsed.data.length > 0) {
-            setStages(parsed.data);
-          }
-        }
-      } catch (e) {}
-
       const params = new URLSearchParams(window.location.search);
       if (params.get("demo") === "true") {
         setIsDemoGuest(true);
@@ -89,7 +81,7 @@ export default function InterviewsPage() {
 
   // Subscription & Razorpay Payment Modal States
   const [isSubscribed, setIsSubscribed] = useState<boolean>(false);
-  const [isPaymentEnabled, setIsPaymentEnabled] = useState<boolean>(false);
+  const [isPaymentEnabled, setIsPaymentEnabled] = useState<boolean>(true);
   const [configuredFee, setConfiguredFee] = useState<string>("1");
   const [paidStartStageConfig, setPaidStartStageConfig] = useState<number>(6);
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
@@ -165,16 +157,39 @@ export default function InterviewsPage() {
       // Track completed stages for sequential unlocking
       const completedSet = new Set<number>();
 
-      const hasLocalStage0 = typeof window !== "undefined" && Boolean(localStorage.getItem("stage0_profile_data"));
+      const userStage0Key = user?.id ? `stage0_profile_data_${user.id}` : "stage0_profile_data";
+      const hasLocalStage0 = typeof window !== "undefined" && Boolean(localStorage.getItem(userStage0Key));
       const candXp = resMetrics?.data?.candidate?.xp || 0;
-      const isStage0DoneInDb = candXp > 0 || Boolean(resMetrics?.data?.candidate?.resume_data_json?.stage_0_completed) || Boolean(resMetrics?.data?.candidate?.target_role);
+      const isStage0DoneInDb = candXp > 0 || Boolean(resMetrics?.data?.candidate?.resume_data_json?.stage_0_completed);
 
       ALL_30_STAGES.forEach((stg) => {
         const att = attemptMap.get(stg.id);
-        if (att && (att.status === "completed" || att.status === "PASSED" || (typeof att.score === "string" && parseInt(att.score) >= 70))) {
+        if (att && (att.status === "completed" || att.status === "PASSED" || att.is_passed || (typeof att.score === "number" && att.score >= 60) || (typeof att.score === "string" && parseInt(att.score) >= 60))) {
           completedSet.add(stg.id);
         }
       });
+
+      // Also check stages_progress array directly from backend metrics response
+      if (resMetrics?.data?.stages_progress && Array.isArray(resMetrics.data.stages_progress)) {
+        resMetrics.data.stages_progress.forEach((sp: any) => {
+          if (sp.status === "completed" || (typeof sp.score === "string" && parseInt(sp.score) >= 60) || (typeof sp.score === "number" && sp.score >= 60)) {
+            completedSet.add(sp.id);
+          }
+        });
+      }
+
+      // Check localStorage fallback for instant client-side UI persistence
+      if (typeof window !== "undefined") {
+        const rawLocalList = localStorage.getItem("completed_stages_list");
+        if (rawLocalList) {
+          try {
+            const parsedList = JSON.parse(rawLocalList);
+            if (Array.isArray(parsedList)) {
+              parsedList.forEach((stgId: number) => completedSet.add(stgId));
+            }
+          } catch (e) {}
+        }
+      }
 
       const stg0AttCheck = attemptMap.get(0);
       if (hasLocalStage0 || isStage0DoneInDb || (stg0AttCheck && (stg0AttCheck.status === "completed" || stg0AttCheck.status === "PASSED"))) {
@@ -275,6 +290,29 @@ export default function InterviewsPage() {
         };
       });
 
+      // Ensure Stage 0 is ALWAYS present at index 0 of merged stages array!
+      const hasStage0InMerged = merged.some((m) => m.id === 0);
+      if (!hasStage0InMerged) {
+        const isStg0Done = completedSet.has(0);
+        merged.unshift({
+          id: 0,
+          stage_db_id: "stage-0",
+          level: "Level 1",
+          levelName: "Foundation",
+          title: "STAGE 0: SETUP YOUR INTERVIEW PROFILE",
+          desc: "Complete candidate profile, phone, target role & LinkedIn verification form to unlock all interview stages.",
+          category: "Foundation",
+          diff: "Easy",
+          xp: "+100 XP",
+          duration: "5 Mins",
+          icon: "📋",
+          questions: 1,
+          questions_count: 1,
+          status: isStg0Done ? "completed" : "in_progress",
+          score: isStg0Done ? "100%" : "Active"
+        });
+      }
+
       setStages(merged);
       if (typeof window !== "undefined") {
         try {
@@ -294,8 +332,14 @@ export default function InterviewsPage() {
             if (found) return found;
           }
         }
-        if (!prev) return merged[0];
+        const activeOrUnlocked = merged.find((m) => m.status === "in_progress" && m.id > 0);
+        if (!prev || prev.id === 0 || prev.status === "completed") {
+          return activeOrUnlocked || merged.find((m) => m.status === "completed" && m.id > 0) || merged[1] || merged[0];
+        }
         const match = merged.find((m) => m.id === prev.id);
+        if (match && match.status === "completed" && activeOrUnlocked) {
+          return activeOrUnlocked;
+        }
         return match || merged[0];
       });
     } catch (e) {
@@ -338,11 +382,18 @@ export default function InterviewsPage() {
     if (typeof window !== "undefined" && stages.length > 0) {
       const params = new URLSearchParams(window.location.search);
       const qStage = params.get("stage");
-      if (qStage) {
-        const stageNum = parseInt(qStage, 10);
-        const found = stages.find((s: any) => s.id === stageNum);
+      const isAutoStart = params.get("autoStart") === "true";
+      const localAuto = localStorage.getItem("auto_start_stage");
+      const targetStageNum = qStage ? parseInt(qStage, 10) : localAuto ? parseInt(localAuto, 10) : null;
+      if (localAuto) localStorage.removeItem("auto_start_stage");
+
+      if (targetStageNum !== null) {
+        const found = stages.find((s: any) => s.id === targetStageNum);
         if (found) {
           setSelectedStage(found);
+          if (isAutoStart || localAuto) {
+            handleStartStage(targetStageNum);
+          }
         }
       }
     }
@@ -398,7 +449,8 @@ export default function InterviewsPage() {
       setIsPaymentModalOpen(true);
       return;
     }
-    if (s.status === "locked") {
+    const isPrevCompleted = s.id === 1 || stages.some(st => st.id === s.id - 1 && st.status === "completed");
+    if (s.status === "locked" && !isPrevCompleted) {
       setAlertMsg(`⚠️ Stage ${s.id} is locked. Please complete Stage ${s.id - 1} first to unlock!`);
     }
   };
@@ -417,7 +469,8 @@ export default function InterviewsPage() {
         if (stage0Form.linkedinUrl.trim()) {
           localStorage.setItem("candidate_linkedin_url", stage0Form.linkedinUrl.trim());
         }
-        localStorage.setItem("stage0_profile_data", JSON.stringify({
+        const saveKey = user?.id ? `stage0_profile_data_${user.id}` : "stage0_profile_data";
+        localStorage.setItem(saveKey, JSON.stringify({
           fullName: stage0Form.fullName,
           email: stage0Form.email,
           phone: stage0Form.phone,
@@ -512,7 +565,8 @@ export default function InterviewsPage() {
       return;
     }
 
-    if (targetStg?.status === "locked") {
+    const isPrevCompleted = stageId === 1 || stages.some(st => st.id === stageId - 1 && st.status === "completed");
+    if (targetStg?.status === "locked" && !isPrevCompleted) {
       setAlertMsg(`⚠️ Please complete Stage ${stageId - 1} first before unlocking Stage ${stageId}.`);
       return;
     }
@@ -522,7 +576,8 @@ export default function InterviewsPage() {
       const res = await apiFetch("/attempts/start", {
         method: "POST",
         body: JSON.stringify({
-          interview_template_id: `stage-${stageId}-template`
+          interview_template_id: `stage-${stageId}-template`,
+          stage_number: stageId
         })
       });
       const newAttemptId = res?.data?.id || stageId;
@@ -1007,21 +1062,12 @@ export default function InterviewsPage() {
                   </div>
                 ) : (
                   <>
-                    <div className="grid grid-cols-2 gap-2.5 py-2">
+                    <div className="grid grid-cols-3 gap-2.5 py-2">
                       <div className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700/80 flex flex-col gap-0.5">
                         <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider flex items-center gap-1">
                           <Flame className="w-3 h-3 text-orange-500" /> DIFFICULTY
                         </span>
                         <span className="text-xs font-black text-[#FF6B00]">{selectedStage.diff}</span>
-                      </div>
-
-                      <div className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700/80 flex flex-col gap-0.5">
-                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider flex items-center gap-1">
-                          <Trophy className="w-3 h-3 text-emerald-500" /> XP REWARD
-                        </span>
-                        <span className="text-xs font-black text-emerald-600 dark:text-emerald-400 font-mono">
-                          {selectedStage.xp}
-                        </span>
                       </div>
 
                       <div className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700/80 flex flex-col gap-0.5">
@@ -1039,17 +1085,6 @@ export default function InterviewsPage() {
                         </span>
                         <span className="text-xs font-black text-slate-900 dark:text-white font-mono">
                           {selectedStage.questions_count ?? selectedStage.questions} Questions
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* STAR Tip Banner */}
-                    <div className="p-3.5 rounded-2xl bg-gradient-to-r from-orange-50 to-amber-50 dark:from-slate-800/60 dark:to-slate-900/60 border border-[#FF6B00]/30 flex items-start gap-2.5">
-                      <Sparkles className="w-4 h-4 text-[#FF6B00] shrink-0 mt-0.5" />
-                      <div className="flex flex-col text-xs">
-                        <span className="font-black text-slate-900 dark:text-white">STAR Pitch Formula + 3-Level Hints</span>
-                        <span className="text-[11px] text-slate-600 dark:text-slate-400 font-medium">
-                          Practice with Teleprompter or AI hints before evaluating.
                         </span>
                       </div>
                     </div>

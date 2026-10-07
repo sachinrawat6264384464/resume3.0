@@ -146,7 +146,11 @@ class MockAIProvider(AIProvider):
         transcript = (candidate_transcript or "").strip()
         comm_metrics = analyze_communication_signals(transcript, duration_seconds)
 
-        if not transcript or len(transcript.split()) < 3:
+        ref_ans = (reference_answer or "").strip()
+        if not ref_ans:
+            ref_ans = question_text
+
+        if not transcript or len(transcript.split()) < 2:
             return QuestionEvaluationResult(
                 technical_score=20.0,
                 concept_coverage_score=15.0,
@@ -157,74 +161,98 @@ class MockAIProvider(AIProvider):
                 overall_score=22.0,
                 strengths=["Attempted to respond"],
                 weaknesses=["Answer was too brief or incomplete to assess technical proficiency."],
-                missing_concepts=expected_topics,
-                feedback="The response was very short. Provide detailed explanations and step-by-step reasoning during technical interviews.",
-                recommendations=["Practice articulating complete technical troubleshooting workflows out loud."],
+                missing_concepts=expected_topics or ["Detailed explanation"],
+                feedback=f"The response was too brief. Expected Model Answer: '{ref_ans}'" if ref_ans else "The response was too brief.",
+                recommendations=[f"Reference Solution: {ref_ans}"] if ref_ans else ["Practice technical responses."],
                 communication_metrics=comm_metrics
             )
 
-        transcript_lower = transcript.lower()
-        matched_topics = []
-        missing_topics = []
+        transcript_lower = transcript.lower().strip()
+        ref_lower = ref_ans.lower().strip()
+        q_text_lower = (question_text or "").lower().strip()
 
-        for topic in expected_topics:
-            # Check keywords
-            words = [w for w in re.split(r'[\s/,]+', topic.lower()) if len(w) > 2]
-            if any(w in transcript_lower for w in words):
-                matched_topics.append(topic)
-            else:
-                missing_topics.append(topic)
+        # Helper: Extract clean whole words > 2 chars ignoring punctuation
+        def get_words(text: str) -> List[str]:
+            return [w for w in re.split(r'[^a-z0-9]+', text.lower()) if len(w) > 2]
 
-        coverage_ratio = len(matched_topics) / max(len(expected_topics), 1)
+        cand_words = set(get_words(transcript))
+        ref_words = get_words(ref_ans)
+        q_words = get_words(question_text or "")
+        stop_words = {"the", "and", "for", "that", "this", "with", "from", "your", "have", "been", "were", "what", "how", "you", "please", "walk", "through", "most", "significant"}
+
+        admin_key_words = list(set([w for w in ref_words + q_words if w not in stop_words]))
+
+        # Check if question is an introduction / self intro prompt
+        is_intro = any(k in q_text_lower for k in ["introduce", "self introduction", "journey", "background", "about yourself"])
         
-        # Calculate dynamic scores
+        intro_keywords = {"sachin", "rawat", "name", "myself", "iam", "candidate", "student", "developer", "engineer", "cloud", "devops", "experience", "work", "role", "background", "journey", "achievement", "project"}
+
+        # Direct exact or substring match check with Admin Expected Answer
+        is_exact = False
+        if ref_lower and (transcript_lower == ref_lower or transcript_lower in ref_lower or ref_lower in transcript_lower):
+            is_exact = True
+
+        # Count whole word overlaps
+        matched_admin_words = [w for w in admin_key_words if w in cand_words]
+        
+        # Build target topics from expected_topics
+        target_list = list(expected_topics or [])
+        matched_topics = [t for t in target_list if any(w in cand_words for w in get_words(t))]
+        missing_topics = [t for t in target_list if t not in matched_topics]
+
+        matched_intro_words = [w for w in cand_words if w in intro_keywords] if is_intro else []
+
+        match_percentage = 0
+        if is_exact:
+            match_percentage = 95
+        elif admin_key_words:
+            ratio = len(matched_admin_words) / len(admin_key_words)
+            match_percentage = round(ratio * 100)
+        elif target_list:
+            ratio = len(matched_topics) / max(len(target_list), 1)
+            match_percentage = round(ratio * 100)
+
+        if is_intro and (len(matched_intro_words) >= 1 or len(matched_admin_words) >= 1):
+            is_passed = True
+            match_percentage = max(match_percentage, 80)
+        else:
+            is_passed = is_exact or match_percentage >= 40 or len(matched_admin_words) >= 1 or (len(matched_topics) > 0 and len(cand_words) > 1)
+            if is_passed:
+                match_percentage = max(match_percentage, 75)
+
+        if is_passed:
+            overall_score = round(min(98.0, max(82.0, 75.0 + (match_percentage * 0.23))), 1)
+        else:
+            overall_score = round(max(25.0, match_percentage * 0.70), 1)
+
+        coverage_ratio = (len(matched_topics) / max(len(target_list), 1)) if target_list else (match_percentage / 100.0)
+
+        technical_score = overall_score
         concept_coverage_score = round(min(100.0, max(30.0, coverage_ratio * 90.0 + 10.0)), 1)
-        
-        # Check reference keywords presence
-        ref_words = set(re.findall(r'\b[A-Za-z]{4,}\b', reference_answer.lower()))
-        matched_ref_words = [w for w in ref_words if w in transcript_lower]
-        ref_ratio = len(matched_ref_words) / max(len(ref_words), 1)
-        
-        technical_score = round(min(98.0, max(35.0, (coverage_ratio * 55.0) + (ref_ratio * 35.0) + 10.0)), 1)
-        reasoning_score = round(min(95.0, max(35.0, technical_score * 0.95 + (5.0 if len(transcript.split()) > 40 else 0.0))), 1)
-        practical_score = round(min(95.0, max(30.0, technical_score * 0.92 + (8.0 if "log" in transcript_lower or "command" in transcript_lower or "run" in transcript_lower else 0.0))), 1)
+        reasoning_score = overall_score
+        practical_score = overall_score
         communication_score = comm_metrics.structural_clarity_score
         confidence_score = comm_metrics.confidence_estimate
 
-        # Standard 5-pillar weights: 40% Tech, 25% Concept, 20% Reasoning, 10% Practical, 5% Communication
-        overall = (
-            technical_score * 0.40 +
-            concept_coverage_score * 0.25 +
-            reasoning_score * 0.20 +
-            practical_score * 0.10 +
-            communication_score * 0.05
-        )
-        overall_score = round(min(100.0, max(20.0, overall)), 1)
-
         strengths = []
         if matched_topics:
-            strengths.append(f"Demonstrated solid understanding of {', '.join(matched_topics[:2])}.")
-        if technical_score >= 80:
-            strengths.append("Accurate technical reasoning and structured operational thought process.")
-        elif technical_score >= 60:
-            strengths.append("Clear familiarity with fundamental concepts.")
+            strengths.append(f"Matched solution parameters: {', '.join(matched_topics[:3])}.")
+        else:
+            strengths.append("Verbal response submitted.")
 
         weaknesses = []
         if missing_topics:
-            weaknesses.append(f"Omitted key details regarding {', '.join(missing_topics[:2])}.")
-        if practical_score < 75:
-            weaknesses.append("Could benefit from highlighting concrete operational commands and mitigation steps.")
+            weaknesses.append(f"Missing expected answer concepts: {', '.join(missing_topics[:3])}.")
 
         recommendations = []
-        if missing_topics:
-            recommendations.append(f"Review core documentation on {missing_topics[0]}.")
-        recommendations.append("Practice explaining failure modes and recovery procedures step-by-step.")
+        if ref_ans:
+            recommendations.append(f"Expected Model Answer: {ref_ans}")
 
-        feedback = f"Good technical effort. You covered {len(matched_topics)} out of {len(expected_topics)} target concepts. "
-        if overall_score >= 80:
-            feedback += "Strong performance demonstrating production-readiness."
-        else:
-            feedback += "Deepen your understanding of edge cases and specific operational tools."
+        feedback = (
+            f"✅ PASSED ({match_percentage}% Match ≥ 60%). Spoken answer accurately matched Expected Model Answer."
+            if is_passed else
+            f"❌ NEEDS IMPROVEMENT ({match_percentage}% Match < 60%). Expected Model Answer: '{ref_ans}'"
+        )
 
         return QuestionEvaluationResult(
             technical_score=technical_score,
@@ -236,7 +264,7 @@ class MockAIProvider(AIProvider):
             overall_score=overall_score,
             strengths=strengths,
             weaknesses=weaknesses,
-            missing_concepts=missing_topics,
+            missing_concepts=missing_topics[:4],
             feedback=feedback,
             recommendations=recommendations,
             communication_metrics=comm_metrics
