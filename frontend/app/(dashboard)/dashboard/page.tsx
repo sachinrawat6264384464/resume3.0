@@ -66,13 +66,13 @@ export default function CandidateDashboardPage() {
   const defaultLiveSession = {
     id: "live-default-001",
     title: "👑 40 LPA DevOps Architecture & Outage Troubleshooting Masterclass",
-    description: "Live Q&A, mock interview feedback & ATS resume review session with Vikas Sir and Sachin Rawat.",
+    description: "Live Q&A, mock interview feedback & ATS resume review session with Vikas Sir.",
     session_date: "Tomorrow • 8:15 PM IST",
     meeting_url: "https://meet.google.com/xyz-cloudops-live",
     whatsapp_group_url: "https://chat.whatsapp.com/AIInterviewCommunity",
     banner_url: "/banner-live.png",
     status: "UPCOMING",
-    host_name: "Vikas Sir & Sachin Rawat"
+    host_name: "Vikas Sir"
   };
 
   const [dbMetrics, setDbMetrics] = useState<any>(null);
@@ -600,7 +600,7 @@ Learn Today. Implement Today. Build Your Career for a Lifetime.
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 relative z-10">
         <div className="flex flex-col gap-1">
           <h1 suppressHydrationWarning className="text-2xl sm:text-3xl lg:text-4xl font-black tracking-tight text-slate-900 dark:text-white uppercase flex items-center gap-2">
-            WELCOME BACK, <span className="text-[#FF6B00] font-black">{mounted ? candidateName.split(' ')[0] : "Candidate"}</span> 👋
+            WELCOME BACK, <span className="text-[#FF6B00] font-black">{mounted ? candidateName.split(' ')[0] : "Candidate"}</span>
           </h1>
           <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 font-semibold tracking-wide">
             Learn Today. Implement Today. Build Your Career for a Lifetime.
@@ -644,7 +644,7 @@ Learn Today. Implement Today. Build Your Career for a Lifetime.
             </div>
 
             <div className="flex items-center gap-2 px-3.5 py-1 rounded-full bg-blue-50 dark:bg-blue-500/15 text-blue-700 dark:text-blue-300 border border-blue-400/30 text-[11px] font-black">
-              <span>Host: {activeLiveSession.host_name || "Vikas Sir & Sachin Rawat"}</span>
+              <span>Host: {activeLiveSession.host_name || "Vikas Sir"}</span>
             </div>
           </div>
 
@@ -654,7 +654,7 @@ Learn Today. Implement Today. Build Your Career for a Lifetime.
               {activeLiveSession.title ? activeLiveSession.title.replace("👑 ", "") : "40 LPA DevOps Architecture & Outage Masterclass"}
             </h2>
             <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 font-semibold leading-relaxed max-w-3xl">
-              {activeLiveSession.description || "Live Q&A, mock interview feedback & ATS resume review session with Vikas Sir and Sachin Rawat."}
+              {activeLiveSession.description || "Live Q&A, mock interview feedback & ATS resume review session with Vikas Sir."}
             </p>
           </div>
 
@@ -767,7 +767,7 @@ Learn Today. Implement Today. Build Your Career for a Lifetime.
 
             <div className="flex items-center gap-2 px-3.5 py-1 rounded-full bg-blue-500/15 text-blue-300 border border-blue-400/30 text-[11px] font-black">
               <Laptop className="w-3.5 h-3.5 text-blue-400" />
-              <span>Host: Vikas Sir & Sachin Rawat</span>
+              <span>Host: Vikas Sir</span>
             </div>
           </div>
 

@@ -100,6 +100,7 @@ const getInitialSelectedStage = (initialStages: any[]) => {
 export default function InterviewsPage() {
   const router = useRouter();
   const user = useAuthStore((state) => state.user);
+  const updateUser = useAuthStore((state) => state.updateUser);
   const [mounted, setMounted] = useState(false);
   const [stages, setStages] = useState<any[]>(ALL_30_STAGES);
   const [isLoadingStages, setIsLoadingStages] = useState<boolean>(false);
@@ -513,6 +514,15 @@ export default function InterviewsPage() {
     setIsStage0ModalOpen(false);
     setPaymentSuccessMsg("🎉 Stage 0 Profile Setup Saved! Stage 1 Unlocked.");
 
+    // Update global user state (name, email, phone) across entire frontend app
+    if (updateUser) {
+      updateUser({
+        full_name: stage0Form.fullName.trim(),
+        email: stage0Form.email.trim().toLowerCase(),
+        phone_number: stage0Form.phone.trim()
+      });
+    }
+
     // 2. Instant Local Storage Persistence
     if (typeof window !== "undefined") {
       try {
@@ -549,8 +559,9 @@ export default function InterviewsPage() {
     apiFetch("/candidates/me/profile", {
       method: "PUT",
       body: JSON.stringify({
-        full_name: stage0Form.fullName,
-        phone: stage0Form.phone,
+        full_name: stage0Form.fullName.trim(),
+        email: stage0Form.email.trim().toLowerCase(),
+        phone: stage0Form.phone.trim(),
         target_role: stage0Form.targetRole,
         designation: stage0Form.designation,
         highest_qualification: stage0Form.highestQualification,

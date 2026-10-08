@@ -229,11 +229,6 @@ export default function LoginPage() {
     setError(null);
     setInfoMsg(null);
 
-    if (!fullName.trim()) {
-      setError("Please enter your Candidate Full Name.");
-      return;
-    }
-
     const cleanPhone = phoneNumber.trim().replace(/\D/g, "");
     if (!cleanPhone || cleanPhone.length < 10) {
       setError("Please enter a valid 10-digit mobile number.");
@@ -248,7 +243,6 @@ export default function LoginPage() {
         method: "POST",
         body: JSON.stringify({
           phone_number: fullFormattedPhone,
-          full_name: fullName.trim(),
           mode: authMode
         })
       });
@@ -490,24 +484,9 @@ export default function LoginPage() {
 
           {/* MOBILE OTP FLOW */}
           {otpStep === 1 ? (
-            /* Step 1: Enter Name + Mobile Number */
+            /* Step 1: Enter Mobile Number Only */
             <form onSubmit={handleSendOTP} className="flex flex-col gap-3.5 sm:gap-4">
               <div id="recaptcha-container"></div>
-
-              <div className="flex flex-col gap-1 sm:gap-1.5">
-                <label className="text-[11px] sm:text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
-                  <User className="w-3.5 h-3.5 text-[#FF6B00] shrink-0" />
-                  Candidate Full Name:
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={fullName}
-                  onChange={(e) => setFullName(e.target.value)}
-                  placeholder="e.g. Sachin Rawat"
-                  className="w-full px-3.5 py-2.5 sm:px-4 sm:py-3 rounded-xl sm:rounded-2xl text-xs bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white font-bold focus:outline-none focus:border-[#FF6B00]"
-                />
-              </div>
 
               <div className="flex flex-col gap-1 sm:gap-1.5">
                 <label className="text-[11px] sm:text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
@@ -563,7 +542,7 @@ export default function LoginPage() {
               <div className="p-3 sm:p-3.5 rounded-xl sm:rounded-2xl bg-slate-900/90 border border-slate-800 text-xs font-medium text-slate-300 flex items-center justify-between gap-2">
                 <div>
                   <span className="font-bold text-slate-400 block">Mobile Number:</span>
-                  <span className="font-mono text-[11px] sm:text-xs text-white font-bold">{phoneNumber} ({fullName})</span>
+                  <span className="font-mono text-[11px] sm:text-xs text-white font-bold">+91 {phoneNumber}</span>
                 </div>
                 <button
                   type="button"

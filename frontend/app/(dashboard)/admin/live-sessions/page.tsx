@@ -43,7 +43,7 @@ export default function AdminLiveSessionsPage() {
   const [bannerUrl, setBannerUrl] = useState("");
   const [status, setStatus] = useState("UPCOMING");
   const [isActive, setIsActive] = useState(true);
-  const [hostName, setHostName] = useState("Vikas Sir & Sachin Rawat");
+  const [hostName, setHostName] = useState("Vikas Sir");
 
   const [saving, setSaving] = useState(false);
 
@@ -177,13 +177,13 @@ export default function AdminLiveSessionsPage() {
         processed = processAndSortSessions([{
           id: "live-default-001",
           title: "👑 40 LPA DevOps Architecture & Outage Troubleshooting Masterclass",
-          description: "Live Q&A, mock interview feedback & ATS resume review session with Vikas Sir and Sachin Rawat.",
+          description: "Live Q&A, mock interview feedback & ATS resume review session with Vikas Sir.",
           session_date: "Tomorrow • 8:15 PM IST",
           meeting_url: "https://meet.google.com/xyz-cloudops-live",
           whatsapp_group_url: "https://chat.whatsapp.com/AIInterviewCommunity",
           is_active: true,
           status: "UPCOMING",
-          host_name: "Vikas Sir & Sachin Rawat"
+          host_name: "Vikas Sir"
         }]);
       }
       setSessions(processed);
@@ -239,14 +239,14 @@ export default function AdminLiveSessionsPage() {
   const handleOpenCreateModal = () => {
     setEditingSession(null);
     setTitle("👑 40 LPA DevOps Architecture & Outage Troubleshooting Masterclass");
-    setDescription("Live Q&A, mock interview feedback & ATS resume review session with Vikas Sir and Sachin Rawat.");
+    setDescription("Live Q&A, mock interview feedback & ATS resume review session with Vikas Sir.");
     setSessionDate("25 Sept 2026 • 8:15 PM IST");
     setMeetingUrl("https://meet.google.com/xyz-cloudops-live");
     setWhatsappGroupUrl("https://chat.whatsapp.com/AIInterviewCommunity");
     setBannerUrl("");
     setStatus("UPCOMING");
     setIsActive(true);
-    setHostName("Vikas Sir & Sachin Rawat");
+    setHostName("Vikas Sir");
     setIsModalOpen(true);
   };
 
@@ -260,7 +260,7 @@ export default function AdminLiveSessionsPage() {
     setBannerUrl(s.banner_url || "");
     setStatus(s.status || "UPCOMING");
     setIsActive(s.is_active ?? true);
-    setHostName(s.host_name || "Vikas Sir & Sachin Rawat");
+    setHostName(s.host_name || "Vikas Sir");
     setIsModalOpen(true);
   };
 
@@ -482,7 +482,7 @@ export default function AdminLiveSessionsPage() {
                     </div>
                     <div className="flex items-center gap-2">
                       <Users className="w-3.5 h-3.5 text-[#FF6B00]" />
-                      <span>Host: {s.host_name || "Vikas Sir & Sachin Rawat"}</span>
+                      <span>Host: {s.host_name || "Vikas Sir"}</span>
                     </div>
                   </div>
                 </div>
@@ -689,7 +689,7 @@ export default function AdminLiveSessionsPage() {
                     type="text"
                     value={hostName}
                     onChange={(e) => setHostName(e.target.value)}
-                    placeholder="Vikas Sir & Sachin Rawat"
+                    placeholder="Vikas Sir"
                     className="w-full px-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white font-bold focus:outline-none focus:border-[#FF6B00]"
                   />
                 </div>
