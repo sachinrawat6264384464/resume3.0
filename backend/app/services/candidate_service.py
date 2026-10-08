@@ -74,14 +74,30 @@ class CandidateService:
 
             # Determine robust phone number
             c_phone = cand.phone or (cand.user.phone_number if cand.user else None)
-            if not c_phone and cand.user and cand.user.email:
-                digits = "".join(filter(str.isdigit, cand.user.email))
-                if len(digits) >= 10:
-                    c_phone = f"+91 {digits[-10:]}"
+            if not c_phone:
+                import re
+                sources = [
+                    cand.user.email if cand.user else "",
+                    cand.student_id or "",
+                    cand.notes or "",
+                    str(cand.resume_data_json or "")
+                ]
+                for src in sources:
+                    match = re.search(r'(?:\+?91[\s-]?)?([6-9]\d{9})', src)
+                    if match:
+                        c_phone = f"+91 {match.group(1)}"
+                        break
+                    digits = "".join(filter(str.isdigit, src))
+                    if len(digits) >= 10:
+                        c_phone = f"+91 {digits[-10:]}"
+                        break
 
-            # Auto sync cand.phone if missing
-            if c_phone and not cand.phone:
-                cand.phone = c_phone
+            # Auto sync cand.phone and cand.user.phone_number if missing
+            if c_phone:
+                if not cand.phone:
+                    cand.phone = c_phone
+                if cand.user and not cand.user.phone_number:
+                    cand.user.phone_number = c_phone
 
             output.append(CandidateWithAttemptsOut(
                 id=cand.id,

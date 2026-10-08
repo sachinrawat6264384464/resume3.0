@@ -208,11 +208,13 @@ async def verify_otp(req: VerifyOTPRequest, db: AsyncSession = Depends(get_db)):
 
     from app.models.candidate import Candidate
     if existing_user:
-        # Update user full_name if provided
-        if req.full_name and req.full_name.strip():
+        # Update user full_name and phone_number if provided
+        if req.full_name and req.full_name.strip() and not req.full_name.lower().startswith("candidate"):
             existing_user.full_name = req.full_name.strip()
+        if target_phone:
+            existing_user.phone_number = target_phone
 
-        # Ensure Candidate record exists in DB
+        # Ensure Candidate record exists in DB and sync phone
         stmt_cand = select(Candidate).where(Candidate.user_id == existing_user.id)
         res_cand = await db.execute(stmt_cand)
         cand = res_cand.scalar_one_or_none()
@@ -222,22 +224,33 @@ async def verify_otp(req: VerifyOTPRequest, db: AsyncSession = Depends(get_db)):
                 organization_id=existing_user.organization_id,
                 target_role="CloudOps Engineer",
                 experience_level="MID",
-                phone=existing_user.phone_number
+                phone=target_phone or existing_user.phone_number
             )
             db.add(cand)
+        else:
+            if target_phone:
+                cand.phone = target_phone
+            elif existing_user.phone_number:
+                cand.phone = existing_user.phone_number
+
         await db.commit()
+        await db.refresh(existing_user)
 
         user_email = existing_user.email or f"user_{''.join(filter(str.isdigit, existing_user.phone_number or ''))}@cloudops.internal"
         return await service.authenticate_mock(
-            MockLoginRequest(email=user_email, name=existing_user.full_name)
+            MockLoginRequest(
+                email=user_email,
+                name=existing_user.full_name,
+                phone_number=target_phone or existing_user.phone_number
+            )
         )
 
     # 2. REGISTER NEW CANDIDATE USER AUTOMATICALLY
     phone_digits = "".join(filter(str.isdigit, target_phone)) if target_phone else ""
     default_prefix = phone_digits if phone_digits else str(secrets.randbelow(900000))
-    final_email = target_email or f"user_{default_prefix}@cloudops.internal"
-    final_phone = target_phone or f"+91{secrets.randbelow(9000000000) + 1000000000}"
-    final_name = (req.full_name or "").strip() or f"Candidate {final_email.split('@')[0]}"
+    final_email = (target_email if (target_email and "@" in target_email and not target_email.endswith("@cloudops.internal")) else f"cand_{default_prefix}@cloudops.internal")
+    final_phone = target_phone if target_phone else (f"+91{phone_digits}" if len(phone_digits)>=10 else f"+91{secrets.randbelow(9000000000) + 1000000000}")
+    final_name = (req.full_name or "").strip() or (f"Candidate {phone_digits[-4:]}" if len(phone_digits)>=4 else "Candidate User")
     final_password = req.password or "DefaultPass@123"
 
     user = await service.register_user(
@@ -260,7 +273,11 @@ async def verify_otp(req: VerifyOTPRequest, db: AsyncSession = Depends(get_db)):
         pass
 
     return await service.authenticate_mock(
-        MockLoginRequest(email=final_email, name=final_name)
+        MockLoginRequest(
+            email=final_email,
+            name=final_name,
+            phone_number=final_phone
+        )
     )
 
 @router.post("/social-login", response_model=TokenResponse)

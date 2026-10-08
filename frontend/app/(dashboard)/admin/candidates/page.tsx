@@ -229,13 +229,28 @@ export default function AdminCandidatesPage() {
 
   const getPhoneDisplay = (c: any) => {
     if (!c) return "No Phone";
-    if (c.phone && c.phone.trim()) return c.phone.trim();
-    if (c.user?.phone_number && c.user.phone_number.trim()) return c.user.phone_number.trim();
-    const emailStr = c.user?.email || c.email || "";
-    const digits = emailStr.replace(/\D/g, "");
-    if (digits.length >= 10) {
-      return `+91 ${digits.slice(-10)}`;
+    if (c.phone && c.phone.trim() && c.phone.trim() !== "null" && c.phone.trim() !== "undefined") return c.phone.trim();
+    if (c.user?.phone_number && c.user.phone_number.trim() && c.user.phone_number.trim() !== "null") return c.user.phone_number.trim();
+    
+    const sources = [
+      c.user?.email || "",
+      c.email || "",
+      c.student_id || "",
+      c.notes || "",
+      typeof c.resume_data_json === "string" ? c.resume_data_json : JSON.stringify(c.resume_data_json || {})
+    ];
+
+    for (const src of sources) {
+      const match = src.match(/(?:\+?91[\s-]?)?([6-9]\d{9})/);
+      if (match && match[1]) {
+        return `+91 ${match[1]}`;
+      }
+      const allDigits = src.replace(/\D/g, "");
+      if (allDigits.length >= 10) {
+        return `+91 ${allDigits.slice(-10)}`;
+      }
     }
+
     return "No Phone";
   };
 

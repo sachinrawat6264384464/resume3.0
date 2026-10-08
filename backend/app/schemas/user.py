@@ -44,6 +44,7 @@ class MockLoginRequest(BaseModel):
     role: UserRole = UserRole.CANDIDATE
     email: Optional[str] = None
     name: Optional[str] = None
+    phone_number: Optional[str] = None
 
 class FirebasePhoneLoginRequest(BaseModel):
     id_token: str

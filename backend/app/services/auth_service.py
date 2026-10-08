@@ -129,6 +129,7 @@ class AuthService:
         role_str = mock_req.role.value if isinstance(mock_req.role, UserRole) else str(mock_req.role)
         email = mock_req.email or f"{role_str.lower()}@cloudops.internal"
         name = mock_req.name or f"Demo {role_str.capitalize()}"
+        req_phone = getattr(mock_req, "phone_number", None)
 
         stmt = select(User).where(User.email == email)
         result = await self.db.execute(stmt)
@@ -138,6 +139,7 @@ class AuthService:
             org = await self.get_or_create_default_org()
             user = User(
                 email=email,
+                phone_number=req_phone,
                 full_name=name,
                 role=role_str,
                 organization_id=org.id,
@@ -151,12 +153,18 @@ class AuthService:
                     user_id=user.id,
                     organization_id=org.id,
                     target_role="CloudOps Engineer",
-                    experience_level="MID"
+                    experience_level="MID",
+                    phone=req_phone
                 )
                 self.db.add(cand)
                 await self.db.flush()
             await self.db.commit()
         else:
+            dirty = False
+            if req_phone and not user.phone_number:
+                user.phone_number = req_phone
+                dirty = True
+
             # Ensure candidate record exists in DB
             if user.role == UserRole.CANDIDATE.value:
                 stmt_cand = select(Candidate).where(Candidate.user_id == user.id)
@@ -168,15 +176,23 @@ class AuthService:
                         organization_id=user.organization_id,
                         target_role="CloudOps Engineer",
                         experience_level="MID",
-                        phone=user.phone_number
+                        phone=req_phone or user.phone_number
                     )
                     self.db.add(cand)
-                    await self.db.commit()
+                    dirty = True
+                else:
+                    active_phone = req_phone or user.phone_number
+                    if active_phone and not cand.phone:
+                        cand.phone = active_phone
+                        dirty = True
 
             # Overwrite legacy "Demo Candidate" or default name with real name or email prefix
             new_name = mock_req.name or (email.split('@')[0].capitalize() if '@' in email else None)
             if new_name and not new_name.lower().startswith("demo candidate"):
                 user.full_name = new_name
+                dirty = True
+
+            if dirty:
                 await self.db.commit()
             elif user.full_name and (user.full_name.lower().startswith("demo candidate") or user.full_name.lower().startswith("demo ")):
                 if email and "@" in email:
