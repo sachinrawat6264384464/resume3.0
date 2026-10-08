@@ -97,20 +97,30 @@ async def update_my_profile(
         db.add(cand)
         await db.flush()
 
+    res_data = dict(cand.resume_data_json or {})
+
     if req.get("email"):
         email_val = req["email"].strip().lower()
-        stmt_exist = select(User).where(and_(User.email == email_val, User.id != user.id))
-        res_exist = await db.execute(stmt_exist)
-        if res_exist.scalar_one_or_none():
-            raise HTTPException(status_code=400, detail="An account with this Email Address is already registered.")
-        user.email = email_val
+        if email_val and not email_val.endswith("@cloudops.internal") and email_val != user.email:
+            stmt_exist = select(User).where(and_(User.email == email_val, User.id != user.id))
+            res_exist = await db.execute(stmt_exist)
+            if res_exist.scalar_one_or_none():
+                raise HTTPException(status_code=400, detail="An account with this Email Address is already registered.")
+            user.email = email_val
+            res_data["email"] = email_val
 
     if req.get("full_name"):
-        user.full_name = req["full_name"].strip()
-        cand.full_name = req["full_name"].strip()
+        clean_name = req["full_name"].strip()
+        if clean_name:
+            user.full_name = clean_name
+            res_data["full_name"] = clean_name
+
     if req.get("phone"):
-        user.phone_number = req["phone"].strip()
-        cand.phone = req["phone"].strip()
+        clean_phone = req["phone"].strip()
+        if clean_phone:
+            user.phone_number = clean_phone
+            cand.phone = clean_phone
+
     if req.get("target_role"):
         cand.target_role = req["target_role"].strip()
     if req.get("target_salary_band"):
@@ -125,8 +135,6 @@ async def update_my_profile(
             notes_dict = json.loads(cand.notes)
         except Exception:
             notes_dict = {"notes": cand.notes}
-    
-    res_data = dict(cand.resume_data_json or {})
 
     if req.get("highest_qualification"):
         res_data["highest_qualification"] = req["highest_qualification"].strip()
@@ -153,6 +161,8 @@ async def update_my_profile(
         res_data["stage_0_completed"] = True
         cand.resume_data_json = res_data
 
+    db.add(user)
+    db.add(cand)
     await db.commit()
     return StandardResponse(
         message="Profile saved to database successfully",

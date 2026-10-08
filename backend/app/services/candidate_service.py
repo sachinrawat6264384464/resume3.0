@@ -92,6 +92,39 @@ class CandidateService:
                         c_phone = f"+91 {digits[-10:]}"
                         break
 
+            # Auto sync full_name & email if stored in resume_data_json or notes
+            if cand.user:
+                saved_name = None
+                saved_email = None
+                if cand.resume_data_json and isinstance(cand.resume_data_json, dict):
+                    saved_name = cand.resume_data_json.get("full_name") or cand.resume_data_json.get("fullName")
+                    saved_email = cand.resume_data_json.get("email")
+                if not saved_name and cand.notes:
+                    try:
+                        import json
+                        n_dict = json.loads(cand.notes)
+                        if isinstance(n_dict, dict):
+                            saved_name = n_dict.get("full_name") or n_dict.get("fullName")
+                            if not saved_email:
+                                saved_email = n_dict.get("email")
+                    except Exception:
+                        pass
+
+                dirty_user = False
+                if saved_name and isinstance(saved_name, str) and saved_name.strip():
+                    clean_sn = saved_name.strip()
+                    if (not cand.user.full_name or cand.user.full_name.lower().startswith("candidate")) and clean_sn:
+                        cand.user.full_name = clean_sn
+                        dirty_user = True
+
+                if saved_email and isinstance(saved_email, str) and "@" in saved_email and not saved_email.endswith("@cloudops.internal"):
+                    if not cand.user.email or cand.user.email.endswith("@cloudops.internal") or cand.user.email != saved_email:
+                        cand.user.email = saved_email
+                        dirty_user = True
+
+                if dirty_user:
+                    self.db.add(cand.user)
+
             # Auto sync cand.phone and cand.user.phone_number if missing
             if c_phone:
                 if not cand.phone:

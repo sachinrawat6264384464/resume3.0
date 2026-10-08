@@ -37,7 +37,17 @@ class Candidate(TimeStampedModel):
     def email(self) -> Optional[str]:
         return self.user.email if self.user else None
 
+    @email.setter
+    def email(self, value: Optional[str]):
+        if self.user and value:
+            self.user.email = value
+
     @property
     def full_name(self) -> str:
         return self.user.full_name if self.user and self.user.full_name else "Candidate"
+
+    @full_name.setter
+    def full_name(self, value: str):
+        if self.user and value:
+            self.user.full_name = value
 
