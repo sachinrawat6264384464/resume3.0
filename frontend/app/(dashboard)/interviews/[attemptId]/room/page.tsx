@@ -295,6 +295,8 @@ export default function InterviewRoomPage() {
             expected_topics: qa.question?.expected_topics
           })).filter((q: any) => q && q.question_text)));
 
+  const fallbackList = STAGE_FALLBACK_QUESTIONS[currentStageNum] || STAGE_FALLBACK_QUESTIONS[1] || [];
+
   const dbTotalQCount = Math.max(
     combinedQuestionsList.length,
     fallbackList.length > 0 ? fallbackList.length : 1
