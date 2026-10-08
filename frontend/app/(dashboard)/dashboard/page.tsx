@@ -621,11 +621,11 @@ Learn Today. Implement Today. Build Your Career for a Lifetime.
 
       {/* HERO EVENT CARD WITH LIVE COUNTDOWN CLOCK OR COMING SOON FALLBACK */}
       {activeLiveSession ? (
-        <div className="relative z-10 p-6 sm:p-8 rounded-[32px] bg-gradient-to-br from-[#0B1528] via-[#0F1E36] to-[#070D18] border-2 border-[#FF6B00]/40 shadow-2xl shadow-[#FF6B00]/15 overflow-hidden flex flex-col gap-6 text-white backdrop-blur-xl">
+        <div className="relative z-10 p-6 sm:p-8 rounded-[32px] bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-800 shadow-2xl shadow-slate-200/50 dark:shadow-slate-950/50 overflow-hidden flex flex-col gap-6 text-slate-900 dark:text-white backdrop-blur-xl">
           
           {/* Ambient Glows */}
-          <div className="absolute -top-24 -right-24 w-72 h-72 bg-[#FF6B00]/15 rounded-full blur-3xl pointer-events-none" />
-          <div className="absolute -bottom-24 -left-24 w-72 h-72 bg-blue-500/15 rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute -top-24 -right-24 w-72 h-72 bg-[#FF6B00]/10 rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute -bottom-24 -left-24 w-72 h-72 bg-blue-500/10 rounded-full blur-3xl pointer-events-none" />
 
           {/* Top Row: Live Beacon Badge & Event Date */}
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 relative z-10">
@@ -642,37 +642,37 @@ Learn Today. Implement Today. Build Your Career for a Lifetime.
                 {activeLiveSession.status === "LIVE_NOW" || activeLiveSession.status === "LIVE_STREAMING" ? "● LIVE STREAMING NOW" : "UPCOMING LIVE MASTERCLASS"}
               </span>
 
-              <span className="px-3.5 py-1 rounded-full text-[11px] font-mono font-black bg-white/10 text-amber-300 border border-amber-400/30">
+              <span className="px-3.5 py-1 rounded-full text-[11px] font-mono font-black bg-amber-50 dark:bg-white/10 text-amber-700 dark:text-amber-300 border border-amber-400/40">
                 📅 {activeLiveSession.session_date}
               </span>
             </div>
 
-            <div className="flex items-center gap-2 px-3.5 py-1 rounded-full bg-blue-500/15 text-blue-300 border border-blue-400/30 text-[11px] font-black">
-              <Laptop className="w-3.5 h-3.5 text-blue-400" />
+            <div className="flex items-center gap-2 px-3.5 py-1 rounded-full bg-blue-50 dark:bg-blue-500/15 text-blue-700 dark:text-blue-300 border border-blue-400/30 text-[11px] font-black">
+              <Laptop className="w-3.5 h-3.5 text-blue-500" />
               <span>Host: {activeLiveSession.host_name || "Vikas Sir & Sachin Rawat"}</span>
             </div>
           </div>
 
           {/* Main Title & Subtitle */}
           <div className="flex flex-col gap-2 relative z-10">
-            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black tracking-tight text-white uppercase leading-snug drop-shadow-md">
+            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black tracking-tight text-slate-900 dark:text-white uppercase leading-snug">
               {activeLiveSession.title || "👑 40 LPA DevOps Architecture & Outage Masterclass"}
             </h2>
-            <p className="text-xs sm:text-sm text-slate-300 font-semibold leading-relaxed max-w-3xl">
+            <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 font-semibold leading-relaxed max-w-3xl">
               {activeLiveSession.description || "Live Q&A, mock interview feedback & ATS resume review session with Vikas Sir and Sachin Rawat."}
             </p>
           </div>
 
           {/* LIVE SESSION SCHEDULE DATE & DIRECT ACTION BUTTONS GRID */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center relative z-10 pt-2 border-t border-white/10">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center relative z-10 pt-2 border-t border-slate-200 dark:border-slate-800">
             
             {/* Scheduled Date & Time Block (6 cols) */}
-            <div className="lg:col-span-6 flex flex-col justify-center gap-1.5 p-4 rounded-2xl bg-white/10 border border-white/15 backdrop-blur-md">
-              <span className="text-[11px] font-black text-amber-400 uppercase tracking-widest flex items-center gap-1.5">
-                <Calendar className="w-4 h-4 text-amber-400" />
+            <div className="lg:col-span-6 flex flex-col justify-center gap-1.5 p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700">
+              <span className="text-[11px] font-black text-amber-600 dark:text-amber-400 uppercase tracking-widest flex items-center gap-1.5">
+                <Calendar className="w-4 h-4 text-amber-500" />
                 LIVE MASTERCLASS SCHEDULED DATE & TIME:
               </span>
-              <span className="text-lg sm:text-xl lg:text-2xl font-black font-mono text-white tracking-tight flex items-center gap-2">
+              <span className="text-lg sm:text-xl lg:text-2xl font-black font-mono text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
                 <span>🗓️</span>
                 <span>{activeLiveSession.session_date}</span>
               </span>
@@ -700,7 +700,7 @@ Learn Today. Implement Today. Build Your Career for a Lifetime.
                   } catch {}
                   if (typeof window !== "undefined") window.open(url, "_blank");
                 }}
-                className="flex-1 py-4 px-5 rounded-2xl bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 hover:from-blue-500 hover:to-indigo-600 text-white font-black text-xs sm:text-sm tracking-wide shadow-xl shadow-blue-900/40 border border-blue-400/40 transition-all flex items-center justify-center gap-2.5 cursor-pointer uppercase group"
+                className="flex-1 py-4 px-5 rounded-2xl bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 hover:from-blue-500 hover:to-indigo-600 text-white font-black text-xs sm:text-sm tracking-wide shadow-xl shadow-blue-600/30 border border-blue-400/40 transition-all flex items-center justify-center gap-2.5 cursor-pointer uppercase group"
               >
                 <Video className="w-5 h-5 text-white" />
                 <span>Zoom Live Room</span>
@@ -726,7 +726,7 @@ Learn Today. Implement Today. Build Your Career for a Lifetime.
                   } catch {}
                   if (typeof window !== "undefined") window.open(url, "_blank");
                 }}
-                className="flex-1 py-4 px-5 rounded-2xl bg-gradient-to-r from-emerald-600 via-emerald-500 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black text-xs sm:text-sm tracking-wide shadow-xl shadow-emerald-900/40 border border-emerald-400/40 transition-all flex items-center justify-center gap-2.5 cursor-pointer uppercase group"
+                className="flex-1 py-4 px-5 rounded-2xl bg-gradient-to-r from-emerald-600 via-emerald-500 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black text-xs sm:text-sm tracking-wide shadow-xl shadow-emerald-600/30 border border-emerald-400/40 transition-all flex items-center justify-center gap-2.5 cursor-pointer uppercase group"
               >
                 <MessageSquare className="w-5 h-5 text-white fill-white/20" />
                 <span>WhatsApp Group</span>
@@ -738,9 +738,9 @@ Learn Today. Implement Today. Build Your Career for a Lifetime.
           </div>
 
           {/* Footer Bar */}
-          <div className="flex items-center justify-between gap-4 pt-3 border-t border-white/10 text-[10.5px] font-black text-slate-400 uppercase tracking-widest relative z-10 flex-wrap">
-            <span className="flex items-center gap-1.5 text-slate-300">
-              <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+          <div className="flex items-center justify-between gap-4 pt-3 border-t border-slate-200 dark:border-slate-800 text-[10.5px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest relative z-10 flex-wrap">
+            <span className="flex items-center gap-1.5 text-slate-700 dark:text-slate-300">
+              <Sparkles className="w-3.5 h-3.5 text-amber-500" />
               PRACTICE • EXPERT FEEDBACK • GET PLACED
             </span>
             <span className="text-[#FF6B00] font-mono font-black">
