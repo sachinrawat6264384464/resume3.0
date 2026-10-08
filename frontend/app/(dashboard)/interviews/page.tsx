@@ -124,6 +124,17 @@ export default function InterviewsPage() {
     }
   }, []);
 
+  // Instant route prefetching for selected stage
+  useEffect(() => {
+    if (selectedStage?.id !== undefined && router?.prefetch) {
+      try {
+        const stgId = selectedStage.id;
+        router.prefetch(`/interviews/stage-${stgId}/pre-check`);
+        router.prefetch(`/interviews/stage-${stgId}/room`);
+      } catch (e) {}
+    }
+  }, [selectedStage, router]);
+
   // Subscription & Razorpay Payment Modal States
   const [isSubscribed, setIsSubscribed] = useState<boolean>(false);
   const [isPaymentEnabled, setIsPaymentEnabled] = useState<boolean>(true);
@@ -650,48 +661,48 @@ export default function InterviewsPage() {
       return;
     }
 
-    setIsStarting(true);
-    try {
-      const res = await apiFetch("/attempts/start", {
-        method: "POST",
-        body: JSON.stringify({
-          interview_template_id: `stage-${stageId}-template`,
-          stage_number: stageId
-        })
-      });
-      const newAttemptId = res?.data?.id || stageId;
-      const sessionObj = {
-        userId: user?.id,
-        userEmail: user?.email,
-        attemptId: String(newAttemptId),
-        stageId: stageId,
-        stageTitle: targetStg?.title || `Stage ${stageId} Assessment`,
-        roomUrl: `/interviews/${newAttemptId}/room`,
-        startedAt: Date.now()
-      };
-      if (typeof window !== "undefined") {
-        localStorage.setItem("active_interview_session", JSON.stringify(sessionObj));
-      }
-      setActiveSession(sessionObj);
-      router.push(`/interviews/${newAttemptId}/pre-check`);
-    } catch (e) {
-      const sessionObj = {
-        userId: user?.id,
-        userEmail: user?.email,
-        attemptId: String(stageId),
-        stageId: stageId,
-        stageTitle: targetStg?.title || `Stage ${stageId} Assessment`,
-        roomUrl: `/interviews/${stageId}/room`,
-        startedAt: Date.now()
-      };
-      if (typeof window !== "undefined") {
-        localStorage.setItem("active_interview_session", JSON.stringify(sessionObj));
-      }
-      setActiveSession(sessionObj);
-      router.push(`/interviews/${stageId}/pre-check`);
-    } finally {
-      setIsStarting(false);
+    // Instant optimistic session creation & 0ms navigation
+    const tempAttemptId = `stage-${stageId}`;
+    const sessionObj = {
+      userId: user?.id,
+      userEmail: user?.email,
+      attemptId: tempAttemptId,
+      stageId: stageId,
+      stageTitle: targetStg?.title || `Stage ${stageId} Assessment`,
+      roomUrl: `/interviews/${tempAttemptId}/room`,
+      startedAt: Date.now()
+    };
+    if (typeof window !== "undefined") {
+      localStorage.setItem("active_interview_session", JSON.stringify(sessionObj));
     }
+    setActiveSession(sessionObj);
+
+    // INSTANT ROUTE PUSH (0ms delay!)
+    router.push(`/interviews/${tempAttemptId}/pre-check`);
+
+    // Async non-blocking background DB attempt creation
+    apiFetch("/attempts/start", {
+      method: "POST",
+      body: JSON.stringify({
+        interview_template_id: `stage-${stageId}-template`,
+        stage_number: stageId
+      })
+    })
+      .then((res) => {
+        if (res?.data?.id) {
+          const realAttemptId = String(res.data.id);
+          const updatedSession = {
+            ...sessionObj,
+            attemptId: realAttemptId,
+            roomUrl: `/interviews/${realAttemptId}/room`
+          };
+          if (typeof window !== "undefined") {
+            localStorage.setItem("active_interview_session", JSON.stringify(updatedSession));
+          }
+          setActiveSession(updatedSession);
+        }
+      })
+      .catch((err) => console.warn("Background attempt start sync notice:", err));
   };
 
   const loadRazorpayScript = (): Promise<boolean> => {

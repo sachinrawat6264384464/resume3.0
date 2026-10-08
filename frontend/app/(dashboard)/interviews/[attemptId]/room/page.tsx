@@ -76,7 +76,7 @@ export default function InterviewRoomPage() {
   const [lastEvalResult, setLastEvalResult] = useState<QuestionEvaluationResult | null>(null);
   const [lastMatchScore, setLastMatchScore] = useState<number | null>(null);
   const [accumulatedScores, setAccumulatedScores] = useState<number[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
 
   // Drop Out & Final Summary Modal States
   const [showDropOutModal, setShowDropOutModal] = useState(false);
@@ -157,34 +157,25 @@ export default function InterviewRoomPage() {
     forceStopAllWebcams();
   };
 
-  // Fetch Attempt State from Real Database
+  // Fetch Attempt State from Real Database (Non-blocking background sync)
   const loadAttempt = useCallback(async () => {
     try {
       if (attemptId) {
-        // Validate Stage 0 Profile Setup completeness
-        const resMetrics = await apiFetch("/candidates/me/dashboard-metrics").catch(() => null);
-        const cand = resMetrics?.data?.candidate;
-        const userStage0Key = cand?.user_id ? `stage0_profile_data_${cand.user_id}` : "stage0_profile_data";
-        const hasLocalStage0 = typeof window !== "undefined" && Boolean(localStorage.getItem(userStage0Key));
-        const isStage0Done = Boolean(
-          hasLocalStage0 || 
-          (cand?.xp && cand.xp > 0) || 
-          cand?.resume_data_json?.stage_0_completed
+        const userStage0Key = "stage0_profile_data";
+        const hasLocalStage0 = typeof window !== "undefined" && Boolean(
+          localStorage.getItem("stage0_profile_data") ||
+          localStorage.getItem("candidate_linkedin_url") ||
+          localStorage.getItem("completed_stages_list")
         );
 
         if (!attemptId.startsWith("stage-") && !attemptId.startsWith("demo-")) {
-          const res = await apiFetch(`/attempts/${attemptId}`);
+          const res = await apiFetch(`/attempts/${attemptId}`).catch(() => null);
           if (res?.data) {
             const att: InterviewAttempt = res.data;
             setAttempt(att);
 
             const current = att.stage_attempts?.find((s) => s.status === "IN_PROGRESS") || att.stage_attempts?.[0];
-            const stgNum = current?.stage_number ?? att.stage_number ?? 1;
-
-            if (stgNum > 0 && !isStage0Done) {
-              router.replace("/interviews?stage=0&locked=true");
-              return;
-            }
+            const stgNum = current?.stage_number ?? att.stage_number ?? (parseInt(attemptId.replace(/\D/g, ""), 10) || 1);
 
             if (current) setActiveStage(current);
 
@@ -201,32 +192,12 @@ export default function InterviewRoomPage() {
               localStorage.setItem("active_interview_session", JSON.stringify(sessionData));
             }
           }
-        } else {
-          const matchedNum = parseInt(attemptId.replace(/\D/g, ""), 10) || 1;
-          if (matchedNum > 0 && !isStage0Done) {
-            router.replace("/interviews?stage=0&locked=true");
-            return;
-          }
         }
       }
     } catch (err: any) {
       console.warn("Attempt load fallback notice:", err);
-      if (typeof window !== "undefined" && attemptId) {
-        const fallbackObj = {
-          userId: user?.id,
-          userEmail: user?.email,
-          attemptId,
-          stageId: 1,
-          stageTitle: "Live Mock Interview",
-          roomUrl: `/interviews/${attemptId}/room`,
-          startedAt: Date.now()
-        };
-        localStorage.setItem("active_interview_session", JSON.stringify(fallbackObj));
-      }
-    } finally {
-      setIsLoading(false);
     }
-  }, [attemptId]);
+  }, [attemptId, user]);
 
   useEffect(() => {
     loadAttempt();
@@ -353,7 +324,7 @@ export default function InterviewRoomPage() {
     ]
   };
 
-  const currentStageNum = activeStage?.stage_number || (activeStage?.stage as any)?.stage_number || 1;
+  const currentStageNum = activeStage?.stage_number || (activeStage?.stage as any)?.stage_number || (attemptId ? (parseInt(attemptId.replace(/\D/g, ""), 10) || 1) : 1);
   const stageFallbackList = STAGE_FALLBACK_QUESTIONS[currentStageNum] || STAGE_FALLBACK_QUESTIONS[1];
   const defaultStageQ = stageFallbackList[currentQIndex] || stageFallbackList[0] || "Describe your background and technical experience in Cloud & DevOps engineering.";
 
