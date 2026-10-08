@@ -138,9 +138,11 @@ async def update_my_profile(
     if req.get("designation"):
         notes_dict["designation"] = req["designation"].strip()
         res_data["designation"] = req["designation"].strip()
-    if req.get("linkedin_url"):
-        notes_dict["linkedin_url"] = req["linkedin_url"].strip()
-        res_data["linkedin_url"] = req["linkedin_url"].strip()
+    linkedin_val = req.get("linkedin_url") or req.get("linkedinUrl") or req.get("linkedin")
+    if linkedin_val and isinstance(linkedin_val, str) and linkedin_val.strip():
+        clean_link = linkedin_val.strip()
+        notes_dict["linkedin_url"] = clean_link
+        res_data["linkedin_url"] = clean_link
 
     cand.notes = json.dumps(notes_dict)
     cand.resume_data_json = res_data
