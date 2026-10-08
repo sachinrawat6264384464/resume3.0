@@ -164,6 +164,8 @@ async def update_my_profile(
     db.add(user)
     db.add(cand)
     await db.commit()
+
+    invalidate_candidate_metrics_cache(user.id)
     return StandardResponse(
         message="Profile saved to database successfully",
         data={
@@ -178,16 +180,47 @@ async def update_my_profile(
         }
     )
 
+_CANDIDATE_METRICS_CACHE = {}
+_DASHBOARD_LEADERBOARD_CACHE = {
+    "data": None,
+    "timestamp": 0
+}
+
+def invalidate_candidate_metrics_cache(user_id: Optional[str] = None):
+    if user_id:
+        _CANDIDATE_METRICS_CACHE.pop(user_id, None)
+    else:
+        _CANDIDATE_METRICS_CACHE.clear()
+
 @router.get("/me/dashboard-metrics", response_model=StandardResponse[dict])
 async def get_dashboard_metrics(
     payload: dict = Depends(verify_auth_token),
     db: AsyncSession = Depends(get_db)
 ):
+    import time
     auth_svc = AuthService(db)
     user = await auth_svc.get_current_user_from_payload(payload)
-    cand_svc = CandidateService(db)
-    cand = await cand_svc.get_candidate_by_user_id(user.id, user.organization_id)
-    
+
+    now_ts = time.time()
+    cache_entry = _CANDIDATE_METRICS_CACHE.get(user.id)
+    if cache_entry and (now_ts - cache_entry["timestamp"]) < 15:
+        return StandardResponse(data=cache_entry["data"])
+
+    # Batch query candidate with all attempts, stage attempts, question attempts, resume audits, and roadmaps
+    stmt_cand = (
+        select(Candidate)
+        .where(Candidate.user_id == user.id, Candidate.organization_id == user.organization_id)
+        .options(
+            selectinload(Candidate.interview_attempts)
+            .selectinload(InterviewAttempt.stage_attempts)
+            .selectinload(StageAttempt.question_attempts),
+            selectinload(Candidate.resume_audits),
+            selectinload(Candidate.roadmaps)
+        )
+    )
+    res_cand = await db.execute(stmt_cand)
+    cand = res_cand.scalar_one_or_none()
+
     if not cand:
         cand = Candidate(
             user_id=user.id,
@@ -232,44 +265,28 @@ async def get_dashboard_metrics(
         cand.last_active_at = now_utc
         should_commit = True
 
-    # 1. Real Stage Attempts from Database
-    stmt_attempts = (
-        select(StageAttempt)
-        .join(InterviewAttempt, StageAttempt.interview_attempt_id == InterviewAttempt.id)
-        .where(InterviewAttempt.candidate_id == cand.id)
-    )
-    res_attempts = await db.execute(stmt_attempts)
-    candidate_attempts = res_attempts.scalars().all()
-
+    # Flatten stage attempts and question attempts from pre-fetched candidate attempts
     attempts_by_stage = {}
     attempts_by_stage_id = {}
     passed_stage_ids = set()
     highest_score_map = {}
+    all_q_attempts = []
 
-    for att in candidate_attempts:
-        if att.id:
-            attempts_by_stage_id[att.id] = att
-        if att.stage_number is not None:
-            s_num = att.stage_number
-            s_score = att.score or 0.0
-            if att.status in ["PASSED", "COMPLETED"] or att.is_override or s_score >= 60.0:
-                passed_stage_ids.add(s_num)
-                highest_score_map[s_num] = max(highest_score_map.get(s_num, 0.0), s_score)
-            
-            existing = attempts_by_stage.get(s_num)
-            if not existing or s_score > (existing.score or 0.0) or att.status == "PASSED":
-                attempts_by_stage[s_num] = att
+    for att in (cand.interview_attempts or []):
+        for sa in (att.stage_attempts or []):
+            if sa.id:
+                attempts_by_stage_id[sa.id] = sa
+            if sa.stage_number is not None:
+                s_num = sa.stage_number
+                s_score = sa.score or 0.0
+                if sa.status in ["PASSED", "COMPLETED"] or sa.is_override or s_score >= 60.0:
+                    passed_stage_ids.add(s_num)
+                    highest_score_map[s_num] = max(highest_score_map.get(s_num, 0.0), s_score)
+                existing = attempts_by_stage.get(s_num)
+                if not existing or s_score > (existing.score or 0.0) or sa.status == "PASSED":
+                    attempts_by_stage[s_num] = sa
+            all_q_attempts.extend(sa.question_attempts or [])
 
-    # Also check question attempts across all sessions for passed questions
-    stmt_q_attempts = (
-        select(QuestionAttempt)
-        .join(StageAttempt, QuestionAttempt.stage_attempt_id == StageAttempt.id)
-        .join(InterviewAttempt, StageAttempt.interview_attempt_id == InterviewAttempt.id)
-        .where(InterviewAttempt.candidate_id == cand.id)
-    )
-    res_q_attempts = await db.execute(stmt_q_attempts)
-    all_q_attempts = res_q_attempts.scalars().all()
-    
     q_scores_by_stage = {}
     for qa in all_q_attempts:
         if qa.overall_score is not None and qa.overall_score >= 60.0:
@@ -337,11 +354,10 @@ async def get_dashboard_metrics(
 
     completed_stages_count = len([s for s in passed_stage_ids if s >= 1])
 
-    # 2. Dynamic Readiness Score & 5-Pillar Breakdown (Filtered directly from all_q_attempts, avoiding extra SQL query)
+    # 2. Dynamic Readiness Score & 5-Pillar Breakdown
     eval_questions = [qa for qa in all_q_attempts if qa.overall_score is not None and qa.overall_score > 0]
 
     if eval_questions and len(eval_questions) >= 3:
-        # Only use per-pillar score if it's valid (> 0), otherwise fall back to overall_score
         def safe_avg(attr_fn):
             vals = [(attr_fn(q) if (attr_fn(q) and attr_fn(q) > 0) else q.overall_score) for q in eval_questions]
             return round(sum(vals) / len(vals), 1)
@@ -352,7 +368,6 @@ async def get_dashboard_metrics(
         practical_avg = safe_avg(lambda q: q.practical_score)
         comm_avg      = safe_avg(lambda q: q.communication_score)
 
-        # Overall = weighted average across all 5 pillars
         computed_readiness = round(
             (tech_avg * 0.30 + concept_avg * 0.20 + reasoning_avg * 0.20 + practical_avg * 0.15 + comm_avg * 0.15),
             1
@@ -365,10 +380,8 @@ async def get_dashboard_metrics(
             "devops_mindset":  int(min(100, practical_avg))
         }
     elif completed_scores:
-        # Use stage-level scores when question-level scores aren't available yet
         base = int(round(sum(completed_scores) / len(completed_scores), 1))
         computed_readiness = float(base)
-        # Distribute across pillars with slight variation to look natural
         breakdown = {
             "technical":       min(100, base),
             "problem_solving": min(100, max(0, base - 5)),
@@ -377,7 +390,6 @@ async def get_dashboard_metrics(
             "devops_mindset":  min(100, max(0, base + 2))
         }
     else:
-        # Calculate dynamic readiness_score from candidate XP & completed labs if no stage attempts exist yet
         if cand.readiness_score and cand.readiness_score > 0:
             base_score = float(cand.readiness_score)
         elif (cand.xp or 0) > 0:
@@ -402,18 +414,15 @@ async def get_dashboard_metrics(
     if should_commit:
         await db.commit()
 
-    # 4. Dynamic ATS Resume Score & Top Skills from LangChain ResumeAudit
-    stmt_aud = select(ResumeAudit).where(ResumeAudit.candidate_id == cand.id).order_by(desc(ResumeAudit.created_at)).limit(1)
-    res_aud = await db.execute(stmt_aud)
-    latest_aud = res_aud.scalar_one_or_none()
+    # Resume Audit from pre-fetched candidate.resume_audits
+    audits = sorted(cand.resume_audits or [], key=lambda a: a.created_at or datetime.min, reverse=True)
+    latest_aud = audits[0] if audits else None
 
     skills_detected = []
-    
     if latest_aud:
         ats_score_val = float(latest_aud.ats_score or 0.0)
         matching_skills = latest_aud.matching_skills_json or []
         missing_skills = latest_aud.missing_skills_json or []
-        
         skills_detected = matching_skills if matching_skills else ["Linux Admin", "AWS IAM & VPC", "Docker Containers", "Kubernetes EKS", "Terraform IaC"]
         matching_count = len(matching_skills)
         missing_count = len(missing_skills)
@@ -444,59 +453,61 @@ async def get_dashboard_metrics(
             "ats_score": f"{round(ats_score_val, 1)} / 100" if ats_score_val > 0 else "0 / 100"
         }
 
-    # 5. Real Top 3 Leaderboard from Database
-    stmt = (
-        select(Candidate)
-        .options(selectinload(Candidate.user))
-        .join(User, Candidate.user_id == User.id)
-        .where(
-            User.email.not_like("%example.com%"),
-            User.email.not_like("%dummy%")
-        )
-        .order_by(desc(Candidate.xp), desc(Candidate.readiness_score))
-        .limit(3)
-    )
-    res = await db.execute(stmt)
-    top_3_candidates = res.scalars().all()
-
-    if not top_3_candidates:
-        stmt_all = (
+    # Leaderboard with 60-second in-memory TTL Cache
+    if _DASHBOARD_LEADERBOARD_CACHE["data"] is not None and (now_ts - _DASHBOARD_LEADERBOARD_CACHE["timestamp"]) < 60:
+        leaderboard_data = _DASHBOARD_LEADERBOARD_CACHE["data"]
+    else:
+        stmt_lb = (
             select(Candidate)
             .options(selectinload(Candidate.user))
+            .join(User, Candidate.user_id == User.id)
+            .where(
+                User.email.not_like("%example.com%"),
+                User.email.not_like("%dummy%")
+            )
             .order_by(desc(Candidate.xp), desc(Candidate.readiness_score))
             .limit(3)
         )
-        res_all = await db.execute(stmt_all)
-        top_3_candidates = res_all.scalars().all()
+        res_lb = await db.execute(stmt_lb)
+        top_3_candidates = res_lb.scalars().all()
 
-    leaderboard_data = []
-    for rank, c in enumerate(top_3_candidates, 1):
-        name = (c.user.full_name if (c.user and c.user.full_name) else c.full_name) or f"Candidate {c.id[:6]}"
-        c_res = c.resume_data_json or {}
-        c_notes = {}
-        if c.notes and c.notes.startswith("{"):
-            try:
-                c_notes = json.loads(c.notes)
-            except Exception:
-                pass
-        
-        linkedin_link = c_res.get("linkedin_url") or c_notes.get("linkedin_url")
-        designation_title = c_res.get("designation") or c_notes.get("designation") or c.target_role or "Cloud Engineer"
+        if not top_3_candidates:
+            stmt_all = (
+                select(Candidate)
+                .options(selectinload(Candidate.user))
+                .order_by(desc(Candidate.xp), desc(Candidate.readiness_score))
+                .limit(3)
+            )
+            res_all = await db.execute(stmt_all)
+            top_3_candidates = res_all.scalars().all()
 
-        leaderboard_data.append({
-            "rank": rank,
-            "name": name,
-            "role": designation_title,
-            "linkedin_url": linkedin_link,
-            "xp": f"{c.xp or 0} XP",
-            "is_me": c.id == cand.id
-        })
+        leaderboard_data = []
+        for rank, c in enumerate(top_3_candidates, 1):
+            name = (c.user.full_name if (c.user and c.user.full_name) else c.full_name) or f"Candidate {c.id[:6]}"
+            c_res = c.resume_data_json or {}
+            c_notes = {}
+            if c.notes and c.notes.startswith("{"):
+                try:
+                    c_notes = json.loads(c.notes)
+                except Exception:
+                    pass
+            
+            linkedin_link = c_res.get("linkedin_url") or c_notes.get("linkedin_url")
+            designation_title = c_res.get("designation") or c_notes.get("designation") or c.target_role or "Cloud Engineer"
 
-    # 6. Real Roadmap Status from Database
-    stmt_rm = select(CandidateRoadmap).where(CandidateRoadmap.candidate_id == cand.id).order_by(CandidateRoadmap.week_number)
-    res_rm = await db.execute(stmt_rm)
-    roadmap_items = res_rm.scalars().all()
+            leaderboard_data.append({
+                "rank": rank,
+                "name": name,
+                "role": designation_title,
+                "linkedin_url": linkedin_link,
+                "xp": f"{c.xp or 0} XP",
+                "is_me": c.id == cand.id
+            })
+        _DASHBOARD_LEADERBOARD_CACHE["data"] = leaderboard_data
+        _DASHBOARD_LEADERBOARD_CACHE["timestamp"] = now_ts
 
+    # Roadmaps from pre-fetched candidate.roadmaps
+    roadmap_items = sorted(cand.roadmaps or [], key=lambda r: r.week_number)
     if not roadmap_items:
         seed_items = [
             CandidateRoadmap(candidate_id=cand.id, week_number=1, title="Linux & Shell Deep Dive", category="Linux", is_completed=True, xp_reward=100),
@@ -512,6 +523,48 @@ async def get_dashboard_metrics(
         {"week": f"Week {r.week_number}", "title": r.title, "done": r.is_completed}
         for r in roadmap_items
     ]
+
+    # Payment config check from memory
+    from app.api.v1.payment_gateway import get_or_create_singleton_config
+    payment_cfg = await get_or_create_singleton_config(db)
+    payment_gateway_enabled = payment_cfg.is_enabled
+
+    if not payment_gateway_enabled:
+        is_subscribed = True
+    else:
+        is_pro_json = bool(cand.resume_data_json and cand.resume_data_json.get("is_pro"))
+        is_subscribed = is_pro_json
+
+    metrics = {
+        "readiness_score": computed_readiness,
+        "xp": cand.xp or 0,
+        "level": cand.level or 1,
+        "streak_days": cand.streak_days or 1,
+        "completed_stages_count": completed_stages_count,
+        "is_subscribed": is_subscribed,
+        "target_salary_band": cand.target_salary_band or "₹18 – ₹40 LPA",
+        "readiness_breakdown": breakdown,
+        "stages_progress": stages_progress,
+        "resume_ats": resume_ats,
+        "top_skills": skills_detected,
+        "upcoming_interview": {
+            "title": next_upcoming_stage["name"],
+            "subtitle": next_upcoming_stage["subtitle"],
+            "date": datetime.now().strftime("%d %b %Y"),
+            "time": "10:00 AM"
+        },
+        "leaderboard": leaderboard_data,
+        "roadmap": roadmap_data,
+        "today_study_tasks_count": 0,
+        "unread_reminders_count": 0
+    }
+
+    _CANDIDATE_METRICS_CACHE[user.id] = {
+        "data": metrics,
+        "timestamp": now_ts
+    }
+
+    return StandardResponse(data=metrics)
 
     # 7. Real Today Study Tasks & Unread Reminders Count from Database
     now_utc = datetime.now(timezone.utc)
