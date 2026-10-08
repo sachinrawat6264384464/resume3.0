@@ -3,7 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func, desc
 from sqlalchemy.orm import selectinload, defer
 from app.models.candidate import Candidate
-from app.models.user import User
+from app.models.user import User, UserRole
 from app.models.interview_attempt import InterviewAttempt
 from app.models.stage_attempt import StageAttempt
 from app.models.interview_stage import InterviewStage
