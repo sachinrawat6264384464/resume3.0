@@ -98,23 +98,39 @@ class InterviewService:
         room_stages = [s for s in template.stages if s.stage_number >= 1]
         sorted_stages = sorted(room_stages, key=lambda s: s.stage_number)
 
+        # Query all active stages across DB to pick stages with most active questions
+        all_db_stages_stmt = select(InterviewStage).options(selectinload(InterviewStage.questions))
+        all_db_stages_res = await self.db.execute(all_db_stages_stmt)
+        all_db_stages = all_db_stages_res.scalars().all()
+
         stage_tuples = []
         for idx, stage in enumerate(sorted_stages):
-            is_target = (stage.stage_number == effective_start_stage) or (idx == 0 and effective_start_stage <= 1)
+            s_num = stage.stage_number
+            matching = [st for st in all_db_stages if st.stage_number == s_num]
+            if matching:
+                best_stage = max(
+                    matching,
+                    key=lambda s: len([q for q in (s.questions or []) if getattr(q, "is_active", None) != "INACTIVE"])
+                )
+            else:
+                best_stage = stage
+
+            is_target = (s_num == effective_start_stage) or (idx == 0 and effective_start_stage <= 1)
             stage_att = StageAttempt(
                 interview_attempt_id=attempt.id,
-                interview_stage_id=stage.id,
-                stage_number=stage.stage_number,
+                interview_stage_id=best_stage.id,
+                stage_number=s_num,
                 status="IN_PROGRESS" if is_target else "LOCKED",
                 started_at=now if is_target else None
             )
             self.db.add(stage_att)
-            stage_tuples.append((stage_att, stage))
+            stage_tuples.append((stage_att, best_stage))
 
         await self.db.flush()
 
         for stage_att, stage in stage_tuples:
-            sorted_questions = sorted(stage.questions, key=lambda q: q.order_index)
+            active_qs = [q for q in (stage.questions or []) if getattr(q, "is_active", None) != "INACTIVE"]
+            sorted_questions = sorted(active_qs, key=lambda q: q.order_index)
             for q in sorted_questions:
                 q_att = QuestionAttempt(
                     stage_attempt_id=stage_att.id,
@@ -165,28 +181,42 @@ class InterviewService:
             if sa.stage_number == 0:
                 continue
 
-            if not sa.stage:
-                stg_stmt = select(InterviewStage).where(InterviewStage.stage_number == sa.stage_number).options(selectinload(InterviewStage.questions))
-                stg_res = await self.db.execute(stg_stmt)
-                matching_stage = stg_res.scalar_one_or_none()
-                if matching_stage:
-                    sa.interview_stage_id = matching_stage.id
-                    sa.stage = matching_stage
+            # Query all InterviewStage records matching this stage_number to pick the best stage with most active questions
+            stg_stmt = (
+                select(InterviewStage)
+                .where(InterviewStage.stage_number == sa.stage_number)
+                .options(selectinload(InterviewStage.questions))
+            )
+            stg_res = await self.db.execute(stg_stmt)
+            matching_stages = stg_res.scalars().all()
+
+            if matching_stages:
+                best_stage = max(
+                    matching_stages,
+                    key=lambda s: len([q for q in (s.questions or []) if getattr(q, "is_active", None) != "INACTIVE"])
+                )
+                if not sa.stage or sa.interview_stage_id != best_stage.id:
+                    sa.interview_stage_id = best_stage.id
+                    sa.stage = best_stage
                     has_new_attempts = True
 
             if sa.stage and sa.stage.questions:
+                active_qs = [q for q in sa.stage.questions if getattr(q, "is_active", None) != "INACTIVE"]
+
                 # Delete old generic placeholder question attempts if real DB questions exist
-                generic_qas = [
-                    qa for qa in sa.question_attempts 
-                    if qa.question_text_snapshot and ("TECHNICAL ASSESSMENT" in qa.question_text_snapshot or "Generic" in qa.question_text_snapshot or qa.question_id is None)
-                ]
-                for gqa in generic_qas:
-                    await self.db.delete(gqa)
-                    sa.question_attempts.remove(gqa)
-                    has_new_attempts = True
+                if active_qs:
+                    generic_qas = [
+                        qa for qa in sa.question_attempts 
+                        if qa.question_text_snapshot and ("TECHNICAL ASSESSMENT" in qa.question_text_snapshot or "Generic" in qa.question_text_snapshot or qa.question_id is None)
+                    ]
+                    for gqa in generic_qas:
+                        await self.db.delete(gqa)
+                        if gqa in sa.question_attempts:
+                            sa.question_attempts.remove(gqa)
+                        has_new_attempts = True
 
                 existing_q_ids = {qa.question_id for qa in sa.question_attempts if qa.question_id}
-                sorted_qs = sorted(sa.stage.questions, key=lambda q: q.order_index)
+                sorted_qs = sorted(active_qs, key=lambda q: q.order_index)
                 for q in sorted_qs:
                     if q.id not in existing_q_ids:
                         new_qa = QuestionAttempt(

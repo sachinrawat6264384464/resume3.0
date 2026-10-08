@@ -264,12 +264,14 @@ export default function InterviewRoomPage() {
   }, []);
 
   const allQAttempts = activeStage?.question_attempts || [];
-  const stageQuestions = (activeStage?.stage as any)?.questions || [];
+  const stageQuestions = ((activeStage?.stage as any)?.questions || []).filter((q: any) => q.is_active !== "INACTIVE");
 
-  // Determine total questions count for the stage: use stageQuestions from DB if available, else allQAttempts
-  const dbTotalQCount = stageQuestions.length > 0
-    ? stageQuestions.length
-    : (allQAttempts.length > 0 ? allQAttempts.length : 1);
+  // Determine total questions count for the stage: maximum of DB stage questions count, question attempts count, or 1
+  const dbTotalQCount = Math.max(
+    stageQuestions.length,
+    allQAttempts.length,
+    1
+  );
 
   const maxQCount = dbTotalQCount;
 
