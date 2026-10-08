@@ -412,9 +412,10 @@ async def get_dashboard_metrics(
     if should_commit:
         await db.commit()
 
-    # Resume Audit from pre-fetched candidate.resume_audits
-    audits = sorted(cand.resume_audits or [], key=lambda a: a.created_at or datetime.min, reverse=True)
-    latest_aud = audits[0] if audits else None
+    # Resume Audit from Database
+    stmt_aud = select(ResumeAudit).where(ResumeAudit.candidate_id == cand.id).order_by(desc(ResumeAudit.created_at)).limit(1)
+    res_aud = await db.execute(stmt_aud)
+    latest_aud = res_aud.scalar_one_or_none()
 
     skills_detected = []
     if latest_aud:
@@ -504,8 +505,11 @@ async def get_dashboard_metrics(
         _DASHBOARD_LEADERBOARD_CACHE["data"] = leaderboard_data
         _DASHBOARD_LEADERBOARD_CACHE["timestamp"] = now_ts
 
-    # Roadmaps from pre-fetched candidate.roadmaps
-    roadmap_items = sorted(cand.roadmaps or [], key=lambda r: r.week_number)
+    # Roadmaps from Database
+    stmt_rm = select(CandidateRoadmap).where(CandidateRoadmap.candidate_id == cand.id).order_by(CandidateRoadmap.week_number)
+    res_rm = await db.execute(stmt_rm)
+    roadmap_items = res_rm.scalars().all()
+
     if not roadmap_items:
         seed_items = [
             CandidateRoadmap(candidate_id=cand.id, week_number=1, title="Linux & Shell Deep Dive", category="Linux", is_completed=True, xp_reward=100),
