@@ -129,6 +129,23 @@ async def start_attempt(
     template_id = existing_tmpl.id
     target_stage_num = req.stage_number or 1
 
+    # Validate Stage 0 Profile Setup completeness for non-demo users attempting stage >= 1
+    if target_stage_num > 0:
+        cand_stmt = select(Candidate).where(Candidate.user_id == user.id)
+        cand_res = await db.execute(cand_stmt)
+        cand_obj = cand_res.scalar_one_or_none()
+        is_stg0_complete = False
+        if cand_obj:
+            is_stg0_complete = bool(
+                (cand_obj.xp and cand_obj.xp > 0) or 
+                (cand_obj.resume_data_json and cand_obj.resume_data_json.get("stage_0_completed"))
+            )
+        if not is_stg0_complete:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="⚠️ Stage 0 Profile Setup must be completed before starting Stage 1 or higher interview stages."
+            )
+
     attempt = await interview_svc.start_interview_attempt(
         template_id=template_id,
         candidate_id=candidate_id,

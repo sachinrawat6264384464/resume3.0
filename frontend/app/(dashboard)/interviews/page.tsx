@@ -378,9 +378,13 @@ export default function InterviewsPage() {
             if (found) return found;
           }
         }
+        const isStg0Done = completedSet.has(0);
+        if (!isStg0Done) {
+          return merged[0];
+        }
         const activeOrUnlocked = merged.find((m) => m.status === "in_progress" && m.id > 0);
         if (!prev || prev.id === 0 || prev.status === "completed") {
-          return activeOrUnlocked || merged.find((m) => m.status === "completed" && m.id > 0) || merged[1] || merged[0];
+          return activeOrUnlocked || merged.find((m) => m.status === "completed" && m.id > 0) || merged[0];
         }
         const match = merged.find((m) => m.id === prev.id);
         if (match && match.status === "completed" && activeOrUnlocked) {
@@ -621,15 +625,28 @@ export default function InterviewsPage() {
       return;
     }
 
+    // Check if Stage 0 is completed before starting any higher stage
+    const isStage0Done = stages.some(st => st.id === 0 && st.status === "completed");
+    if (stageId > 0 && !isStage0Done) {
+      setIsStage0ModalOpen(true);
+      setAlertMsg("⚠️ Stage 0 Profile Setup must be completed first before starting Stage 1!");
+      return;
+    }
+
     if (targetStg?.status === "pro_locked" || (isPaymentEnabled && !isSubscribed && stageId >= paidStartStageConfig)) {
       setSelectedStageForPayment(targetStg);
       setIsPaymentModalOpen(true);
       return;
     }
 
-    const isPrevCompleted = stageId === 1 || stages.some(st => st.id === stageId - 1 && st.status === "completed");
-    if (targetStg?.status === "locked" && !isPrevCompleted) {
-      setAlertMsg(`⚠️ Please complete Stage ${stageId - 1} first before unlocking Stage ${stageId}.`);
+    const isPrevCompleted = stageId === 0 ? true : stages.some(st => st.id === stageId - 1 && st.status === "completed");
+    if (targetStg?.status === "locked" || !isPrevCompleted) {
+      if (stageId === 1) {
+        setIsStage0ModalOpen(true);
+        setAlertMsg("⚠️ Stage 0 Profile Setup must be completed first before starting Stage 1!");
+      } else {
+        setAlertMsg(`⚠️ Stage ${stageId} is locked. Please complete Stage ${stageId - 1} first!`);
+      }
       return;
     }
 

@@ -161,25 +161,51 @@ export default function InterviewRoomPage() {
   const loadAttempt = useCallback(async () => {
     try {
       if (attemptId) {
-        const res = await apiFetch(`/attempts/${attemptId}`);
-        if (res?.data) {
-          const att: InterviewAttempt = res.data;
-          setAttempt(att);
+        // Validate Stage 0 Profile Setup completeness
+        const resMetrics = await apiFetch("/candidates/me/dashboard-metrics").catch(() => null);
+        const cand = resMetrics?.data?.candidate;
+        const userStage0Key = cand?.user_id ? `stage0_profile_data_${cand.user_id}` : "stage0_profile_data";
+        const hasLocalStage0 = typeof window !== "undefined" && Boolean(localStorage.getItem(userStage0Key));
+        const isStage0Done = Boolean(
+          hasLocalStage0 || 
+          (cand?.xp && cand.xp > 0) || 
+          cand?.resume_data_json?.stage_0_completed
+        );
 
-          const current = att.stage_attempts?.find((s) => s.status === "IN_PROGRESS") || att.stage_attempts?.[0];
-          if (current) setActiveStage(current);
+        if (!attemptId.startsWith("stage-") && !attemptId.startsWith("demo-")) {
+          const res = await apiFetch(`/attempts/${attemptId}`);
+          if (res?.data) {
+            const att: InterviewAttempt = res.data;
+            setAttempt(att);
 
-          if (typeof window !== "undefined") {
-            const sessionData = {
-              userId: user?.id,
-              userEmail: user?.email,
-              attemptId,
-              stageId: current?.stage_number ?? 1,
-              stageTitle: att.template?.title || current?.stage?.title || `Stage ${current?.stage_number || 1} Assessment`,
-              roomUrl: `/interviews/${attemptId}/room`,
-              startedAt: Date.now()
-            };
-            localStorage.setItem("active_interview_session", JSON.stringify(sessionData));
+            const current = att.stage_attempts?.find((s) => s.status === "IN_PROGRESS") || att.stage_attempts?.[0];
+            const stgNum = current?.stage_number ?? att.stage_number ?? 1;
+
+            if (stgNum > 0 && !isStage0Done) {
+              router.replace("/interviews?stage=0&locked=true");
+              return;
+            }
+
+            if (current) setActiveStage(current);
+
+            if (typeof window !== "undefined") {
+              const sessionData = {
+                userId: user?.id,
+                userEmail: user?.email,
+                attemptId,
+                stageId: stgNum,
+                stageTitle: att.template?.title || current?.stage?.title || `Stage ${stgNum} Assessment`,
+                roomUrl: `/interviews/${attemptId}/room`,
+                startedAt: Date.now()
+              };
+              localStorage.setItem("active_interview_session", JSON.stringify(sessionData));
+            }
+          }
+        } else {
+          const matchedNum = parseInt(attemptId.replace(/\D/g, ""), 10) || 1;
+          if (matchedNum > 0 && !isStage0Done) {
+            router.replace("/interviews?stage=0&locked=true");
+            return;
           }
         }
       }

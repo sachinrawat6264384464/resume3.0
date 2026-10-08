@@ -17,14 +17,39 @@ export default function PreCheckPage() {
 
   useEffect(() => {
     async function loadAttempt() {
-      if (!attemptId || attemptId.startsWith("stage-")) {
+      if (!attemptId) {
         setIsLoading(false);
         return;
       }
+
       try {
-        const res = await apiFetch(`/attempts/${attemptId}`);
-        if (res?.data) {
-          setAttempt(res.data);
+        // Verify Stage 0 Profile Setup status before allowing camera lobby access
+        const resMetrics = await apiFetch("/candidates/me/dashboard-metrics").catch(() => null);
+        const cand = resMetrics?.data?.candidate;
+        const userStage0Key = cand?.user_id ? `stage0_profile_data_${cand.user_id}` : "stage0_profile_data";
+        const hasLocalStage0 = typeof window !== "undefined" && Boolean(localStorage.getItem(userStage0Key));
+        const isStage0Done = Boolean(
+          hasLocalStage0 || 
+          (cand?.xp && cand.xp > 0) || 
+          cand?.resume_data_json?.stage_0_completed
+        );
+
+        if (!attemptId.startsWith("stage-") && !attemptId.startsWith("demo-")) {
+          const res = await apiFetch(`/attempts/${attemptId}`);
+          if (res?.data) {
+            setAttempt(res.data);
+            const stgNum = res.data.stage_attempts?.[0]?.stage_number ?? res.data.stage_number ?? 1;
+            if (stgNum > 0 && !isStage0Done) {
+              router.replace("/interviews?stage=0&locked=true");
+              return;
+            }
+          }
+        } else {
+          const matchedNum = parseInt(attemptId.replace(/\D/g, ""), 10) || 1;
+          if (matchedNum > 0 && !isStage0Done) {
+            router.replace("/interviews?stage=0&locked=true");
+            return;
+          }
         }
       } catch (err: any) {
         console.warn("Pre-check attempt load notice:", err);
@@ -34,7 +59,7 @@ export default function PreCheckPage() {
     }
 
     loadAttempt();
-  }, [attemptId]);
+  }, [attemptId, router]);
 
   const handleReadyToStart = (stream: MediaStream | null) => {
     // Media stream ready -> proceed to live room
