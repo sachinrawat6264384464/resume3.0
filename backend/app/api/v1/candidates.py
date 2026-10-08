@@ -206,16 +206,14 @@ async def get_dashboard_metrics(
     if cache_entry and (now_ts - cache_entry["timestamp"]) < 15:
         return StandardResponse(data=cache_entry["data"])
 
-    # Batch query candidate with all attempts, stage attempts, question attempts, resume audits, and roadmaps
+    # Batch query candidate with all attempts, stage attempts, and question attempts
     stmt_cand = (
         select(Candidate)
         .where(Candidate.user_id == user.id, Candidate.organization_id == user.organization_id)
         .options(
-            selectinload(Candidate.interview_attempts)
+            selectinload(Candidate.attempts)
             .selectinload(InterviewAttempt.stage_attempts)
-            .selectinload(StageAttempt.question_attempts),
-            selectinload(Candidate.resume_audits),
-            selectinload(Candidate.roadmaps)
+            .selectinload(StageAttempt.question_attempts)
         )
     )
     res_cand = await db.execute(stmt_cand)
@@ -272,7 +270,7 @@ async def get_dashboard_metrics(
     highest_score_map = {}
     all_q_attempts = []
 
-    for att in (cand.interview_attempts or []):
+    for att in (cand.attempts or []):
         for sa in (att.stage_attempts or []):
             if sa.id:
                 attempts_by_stage_id[sa.id] = sa
