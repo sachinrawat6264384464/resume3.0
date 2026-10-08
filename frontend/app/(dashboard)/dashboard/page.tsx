@@ -765,13 +765,52 @@ Learn Today. Implement Today. Build Your Career for a Lifetime.
             </div>
 
             <div className="lg:col-span-6 flex flex-col sm:flex-row gap-3">
+              {/* Zoom Button */}
+              <button
+                type="button"
+                onClick={() => {
+                  const url = activeLiveSession?.meeting_url || "https://meet.google.com/xyz-cloudops-live";
+                  try {
+                    apiFetch("/live-sessions/track-click", {
+                      method: "POST",
+                      body: JSON.stringify({
+                        live_session_id: activeLiveSession?.id || "live-default-001",
+                        session_title: activeLiveSession?.title || "40 LPA DevOps Architecture Masterclass",
+                        candidate_name: candidateName,
+                        candidate_email: (user as any)?.email || "candidate@cloudops.internal",
+                        platform_clicked: "ZOOM"
+                      })
+                    }).catch(() => {});
+                  } catch {}
+                  if (typeof window !== "undefined") window.open(url, "_blank");
+                }}
+                className="flex-1 py-3.5 px-5 rounded-2xl bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 hover:from-blue-500 hover:to-indigo-600 text-white font-black text-xs sm:text-sm tracking-wide shadow-xl shadow-blue-600/30 border border-blue-400/40 transition-all flex items-center justify-center gap-2.5 cursor-pointer uppercase group"
+              >
+                <Video className="w-5 h-5 text-white" />
+                <span>Zoom Live Room</span>
+                <ChevronRight className="w-4 h-4 text-white/80 group-hover:translate-x-1 transition-transform" />
+              </button>
+
+              {/* WhatsApp Button */}
               <button
                 type="button"
                 onClick={() => {
                   const url = activeLiveSession?.whatsapp_group_url || "https://chat.whatsapp.com/AIInterviewCommunity";
+                  try {
+                    apiFetch("/live-sessions/track-click", {
+                      method: "POST",
+                      body: JSON.stringify({
+                        live_session_id: activeLiveSession?.id || "live-default-001",
+                        session_title: activeLiveSession?.title || "40 LPA DevOps Architecture Masterclass",
+                        candidate_name: candidateName,
+                        candidate_email: (user as any)?.email || "candidate@cloudops.internal",
+                        platform_clicked: "WHATSAPP"
+                      })
+                    }).catch(() => {});
+                  } catch {}
                   if (typeof window !== "undefined") window.open(url, "_blank");
                 }}
-                className="flex-1 py-4 px-5 rounded-2xl bg-gradient-to-r from-emerald-600 via-emerald-500 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black text-xs sm:text-sm tracking-wide shadow-xl shadow-emerald-900/40 border border-emerald-400/40 transition-all flex items-center justify-center gap-2.5 cursor-pointer uppercase group"
+                className="flex-1 py-3.5 px-5 rounded-2xl bg-gradient-to-r from-emerald-600 via-emerald-500 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black text-xs sm:text-sm tracking-wide shadow-xl shadow-emerald-900/40 border border-emerald-400/40 transition-all flex items-center justify-center gap-2.5 cursor-pointer uppercase group"
               >
                 <MessageSquare className="w-5 h-5 text-white fill-white/20" />
                 <span>Join WhatsApp Group</span>
