@@ -206,6 +206,8 @@ async def get_dashboard_metrics(
         await db.commit()
         await db.refresh(cand)
 
+    should_commit = False
+
     # 1. Real Datetime-Based Day Streak Tracking
     from datetime import datetime, timezone
     now_utc = datetime.now(timezone.utc)
@@ -217,18 +219,18 @@ async def get_dashboard_metrics(
         if days_diff == 1:
             cand.streak_days = (cand.streak_days or 0) + 1
             cand.last_active_at = now_utc
-            await db.commit()
+            should_commit = True
         elif days_diff > 1:
             cand.streak_days = 1
             cand.last_active_at = now_utc
-            await db.commit()
+            should_commit = True
         elif days_diff == 0 and not cand.last_active_at:
             cand.last_active_at = now_utc
-            await db.commit()
+            should_commit = True
     else:
         cand.streak_days = 1
         cand.last_active_at = now_utc
-        await db.commit()
+        should_commit = True
 
     # 1. Real Stage Attempts from Database
     stmt_attempts = (
@@ -335,16 +337,8 @@ async def get_dashboard_metrics(
 
     completed_stages_count = len([s for s in passed_stage_ids if s >= 1])
 
-    # 2. Dynamic Readiness Score & 5-Pillar Breakdown Calculation from Neon DB Question Attempts
-    stmt_eval_q = (
-        select(QuestionAttempt)
-        .join(InterviewAttempt, QuestionAttempt.interview_attempt_id == InterviewAttempt.id)
-        .where(InterviewAttempt.candidate_id == cand.id)
-        .where(QuestionAttempt.overall_score.isnot(None))
-        .where(QuestionAttempt.overall_score > 0)
-    )
-    res_eval_q = await db.execute(stmt_eval_q)
-    eval_questions = res_eval_q.scalars().all()
+    # 2. Dynamic Readiness Score & 5-Pillar Breakdown (Filtered directly from all_q_attempts, avoiding extra SQL query)
+    eval_questions = [qa for qa in all_q_attempts if qa.overall_score is not None and qa.overall_score > 0]
 
     if eval_questions and len(eval_questions) >= 3:
         # Only use per-pillar score if it's valid (> 0), otherwise fall back to overall_score
@@ -403,6 +397,9 @@ async def get_dashboard_metrics(
 
     if round(cand.readiness_score or 0.0, 1) != round(computed_readiness, 1):
         cand.readiness_score = computed_readiness
+        should_commit = True
+
+    if should_commit:
         await db.commit()
 
     # 4. Dynamic ATS Resume Score & Top Skills from LangChain ResumeAudit
@@ -507,12 +504,9 @@ async def get_dashboard_metrics(
             CandidateRoadmap(candidate_id=cand.id, week_number=3, title="Kubernetes Advanced & Helm", category="Kubernetes", is_completed=False, xp_reward=200),
             CandidateRoadmap(candidate_id=cand.id, week_number=4, title="DevOps Projects & SRE Outages", category="SRE", is_completed=False, xp_reward=300)
         ]
-        for item in seed_items:
-            db.add(item)
+        db.add_all(seed_items)
         await db.commit()
-        stmt_rm = select(CandidateRoadmap).where(CandidateRoadmap.candidate_id == cand.id).order_by(CandidateRoadmap.week_number)
-        res_rm = await db.execute(stmt_rm)
-        roadmap_items = res_rm.scalars().all()
+        roadmap_items = seed_items
 
     roadmap_data = [
         {"week": f"Week {r.week_number}", "title": r.title, "done": r.is_completed}

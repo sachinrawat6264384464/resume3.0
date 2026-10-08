@@ -42,9 +42,24 @@ class VerifySubscribeRequest(BaseModel):
     amount: str = "1"
     coupon_code: Optional[str] = None
 
+import time
+
 SINGLETON_CONFIG_ID = "default_config"
 
+_PAYMENT_CONFIG_CACHE = {
+    "config": None,
+    "timestamp": 0
+}
+
+def invalidate_payment_config_cache():
+    _PAYMENT_CONFIG_CACHE["config"] = None
+    _PAYMENT_CONFIG_CACHE["timestamp"] = 0
+
 async def get_or_create_singleton_config(db: AsyncSession) -> PaymentGatewayConfig:
+    now_ts = time.time()
+    if _PAYMENT_CONFIG_CACHE["config"] is not None and (now_ts - _PAYMENT_CONFIG_CACHE["timestamp"]) < 300:
+        return _PAYMENT_CONFIG_CACHE["config"]
+
     stmt = select(PaymentGatewayConfig).where(PaymentGatewayConfig.id == SINGLETON_CONFIG_ID)
     res = await db.execute(stmt)
     config = res.scalar_one_or_none()
@@ -108,6 +123,8 @@ async def get_or_create_singleton_config(db: AsyncSession) -> PaymentGatewayConf
                 await db.delete(s)
             await db.commit()
 
+    _PAYMENT_CONFIG_CACHE["config"] = config
+    _PAYMENT_CONFIG_CACHE["timestamp"] = now_ts
     return config
 
 @router.get("/config", response_model=StandardResponse[dict])
@@ -188,6 +205,8 @@ async def update_payment_config(
 
     await db.commit()
     await db.refresh(config)
+
+    invalidate_payment_config_cache()
 
     # Revoke all candidate tokens so all logged-in candidates log out automatically
     revoke_all_candidate_sessions()

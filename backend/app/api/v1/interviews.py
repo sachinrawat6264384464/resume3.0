@@ -55,6 +55,9 @@ async def get_candidate_stages(
     payload: Optional[dict] = Depends(verify_auth_token),
     db: AsyncSession = Depends(get_db)
 ):
+    now_ts = time.time()
+    if _STAGES_CACHE["data"] is not None and (now_ts - _STAGES_CACHE["timestamp"]) < 300:
+        return StandardResponse(data=_STAGES_CACHE["data"])
 
     stmt = (
         select(InterviewStage)
