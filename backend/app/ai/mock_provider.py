@@ -184,17 +184,8 @@ class MockAIProvider(AIProvider):
             "assessment", "question", "answer", "round", "main", "karun", "bus", "kya"
         }
 
-        # Key target words are extracted ONLY from reference_answer (ref_words) AND expected_topics! NOT question_text!
-        admin_ref_keywords = set([w for w in ref_words if w not in stop_words])
-        
-        # Add words from expected_topics to target concept keywords
-        topic_words = set()
-        for t in (expected_topics or []):
-            for w in get_words(t):
-                if w not in stop_words:
-                    topic_words.add(w)
-
-        admin_key_words = list(admin_ref_keywords.union(topic_words))
+        # Key target words are extracted STRICTLY AND EXCLUSIVELY from reference_answer (ref_words)! NOT expected_topics, NOT question_text!
+        admin_key_words = [w for w in ref_words if w not in stop_words]
 
         begging_phrases = [
             "give me pass", "pass me", "dont know", "don't know", "dont have", "don't have",
@@ -223,17 +214,9 @@ class MockAIProvider(AIProvider):
             if transcript_lower == ref_lower or (len(ref_words) >= 3 and len([w for w in ref_words if w in cand_words]) >= len(ref_words) * 0.85):
                 is_exact = True
 
-        # Count whole word overlaps with Admin Expected Answer & Topics
+        # Count whole word overlaps with Admin Expected Model Answer ONLY
         matched_admin_words = [w for w in admin_key_words if w in cand_words]
-        
-        # Build target topics from expected_topics
-        target_list = list(expected_topics or [])
-        matched_topics = []
-        for t in target_list:
-            t_words = [w for w in get_words(t) if w not in stop_words]
-            if t_words and any(w in cand_words for w in t_words):
-                matched_topics.append(t)
-        missing_topics = [t for t in target_list if t not in matched_topics]
+        missing_admin_words = [w for w in admin_key_words if w not in cand_words]
 
         match_percentage = 0
         if is_question_copy or is_begging:
@@ -246,16 +229,15 @@ class MockAIProvider(AIProvider):
             if admin_key_words:
                 ratio = len(matched_admin_words) / len(admin_key_words)
                 match_percentage = round(ratio * 100)
-            elif target_list:
-                ratio = len(matched_topics) / max(len(target_list), 1)
-                match_percentage = round(ratio * 100)
+            else:
+                match_percentage = 50
 
-            is_passed = (match_percentage >= 50 and len(matched_admin_words) >= 2) or (len(matched_topics) >= 1 and len(matched_admin_words) >= 1)
+            is_passed = (match_percentage >= 50 and len(matched_admin_words) >= 2) or is_exact
 
             if is_passed:
                 match_percentage = max(match_percentage, 65)
             else:
-                if len(matched_admin_words) == 0 and len(matched_topics) == 0:
+                if len(matched_admin_words) == 0:
                     match_percentage = min(match_percentage, 15)
                 else:
                     match_percentage = min(match_percentage, 45)
@@ -268,9 +250,10 @@ class MockAIProvider(AIProvider):
             feedback_msg = f"✅ PASSED ({match_percentage}% Match ≥ 60%). Spoken answer accurately matched Expected Model Answer."
         else:
             overall_score = round(max(15.0, match_percentage * 0.70), 1)
-            feedback_msg = f"❌ NEEDS IMPROVEMENT ({match_percentage}% Match < 60%). Missing expected concepts: {', '.join(missing_topics[:3]) or 'Technical Details'}. Expected Answer: '{ref_ans}'" if ref_ans else f"❌ NEEDS IMPROVEMENT ({match_percentage}% Match < 60%)."
+            missing_snippet = ", ".join(missing_admin_words[:3]) or "Technical Details"
+            feedback_msg = f"❌ NEEDS IMPROVEMENT ({match_percentage}% Match < 60%). Missing expected keywords: {missing_snippet}. Expected Answer: '{ref_ans}'" if ref_ans else f"❌ NEEDS IMPROVEMENT ({match_percentage}% Match < 60%)."
 
-        coverage_ratio = (len(matched_topics) / max(len(target_list), 1)) if target_list else (match_percentage / 100.0)
+        coverage_ratio = (len(matched_admin_words) / max(len(admin_key_words), 1)) if admin_key_words else (match_percentage / 100.0)
 
         technical_score = overall_score
         concept_coverage_score = round(min(100.0, max(30.0, coverage_ratio * 90.0 + 10.0)), 1) if is_passed else round(coverage_ratio * 40.0, 1)
@@ -280,16 +263,16 @@ class MockAIProvider(AIProvider):
         confidence_score = comm_metrics.confidence_estimate
 
         strengths = []
-        if matched_topics:
-            strengths.append(f"Matched solution parameters: {', '.join(matched_topics[:3])}.")
+        if matched_admin_words:
+            strengths.append(f"Matched expected solution parameters: {', '.join(matched_admin_words[:4])}.")
         elif is_passed:
             strengths.append("Verbal response accurately matched reference answer.")
         else:
             strengths.append("Verbal response submitted.")
 
         weaknesses = []
-        if missing_topics:
-            weaknesses.append(f"Missing expected answer concepts: {', '.join(missing_topics[:3])}.")
+        if missing_admin_words:
+            weaknesses.append(f"Missing expected answer keywords: {', '.join(missing_admin_words[:3])}.")
         elif not is_passed:
             weaknesses.append("Response lacked key technical solution parameters.")
 
@@ -309,7 +292,7 @@ class MockAIProvider(AIProvider):
             overall_score=overall_score,
             strengths=strengths,
             weaknesses=weaknesses,
-            missing_concepts=missing_topics[:4],
+            missing_concepts=missing_admin_words[:4],
             feedback=feedback,
             recommendations=recommendations,
             communication_metrics=comm_metrics
