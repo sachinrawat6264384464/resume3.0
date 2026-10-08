@@ -32,7 +32,7 @@ else:
 
 engine = create_async_engine(
     db_url,
-    echo=settings.DEBUG,
+    echo=False,
     **engine_kwargs
 )
 

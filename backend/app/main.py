@@ -24,24 +24,23 @@ async def scheduled_retention_job():
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Startup: Ensure tables exist & seed initial CloudOps data
+    # Startup: Launch CloudOps AI platform instantly
     print(f"Starting {settings.PROJECT_NAME} in {settings.ENVIRONMENT} mode...")
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
     
+    # Start scheduled cleanup job for 90-day recording retention
     try:
-        await seed_database()
+        scheduler.add_job(scheduled_retention_job, 'interval', hours=24, id="recording_retention_cleaner")
+        scheduler.start()
     except Exception as e:
-        print(f"Seed check error (may already be seeded): {e}")
-
-    # Start scheduled cleanup job (runs every 24 hours in production; set to run periodically)
-    scheduler.add_job(scheduled_retention_job, 'interval', hours=24, id="recording_retention_cleaner")
-    scheduler.start()
+        print(f"Scheduler startup notice: {e}")
     
     yield
 
     # Shutdown
-    scheduler.shutdown()
+    try:
+        scheduler.shutdown()
+    except Exception:
+        pass
     await engine.dispose()
     print("Application shutdown complete.")
 
