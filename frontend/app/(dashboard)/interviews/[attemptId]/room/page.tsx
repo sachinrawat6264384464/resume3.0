@@ -293,6 +293,51 @@ export default function InterviewRoomPage() {
     return () => clearInterval(timer);
   }, [timeLeftSeconds, isRecording, stageSummary, isSummaryDismissed, isProcessing, accumulatedScores, maxQCount, isCameraLive]);
 
+  // Dynamic fallback questions per stage and index to ensure candidate ALWAYS gets real technical questions (1 by 1)
+  const STAGE_FALLBACK_QUESTIONS: Record<number, string[]> = {
+    1: [
+      "Please introduce yourself, walk through your technical journey in Cloud & DevOps, and highlight your most significant production achievement.",
+      "Demonstrate your background in CloudOps engineering. Explain how you automate AWS infrastructure deployments using Terraform and CI/CD pipelines.",
+      "When designing a cloud infrastructure solution, how do you balance cost optimization, high availability, and developer delivery speed?",
+      "Explain IAM security best practices when configuring service accounts and IRSA for Kubernetes workloads.",
+      "How do you configure high availability and multi-region failover across AWS EC2, S3, and RDS database clusters?",
+      "Describe how you monitor microservice health telemetry using Prometheus metrics and Grafana dashboards.",
+      "Explain how you handle a database connection pool exhaustion incident under sudden user traffic spikes.",
+      "How do you perform zero-downtime rolling deployments and canary rollouts using Kubernetes deployment strategies?",
+      "Explain how you configure cloud cost alerts and anomaly detection to prevent unexpected AWS cloud bill spikes.",
+      "Describe a critical production outage incident you resolved under tight SLA pressure and the post-mortem steps you took."
+    ],
+    2: [
+      "Walk us through your daily technical workflow as a DevOps/Cloud engineer, from code commit to production deployment.",
+      "How do you approach learning and integrating new cloud-native technologies into an existing production stack?"
+    ],
+    3: [
+      "How do you investigate high disk I/O wait and identify which Linux process is causing heavy disk read/write operations?",
+      "Explain the difference between SIGTERM (15) and SIGKILL (9) process signals in Linux, and how applications handle them."
+    ],
+    4: [
+      "A critical systemd service failed to start on an Ubuntu server. Walk me through the exact terminal commands and steps you take to troubleshoot and recover it.",
+      "How do you triage a 'No space left on device' error when df -h shows disk space available, but df -i shows 100% inode usage?"
+    ],
+    5: [
+      "Compare Virtual Machines (hypervisor-based) vs Containers (OS-level virtualization) in terms of architecture, performance, isolation, and resource overhead.",
+      "Explain the core principles of Infrastructure as Code (IaC) and how state lock/backend storage works in Terraform."
+    ]
+  };
+
+  const currentStageNum = activeStage?.stage_number || (activeStage?.stage as any)?.stage_number || 1;
+  const stageFallbackList = STAGE_FALLBACK_QUESTIONS[currentStageNum] || STAGE_FALLBACK_QUESTIONS[1];
+  const defaultStageQ = stageFallbackList[currentQIndex] || stageFallbackList[0] || "Describe your background and technical experience in Cloud & DevOps engineering.";
+
+  const isGenericStageTitle = (text?: string) => {
+    if (!text) return true;
+    const trimmed = text.trim().toLowerCase();
+    if (trimmed === "stage 1 technical assessment" || trimmed === "stage 1" || trimmed === "stage 2 technical assessment") return true;
+    if (/^stage\s*\d+(\s*technical\s*assessment)?$/i.test(trimmed)) return true;
+    if (trimmed.includes("technical assessment") && !trimmed.includes("?") && trimmed.length < 35) return true;
+    return false;
+  };
+
   // Active question from stageQuestions (Admin/DB updated questions) or allQAttempts
   const activeStageQuestion = stageQuestions[currentQIndex];
   const activeQuestionAttempt = allQAttempts[currentQIndex];
@@ -303,7 +348,7 @@ export default function InterviewRoomPage() {
     activeQuestionAttempt?.question?.question_text ||
     (activeQuestionAttempt as any)?.question_text;
 
-  const rawQText = dbQuestionText || activeStage?.title || (activeStage?.stage as any)?.title || `Stage ${activeStage?.stage_number || 1} Technical Assessment`;
+  const rawQText = (!isGenericStageTitle(dbQuestionText) ? dbQuestionText : null) || defaultStageQ;
   const derivedKeywords = extractKeywordsFromText(rawQText);
 
   const rawIdealAnswer = activeStageQuestion?.reference_answer ||
