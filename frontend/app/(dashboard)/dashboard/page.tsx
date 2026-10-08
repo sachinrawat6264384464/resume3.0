@@ -88,46 +88,21 @@ export default function CandidateDashboardPage() {
       return;
     }
 
-    const now = Date.now();
-    const FOUR_HOURS_MS = 4 * 60 * 60 * 1000;
-    const SESSION_DURATION_MS = 2 * 60 * 60 * 1000; // 2 hour session window
-
-    // 1. Session explicitly marked LIVE_NOW or LIVE_STREAMING (ignoring stale abandoned streams > 4h old)
-    const liveNow = sessions.find(s => {
-      if (s.status !== "LIVE_NOW" && s.status !== "LIVE_STREAMING") return false;
-      let sTime = s.parsed_dt ? new Date(s.parsed_dt).getTime() : parseSessionDate(s.session_date).getTime();
-      if (sTime > 0 && (sTime + FOUR_HOURS_MS) < now) return false;
-      return true;
-    });
+    // 1. Session explicitly marked LIVE_NOW or LIVE_STREAMING by admin
+    const liveNow = sessions.find(s => s.status === "LIVE_NOW" || s.status === "LIVE_STREAMING");
 
     if (liveNow) {
       setActiveLiveSession(liveNow);
       return;
     }
 
+    // 2. Filter active sessions
+    const activeSessions = sessions.filter(s => s.is_active !== false && s.status !== "COMPLETED" && s.status !== "CANCELLED");
 
-    // 2. Filter sessions whose end time (scheduled time + 2 hours) is in the FUTURE
-    const upcomingOrCurrent = sessions.filter(s => {
-      if (s.status === "COMPLETED" || s.status === "EXPIRED" || s.is_active === false) return false;
-      
-      let sTime = s.parsed_dt ? new Date(s.parsed_dt).getTime() : 0;
-      if (isNaN(sTime) || sTime === 0) {
-        sTime = parseSessionDate(s.session_date).getTime();
-      }
-
-      // If date could not be determined at all, keep as fallback
-      if (sTime === 0) return true;
-
-      // EXCLUDE past expired sessions!
-      return (sTime + SESSION_DURATION_MS) > now;
-    });
-
-    if (upcomingOrCurrent.length > 0) {
-      // Pick the single immediate next upcoming session (earliest date)
-      setActiveLiveSession(upcomingOrCurrent[0]);
+    if (activeSessions.length > 0) {
+      setActiveLiveSession(activeSessions[0]);
     } else {
-      // All sessions have expired or finished
-      setActiveLiveSession(null);
+      setActiveLiveSession(sessions[0]);
     }
   };
 

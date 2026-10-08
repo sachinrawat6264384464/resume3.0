@@ -86,19 +86,10 @@ async def get_active_live_sessions(db: AsyncSession = Depends(get_db)):
     sessions = res.scalars().all()
 
     now = datetime.now(timezone.utc)
-    SESSION_DURATION = timedelta(hours=2)
 
     items = []
     for s in sessions:
         s_dt = parse_session_datetime(s.session_date)
-        # Auto-complete past sessions (if scheduled time + duration has passed)
-        if s_dt > datetime.min.replace(tzinfo=timezone.utc):
-            max_allowed = SESSION_DURATION if s.status not in ["LIVE_NOW", "LIVE_STREAMING"] else timedelta(hours=4)
-            if (s_dt + max_allowed) < now:
-                s.is_active = False
-                s.status = "COMPLETED"
-                continue
-
 
         items.append({
             "id": s.id,
@@ -109,7 +100,7 @@ async def get_active_live_sessions(db: AsyncSession = Depends(get_db)):
             "whatsapp_group_url": s.whatsapp_group_url or "https://chat.whatsapp.com/AIInterviewCommunity",
             "banner_url": s.banner_url,
             "status": s.status,
-            "host_name": s.host_name,
+            "host_name": s.host_name or "Vikas Sir",
             "parsed_dt": s_dt.isoformat()
         })
 

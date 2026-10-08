@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { 
   Calendar, Video, Plus, Edit2, Trash2, Eye, CheckCircle2, 
-  Clock, Link as LinkIcon, Users, Sparkles, RefreshCw, Loader2, X, Play, Radio, StopCircle, MessageSquare
+  Clock, Link as LinkIcon, Users, Sparkles, RefreshCw, Loader2, X, Play, Radio, StopCircle, MessageSquare, AlertTriangle
 } from "lucide-react";
 import { apiFetch } from "@/lib/api";
 
@@ -22,6 +22,8 @@ export default function AdminLiveSessionsPage() {
   const [loading, setLoading] = useState(() => sessions.length === 0);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingSession, setEditingSession] = useState<any | null>(null);
+  const [deletingSession, setDeletingSession] = useState<any | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const [clickLogs, setClickLogs] = useState<any[]>(() => {
     if (typeof window !== "undefined") {
@@ -365,18 +367,25 @@ export default function AdminLiveSessionsPage() {
     setIsModalOpen(false);
   };
 
-  const handleDeleteSession = async (id: string) => {
-    if (!confirm("Are you sure you want to delete this live session?")) return;
+  const handleDeleteSession = (sessionObj: any) => {
+    setDeletingSession(sessionObj);
+  };
+
+  const confirmDeleteSession = async () => {
+    if (!deletingSession) return;
+    setIsDeleting(true);
     try {
-      await apiFetch(`/live-sessions/admin/${id}`, { method: "DELETE" });
+      await apiFetch(`/live-sessions/admin/${deletingSession.id}`, { method: "DELETE" });
     } catch (err: any) {
       console.warn("Delete API warning:", err);
     }
-    setSessions((prev) => prev.filter((item) => item.id !== id));
+    setSessions((prev) => prev.filter((item) => item.id !== deletingSession.id));
     if (typeof window !== "undefined") {
       window.dispatchEvent(new Event("liveSessionUpdated"));
       localStorage.setItem("latest_live_session_updated", String(Date.now()));
     }
+    setIsDeleting(false);
+    setDeletingSession(null);
   };
 
   return (
@@ -532,7 +541,7 @@ export default function AdminLiveSessionsPage() {
                       </button>
 
                       <button
-                        onClick={() => handleDeleteSession(s.id)}
+                        onClick={() => handleDeleteSession(s)}
                         className="p-2 rounded-xl bg-rose-50 dark:bg-rose-950 text-rose-600 dark:text-rose-300 hover:bg-rose-600 hover:text-white transition-all cursor-pointer"
                         title="Delete Session"
                       >
@@ -766,6 +775,68 @@ export default function AdminLiveSessionsPage() {
               </div>
 
             </form>
+
+          </div>
+        </div>
+      )}
+
+      {/* CUSTOM IN-PAGE DELETE CONFIRMATION MODAL */}
+      {deletingSession && (
+        <div className="fixed inset-0 bg-slate-950/70 backdrop-blur-xs z-50 flex items-center justify-center p-4 animate-fadeIn">
+          <div className="bg-white dark:bg-slate-900 border-2 border-rose-500/40 dark:border-rose-500/50 rounded-[32px] max-w-md w-full p-6 sm:p-7 shadow-2xl flex flex-col gap-5 text-left relative">
+            
+            <div className="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-slate-800">
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 rounded-2xl bg-rose-100 dark:bg-rose-950/80 text-rose-600 dark:text-rose-400">
+                  <AlertTriangle className="w-6 h-6" />
+                </div>
+                <div>
+                  <h3 className="text-base font-black text-slate-900 dark:text-white">
+                    Confirm Delete Live Session
+                  </h3>
+                  <span className="text-[11px] font-bold text-rose-600 dark:text-rose-400 uppercase tracking-wider">
+                    Irreversible Action
+                  </span>
+                </div>
+              </div>
+              <button
+                onClick={() => setDeletingSession(null)}
+                className="p-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-400 hover:text-slate-900 dark:hover:text-white cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="flex flex-col gap-2 text-xs">
+              <p className="text-slate-600 dark:text-slate-300 font-medium leading-relaxed">
+                Are you sure you want to permanently delete this masterclass live session?
+              </p>
+              <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 font-bold text-slate-900 dark:text-white">
+                "{deletingSession.title}"
+              </div>
+              <p className="text-[11px] text-slate-400 font-medium">
+                This will remove the session from candidate dashboards and clean up scheduled reminders.
+              </p>
+            </div>
+
+            <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-200 dark:border-slate-800">
+              <button
+                type="button"
+                onClick={() => setDeletingSession(null)}
+                className="px-4 py-2.5 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={isDeleting}
+                onClick={confirmDeleteSession}
+                className="px-5 py-2.5 rounded-xl text-xs font-black text-white bg-rose-600 hover:bg-rose-700 shadow-md shadow-rose-600/30 flex items-center gap-2 transition-all cursor-pointer uppercase tracking-wider"
+              >
+                {isDeleting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
+                <span>Yes, Delete Session</span>
+              </button>
+            </div>
 
           </div>
         </div>
