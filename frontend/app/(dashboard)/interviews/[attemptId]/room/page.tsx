@@ -157,16 +157,19 @@ export default function InterviewRoomPage() {
     forceStopAllWebcams();
   };
 
-  // Fetch Attempt State from Real Database (Non-blocking background sync)
+  const [dbStagesData, setDbStagesData] = useState<any[]>([]);
+
+  // Fetch Attempt State & Live Admin DB Stage Questions (Non-blocking background sync)
   const loadAttempt = useCallback(async () => {
     try {
+      // 1. Fetch live DB stages with all questions configured by Admin in /admin/templates
+      const resStages = await apiFetch("/interviews/stages").catch(() => null);
+      if (resStages?.data && Array.isArray(resStages.data)) {
+        setDbStagesData(resStages.data);
+      }
+
       if (attemptId) {
-        const userStage0Key = "stage0_profile_data";
-        const hasLocalStage0 = typeof window !== "undefined" && Boolean(
-          localStorage.getItem("stage0_profile_data") ||
-          localStorage.getItem("candidate_linkedin_url") ||
-          localStorage.getItem("completed_stages_list")
-        );
+        const targetStageNum = parseInt(attemptId.replace(/\D/g, ""), 10) || 1;
 
         if (!attemptId.startsWith("stage-") && !attemptId.startsWith("demo-")) {
           const res = await apiFetch(`/attempts/${attemptId}`).catch(() => null);
@@ -174,8 +177,13 @@ export default function InterviewRoomPage() {
             const att: InterviewAttempt = res.data;
             setAttempt(att);
 
-            const current = att.stage_attempts?.find((s) => s.status === "IN_PROGRESS") || att.stage_attempts?.[0];
-            const stgNum = current?.stage_number ?? att.stage_number ?? (parseInt(attemptId.replace(/\D/g, ""), 10) || 1);
+            // Match exact target stage_number (e.g. Stage 1) instead of matching stage 0
+            const current = att.stage_attempts?.find((s) => s.stage_number === targetStageNum) 
+              || att.stage_attempts?.find((s) => s.status === "IN_PROGRESS" && s.stage_number >= 1)
+              || att.stage_attempts?.find((s) => s.stage_number >= 1)
+              || att.stage_attempts?.[0];
+              
+            const stgNum = current?.stage_number ?? targetStageNum;
 
             if (current) setActiveStage(current);
 
@@ -234,64 +242,6 @@ export default function InterviewRoomPage() {
     };
   }, []);
 
-  const allQAttempts = activeStage?.question_attempts || [];
-  const stageQuestions = ((activeStage?.stage as any)?.questions || []).filter((q: any) => q.is_active !== "INACTIVE");
-
-  // Determine total questions count for the stage: maximum of DB stage questions count, question attempts count, or 1
-  const dbTotalQCount = Math.max(
-    stageQuestions.length,
-    allQAttempts.length,
-    1
-  );
-
-  const maxQCount = dbTotalQCount;
-
-  // Camera Stream Active & Validated State
-  const isCameraLive = Boolean(
-    stream &&
-    isCameraActive &&
-    stream.getVideoTracks().length > 0 &&
-    stream.getVideoTracks().some((t) => t.enabled && t.readyState === "live")
-  );
-
-  // 13-Minute Countdown Timer with Automatic Expiration & Camera Pause Protection
-  useEffect(() => {
-    if (timeLeftSeconds <= 0 && !stageSummary && !isSummaryDismissed && !isProcessing) {
-      // 🚨 TIME EXPIRED! Stop recording, stop camera hardware, calculate scores for answered questions & show final summary!
-      stopCameraCompletely();
-      forceStopAllWebcams();
-
-      const allScores = accumulatedScores.length > 0 ? accumulatedScores : [0];
-      const avgScore = Math.round(allScores.reduce((a, b) => a + b, 0) / allScores.length);
-      const correctQuestionsCount = allScores.filter((s) => s >= 60.0).length;
-      const requiredPassCount = Math.ceil(maxQCount * 0.75);
-      const isPassedStage = (avgScore >= 80.0) && (correctQuestionsCount >= requiredPassCount);
-
-      const finalSummary: StageSummaryData = {
-        overallScore: avgScore,
-        passed: isPassedStage,
-        totalQuestions: maxQCount,
-        xpEarned: isPassedStage ? 150 : Math.floor(avgScore * 1.5)
-      };
-
-      setStageSummary(finalSummary);
-      return;
-    }
-
-    // 🚨 PAUSE TIMER AUTOMATICALLY WHEN CAMERA IS OFF / NOT ACTIVE!
-    if (!isCameraLive) {
-      return;
-    }
-
-    const timer = setInterval(() => {
-      setTimeLeftSeconds((prev) => (prev > 0 ? prev - 1 : 0));
-      if (isRecording) {
-        setQuestionSeconds((prev) => prev + 1);
-      }
-    }, 1000);
-    return () => clearInterval(timer);
-  }, [timeLeftSeconds, isRecording, stageSummary, isSummaryDismissed, isProcessing, accumulatedScores, maxQCount, isCameraLive]);
-
   // Dynamic fallback questions per stage and index to ensure candidate ALWAYS gets real technical questions (1 by 1)
   const STAGE_FALLBACK_QUESTIONS: Record<number, string[]> = {
     1: [
@@ -325,8 +275,88 @@ export default function InterviewRoomPage() {
   };
 
   const currentStageNum = activeStage?.stage_number || (activeStage?.stage as any)?.stage_number || (attemptId ? (parseInt(attemptId.replace(/\D/g, ""), 10) || 1) : 1);
-  const stageFallbackList = STAGE_FALLBACK_QUESTIONS[currentStageNum] || STAGE_FALLBACK_QUESTIONS[1];
-  const defaultStageQ = stageFallbackList[currentQIndex] || stageFallbackList[0] || "Describe your background and technical experience in Cloud & DevOps engineering.";
+
+  // Match live DB stage fetched from /interviews/stages
+  const liveDbStage = dbStagesData.find((s: any) => s.id === currentStageNum || s.stage_number === currentStageNum);
+  const liveDbQuestions = (liveDbStage?.questions || []).filter((q: any) => q.is_active !== "INACTIVE");
+
+  const stageQuestions = ((activeStage?.stage as any)?.questions || []).filter((q: any) => q.is_active !== "INACTIVE");
+  const allQAttempts = activeStage?.question_attempts || [];
+
+  // Priority question list: Live Admin configured questions from DB > Attempt stage questions > Attempt question attempts
+  const combinedQuestionsList = liveDbQuestions.length > 0
+    ? liveDbQuestions
+    : (stageQuestions.length > 0
+        ? stageQuestions
+        : (allQAttempts.map((qa: any) => ({
+            id: qa.question_id || qa.id,
+            question_text: qa.question_text_snapshot || qa.question?.question_text,
+            reference_answer: qa.question?.reference_answer,
+            expected_topics: qa.question?.expected_topics
+          })).filter((q: any) => q && q.question_text)));
+
+  const dbTotalQCount = Math.max(
+    combinedQuestionsList.length,
+    fallbackList.length > 0 ? fallbackList.length : 1
+  );
+
+  const maxQCount = dbTotalQCount;
+
+  // Camera Stream Active & Validated State
+  const isCameraLive = Boolean(
+    stream &&
+    isCameraActive &&
+    stream.getVideoTracks().length > 0 &&
+    stream.getVideoTracks().some((t) => t.enabled && t.readyState === "live")
+  );
+
+  // 13-Minute Countdown Timer with Automatic Expiration & Camera Pause Protection
+  useEffect(() => {
+    if (timeLeftSeconds <= 0 && !stageSummary && !isSummaryDismissed && !isProcessing) {
+      stopCameraCompletely();
+      forceStopAllWebcams();
+
+      const allScores = accumulatedScores.length > 0 ? accumulatedScores : [0];
+      const avgScore = Math.round(allScores.reduce((a, b) => a + b, 0) / allScores.length);
+      const correctQuestionsCount = allScores.filter((s) => s >= 60.0).length;
+      const requiredPassCount = Math.ceil(maxQCount * 0.75);
+      const isPassedStage = (avgScore >= 80.0) && (correctQuestionsCount >= requiredPassCount);
+
+      const finalSummary: StageSummaryData = {
+        overallScore: avgScore,
+        passed: isPassedStage,
+        totalQuestions: maxQCount,
+        xpEarned: isPassedStage ? 150 : Math.floor(avgScore * 1.5)
+      };
+
+      setStageSummary(finalSummary);
+      return;
+    }
+
+    if (!isCameraLive) {
+      return;
+    }
+
+    const timer = setInterval(() => {
+      setTimeLeftSeconds((prev) => (prev > 0 ? prev - 1 : 0));
+      if (isRecording) {
+        setQuestionSeconds((prev) => prev + 1);
+      }
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [timeLeftSeconds, isRecording, stageSummary, isSummaryDismissed, isProcessing, accumulatedScores, maxQCount, isCameraLive]);
+
+  // Active question item for current index
+  const activeQItem = combinedQuestionsList[currentQIndex];
+  const activeStageQuestion = stageQuestions[currentQIndex];
+  const activeQuestionAttempt = allQAttempts[currentQIndex];
+
+  const dbQuestionText = activeQItem?.question_text ||
+    activeStageQuestion?.question_text ||
+    activeQuestionAttempt?.question_text_snapshot ||
+    activeQuestionAttempt?.question?.question_text;
+
+  const defaultStageQ = fallbackList[currentQIndex] || fallbackList[0] || "Describe your background and technical experience in Cloud & DevOps engineering.";
 
   const isGenericStageTitle = (text?: string) => {
     if (!text) return true;
@@ -336,16 +366,6 @@ export default function InterviewRoomPage() {
     if (trimmed.includes("technical assessment") && !trimmed.includes("?") && trimmed.length < 35) return true;
     return false;
   };
-
-  // Active question from stageQuestions (Admin/DB updated questions) or allQAttempts
-  const activeStageQuestion = stageQuestions[currentQIndex];
-  const activeQuestionAttempt = allQAttempts[currentQIndex];
-
-  // Resolve dynamic DB questions configured by Admin for this specific Stage
-  const dbQuestionText = activeStageQuestion?.question_text ||
-    activeQuestionAttempt?.question_text_snapshot ||
-    activeQuestionAttempt?.question?.question_text ||
-    (activeQuestionAttempt as any)?.question_text;
 
   const rawQText = (!isGenericStageTitle(dbQuestionText) ? dbQuestionText : null) || defaultStageQ;
   const derivedKeywords = extractKeywordsFromText(rawQText);
@@ -385,19 +405,18 @@ export default function InterviewRoomPage() {
   const defaultStageAns = (STAGE_FALLBACK_ANSWERS[currentStageNum] || STAGE_FALLBACK_ANSWERS[1])[currentQIndex]
     || "Provide a structured response covering architectural principles, diagnostic commands, and recovery steps.";
 
-  const rawIdealAnswer = activeStageQuestion?.reference_answer ||
+  const rawIdealAnswer = activeQItem?.reference_answer ||
+    activeStageQuestion?.reference_answer ||
     activeQuestionAttempt?.question?.reference_answer ||
     (activeQuestionAttempt as any)?.reference_answer || "";
 
   // Sanitize reference answer: prioritize exact reference_answer directly from PostgreSQL DB
   const isDirtyRefAns = !rawIdealAnswer || rawIdealAnswer.toLowerCase().includes("sachin") || rawIdealAnswer.toLowerCase() === "test";
-  const dbIdealAnswer = (!isDirtyRefAns && rawIdealAnswer.trim().length > 5) ? rawIdealAnswer.trim() : defaultStageAns;
+  const dbIdealAnswer = (!isDirtyRefAns && rawIdealAnswer && rawIdealAnswer.trim().length > 5) ? rawIdealAnswer.trim() : defaultStageAns;
 
-  const dbKeywords = (activeStageQuestion?.expected_topics && activeStageQuestion.expected_topics.length > 0)
-    ? activeStageQuestion.expected_topics
-    : ((activeQuestionAttempt?.question?.expected_topics && activeQuestionAttempt.question.expected_topics.length > 0)
-        ? activeQuestionAttempt.question.expected_topics
-        : (activeQuestionAttempt as any)?.expected_topics);
+  const dbKeywords = (activeQItem?.expected_topics && activeQItem.expected_topics.length > 0)
+    ? activeQItem.expected_topics
+    : (activeStageQuestion?.expected_topics || activeQuestionAttempt?.question?.expected_topics);
 
   // Extract reference words STRICTLY from Admin Expected Answer
   const refAnswerWords = dbIdealAnswer
