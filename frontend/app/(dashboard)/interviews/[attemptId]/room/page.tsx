@@ -593,7 +593,10 @@ export default function InterviewRoomPage() {
       "the", "and", "for", "that", "this", "with", "from", "your", "have", "been", "were", 
       "what", "how", "you", "please", "walk", "through", "most", "significant", "explain", 
       "describe", "give", "pass", "dont", "have", "anything", "stage", "technical", 
-      "assessment", "question", "answer", "round", "main", "karun", "bus", "kya"
+      "assessment", "question", "answer", "round", "main", "karun", "bus", "kya",
+      "detail", "present", "their", "about", "core", "role", "years", "such", "than",
+      "when", "over", "under", "into", "during", "where", "which", "each", "every",
+      "also", "well", "both", "only", "more", "some", "them", "these", "those"
     ]);
 
     // Key target words are extracted ONLY from idealWords (Expected Model Answer) and keywords (expected_topics)! NOT question text!
