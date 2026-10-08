@@ -64,6 +64,9 @@ export default function InterviewRoomPage() {
   const [submittedAnswerText, setSubmittedAnswerText] = useState("");
   const [sttLang, setSttLang] = useState<"en-US" | "en-IN">("en-US");
   const speechRecognitionRef = useRef<any>(null);
+  const isRecordingRef = useRef(false);
+  const candidateVideoRef = useRef<HTMLVideoElement | null>(null);
+  const baseTranscriptRef = useRef("");
 
   // 13 Mins Live Countdown Timer (780 Seconds)
   const [timeLeftSeconds, setTimeLeftSeconds] = useState(780); // 13 Mins
@@ -77,6 +80,7 @@ export default function InterviewRoomPage() {
 
   // Drop Out & Final Summary Modal States
   const [showDropOutModal, setShowDropOutModal] = useState(false);
+  const [showHintModal, setShowHintModal] = useState(false);
   const [stageSummary, setStageSummary] = useState<StageSummaryData | null>(null);
   const [isSummaryDismissed, setIsSummaryDismissed] = useState(false);
   const [isProceedingNext, setIsProceedingNext] = useState(false);
@@ -110,7 +114,18 @@ export default function InterviewRoomPage() {
     }
   }, []);
 
+  // Dedicated stable video stream binder (Prevents camera blinking on timer ticks / state updates)
+  useEffect(() => {
+    if (candidateVideoRef.current && stream) {
+      if (candidateVideoRef.current.srcObject !== stream) {
+        candidateVideoRef.current.srcObject = stream;
+        candidateVideoRef.current.play().catch(() => null);
+      }
+    }
+  }, [stream]);
+
   const stopCameraCompletely = () => {
+    isRecordingRef.current = false;
     forceStopAllWebcams();
     if (recorderRef.current) {
       try {
@@ -119,6 +134,8 @@ export default function InterviewRoomPage() {
     }
     if (speechRecognitionRef.current) {
       try {
+        speechRecognitionRef.current.onend = null;
+        speechRecognitionRef.current.onerror = null;
         speechRecognitionRef.current.stop();
       } catch (e) {}
     }
@@ -373,7 +390,6 @@ export default function InterviewRoomPage() {
   const handleStartRecording = () => {
     if (!stream) {
       enableCameraStream();
-      // Show camera permission info in transcript area instead of blocking alert
       setSpokenTranscript("[Camera/Mic required] Please allow camera & microphone access, then click Start Verbal Answer again.");
       return;
     }
@@ -385,16 +401,28 @@ export default function InterviewRoomPage() {
     setQuestionSeconds(0);
     setLastEvalResult(null);
     setLastMatchScore(null);
-    setSpokenTranscript("");
+
+    // Save existing transcript as base text so new speech appends seamlessly after pause!
+    const baseText = spokenTranscript.trim() ? spokenTranscript.trim() + " " : "";
+    baseTranscriptRef.current = baseText;
 
     const rec = new QuestionRecorder();
     rec.start(stream);
     recorderRef.current = rec;
+    
+    isRecordingRef.current = true;
     setIsRecording(true);
 
-    // Live Web Speech Recognition (Enforce English/Hinglish Latin script)
+    // Live Web Speech Recognition (Enforce English/Hinglish Latin script with auto-restart loop)
     if (typeof window !== "undefined" && ("SpeechRecognition" in window || "webkitSpeechRecognition" in window)) {
       try {
+        if (speechRecognitionRef.current) {
+          try {
+            speechRecognitionRef.current.onend = null;
+            speechRecognitionRef.current.onerror = null;
+            speechRecognitionRef.current.stop();
+          } catch (e) {}
+        }
         const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
         const recognition = new SpeechRecognition();
         recognition.continuous = true;
@@ -402,16 +430,37 @@ export default function InterviewRoomPage() {
         recognition.lang = sttLang; // 'en-US' or 'en-IN' to prevent Devanagari script
         
         recognition.onresult = (event: any) => {
-          let currentText = "";
+          let currentSessionText = "";
           for (let i = 0; i < event.results.length; i++) {
-            currentText += event.results[i][0].transcript + " ";
+            currentSessionText += event.results[i][0].transcript + " ";
           }
-          setSpokenTranscript(currentText.trim());
+          const fullText = (baseTranscriptRef.current + currentSessionText).trim();
+          if (fullText) {
+            setSpokenTranscript(fullText);
+          }
         };
+
+        recognition.onerror = (event: any) => {
+          console.warn("Speech recognition error notice:", event.error);
+          if (isRecordingRef.current && (event.error === "no-speech" || event.error === "network")) {
+            try {
+              recognition.start();
+            } catch (e) {}
+          }
+        };
+
+        recognition.onend = () => {
+          if (isRecordingRef.current) {
+            try {
+              recognition.start();
+            } catch (e) {}
+          }
+        };
+
         recognition.start();
         speechRecognitionRef.current = recognition;
       } catch (err) {
-        console.warn("Speech recognition notice:", err);
+        console.warn("Speech recognition start notice:", err);
       }
     }
   };
@@ -460,23 +509,44 @@ export default function InterviewRoomPage() {
     const candWords = new Set(getWords(lower));
     const idealWords = getWords(idealLower);
     const qTextLower = (activeQuestionAttempt?.question_text_snapshot || "").toLowerCase();
-    const qWords = getWords(qTextLower);
-    const stopWords = new Set(["the", "and", "for", "that", "this", "with", "from", "your", "have", "been", "were", "what", "how", "you", "please", "walk", "through", "most", "significant"]);
-    const adminKeyWords = Array.from(new Set([...idealWords, ...qWords].filter((w) => !stopWords.has(w))));
+    
+    const stopWords = new Set([
+      "the", "and", "for", "that", "this", "with", "from", "your", "have", "been", "were", 
+      "what", "how", "you", "please", "walk", "through", "most", "significant", "explain", 
+      "describe", "give", "pass", "dont", "have", "anything", "stage", "technical", 
+      "assessment", "question", "answer", "round", "main", "karun", "bus", "kya"
+    ]);
+
+    // Key target words are extracted ONLY from idealWords (Expected Model Answer) and keywords (expected_topics)! NOT question text!
+    const adminRefKeywords = idealWords.filter((w) => !stopWords.has(w));
+    const topicWords: string[] = [];
+    keywords.forEach((kw: string) => {
+      getWords(kw).forEach((w) => {
+        if (!stopWords.has(w)) topicWords.push(w);
+      });
+    });
+
+    const adminKeyWords = Array.from(new Set([...adminRefKeywords, ...topicWords]));
+
+    const beggingPhrases = [
+      "give me pass", "pass me", "dont know", "don't know", "dont have", "don't have",
+      "kya karun", "please pass", "no idea", "skip", "next question"
+    ];
+    const isBegging = beggingPhrases.some((phrase) => lower.includes(phrase));
 
     const isIntro = lower.includes("introduce") || lower.includes("self") || qTextLower.includes("introduce") || qTextLower.includes("journey") || qTextLower.includes("background");
     const introKeywords = new Set(["sachin", "rawat", "name", "myself", "iam", "candidate", "student", "developer", "engineer", "cloud", "devops", "experience", "work", "role", "background", "journey", "achievement", "project"]);
     const matchedIntroWords = Array.from(candWords).filter((w) => introKeywords.has(w));
 
     // Direct exact or substring match check with Admin Expected Answer
-    const isExactMatch = idealLower && (lower === idealLower || lower.includes(idealLower) || idealLower.includes(lower));
+    const isExactMatch = Boolean(idealLower && idealLower.length > 5 && (lower === idealLower || (lower.length > 15 && idealLower.includes(lower))));
 
     // Count whole word overlaps
     const matchedAdminWords = adminKeyWords.filter((w) => candWords.has(w));
 
     // Smart token matching for multi-word target concepts
     const matched = keywords.filter((kw: string) => {
-      const kwWords = getWords(kw);
+      const kwWords = getWords(kw).filter((w) => !stopWords.has(w));
       return kwWords.length > 0 && kwWords.every((w) => candWords.has(w));
     });
 
@@ -493,31 +563,42 @@ export default function InterviewRoomPage() {
     }
 
     let isPassed = false;
-    if (isIntro && (matchedIntroWords.length >= 1 || matchedAdminWords.length >= 1)) {
+    if (isIntro && matchedIntroWords.length >= 1 && !isBegging) {
       isPassed = true;
       matchPercentage = Math.max(matchPercentage, 80);
     } else {
-      isPassed = isExactMatch || matchPercentage >= 40 || matchedAdminWords.length >= 1 || (matched.length > 0 && candWords.size > 1);
+      if (isBegging) {
+        isPassed = false;
+      } else {
+        isPassed = isExactMatch || (matchPercentage >= 50 && matchedAdminWords.length >= 2) || (matched.length >= 1 && matchedAdminWords.length >= 1);
+      }
+
       if (isPassed) {
-        matchPercentage = Math.max(matchPercentage, 75);
+        matchPercentage = Math.max(matchPercentage, 65);
+      } else {
+        if (isBegging || (matchedAdminWords.length === 0 && matched.length === 0)) {
+          matchPercentage = Math.min(matchPercentage, 15);
+        } else {
+          matchPercentage = Math.min(matchPercentage, 45);
+        }
       }
     }
 
     const finalScore = isPassed
-      ? Math.min(98.0, Math.max(82.0, 75.0 + Math.round(matchPercentage * 0.23)))
-      : Math.max(25.0, Math.round(matchPercentage * 0.70));
+      ? Math.min(98.0, Math.max(70.0, 65.0 + Math.round(matchPercentage * 0.30)))
+      : Math.max(15.0, Math.round(matchPercentage * 0.70));
 
     const evalResult: QuestionEvaluationResult = {
       overall_score: finalScore,
       technical_score: finalScore,
-      concept_coverage_score: isPassed ? Math.min(98, finalScore + 2) : Math.max(20, finalScore - 5),
-      reasoning_score: isPassed ? Math.min(95, finalScore) : Math.max(20, finalScore - 8),
-      practical_score: isPassed ? Math.min(95, finalScore + 4) : Math.max(20, finalScore - 4),
+      concept_coverage_score: isPassed ? Math.min(98, finalScore + 2) : Math.max(15, finalScore - 5),
+      reasoning_score: isPassed ? Math.min(95, finalScore) : Math.max(15, finalScore - 8),
+      practical_score: isPassed ? Math.min(95, finalScore + 4) : Math.max(15, finalScore - 4),
       communication_score: transcriptText.length > 10 ? 88.0 : 40.0,
       confidence_score: isPassed ? 90.0 : 45.0,
       feedback: isPassed
         ? `✅ PASSED (${matchPercentage}% Match ≥ 60%). Spoken answer accurately matched Expected Model Answer.`
-        : `❌ NEEDS IMPROVEMENT (${matchPercentage}% Match < 60%). Missing expected concepts: ${missing.slice(0, 3).join(", ")}. Expected Answer: "${benchmark.ideal}"`,
+        : `❌ NEEDS IMPROVEMENT (${matchPercentage}% Match < 60%). Missing expected concepts: ${missing.slice(0, 3).join(", ") || "Technical Details"}. Expected Answer: "${benchmark.ideal}"`,
       strengths: isPassed ? [`Matched expected solution parameters: ${matched.slice(0, 4).join(", ")}`] : ["Verbal response submitted"],
       weaknesses: isPassed ? [] : [`Missing expected concepts: ${missing.slice(0, 3).join(", ")}`],
       missing_concepts: missing.slice(0, 4),
@@ -564,11 +645,14 @@ export default function InterviewRoomPage() {
 
   // Finish Answer & Submit (Real Mode Saves to DB, Practice Mode Does Not)
   const handleFinishAnswer = async (manualText?: string) => {
+    isRecordingRef.current = false;
     setIsRecording(false);
     setIsProcessing(true);
 
     if (speechRecognitionRef.current) {
       try {
+        speechRecognitionRef.current.onend = null;
+        speechRecognitionRef.current.onerror = null;
         speechRecognitionRef.current.stop();
       } catch (e) {}
     }
@@ -817,157 +901,281 @@ export default function InterviewRoomPage() {
         </div>
       )}
 
-      {/* Main Room Layout */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+      {/* Main Dual-Panel Layout matching Screenshot 2 */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         
-        {/* Left Side: Avatar + Question Card + Live Speech-to-Text Box + AI Evaluation Report */}
-        <div className="lg:col-span-7 flex flex-col gap-6">
-          
-          {/* AI Interviewer Avatar Card */}
-          <AIInterviewerAvatar 
-            isSpeaking={isSpeaking} 
-            questionText={questionText} 
-            stageTitle={`Stage 1 • Question ${currentQIndex + 1}/${maxQCount}`}
-            category="AWS & DevOps"
-            onReplayAudio={playVoice}
-          />
-
-          {/* Live Speech-to-Text Transcription Box (Visible continuously) */}
-          <div className="p-4.5 rounded-2xl bg-slate-900 text-white border border-slate-800 shadow-xl flex flex-col gap-2.5">
-            <div className="flex items-center justify-between text-xs text-slate-400 font-sans">
-              <span className="font-bold text-blue-400 flex items-center gap-2">
-                <Mic className="w-4 h-4 text-blue-400 animate-pulse" />
-                <span>🎙️ Live Speech-to-Text Spoken Transcript:</span>
-              </span>
-              <div className="flex items-center gap-2">
-                <select
-                  value={sttLang}
-                  onChange={(e) => setSttLang(e.target.value as any)}
-                  className="px-2 py-0.5 rounded-lg bg-slate-950 text-slate-200 border border-slate-800 text-[11px] font-mono font-bold focus:outline-none focus:border-blue-500 cursor-pointer"
-                  title="Select Speech Recognition Script Language"
-                >
-                  <option value="en-US">🇺🇸 English (en-US)</option>
-                  <option value="en-IN">🇮🇳 Hinglish / English (en-IN)</option>
-                </select>
-                <span className="font-mono text-[11px] bg-slate-800 px-2 py-0.5 rounded text-slate-300">
-                  {spokenTranscript ? `${spokenTranscript.split(/\s+/).filter(Boolean).length} Words` : "0 Words"}
-                </span>
-              </div>
-            </div>
+        {/* LEFT COLUMN: AI Interviewer Avatar Card + Live Candidate PIP */}
+        <div className="lg:col-span-5 flex flex-col gap-4">
+          <div className="p-8 rounded-[32px] bg-slate-50/90 dark:bg-slate-900/90 border border-slate-200/80 dark:border-slate-800 shadow-sm flex flex-col items-center text-center justify-between relative overflow-hidden min-h-[560px]">
             
-            <div className="p-3.5 rounded-xl bg-slate-950 border border-slate-800/80 font-mono text-xs text-slate-200 leading-relaxed min-h-[56px] italic flex items-center">
-              {spokenTranscript ? (
-                <span>"{spokenTranscript}"</span>
-              ) : (
-                <span className="text-slate-500 not-italic">
-                  Speak out loud into your microphone... Your live spoken answer will transcribe here in real time.
-                </span>
-              )}
-            </div>
-          </div>
-
-          {/* AI Evaluation Report (Renders immediately after submission) */}
-          {lastEvalResult && (
-            <div className="p-6 rounded-3xl bg-slate-900 text-white border border-slate-800 shadow-2xl flex flex-col gap-4 animate-fadeIn">
-              <div className="flex items-center justify-between pb-3 border-b border-slate-800">
-                <div className="flex items-center gap-2">
-                  {lastMatchScore !== null && lastMatchScore >= 60 ? (
-                    <CheckCircle2 className="w-5 h-5 text-emerald-400" />
-                  ) : (
-                    <XCircle className="w-5 h-5 text-rose-400" />
-                  )}
-                  <span className={`font-extrabold text-sm ${lastMatchScore !== null && lastMatchScore >= 60 ? 'text-emerald-400' : 'text-rose-400'}`}>
-                    {lastMatchScore !== null && lastMatchScore >= 60 
-                      ? `✅ PASSED (${lastMatchScore}% Concept Match ≥ 60%)` 
-                      : `❌ NEEDS IMPROVEMENT (${lastMatchScore ?? 0}% Match < 60%)`}
-                  </span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-xs text-slate-400 font-mono">EVAL SCORE</span>
-                  <span className={`text-lg font-black font-mono ${lastMatchScore !== null && lastMatchScore >= 60 ? 'text-emerald-400' : 'text-rose-400'}`}>
-                    {lastEvalResult.overall_score}%
-                  </span>
+            <div className="flex flex-col items-center gap-4 w-full pt-4">
+              {/* Avatar Circle */}
+              <div className="relative">
+                <div className={`w-48 h-48 sm:w-56 sm:h-56 rounded-full p-1.5 transition-all duration-500 relative ${
+                  isSpeaking
+                    ? "bg-gradient-to-tr from-purple-600 via-indigo-500 to-blue-500 shadow-2xl shadow-indigo-500/40 ring-4 ring-indigo-400/30"
+                    : "bg-slate-200 dark:bg-slate-800 shadow-lg"
+                }`}>
+                  <div className="w-full h-full rounded-full overflow-hidden bg-slate-950 relative border-4 border-white dark:border-slate-900">
+                    <img
+                      src="/images/ai_avatar_interviewer.jpg"
+                      alt="Ravya - AI Interviewer"
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
                 </div>
               </div>
 
-              <p className="text-xs text-slate-300 leading-relaxed font-medium">
-                {lastEvalResult.feedback}
-              </p>
+              {/* Name & Title */}
+              <div className="flex flex-col items-center gap-0.5">
+                <h3 className="text-xl font-extrabold text-slate-900 dark:text-white">Ravya</h3>
+                <span className="text-xs font-medium text-slate-500 dark:text-slate-400">AI Interview Coach</span>
+              </div>
 
-              {/* Candidate's actual evaluated input */}
-              <div className="p-3 rounded-xl bg-slate-950 border border-slate-800/80 flex flex-col gap-1 text-xs">
-                <span className="font-bold text-amber-400">Your Submitted Response:</span>
-                <span className="font-mono text-slate-200 italic">
-                  "{submittedAnswerText || (lastEvalResult as any).transcript || spokenTranscript || 'Verbal/Text Input'}"
+              {/* Status Pill */}
+              <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-xs">
+                <span className={`w-2 h-2 rounded-full ${isSpeaking ? 'bg-purple-500 animate-ping' : 'bg-emerald-500'}`} />
+                <span className="text-xs font-semibold text-slate-700 dark:text-slate-200">
+                  {isSpeaking ? "Speaking" : "Ready for answer"}
                 </span>
               </div>
 
-              {lastEvalResult.missing_concepts && lastEvalResult.missing_concepts.length > 0 && (
-                <div className="p-3 rounded-xl bg-rose-950/40 border border-rose-500/30 flex flex-col gap-1 text-xs">
-                  <span className="font-bold text-rose-300">Missing Technical Concepts (Req: ≥60% Match):</span>
-                  <span className="font-mono text-rose-200">{lastEvalResult.missing_concepts.join(", ")}</span>
-                </div>
-              )}
-
-              <div className="p-3 rounded-xl bg-blue-950/40 border border-blue-500/30 flex flex-col gap-1 text-xs">
-                <span className="font-bold text-blue-300">System Benchmark (Expected Technical Solution):</span>
-                <span className="font-mono text-slate-200">"{currentBenchmark.ideal}"</span>
-              </div>
-
-
-
-              {/* 🚀 PROCEED TO NEXT QUESTION BUTTON (Keeps Evaluation Card on screen until candidate clicks) */}
+              {/* Replay Question Link */}
               <button
-                onClick={handleProceedToNextQuestion}
-                disabled={isProceedingNext}
-                className={`w-full py-4 px-6 rounded-2xl font-black text-xs text-slate-950 bg-gradient-to-r from-[#FF6B00] via-amber-400 to-orange-400 hover:from-amber-400 hover:to-orange-500 shadow-xl shadow-[#FF6B00]/30 flex items-center justify-center gap-2.5 transition-all uppercase tracking-wider mt-2 border-2 border-amber-300/40 ${
-                  isProceedingNext ? "opacity-90 cursor-wait" : "hover:scale-[1.01] cursor-pointer"
-                }`}
+                onClick={playVoice}
+                className="flex items-center gap-1.5 text-xs font-semibold text-slate-600 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors cursor-pointer pt-1"
               >
-                {isProceedingNext ? (
-                  <>
-                    <Loader2 className="w-4 h-4 text-slate-950 animate-spin" />
-                    <span>Evaluating Stage & Opening Summary...</span>
-                  </>
-                ) : (
-                  <>
-                    <span>
-                      {currentQIndex + 1 < maxQCount
-                        ? `Proceed to Question ${currentQIndex + 2} of ${maxQCount} ➔`
-                        : "View Final Stage Performance Summary 🏆"}
-                    </span>
-                    <ArrowRight className="w-4 h-4 text-slate-950 stroke-[3]" />
-                  </>
-                )}
+                <RefreshCw className="w-3.5 h-3.5" />
+                <span>Replay question</span>
               </button>
             </div>
-          )}
 
+            {/* Candidate PIP Webcam Box (Bottom Right of Left Card) */}
+            <div className="w-full flex items-end justify-between pt-8 z-10">
+              <span className="text-xs font-medium text-slate-400">Ravya · AI Interviewer •</span>
+              
+              <div className="w-36 h-28 sm:w-44 sm:h-32 rounded-2xl overflow-hidden border-2 border-white dark:border-slate-800 shadow-xl relative bg-slate-950 group">
+                {stream && isCameraActive ? (
+                  <video
+                    ref={candidateVideoRef}
+                    autoPlay
+                    playsInline
+                    muted
+                    className="w-full h-full object-cover scale-x-[-1]"
+                  />
+                ) : (
+                  <div className="w-full h-full flex flex-col items-center justify-center text-slate-400 gap-1 p-2 text-center bg-slate-900">
+                    <CameraOff className="w-5 h-5 text-amber-400" />
+                    <span className="text-[10px] font-medium">Camera Paused</span>
+                  </div>
+                )}
+                <div className="absolute bottom-2 left-2 px-2 py-0.5 rounded-md bg-slate-900/80 backdrop-blur-sm text-[10px] font-semibold text-white flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                  <span>You •</span>
+                </div>
+              </div>
+            </div>
+
+          </div>
         </div>
 
-        {/* Right Side: Camera Window + Mic Waveform + Start Answer Controls */}
-        <div className="lg:col-span-5 flex flex-col gap-6">
-          
-          {/* Moveable Webcam Preview Window */}
-          <WebcamPreview
-            stream={stream}
-            isActive={isCameraActive}
-            isRecording={isRecording}
-            onEnableCamera={enableCameraStream}
-          />
+        {/* RIGHT COLUMN: Question Heading & Interactive Answer Controls */}
+        <div className="lg:col-span-7 flex flex-col gap-6">
+          <div className="p-8 rounded-[32px] bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-sm flex flex-col justify-between gap-6 min-h-[560px]">
+            
+            {/* Question Header & Prompt */}
+            <div className="flex flex-col gap-4">
+              <div className="flex items-center gap-2">
+                <span className="px-3 py-1 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-mono text-[11px] font-bold uppercase tracking-wider">
+                  ROUND {currentQIndex + 1} · {activeStage?.stage?.category || "ABOUT YOU"}
+                </span>
+                <span className="text-xs font-extrabold text-indigo-600 dark:text-indigo-400 tracking-wider uppercase">
+                  {activeStage?.stage?.title || "INTRODUCTION"}
+                </span>
+              </div>
 
-          {/* Audio Waveform Meter */}
-          <AudioWaveformVisualizer isActive={isRecording} stream={stream} />
+              <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white leading-tight tracking-tight">
+                {questionText}
+              </h2>
 
-          {/* Start/Stop Controls */}
-          <AnswerControls
-            isRecording={isRecording}
-            isProcessing={isProcessing}
-            isDisabled={Boolean(lastEvalResult) || isProcessing}
-            onStartRecording={handleStartRecording}
-            onFinishAnswer={handleFinishAnswer}
-          />
+              {/* Need a structure hint? Link */}
+              <div className="relative">
+                <button
+                  onClick={() => setShowHintModal(!showHintModal)}
+                  className="text-xs font-semibold text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 transition-colors flex items-center gap-1.5 cursor-pointer"
+                >
+                  <Lightbulb className="w-3.5 h-3.5 text-amber-500" />
+                  <span>Need a structure hint?</span>
+                </button>
 
+                {showHintModal && (
+                  <div className="mt-3 p-4 rounded-2xl bg-indigo-50/80 dark:bg-indigo-950/50 border border-indigo-200 dark:border-indigo-800 text-xs text-indigo-900 dark:text-indigo-200 flex flex-col gap-2 animate-fadeIn">
+                    <span className="font-bold flex items-center gap-1.5 text-indigo-700 dark:text-indigo-300">
+                      💡 Recommended Technical Structure:
+                    </span>
+                    <ul className="list-disc pl-4 space-y-1 text-slate-700 dark:text-slate-300 font-medium">
+                      {currentBenchmark.keywords.map((kw: string, i: number) => (
+                        <li key={i}>{kw}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Answer Input Panel */}
+            <div className="flex flex-col gap-4">
+              <div className="border border-slate-200 dark:border-slate-800 rounded-2xl bg-white dark:bg-slate-950 p-5 shadow-xs flex flex-col gap-3 focus-within:border-indigo-500 focus-within:ring-2 focus-within:ring-indigo-100 transition-all relative">
+                
+                {/* Answer Box Header */}
+                <div className="flex items-center justify-between text-xs text-slate-400 font-medium">
+                  <span>Your answer</span>
+                  <span className="font-mono text-slate-400">
+                    {formatTimer(questionSeconds)}
+                  </span>
+                </div>
+
+                {/* Live Speech-to-Text Area */}
+                <textarea
+                  value={spokenTranscript}
+                  onChange={(e) => setSpokenTranscript(e.target.value)}
+                  placeholder="Speak your answer or type it here..."
+                  className="w-full min-h-[140px] text-slate-800 dark:text-slate-100 placeholder-slate-400 text-base font-normal resize-none focus:outline-none bg-transparent leading-relaxed"
+                  disabled={Boolean(lastEvalResult) || isProcessing}
+                />
+
+                {/* Bottom Toolbar inside Answer Box */}
+                <div className="flex items-center justify-between pt-3 border-t border-slate-100 dark:border-slate-800/80 flex-wrap gap-3">
+                  <div className="flex items-center gap-2">
+                    {!isRecording ? (
+                      <button
+                        onClick={handleStartRecording}
+                        disabled={Boolean(lastEvalResult) || isProcessing}
+                        className="bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-950 hover:bg-slate-800 dark:hover:bg-white px-5 py-2.5 rounded-xl text-xs font-bold flex items-center gap-2 transition-all cursor-pointer shadow-sm active:scale-95 disabled:opacity-50"
+                      >
+                        <span className="w-2 h-2 rounded-full bg-rose-500" />
+                        <span>• Start speaking</span>
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => handleFinishAnswer()}
+                        className="bg-rose-600 hover:bg-rose-700 text-white px-5 py-2.5 rounded-xl text-xs font-bold flex items-center gap-2 transition-all cursor-pointer shadow-md shadow-rose-200 animate-pulse"
+                      >
+                        <span className="w-2 h-2 rounded-full bg-white" />
+                        <span>• Recording...</span>
+                      </button>
+                    )}
+
+                    <button
+                      onClick={() => {
+                        if (isRecording) {
+                          if (speechRecognitionRef.current) speechRecognitionRef.current.stop();
+                          setIsRecording(false);
+                        }
+                      }}
+                      disabled={!isRecording}
+                      className="bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 px-4 py-2.5 rounded-xl text-xs font-semibold transition-all cursor-pointer disabled:opacity-40"
+                    >
+                      Stop
+                    </button>
+                  </div>
+
+                  <span className="text-[11px] text-slate-400 font-normal hidden sm:inline">
+                    Live transcription on mobile and desktop
+                  </span>
+                </div>
+
+              </div>
+
+              {/* Footer Action Row */}
+              <div className="flex items-center justify-between pt-2">
+                <button
+                  onClick={handleProceedToNextQuestion}
+                  disabled={isProcessing}
+                  className="text-xs font-medium text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 transition-colors cursor-pointer"
+                >
+                  Skip this question
+                </button>
+
+                <button
+                  onClick={() => handleFinishAnswer()}
+                  disabled={Boolean(lastEvalResult) || isProcessing}
+                  className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-7 py-3.5 rounded-2xl text-sm transition-all shadow-lg shadow-indigo-200 dark:shadow-none hover:shadow-indigo-300 flex items-center gap-2 cursor-pointer active:scale-98 disabled:opacity-50"
+                >
+                  {isProcessing ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <span>Evaluating answer...</span>
+                    </>
+                  ) : (
+                    <>
+                      <span>Submit answer</span>
+                      <ArrowRight className="w-4 h-4" />
+                    </>
+                  )}
+                </button>
+              </div>
+
+            </div>
+
+            {/* Post-Evaluation Feedback Card (Renders immediately after submitting) */}
+            {lastEvalResult && (
+              <div className="p-6 rounded-3xl bg-slate-900 text-white border border-slate-800 shadow-2xl flex flex-col gap-4 animate-fadeIn mt-4">
+                <div className="flex items-center justify-between pb-3 border-b border-slate-800">
+                  <div className="flex items-center gap-2">
+                    {lastMatchScore !== null && lastMatchScore >= 60 ? (
+                      <CheckCircle2 className="w-5 h-5 text-emerald-400" />
+                    ) : (
+                      <XCircle className="w-5 h-5 text-rose-400" />
+                    )}
+                    <span className={`font-extrabold text-sm ${lastMatchScore !== null && lastMatchScore >= 60 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                      {lastMatchScore !== null && lastMatchScore >= 60 
+                        ? `✅ PASSED (${lastMatchScore}% Concept Match ≥ 60%)` 
+                        : `❌ NEEDS IMPROVEMENT (${lastMatchScore ?? 0}% Match < 60%)`}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-slate-400 font-mono">EVAL SCORE</span>
+                    <span className={`text-lg font-black font-mono ${lastMatchScore !== null && lastMatchScore >= 60 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                      {lastEvalResult.overall_score}%
+                    </span>
+                  </div>
+                </div>
+
+                <p className="text-xs text-slate-300 leading-relaxed font-medium">
+                  {lastEvalResult.feedback}
+                </p>
+
+                <div className="p-3 rounded-xl bg-blue-950/40 border border-blue-500/30 flex flex-col gap-1 text-xs">
+                  <span className="font-bold text-blue-300">System Benchmark (Expected Technical Solution):</span>
+                  <span className="font-mono text-slate-200">"{currentBenchmark.ideal}"</span>
+                </div>
+
+                <button
+                  onClick={handleProceedToNextQuestion}
+                  disabled={isProceedingNext}
+                  className="w-full py-3.5 px-6 rounded-2xl font-black text-xs text-slate-950 bg-gradient-to-r from-amber-400 via-orange-400 to-amber-500 hover:from-amber-300 hover:to-orange-400 shadow-lg flex items-center justify-center gap-2 transition-all uppercase tracking-wider cursor-pointer"
+                >
+                  {isProceedingNext ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <span>Proceeding...</span>
+                    </>
+                  ) : (
+                    <>
+                      <span>
+                        {currentQIndex + 1 < maxQCount
+                          ? `Proceed to Question ${currentQIndex + 2} of ${maxQCount} ➔`
+                          : "View Final Stage Performance Summary 🏆"}
+                      </span>
+                      <ArrowRight className="w-4 h-4" />
+                    </>
+                  )}
+                </button>
+              </div>
+            )}
+
+          </div>
         </div>
 
       </div>

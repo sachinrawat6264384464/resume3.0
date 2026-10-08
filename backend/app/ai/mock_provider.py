@@ -147,8 +147,6 @@ class MockAIProvider(AIProvider):
         comm_metrics = analyze_communication_signals(transcript, duration_seconds)
 
         ref_ans = (reference_answer or "").strip()
-        if not ref_ans:
-            ref_ans = question_text
 
         if not transcript or len(transcript.split()) < 2:
             return QuestionEvaluationResult(
@@ -162,8 +160,8 @@ class MockAIProvider(AIProvider):
                 strengths=["Attempted to respond"],
                 weaknesses=["Answer was too brief or incomplete to assess technical proficiency."],
                 missing_concepts=expected_topics or ["Detailed explanation"],
-                feedback=f"The response was too brief. Expected Model Answer: '{ref_ans}'" if ref_ans else "The response was too brief.",
-                recommendations=[f"Reference Solution: {ref_ans}"] if ref_ans else ["Practice technical responses."],
+                feedback=f"❌ Response was too brief. Expected Model Answer: '{ref_ans}'" if ref_ans else "❌ Response was too brief.",
+                recommendations=[f"Expected Model Answer: {ref_ans}"] if ref_ans else ["Practice technical responses."],
                 communication_metrics=comm_metrics
             )
 
@@ -177,30 +175,54 @@ class MockAIProvider(AIProvider):
 
         cand_words = set(get_words(transcript))
         ref_words = get_words(ref_ans)
-        q_words = get_words(question_text or "")
-        stop_words = {"the", "and", "for", "that", "this", "with", "from", "your", "have", "been", "were", "what", "how", "you", "please", "walk", "through", "most", "significant"}
 
-        admin_key_words = list(set([w for w in ref_words + q_words if w not in stop_words]))
+        stop_words = {
+            "the", "and", "for", "that", "this", "with", "from", "your", "have", "been", "were", 
+            "what", "how", "you", "please", "walk", "through", "most", "significant", "explain", 
+            "describe", "give", "pass", "dont", "have", "anything", "stage", "technical", 
+            "assessment", "question", "answer", "round", "main", "karun", "bus", "kya"
+        }
+
+        # Key target words are extracted ONLY from reference_answer (ref_words) AND expected_topics! NOT question_text!
+        admin_ref_keywords = set([w for w in ref_words if w not in stop_words])
+        
+        # Add words from expected_topics to target concept keywords
+        topic_words = set()
+        for t in (expected_topics or []):
+            for w in get_words(t):
+                if w not in stop_words:
+                    topic_words.add(w)
+
+        admin_key_words = list(admin_ref_keywords.union(topic_words))
+
+        begging_phrases = [
+            "give me pass", "pass me", "dont know", "don't know", "dont have", "don't have",
+            "kya karun", "please pass", "no idea", "skip", "next question"
+        ]
+        is_begging = any(p in transcript_lower for p in begging_phrases)
 
         # Check if question is an introduction / self intro prompt
         is_intro = any(k in q_text_lower for k in ["introduce", "self introduction", "journey", "background", "about yourself"])
-        
         intro_keywords = {"sachin", "rawat", "name", "myself", "iam", "candidate", "student", "developer", "engineer", "cloud", "devops", "experience", "work", "role", "background", "journey", "achievement", "project"}
+        matched_intro_words = [w for w in cand_words if w in intro_keywords] if is_intro else []
 
         # Direct exact or substring match check with Admin Expected Answer
         is_exact = False
-        if ref_lower and (transcript_lower == ref_lower or transcript_lower in ref_lower or ref_lower in transcript_lower):
-            is_exact = True
+        if ref_lower and len(ref_lower) > 5:
+            if transcript_lower == ref_lower or (len(transcript_lower) > 15 and transcript_lower in ref_lower):
+                is_exact = True
 
         # Count whole word overlaps
         matched_admin_words = [w for w in admin_key_words if w in cand_words]
         
         # Build target topics from expected_topics
         target_list = list(expected_topics or [])
-        matched_topics = [t for t in target_list if any(w in cand_words for w in get_words(t))]
+        matched_topics = []
+        for t in target_list:
+            t_words = [w for w in get_words(t) if w not in stop_words]
+            if t_words and any(w in cand_words for w in t_words):
+                matched_topics.append(t)
         missing_topics = [t for t in target_list if t not in matched_topics]
-
-        matched_intro_words = [w for w in cand_words if w in intro_keywords] if is_intro else []
 
         match_percentage = 0
         if is_exact:
@@ -212,23 +234,32 @@ class MockAIProvider(AIProvider):
             ratio = len(matched_topics) / max(len(target_list), 1)
             match_percentage = round(ratio * 100)
 
-        if is_intro and (len(matched_intro_words) >= 1 or len(matched_admin_words) >= 1):
+        if is_intro and len(matched_intro_words) >= 1 and not is_begging:
             is_passed = True
             match_percentage = max(match_percentage, 80)
         else:
-            is_passed = is_exact or match_percentage >= 40 or len(matched_admin_words) >= 1 or (len(matched_topics) > 0 and len(cand_words) > 1)
+            if is_begging:
+                is_passed = False
+            else:
+                is_passed = is_exact or (match_percentage >= 50 and len(matched_admin_words) >= 2) or (len(matched_topics) >= 1 and len(matched_admin_words) >= 1)
+
             if is_passed:
-                match_percentage = max(match_percentage, 75)
+                match_percentage = max(match_percentage, 65)
+            else:
+                if is_begging or (len(matched_admin_words) == 0 and len(matched_topics) == 0):
+                    match_percentage = min(match_percentage, 15)
+                else:
+                    match_percentage = min(match_percentage, 45)
 
         if is_passed:
-            overall_score = round(min(98.0, max(82.0, 75.0 + (match_percentage * 0.23))), 1)
+            overall_score = round(min(98.0, max(70.0, 65.0 + (match_percentage * 0.30))), 1)
         else:
-            overall_score = round(max(25.0, match_percentage * 0.70), 1)
+            overall_score = round(max(15.0, match_percentage * 0.70), 1)
 
         coverage_ratio = (len(matched_topics) / max(len(target_list), 1)) if target_list else (match_percentage / 100.0)
 
         technical_score = overall_score
-        concept_coverage_score = round(min(100.0, max(30.0, coverage_ratio * 90.0 + 10.0)), 1)
+        concept_coverage_score = round(min(100.0, max(30.0, coverage_ratio * 90.0 + 10.0)), 1) if is_passed else round(coverage_ratio * 40.0, 1)
         reasoning_score = overall_score
         practical_score = overall_score
         communication_score = comm_metrics.structural_clarity_score
@@ -237,12 +268,16 @@ class MockAIProvider(AIProvider):
         strengths = []
         if matched_topics:
             strengths.append(f"Matched solution parameters: {', '.join(matched_topics[:3])}.")
+        elif is_passed:
+            strengths.append("Verbal response accurately matched reference answer.")
         else:
             strengths.append("Verbal response submitted.")
 
         weaknesses = []
         if missing_topics:
             weaknesses.append(f"Missing expected answer concepts: {', '.join(missing_topics[:3])}.")
+        elif not is_passed:
+            weaknesses.append("Response lacked key technical solution parameters.")
 
         recommendations = []
         if ref_ans:
@@ -251,7 +286,7 @@ class MockAIProvider(AIProvider):
         feedback = (
             f"✅ PASSED ({match_percentage}% Match ≥ 60%). Spoken answer accurately matched Expected Model Answer."
             if is_passed else
-            f"❌ NEEDS IMPROVEMENT ({match_percentage}% Match < 60%). Expected Model Answer: '{ref_ans}'"
+            f"❌ NEEDS IMPROVEMENT ({match_percentage}% Match < 60%). Expected Model Answer: '{ref_ans}'" if ref_ans else f"❌ NEEDS IMPROVEMENT ({match_percentage}% Match < 60%)."
         )
 
         return QuestionEvaluationResult(

@@ -52,3 +52,40 @@ async def test_5_pillar_scoring_rubric_weights():
 
     # Verify overall score range
     assert 0 <= result.overall_score <= 100
+
+@pytest.mark.asyncio
+async def test_begging_and_question_text_exclusion():
+    ai = MockAIProvider()
+    question_text = "STAGE 1 TECHNICAL ASSESSMENT"
+    expected = ["AWS", "Docker", "Kubernetes", "Linux", "CI/CD"]
+    reference = "Provide a structured technical answer detailing key cloud & DevOps concepts, tools, and real-world practices for: Stage 1 Technical Assessment"
+    
+    # Candidate transcript from user screenshot containing question title words + begging
+    bad_transcript = "Kya Karun main bus to I don't have anything technical assessment 1 give me pass"
+
+    result = await ai.evaluate_answer(
+        question_text=question_text,
+        expected_topics=expected,
+        reference_answer=reference,
+        candidate_transcript=bad_transcript,
+        duration_seconds=10.0
+    )
+
+    # Must fail with low score because candidate did not provide technical solution
+    assert result.overall_score < 40.0
+    assert "NEEDS IMPROVEMENT" in result.feedback
+    assert "PASSED" not in result.feedback
+
+    # Good technical transcript
+    good_transcript = "In AWS and Kubernetes, we use Docker containers deployed with GitHub Actions CI/CD pipelines on Linux."
+    good_result = await ai.evaluate_answer(
+        question_text=question_text,
+        expected_topics=expected,
+        reference_answer=reference,
+        candidate_transcript=good_transcript,
+        duration_seconds=12.0
+    )
+
+    assert good_result.overall_score >= 65.0
+    assert "PASSED" in good_result.feedback
+
