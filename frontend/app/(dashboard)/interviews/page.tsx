@@ -59,6 +59,14 @@ const ALL_30_STAGES = [
 const getInitialStages = () => {
   if (typeof window === "undefined") return ALL_30_STAGES;
   try {
+    const cached = sessionStorage.getItem("cached_interviews_stages");
+    if (cached) {
+      const parsedCache = JSON.parse(cached);
+      if (parsedCache?.data && Array.isArray(parsedCache.data) && parsedCache.data.length > 0) {
+        return parsedCache.data;
+      }
+    }
+
     const rawList = localStorage.getItem("completed_stages_list");
     const completedSet = new Set<number>();
     if (rawList) {
@@ -67,7 +75,12 @@ const getInitialStages = () => {
         parsed.forEach((id: number) => completedSet.add(id));
       }
     }
-    const hasLocalStage0 = Boolean(localStorage.getItem("stage0_profile_data") || localStorage.getItem("candidate_linkedin_url"));
+    const hasLocalStage0 = Boolean(
+      localStorage.getItem("stage0_profile_data") || 
+      localStorage.getItem("candidate_linkedin_url") ||
+      localStorage.getItem("completed_stages_list") ||
+      localStorage.getItem("active_interview_session")
+    );
     if (hasLocalStage0) {
       completedSet.add(0);
     }
@@ -102,10 +115,13 @@ export default function InterviewsPage() {
   const user = useAuthStore((state) => state.user);
   const updateUser = useAuthStore((state) => state.updateUser);
   const [mounted, setMounted] = useState(false);
-  const [stages, setStages] = useState<any[]>(ALL_30_STAGES);
+  const [stages, setStages] = useState<any[]>(() => getInitialStages());
   const [isLoadingStages, setIsLoadingStages] = useState<boolean>(false);
   const [activeTab, setActiveTab] = useState<string>("ALL");
-  const [selectedStage, setSelectedStage] = useState<any | null>(ALL_30_STAGES[0]);
+  const [selectedStage, setSelectedStage] = useState<any | null>(() => {
+    const initStgs = getInitialStages();
+    return getInitialSelectedStage(initStgs);
+  });
   const [isStarting, setIsStarting] = useState(false);
 
   const [isDemoGuest, setIsDemoGuest] = useState(false);
