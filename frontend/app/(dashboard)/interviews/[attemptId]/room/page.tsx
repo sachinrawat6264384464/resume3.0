@@ -406,7 +406,7 @@ export default function InterviewRoomPage() {
 
   // Sanitize reference answer: prioritize exact reference_answer directly from PostgreSQL DB
   const isDirtyRefAns = !rawIdealAnswer || rawIdealAnswer.toLowerCase().includes("sachin") || rawIdealAnswer.toLowerCase() === "test";
-  const dbIdealAnswer = (!isDirtyRefAns && rawIdealAnswer && rawIdealAnswer.trim().length > 5) ? rawIdealAnswer.trim() : defaultStageAns;
+  const dbIdealAnswer = (!isDirtyRefAns && rawIdealAnswer && rawIdealAnswer.trim().length > 0) ? rawIdealAnswer.trim() : defaultStageAns;
 
   const dbKeywords = (activeQItem?.expected_topics && activeQItem.expected_topics.length > 0)
     ? activeQItem.expected_topics
@@ -621,7 +621,13 @@ export default function InterviewRoomPage() {
     const matchedIntroWords = Array.from(candWords).filter((w) => introKeywords.has(w));
 
     // Direct exact or substring match check with Admin Expected Answer
-    const isExactMatch = Boolean(idealLower && idealLower.length > 5 && (lower === idealLower || (lower.length > 15 && idealLower.includes(lower))));
+    const isExactMatch = Boolean(
+      idealLower && lower && (
+        lower === idealLower ||
+        (lower.length >= 2 && idealLower.includes(lower)) ||
+        (idealLower.length >= 2 && lower.includes(idealLower))
+      )
+    );
 
     // Count whole word overlaps
     const matchedAdminWords = adminKeyWords.filter((w) => candWords.has(w));

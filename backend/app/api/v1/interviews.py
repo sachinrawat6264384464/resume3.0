@@ -56,7 +56,7 @@ async def get_candidate_stages(
     db: AsyncSession = Depends(get_db)
 ):
     now_ts = time.time()
-    if _STAGES_CACHE["data"] is not None and (now_ts - _STAGES_CACHE["timestamp"]) < 300:
+    if _STAGES_CACHE["data"] is not None and (now_ts - _STAGES_CACHE["timestamp"]) < 10:
         return StandardResponse(data=_STAGES_CACHE["data"])
 
     stmt = (
@@ -93,7 +93,9 @@ async def get_candidate_stages(
                     "question_text": q.question_text,
                     "question_type": q.question_type,
                     "difficulty": q.difficulty,
-                    "skill_category": q.skill_category
+                    "skill_category": q.skill_category,
+                    "reference_answer": q.reference_answer or "",
+                    "expected_topics": q.expected_topics or []
                 } for q in active_q
             ]
         })
