@@ -351,26 +351,48 @@ export default function InterviewRoomPage() {
   const rawQText = (!isGenericStageTitle(dbQuestionText) ? dbQuestionText : null) || defaultStageQ;
   const derivedKeywords = extractKeywordsFromText(rawQText);
 
+  // Dynamic fallback expected answers per stage and index (Admin Expected Answers)
+  const STAGE_FALLBACK_ANSWERS: Record<number, string[]> = {
+    1: [
+      "Detail your Cloud & DevOps background: present role, years of experience, core tech stack (AWS, Terraform, Docker, Kubernetes), key deployment workflows, and your most significant production achievement.",
+      "Demonstrate your background in CloudOps engineering: explain automated AWS infrastructure deployments using Terraform modules, state locking, and CI/CD pipelines.",
+      "Explain the architectural balance: high availability via Multi-AZ auto-scaling, cost governance via Spot/Reserved instances and right-sizing, and developer velocity via reusable IaC modules.",
+      "Detail IAM security best practices: service accounts, least privilege access, IRSA on EKS, role auto-rotation, and avoiding hardcoded credentials.",
+      "Detail multi-region HA configuration: EC2 auto-scaling groups across multi-AZs, S3 cross-region replication, RDS multi-AZ failover and read replicas.",
+      "Detail observability setup: Prometheus scraping metrics endpoints, Grafana dashboard visualization, alertmanager notifications, and latency SLAs.",
+      "Detail database triage workflow: connection pool limits, max_connections tuning, PgBouncer pooling, slow query analysis, and auto-scaling app pods.",
+      "Detail Kubernetes release strategies: zero-downtime rolling updates, maxSurge and maxUnavailable settings, canary deployments, and automated rollback triggers.",
+      "Detail FinOps practices: AWS Cost Explorer alerts, budget notifications, Spot instance usage, S3 lifecycle rules, and right-sizing idle resources.",
+      "Detail incident post-mortem: root cause analysis (RCA), timeline mapping, SLA restoration, blameless post-mortem document, and preventative action items."
+    ],
+    2: [
+      "Detailed walkthrough: Developer feature branch -> PR review with automated SAST/unit tests -> CI container build & scanning -> CD deployment via Helm/ArgoCD -> Telemetry monitoring.",
+      "Structured adoption: 1) Identify business problem & PoC evaluation. 2) Load & security benchmarking. 3) Staging pilot deployment. 4) Runbook creation and knowledge transfer."
+    ],
+    3: [
+      "1) Check CPU wait time (%wa) with top/vmstat. 2) Run 'iotop -o' to isolate active PID. 3) Use 'iostat -xz 1' to check disk device utilization. 4) Run 'lsof -p <PID>' or 'pidstat -d' to view open files.",
+      "SIGTERM (15) requests graceful shutdown, allowing the application to close connections and flush files. SIGKILL (9) is handled directly by the kernel and forcefully terminates the process immediately without cleanup."
+    ],
+    4: [
+      "1) systemctl status <service> for exit code. 2) journalctl -u <service> -xe --no-pager for logs. 3) Verify config syntax and permissions. 4) ss -tulpn | grep <port> for port conflicts. 5) systemctl daemon-reload & restart.",
+      "Inode exhaustion happens when millions of tiny files exhaust file table entries. Fix: 1) Verify inodes with df -i. 2) Locate directory with excessive files via find command. 3) Delete temp/session files. 4) Check for unlinked open deleted files holding inodes using lsof +L1."
+    ],
+    5: [
+      "VMs run full guest OS instances on hypervisors (strong isolation, heavy overhead, minutes startup). Containers share the host OS kernel using Linux namespaces & cgroups (lightweight MB footprint, sub-second startup, process isolation).",
+      "Declarative IaC (Terraform) specifies the desired target state; the engine calculates execution steps automatically. Imperative scripts (Bash/AWS CLI) specify step-by-step commands which lack built-in idempotency and state management."
+    ]
+  };
+
+  const defaultStageAns = (STAGE_FALLBACK_ANSWERS[currentStageNum] || STAGE_FALLBACK_ANSWERS[1])[currentQIndex]
+    || "Provide a structured response covering architectural principles, diagnostic commands, and recovery steps.";
+
   const rawIdealAnswer = activeStageQuestion?.reference_answer ||
     activeQuestionAttempt?.question?.reference_answer ||
     (activeQuestionAttempt as any)?.reference_answer || "";
 
-  const getNaturalBenchmarkAnswer = (qText: string) => {
-    const lower = (qText || "").toLowerCase();
-    if (lower.includes("introduce") || lower.includes("journey") || lower.includes("background") || lower.includes("achievement")) {
-      return "Detail your Cloud & DevOps background: present role, years of experience, core tech stack (AWS, Terraform, Docker, Kubernetes), key deployment workflows, and your most significant production achievement.";
-    }
-    if (lower.includes("troubleshoot") || lower.includes("crash") || lower.includes("linux") || lower.includes("memory")) {
-      return "Detail your diagnostic workflow: system triage commands (top/htop, free -m, journalctl, ps aux), identifying memory leaks / OOMKilled states, and steps for remediation.";
-    }
-    return `Explain key technical concepts, CLI tools, design principles, and real-world production practices for: ${qText}`;
-  };
-
   // Sanitize reference answer: prioritize exact reference_answer directly from PostgreSQL DB
   const isDirtyRefAns = !rawIdealAnswer || rawIdealAnswer.toLowerCase().includes("sachin") || rawIdealAnswer.toLowerCase() === "test";
-  const dbIdealAnswer = isDirtyRefAns
-    ? `Provide a structured technical answer detailing key Cloud & DevOps concepts, tools, and real-world practices for: ${rawQText}`
-    : rawIdealAnswer;
+  const dbIdealAnswer = (!isDirtyRefAns && rawIdealAnswer.trim().length > 5) ? rawIdealAnswer.trim() : defaultStageAns;
 
   const dbKeywords = (activeStageQuestion?.expected_topics && activeStageQuestion.expected_topics.length > 0)
     ? activeStageQuestion.expected_topics
@@ -378,8 +400,8 @@ export default function InterviewRoomPage() {
         ? activeQuestionAttempt.question.expected_topics
         : (activeQuestionAttempt as any)?.expected_topics);
 
-  // Extract reference words from Admin Expected Answer
-  const refAnswerWords = !isDirtyRefAns && dbIdealAnswer
+  // Extract reference words STRICTLY from Admin Expected Answer
+  const refAnswerWords = dbIdealAnswer
     ? dbIdealAnswer.split(/[\s/,.!?:;()"'\-]+/).filter((w: string) => w.length > 2)
     : [];
 
