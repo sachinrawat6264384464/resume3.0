@@ -262,35 +262,7 @@ export default function CandidatePerformancePage() {
           </p>
         </div>
 
-        {/* Dual Metric Score Cards */}
-        <div className="flex items-center gap-4 z-10 shrink-0">
-          
-          <div className="p-5 rounded-2xl bg-slate-900/90 border border-[#FF9900]/40 text-center min-w-[160px] shadow-xl flex flex-col items-center justify-center">
-            <span className="text-[10px] font-mono text-slate-400 font-bold uppercase tracking-wider block">
-              Readiness Velocity
-            </span>
-            <span className="text-3xl sm:text-4xl font-black text-[#FF9900] font-mono block my-1">
-              {readiness}%
-            </span>
-            <span className="text-[10.5px] text-amber-400 font-bold">
-              {perfData?.salary_band || "Ready for ₹18–25 LPA"}
-            </span>
-          </div>
 
-          <div className="p-5 rounded-2xl bg-slate-900/90 border border-blue-500/40 text-center min-w-[160px] shadow-xl flex flex-col items-center justify-center">
-            <span className="text-[10px] font-mono text-slate-400 font-bold uppercase tracking-wider block flex items-center justify-center gap-1">
-              <FileCheck className="w-3.5 h-3.5 text-blue-400" />
-              Resume ATS Score
-            </span>
-            <span className="text-3xl sm:text-4xl font-black text-blue-400 font-mono block my-1">
-              {atsScore}%
-            </span>
-            <span className="text-[10.5px] text-blue-300 font-bold">
-              {atsScore >= 80 ? "🎯 Target Match" : "⚡ Good Match"}
-            </span>
-          </div>
-
-        </div>
 
       </div>
 
