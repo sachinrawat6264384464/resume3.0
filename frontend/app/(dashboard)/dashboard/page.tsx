@@ -612,10 +612,6 @@ Learn Today. Implement Today. Build Your Career for a Lifetime.
             <Flame className="w-4 h-4 text-orange-500 fill-orange-500" />
             <span>{userStreak} Day Streak</span>
           </div>
-          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-purple-50 dark:bg-purple-950/50 border border-purple-500/30 text-xs font-bold text-purple-600 dark:text-purple-400">
-            <Trophy className="w-4 h-4 text-purple-500" />
-            <span>{userXp.toLocaleString()} XP</span>
-          </div>
         </div>
       </div>
 
@@ -643,12 +639,11 @@ Learn Today. Implement Today. Build Your Career for a Lifetime.
               </span>
 
               <span className="px-3.5 py-1 rounded-full text-[11px] font-mono font-black bg-amber-50 dark:bg-white/10 text-amber-700 dark:text-amber-300 border border-amber-400/40">
-                📅 {activeLiveSession.session_date}
+                {activeLiveSession.session_date}
               </span>
             </div>
 
             <div className="flex items-center gap-2 px-3.5 py-1 rounded-full bg-blue-50 dark:bg-blue-500/15 text-blue-700 dark:text-blue-300 border border-blue-400/30 text-[11px] font-black">
-              <Laptop className="w-3.5 h-3.5 text-blue-500" />
               <span>Host: {activeLiveSession.host_name || "Vikas Sir & Sachin Rawat"}</span>
             </div>
           </div>
@@ -656,7 +651,7 @@ Learn Today. Implement Today. Build Your Career for a Lifetime.
           {/* Main Title & Subtitle */}
           <div className="flex flex-col gap-2 relative z-10">
             <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black tracking-tight text-slate-900 dark:text-white uppercase leading-snug">
-              {activeLiveSession.title || "👑 40 LPA DevOps Architecture & Outage Masterclass"}
+              {activeLiveSession.title ? activeLiveSession.title.replace("👑 ", "") : "40 LPA DevOps Architecture & Outage Masterclass"}
             </h2>
             <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 font-semibold leading-relaxed max-w-3xl">
               {activeLiveSession.description || "Live Q&A, mock interview feedback & ATS resume review session with Vikas Sir and Sachin Rawat."}
@@ -669,11 +664,9 @@ Learn Today. Implement Today. Build Your Career for a Lifetime.
             {/* Scheduled Date & Time Block (6 cols) */}
             <div className="lg:col-span-6 flex flex-col justify-center gap-1.5 p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700">
               <span className="text-[11px] font-black text-amber-600 dark:text-amber-400 uppercase tracking-widest flex items-center gap-1.5">
-                <Calendar className="w-4 h-4 text-amber-500" />
                 LIVE MASTERCLASS SCHEDULED DATE & TIME:
               </span>
               <span className="text-lg sm:text-xl lg:text-2xl font-black font-mono text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
-                <span>🗓️</span>
                 <span>{activeLiveSession.session_date}</span>
               </span>
             </div>
@@ -691,7 +684,7 @@ Learn Today. Implement Today. Build Your Career for a Lifetime.
                       method: "POST",
                       body: JSON.stringify({
                         live_session_id: activeLiveSession?.id || "live-default-001",
-                        session_title: activeLiveSession?.title || "👑 40 LPA DevOps Architecture Masterclass",
+                        session_title: activeLiveSession?.title || "40 LPA DevOps Architecture Masterclass",
                         candidate_name: candidateName,
                         candidate_email: (user as any)?.email || "candidate@cloudops.internal",
                         platform_clicked: "ZOOM"
@@ -717,7 +710,7 @@ Learn Today. Implement Today. Build Your Career for a Lifetime.
                       method: "POST",
                       body: JSON.stringify({
                         live_session_id: activeLiveSession?.id || "live-default-001",
-                        session_title: activeLiveSession?.title || "👑 40 LPA DevOps Architecture Masterclass",
+                        session_title: activeLiveSession?.title || "40 LPA DevOps Architecture Masterclass",
                         candidate_name: candidateName,
                         candidate_email: (user as any)?.email || "candidate@cloudops.internal",
                         platform_clicked: "WHATSAPP"
@@ -740,7 +733,6 @@ Learn Today. Implement Today. Build Your Career for a Lifetime.
           {/* Footer Bar */}
           <div className="flex items-center justify-between gap-4 pt-3 border-t border-slate-200 dark:border-slate-800 text-[10.5px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest relative z-10 flex-wrap">
             <span className="flex items-center gap-1.5 text-slate-700 dark:text-slate-300">
-              <Sparkles className="w-3.5 h-3.5 text-amber-500" />
               PRACTICE • EXPERT FEEDBACK • GET PLACED
             </span>
             <span className="text-[#FF6B00] font-mono font-black">
