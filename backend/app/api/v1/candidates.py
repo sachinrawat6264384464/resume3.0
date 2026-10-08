@@ -271,7 +271,12 @@ async def get_dashboard_metrics(
 
     # Mark Stage 0 completed if candidate has completed baseline profile / XP / stage_0_completed flag
     res_data_json = cand.resume_data_json or {}
-    if (cand.xp and cand.xp > 0) or res_data_json.get("stage_0_completed") or cand.user_id:
+    is_stg0_done = bool(
+        res_data_json.get("stage_0_completed") or
+        res_data_json.get("linkedin_url") or
+        (cand.xp and cand.xp > 0)
+    )
+    if is_stg0_done:
         passed_stage_ids.add(0)
         highest_score_map[0] = 100.0
 
@@ -298,7 +303,7 @@ async def get_dashboard_metrics(
                 "status": "completed",
                 "attempt_id": att.interview_attempt_id if att else None
             })
-        elif s_num == 0 or s_num == 1 or (s_num - 1) in passed_stage_ids:
+        elif s_num == 0 or (s_num == 1 and 0 in passed_stage_ids) or ((s_num - 1) in passed_stage_ids):
             score_str = f"{int(att.score)}%" if (att and att.score and att.score > 0) else "Active"
             stages_progress.append({
                 "id": s_num,

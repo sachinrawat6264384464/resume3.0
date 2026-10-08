@@ -13,10 +13,10 @@ import { useAuthStore } from "@/lib/store";
 
 const ALL_30_STAGES = [
   // STAGE 0 — PROFILE SETUP & VERIFICATION FORM
-  { id: 0, level: "Level 1", levelName: "Foundation", title: "STAGE 0: SETUP YOUR INTERVIEW PROFILE", xp: "+100 XP", duration: "5 Mins", questions: 1, questions_count: 1, icon: "📋", diff: "Easy", desc: "Complete candidate profile, phone, target role & LinkedIn verification form to unlock all interview stages.", status: "completed", score: "100%" },
+  { id: 0, level: "Level 1", levelName: "Foundation", title: "STAGE 0: SETUP YOUR INTERVIEW PROFILE", xp: "+100 XP", duration: "5 Mins", questions: 1, questions_count: 1, icon: "📋", diff: "Easy", desc: "Complete candidate profile, phone, target role & LinkedIn verification form to unlock all interview stages.", status: "in_progress", score: "Active" },
 
   // LEVEL 1 — FOUNDATION (TRACK 1)
-  { id: 1, level: "Level 1", levelName: "Foundation", title: "STAGE 1: SELF INTRODUCTION", xp: "+200 XP", duration: "12 Mins", questions: 2, questions_count: 2, icon: "🏆", diff: "Easy", desc: "Master your 60-second pitch, STAR background intro, and career story.", status: "in_progress", score: "Active" },
+  { id: 1, level: "Level 1", levelName: "Foundation", title: "STAGE 1: SELF INTRODUCTION", xp: "+200 XP", duration: "12 Mins", questions: 2, questions_count: 2, icon: "🏆", diff: "Easy", desc: "Master your 60-second pitch, STAR background intro, and career story.", status: "locked", score: "--" },
   { id: 2, level: "Level 1", levelName: "Foundation", title: "STAGE 2: TECHNICAL INTRODUCTION", xp: "+200 XP", duration: "15 Mins", questions: 2, questions_count: 2, icon: "🏆", diff: "Easy", desc: "Explain your daily technical workflow, tool stack, and architecture experience.", status: "locked", score: "--" },
   { id: 3, level: "Level 1", levelName: "Foundation", title: "☁️ CHALLENGE 03 — CLOUD INFRASTRUCTURE ENGINEER", xp: "+200 XP", duration: "18 Mins", questions: 2, questions_count: 2, icon: "☁️", diff: "Medium", desc: "Process signals, memory triage, top/htop/iotop, and bash scripting.", status: "locked", score: "--" },
   { id: 4, level: "Level 1", levelName: "Foundation", title: "STAGE 4: LINUX FOR DEVOPS ENGINEERS", xp: "+200 XP", duration: "20 Mins", questions: 2, questions_count: 2, icon: "🐧", diff: "Medium", desc: "Systemd service units, kernel tuning, disk I/O bottlenecks, and cron automation.", status: "locked", score: "--" },
@@ -67,10 +67,17 @@ const getInitialStages = () => {
         parsed.forEach((id: number) => completedSet.add(id));
       }
     }
-    completedSet.add(0);
+    const hasLocalStage0 = Boolean(localStorage.getItem("stage0_profile_data") || localStorage.getItem("candidate_linkedin_url"));
+    if (hasLocalStage0) {
+      completedSet.add(0);
+    }
 
     return ALL_30_STAGES.map((stg) => {
-      if (stg.id === 0) return { ...stg, status: "completed", score: "100%" };
+      if (stg.id === 0) {
+        return completedSet.has(0)
+          ? { ...stg, status: "completed", score: "100%" }
+          : { ...stg, status: "in_progress", score: "Active" };
+      }
       const isCompleted = completedSet.has(stg.id);
       if (isCompleted) {
         return { ...stg, status: "completed", score: "95%" };
