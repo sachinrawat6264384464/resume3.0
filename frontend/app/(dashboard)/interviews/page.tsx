@@ -1129,10 +1129,9 @@ export default function InterviewsPage() {
                 {/* Stage Metrics Grid / Stage 0 Info Banner */}
                 {selectedStage.id === 0 ? (
                   <div className="p-4 rounded-2xl bg-gradient-to-r from-amber-500/10 via-orange-500/10 to-amber-500/10 border-2 border-[#FF6B00]/40 flex items-start gap-3 text-xs my-2">
-                    <Trophy className="w-5 h-5 text-[#FF6B00] shrink-0 mt-0.5" />
                     <div className="flex flex-col gap-1">
                       <span className="font-black text-slate-900 dark:text-white uppercase tracking-wider">
-                        Candidate Profile Baseline Setup (+200 XP)
+                        Candidate Profile Baseline Setup
                       </span>
                       <span className="text-slate-600 dark:text-slate-300 font-medium leading-relaxed">
                         Configure your target role, salary band, designation, and LinkedIn profile link. No video/audio room required for Stage 0. Completing this unlocks <strong>Stage 1: Self Introduction</strong>!
@@ -1187,15 +1186,9 @@ export default function InterviewsPage() {
                 >
                   {selectedStage.id === 0 ? (
                     selectedStage.status === "completed" ? (
-                      <>
-                        <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-                        <span>✓ Stage 0 Profile Completed (+200 XP)</span>
-                      </>
+                      <span>✓ Stage 0 Profile Completed</span>
                     ) : (
-                      <>
-                        <Trophy className="w-4 h-4 text-amber-300" />
-                        <span>Setup Profile & Complete Stage 0 🚀</span>
-                      </>
+                      <span>Setup Profile & Complete Stage 0</span>
                     )
                   ) : selectedStage.status === "pro_locked" ? (
                     <>
@@ -1339,15 +1332,11 @@ export default function InterviewsPage() {
             {/* Modal Header */}
             <div className="flex items-start justify-between gap-4 relative z-10">
               <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-2xl bg-[#FF6B00]/20 text-[#FF6B00] border border-[#FF6B00]/40 flex items-center justify-center font-black text-xl shrink-0">
-                  <Trophy className="w-6 h-6 text-[#FF6B00]" />
-                </div>
                 <div className="flex flex-col">
                   <div className="flex items-center gap-2">
                     <span className="px-2.5 py-0.5 rounded-full text-[9px] font-mono font-black bg-[#FF6B00] text-white uppercase tracking-widest">
                       STAGE 0 • FOUNDATION
                     </span>
-                    <span className="text-[10px] text-amber-500 font-mono font-black">+200 XP REWARD</span>
                   </div>
                   <h3 className="text-lg sm:text-xl font-black text-slate-900 dark:text-white tracking-tight uppercase mt-0.5">
                     Setup Candidate Profile & Target Role
@@ -1364,7 +1353,7 @@ export default function InterviewsPage() {
             </div>
 
             <p className="text-xs text-slate-600 dark:text-slate-400 z-10 font-medium">
-              Complete your profile details below to earn <strong>+200 XP</strong> and unlock <strong>Stage 1: Self Introduction</strong>! Stage 0 is profile configuration only (no video/room required).
+              Complete your profile details below to unlock <strong>Stage 1: Self Introduction</strong>! Stage 0 is profile configuration only (no video/room required).
             </p>
 
             <form onSubmit={handleSaveStage0Profile} className="flex flex-col gap-4 z-10 max-h-[70vh] overflow-y-auto pr-1">
@@ -1515,10 +1504,7 @@ export default function InterviewsPage() {
                       <span>Saving Profile...</span>
                     </>
                   ) : (
-                    <>
-                      <CheckCircle2 className="w-4 h-4" />
-                      <span>Save Profile & Complete Stage 0 (+200 XP) 🚀</span>
-                    </>
+                    <span>Save Profile & Complete Stage 0</span>
                   )}
                 </button>
               </div>
