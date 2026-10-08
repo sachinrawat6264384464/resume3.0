@@ -663,34 +663,19 @@ Learn Today. Implement Today. Build Your Career for a Lifetime.
             </p>
           </div>
 
-          {/* COUNTDOWN CLOCK & DIRECT ACTION BUTTONS GRID */}
+          {/* LIVE SESSION SCHEDULE DATE & DIRECT ACTION BUTTONS GRID */}
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center relative z-10 pt-2 border-t border-white/10">
             
-            {/* Countdown Timer Block (6 cols) */}
-            <div className="lg:col-span-6 flex flex-col gap-2">
+            {/* Scheduled Date & Time Block (6 cols) */}
+            <div className="lg:col-span-6 flex flex-col justify-center gap-1.5 p-4 rounded-2xl bg-white/10 border border-white/15 backdrop-blur-md">
               <span className="text-[11px] font-black text-amber-400 uppercase tracking-widest flex items-center gap-1.5">
-                <Clock className="w-4 h-4 text-amber-400 animate-spin" />
-                EVENT STARTS IN (LIVE COUNTDOWN):
+                <Calendar className="w-4 h-4 text-amber-400" />
+                LIVE MASTERCLASS SCHEDULED DATE & TIME:
               </span>
-              
-              <div className="grid grid-cols-4 gap-2.5 text-center">
-                <div className="flex flex-col items-center justify-center p-3 rounded-2xl bg-white/10 border border-white/15 backdrop-blur-md">
-                  <span className="text-2xl sm:text-3xl font-black font-mono text-white tracking-tight">{countdown.days}</span>
-                  <span className="text-[9px] font-black text-slate-400 uppercase tracking-wider">DAYS</span>
-                </div>
-                <div className="flex flex-col items-center justify-center p-3 rounded-2xl bg-white/10 border border-white/15 backdrop-blur-md">
-                  <span className="text-2xl sm:text-3xl font-black font-mono text-white tracking-tight">{countdown.hours}</span>
-                  <span className="text-[9px] font-black text-slate-400 uppercase tracking-wider">HOURS</span>
-                </div>
-                <div className="flex flex-col items-center justify-center p-3 rounded-2xl bg-white/10 border border-white/15 backdrop-blur-md">
-                  <span className="text-2xl sm:text-3xl font-black font-mono text-amber-300 tracking-tight">{countdown.minutes}</span>
-                  <span className="text-[9px] font-black text-slate-400 uppercase tracking-wider">MINS</span>
-                </div>
-                <div className="flex flex-col items-center justify-center p-3 rounded-2xl bg-[#FF6B00]/25 border border-[#FF6B00]/50 backdrop-blur-md">
-                  <span className="text-2xl sm:text-3xl font-black font-mono text-[#FF6B00] tracking-tight">{countdown.seconds}</span>
-                  <span className="text-[9px] font-black text-orange-300 uppercase tracking-wider">SECS</span>
-                </div>
-              </div>
+              <span className="text-lg sm:text-xl lg:text-2xl font-black font-mono text-white tracking-tight flex items-center gap-2">
+                <span>🗓️</span>
+                <span>{activeLiveSession.session_date}</span>
+              </span>
             </div>
 
             {/* Direct Action Buttons Block (6 cols) */}
@@ -848,7 +833,7 @@ Learn Today. Implement Today. Build Your Career for a Lifetime.
       {/* GROUP-WISE STAGE MANAGEMENT (REQUIREMENT 8 INTEGRATION) */}
       <div className="bg-white dark:bg-slate-900 rounded-[28px] border border-slate-200 dark:border-slate-800 p-6 shadow-sm flex flex-col gap-5 relative z-10">
         
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 dark:border-slate-800 pb-4">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 border-b border-slate-100 dark:border-slate-800 pb-4">
           <div>
             <h3 className="text-lg font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-2 uppercase">
               <Trophy className="w-5 h-5 text-[#FF9900]" />
@@ -860,7 +845,7 @@ Learn Today. Implement Today. Build Your Career for a Lifetime.
           </div>
 
           {/* Group Track Selector Tabs */}
-          <div className="flex items-center gap-1.5 overflow-x-auto pb-1">
+          <div className="flex items-center gap-2 flex-wrap max-w-full overflow-x-auto pb-1 shrink-0">
             {[
               { id: "ALL", label: "All Tracks" },
               { id: "TRACK_1", label: "Track 1" },
@@ -872,9 +857,9 @@ Learn Today. Implement Today. Build Your Career for a Lifetime.
               <button
                 key={tab.id}
                 onClick={() => setSelectedGroupTab(tab.id)}
-                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap shrink-0 ${
                   selectedGroupTab === tab.id
-                    ? "bg-[#FF6B00] text-white font-black shadow-sm"
+                    ? "bg-[#FF6B00] text-white font-black shadow-sm scale-105"
                     : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
                 }`}
               >
