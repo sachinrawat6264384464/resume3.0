@@ -179,21 +179,9 @@ export default function AdminLiveSessionsPage() {
     if (sessions.length === 0) setLoading(true);
     try {
       const res = await apiFetch("/live-sessions/admin/list");
-      let processed = [];
-      if (res?.data && Array.isArray(res.data) && res.data.length > 0) {
+      let processed: any[] = [];
+      if (res?.data && Array.isArray(res.data)) {
         processed = processAndSortSessions(res.data);
-      } else {
-        processed = processAndSortSessions([{
-          id: "live-default-001",
-          title: "👑 40 LPA DevOps Architecture & Outage Troubleshooting Masterclass",
-          description: "Live Q&A, mock interview feedback & ATS resume review session with Vikas Sir.",
-          session_date: "Tomorrow • 8:15 PM IST",
-          meeting_url: "https://meet.google.com/xyz-cloudops-live",
-          whatsapp_group_url: "https://chat.whatsapp.com/AIInterviewCommunity",
-          is_active: true,
-          status: "UPCOMING",
-          host_name: "Vikas Sir"
-        }]);
       }
       setSessions(processed);
       if (typeof window !== "undefined") {
@@ -202,12 +190,11 @@ export default function AdminLiveSessionsPage() {
         } catch {}
       }
     } catch (e) {
-      console.warn("Failed to fetch live sessions from API, using default state:", e);
+      console.warn("Failed to fetch live sessions from API:", e);
     } finally {
       setLoading(false);
     }
   };
-
 
   const fetchClickLogs = async () => {
     setLoadingClicks(true);
@@ -280,8 +267,8 @@ export default function AdminLiveSessionsPage() {
     const nextActive = !isCurrentlyLive;
 
     // Single Active Live Session Logic: Revert all other sessions to UPCOMING if going live
-    setSessions((prev) =>
-      prev.map((s) => {
+    setSessions((prev) => {
+      const list = prev.map((s) => {
         if (s.id === targetSession.id) {
           return { ...s, status: nextStatus, is_active: nextActive };
         }
@@ -289,8 +276,14 @@ export default function AdminLiveSessionsPage() {
           return { ...s, status: "UPCOMING", is_active: false };
         }
         return s;
-      })
-    );
+      });
+      if (typeof window !== "undefined") {
+        try {
+          sessionStorage.setItem("admin_cache_live_sessions", JSON.stringify(list));
+        } catch {}
+      }
+      return list;
+    });
 
     const updatedObj = {
       ...targetSession,
@@ -362,6 +355,11 @@ export default function AdminLiveSessionsPage() {
           return item;
         });
       }
+      if (typeof window !== "undefined") {
+        try {
+          sessionStorage.setItem("admin_cache_live_sessions", JSON.stringify(list));
+        } catch {}
+      }
       return list;
     });
 
@@ -381,12 +379,23 @@ export default function AdminLiveSessionsPage() {
   const confirmDeleteSession = async () => {
     if (!deletingSession) return;
     setIsDeleting(true);
+    const targetId = deletingSession.id;
     try {
-      await apiFetch(`/live-sessions/admin/${deletingSession.id}`, { method: "DELETE" });
+      await apiFetch(`/live-sessions/admin/${targetId}`, { method: "DELETE" });
     } catch (err: any) {
       console.warn("Delete API warning:", err);
     }
-    setSessions((prev) => prev.filter((item) => item.id !== deletingSession.id));
+
+    setSessions((prev) => {
+      const updated = prev.filter((item) => item.id !== targetId);
+      if (typeof window !== "undefined") {
+        try {
+          sessionStorage.setItem("admin_cache_live_sessions", JSON.stringify(updated));
+        } catch {}
+      }
+      return updated;
+    });
+
     if (typeof window !== "undefined") {
       window.dispatchEvent(new Event("liveSessionUpdated"));
       localStorage.setItem("latest_live_session_updated", String(Date.now()));
