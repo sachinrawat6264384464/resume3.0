@@ -245,7 +245,9 @@ export default function InterviewsPage() {
       const savedLinkedin = typeof window !== "undefined" ? localStorage.getItem("candidate_linkedin_url") : "";
       const candLinkedin = savedLinkedin || resMetrics?.data?.candidate?.resume_data_json?.linkedin_url || "";
       const savedName = resMetrics?.data?.candidate?.full_name || user?.full_name || "";
-      const savedEmail = user?.email || resMetrics?.data?.candidate?.user?.email || "";
+      const rawSavedEmail = user?.email || resMetrics?.data?.candidate?.user?.email || resMetrics?.data?.candidate?.email || "";
+      const isInternalDummyEmail = !rawSavedEmail || rawSavedEmail.endsWith("@cloudops.internal") || rawSavedEmail.includes(".internal") || rawSavedEmail.includes("example.com");
+      const savedEmail = isInternalDummyEmail ? "" : rawSavedEmail;
       const savedPhone = user?.phone_number || resMetrics?.data?.candidate?.phone || "";
       const savedRole = resMetrics?.data?.candidate?.target_role || "Senior DevOps Engineer";
       const savedDesig = resMetrics?.data?.candidate?.resume_data_json?.designation || "DevOps Specialist";
@@ -255,17 +257,16 @@ export default function InterviewsPage() {
       const savedBand = resMetrics?.data?.candidate?.target_salary_band || "₹18–40 LPA";
 
       setStage0Form((prev) => ({
-        ...prev,
-        fullName: savedName || prev.fullName,
-        email: savedEmail || prev.email,
-        phone: savedPhone || prev.phone,
-        targetRole: savedRole || prev.targetRole,
-        designation: savedDesig || prev.designation,
-        highestQualification: savedQual || prev.highestQualification,
-        yearsOfExperience: savedYears || prev.yearsOfExperience,
-        linkedinUrl: candLinkedin || prev.linkedinUrl,
-        experienceLevel: savedExp || prev.experienceLevel,
-        targetSalaryBand: savedBand || prev.targetSalaryBand
+        fullName: prev.fullName !== "" ? prev.fullName : savedName,
+        email: prev.email !== "" ? prev.email : savedEmail,
+        phone: prev.phone !== "" ? prev.phone : savedPhone,
+        targetRole: prev.targetRole !== "" ? prev.targetRole : savedRole,
+        designation: prev.designation !== "" ? prev.designation : savedDesig,
+        highestQualification: prev.highestQualification !== "" ? prev.highestQualification : savedQual,
+        yearsOfExperience: prev.yearsOfExperience !== "" ? prev.yearsOfExperience : savedYears,
+        linkedinUrl: prev.linkedinUrl !== "" ? prev.linkedinUrl : candLinkedin,
+        experienceLevel: prev.experienceLevel !== "" ? prev.experienceLevel : savedExp,
+        targetSalaryBand: prev.targetSalaryBand !== "" ? prev.targetSalaryBand : savedBand
       }));
 
       const merged = ALL_30_STAGES.map((stg) => {
