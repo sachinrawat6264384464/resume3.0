@@ -95,7 +95,7 @@ async def get_candidate_stages(
             ]
         })
     _STAGES_CACHE["data"] = data
-    _STAGES_CACHE["timestamp"] = now
+    _STAGES_CACHE["timestamp"] = time.time()
     return StandardResponse(data=data)
 
 @router.put("/stages/{stage_id}", response_model=StandardResponse[dict])
