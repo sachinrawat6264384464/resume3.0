@@ -151,12 +151,7 @@ export default function AdminLeaderboardPage() {
             const init = nameStr.split(" ").map((n: string) => n[0]).join("").toUpperCase().slice(0, 2);
             
             const rawBadges = item.badges || item.badges_json || [];
-            let claimed = parseCandidateBadges(rawBadges);
-
-            if (claimed.length === 0 && (item.xp || 0) > 0) {
-              const count = Math.min(5, Math.floor((item.xp || 1000) / 300) + 1);
-              claimed = MODULE_BADGES.slice(0, count);
-            }
+            const claimed = parseCandidateBadges(rawBadges);
 
             const visibleBadges = claimed.slice(0, 3);
             const extraCount = Math.max(0, claimed.length - 3);
@@ -281,57 +276,7 @@ export default function AdminLeaderboardPage() {
         </div>
       </div>
 
-      {/* TOP COMMUNITY HEADER METRICS CARD */}
-      <div className="grid grid-cols-1 md:grid-cols-12 gap-6 bg-white dark:bg-slate-900/90 p-6 sm:p-8 rounded-[32px] border-2 border-slate-200 dark:border-slate-800 shadow-xl">
-        
-        {/* Left Bonus Badges Pill */}
-        <div className="md:col-span-6 flex flex-col justify-between gap-4 border-b md:border-b-0 md:border-r border-slate-200 dark:border-slate-800 pb-6 md:pb-0 md:pr-8">
-          <div className="flex flex-col gap-1">
-            <span className="text-xs font-mono font-black text-[#FF6B00] uppercase tracking-widest flex items-center gap-1.5">
-              <Trophy className="w-4 h-4 text-[#FF6B00]" />
-              ADMIN REWARDS & AUDIT OVERVIEW
-            </span>
-            <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white uppercase tracking-tight">
-              CloudOps & DevOps Cohort Audit
-            </h2>
-          </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="p-3.5 rounded-2xl bg-amber-50 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-800/60 flex items-center justify-between">
-              <span className="text-xs font-bold text-slate-700 dark:text-slate-300 font-mono">LinkedIn Share Bonus</span>
-              <span className="text-xs font-black text-[#FF6B00] bg-[#FF6B00]/15 px-2.5 py-1 rounded-full font-mono">+50 pts</span>
-            </div>
-            <div className="p-3.5 rounded-2xl bg-amber-50 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-800/60 flex items-center justify-between">
-              <span className="text-xs font-bold text-slate-700 dark:text-slate-300 font-mono">Quality Bonus</span>
-              <span className="text-xs font-black text-[#FF6B00] bg-[#FF6B00]/15 px-2.5 py-1 rounded-full font-mono">Up to +45 pts</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Right Community Stats */}
-        <div className="md:col-span-6 grid grid-cols-2 gap-4 items-center">
-          
-          <div className="p-6 rounded-3xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/80 flex flex-col gap-1 text-center justify-center">
-            <span className="text-3xl sm:text-4xl font-black text-slate-900 dark:text-white font-mono tracking-tight">
-              {members.reduce((sum, m) => sum + (m.pts || 0), 0).toLocaleString()}
-            </span>
-            <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
-              Total Cohort Points
-            </span>
-          </div>
-
-          <div className="p-6 rounded-3xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/80 flex flex-col gap-1 text-center justify-center">
-            <span className="text-3xl sm:text-4xl font-black text-slate-900 dark:text-white font-mono tracking-tight">
-              {members.filter(m => (m.badgeCountTotal || 0) > 0 || (m.allClaimedBadges || []).length > 0).length || members.length}
-            </span>
-            <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
-              Certified Module Experts
-            </span>
-          </div>
-
-        </div>
-
-      </div>
 
       {/* FILTER & TABS CONTROLS BAR */}
       <div className="flex flex-col md:flex-row items-center justify-between gap-4 bg-white dark:bg-slate-900 p-4 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm">
@@ -418,22 +363,20 @@ export default function AdminLeaderboardPage() {
                 <th className="py-4 px-3 bg-slate-50/95 dark:bg-slate-900/95 min-w-[190px]">CANDIDATE NAME & ROLE</th>
                 <th className="py-4 px-3 text-center bg-slate-50/95 dark:bg-slate-900/95">BATCH</th>
                 <th className="py-4 px-4 text-center bg-slate-50/95 dark:bg-slate-900/95 min-w-[240px]">CURRICULUM BADGES</th>
-                <th className="py-4 px-3 text-center bg-slate-50/95 dark:bg-slate-900/95">TOTAL PTS / XP</th>
-                <th className="py-4 px-3 text-center bg-slate-50/95 dark:bg-slate-900/95">READINESS SCORE</th>
               </tr>
             </thead>
 
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60 font-bold">
               {isLoading ? (
                 <tr>
-                  <td colSpan={6} className="py-12 text-center text-slate-400">
+                  <td colSpan={4} className="py-12 text-center text-slate-400">
                     <Loader2 className="w-6 h-6 animate-spin mx-auto text-[#FF6B00] mb-2" />
                     <span>Loading real database leaderboard entries...</span>
                   </td>
                 </tr>
               ) : filteredMembers.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="py-12 text-center text-slate-400 italic">
+                  <td colSpan={4} className="py-12 text-center text-slate-400 italic">
                     No leaderboard candidates found matching your search.
                   </td>
                 </tr>
@@ -511,31 +454,6 @@ export default function AdminLeaderboardPage() {
                             +{m.extraBadgesCount}
                           </div>
                         )}
-                      </div>
-                    </td>
-
-                    {/* Total Points / XP */}
-                    <td className="py-4 px-3 text-center whitespace-nowrap">
-                      <div className="flex flex-col items-center gap-0.5">
-                        <span className="text-xs sm:text-sm font-black font-mono text-slate-900 dark:text-white">
-                          {m.pts.toLocaleString()} XP
-                        </span>
-                        <span className="text-[10px] text-amber-500 font-mono flex items-center gap-0.5 font-bold">
-                          <Flame className="w-3 h-3 fill-amber-500" />
-                          {m.streak} Days Streak
-                        </span>
-                      </div>
-                    </td>
-
-                    {/* Readiness Score */}
-                    <td className="py-4 px-3 text-center whitespace-nowrap">
-                      <div className="flex flex-col items-center gap-0.5">
-                        <span className="text-xs sm:text-sm font-black text-[#FF6B00] font-mono">
-                          {m.readinessScore}%
-                        </span>
-                        <span className="text-[10px] text-slate-600 dark:text-slate-300 font-bold bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-md border border-slate-200 dark:border-slate-700/80 whitespace-nowrap">
-                          {m.salaryBand}
-                        </span>
                       </div>
                     </td>
 

@@ -295,21 +295,7 @@ export default function LoginPage() {
       setAuth(res.user, res.access_token);
       router.push(destinationPath);
     } catch (err: any) {
-      if (cleanCode === "123456" || cleanCode === "622601" || cleanCode.length === 6) {
-        setAuth({
-          id: `cand-${Date.now()}`,
-          organization_id: "org-001",
-          email: cleanEmail,
-          phone_number: fullFormattedPhone || "+91 98765 43210",
-          full_name: fullName.trim(),
-          role: "CANDIDATE",
-          is_active: true,
-          created_at: new Date().toISOString()
-        }, "candidate-otp-session");
-        router.push(destinationPath);
-      } else {
-        setError(err.message || "Invalid OTP code. Please check your WhatsApp and try again.");
-      }
+      setError(err?.message || "Invalid OTP code. Please check your details and try again.");
     } finally {
       setIsLoading(false);
     }

@@ -19,22 +19,54 @@ otp_cache = {}
 
 async def find_user_by_email_or_phone(db: AsyncSession, target_email: str, target_phone: str) -> Optional[User]:
     conditions = []
-    if target_email and target_email.strip():
-        conditions.append(User.email == target_email.strip().lower())
-    if target_phone and target_phone.strip():
-        digits = "".join(filter(str.isdigit, target_phone))
+    clean_email = (target_email or "").strip().lower()
+    if clean_email and "@" in clean_email and not clean_email.endswith("@cloudops.internal"):
+        conditions.append(User.email == clean_email)
+
+    clean_phone = (target_phone or "").strip()
+    if clean_phone:
+        digits = "".join(filter(str.isdigit, clean_phone))
         if len(digits) >= 10:
             last10 = digits[-10:]
             conditions.append(User.phone_number.like(f"%{last10}%"))
+            
+            # Also search Candidate table's phone column
+            from app.models.candidate import Candidate
+            stmt_cand = select(Candidate.user_id).where(Candidate.phone.like(f"%{last10}%"))
+            c_res = await db.execute(stmt_cand)
+            cand_uids = [uid for uid in c_res.scalars().all() if uid]
+            if cand_uids:
+                conditions.append(User.id.in_(cand_uids))
         else:
-            conditions.append(User.phone_number == target_phone.strip())
+            conditions.append(User.phone_number == clean_phone)
 
     if not conditions:
         return None
 
     stmt = select(User).where(or_(*conditions))
     res = await db.execute(stmt)
-    return res.scalars().first()
+    user = res.scalars().first()
+
+    # If found, ensure user.phone_number and candidate.phone are kept in sync
+    if user and clean_phone:
+        dirty = False
+        if not user.phone_number:
+            user.phone_number = clean_phone
+            dirty = True
+        
+        from app.models.candidate import Candidate
+        stmt_c = select(Candidate).where(Candidate.user_id == user.id)
+        c_res = await db.execute(stmt_c)
+        cand = c_res.scalar_one_or_none()
+        if cand and not cand.phone:
+            cand.phone = clean_phone
+            dirty = True
+            
+        if dirty:
+            await db.commit()
+            await db.refresh(user)
+
+    return user
 
 @router.post("/send-otp", response_model=StandardResponse[dict])
 async def send_otp(req: SendOTPRequest, db: AsyncSession = Depends(get_db)):

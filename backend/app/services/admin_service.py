@@ -20,6 +20,7 @@ class AdminService:
         cand_stmt = (
             select(func.count(Candidate.id))
             .join(User, Candidate.user_id == User.id)
+            .where(User.role == UserRole.CANDIDATE.value)
         )
         total_candidates = (await self.db.execute(cand_stmt)).scalar() or 0
 
