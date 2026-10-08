@@ -616,20 +616,40 @@ export default function InterviewRoomPage() {
     ];
     const isBegging = beggingPhrases.some((phrase) => lower.includes(phrase));
 
-    const isIntro = lower.includes("introduce") || lower.includes("self") || qTextLower.includes("introduce") || qTextLower.includes("journey") || qTextLower.includes("background");
-    const introKeywords = new Set(["sachin", "rawat", "name", "myself", "iam", "candidate", "student", "developer", "engineer", "cloud", "devops", "experience", "work", "role", "background", "journey", "achievement", "project"]);
-    const matchedIntroWords = Array.from(candWords).filter((w) => introKeywords.has(w));
+    // ------------------- QUESTION COPY / ANTI-CHEAT CHECK -------------------
+    const qWordsArr = getWords(qTextLower);
+    const qWordsSet = new Set(qWordsArr);
+    
+    let qMatchCount = 0;
+    candWords.forEach((w) => {
+      if (qWordsSet.has(w)) qMatchCount++;
+    });
 
-    // Direct exact or substring match check with Admin Expected Answer
+    const qWordRatio = qWordsArr.length > 0 ? qMatchCount / qWordsArr.length : 0;
+    const candQRatio = candWords.size > 0 ? qMatchCount / candWords.size : 0;
+
+    let isQuestionCopy = false;
+    if (qTextLower.length > 15) {
+      if (lower === qTextLower || (lower.length > 20 && (lower.includes(qTextLower) || qTextLower.includes(lower)))) {
+        isQuestionCopy = true;
+      } else if (qWordRatio >= 0.65 && candQRatio >= 0.55) {
+        const uniqueCandWords = Array.from(candWords).filter((w) => !qWordsSet.has(w) && !stopWords.has(w));
+        if (uniqueCandWords.length < 2) {
+          isQuestionCopy = true;
+        }
+      }
+    }
+
+    // Direct exact match check ONLY with Admin Expected Answer (idealLower)
     const isExactMatch = Boolean(
-      idealLower && lower && (
+      !isQuestionCopy &&
+      idealLower && idealLower.length > 5 && lower && (
         lower === idealLower ||
-        (lower.length >= 2 && idealLower.includes(lower)) ||
-        (idealLower.length >= 2 && lower.includes(idealLower))
+        (idealWords.length >= 3 && idealWords.filter((w) => candWords.has(w)).length >= idealWords.length * 0.85)
       )
     );
 
-    // Count whole word overlaps
+    // Count whole word overlaps with Admin Expected Answer & Topics
     const matchedAdminWords = adminKeyWords.filter((w) => candWords.has(w));
 
     // Smart token matching for multi-word target concepts
@@ -641,30 +661,28 @@ export default function InterviewRoomPage() {
     const missing = keywords.filter((kw: string) => !matched.includes(kw));
 
     let matchPercentage = 0;
-    if (isExactMatch) {
-      matchPercentage = 95;
-    } else if (adminKeyWords.length > 0) {
-      const ratio = matchedAdminWords.length / adminKeyWords.length;
-      matchPercentage = Math.round(ratio * 100);
-    } else if (keywords.length > 0) {
-      matchPercentage = Math.round((matched.length / keywords.length) * 100);
-    }
-
     let isPassed = false;
-    if (isIntro && matchedIntroWords.length >= 1 && !isBegging) {
+
+    if (isQuestionCopy || isBegging) {
+      matchPercentage = isQuestionCopy ? 0 : 15;
+      isPassed = false;
+    } else if (isExactMatch) {
+      matchPercentage = 95;
       isPassed = true;
-      matchPercentage = Math.max(matchPercentage, 80);
     } else {
-      if (isBegging) {
-        isPassed = false;
-      } else {
-        isPassed = isExactMatch || (matchPercentage >= 50 && matchedAdminWords.length >= 2) || (matched.length >= 1 && matchedAdminWords.length >= 1);
+      if (adminKeyWords.length > 0) {
+        const ratio = matchedAdminWords.length / adminKeyWords.length;
+        matchPercentage = Math.round(ratio * 100);
+      } else if (keywords.length > 0) {
+        matchPercentage = Math.round((matched.length / keywords.length) * 100);
       }
+
+      isPassed = (matchPercentage >= 50 && matchedAdminWords.length >= 2) || (matched.length >= 1 && matchedAdminWords.length >= 1);
 
       if (isPassed) {
         matchPercentage = Math.max(matchPercentage, 65);
       } else {
-        if (isBegging || (matchedAdminWords.length === 0 && matched.length === 0)) {
+        if (matchedAdminWords.length === 0 && matched.length === 0) {
           matchPercentage = Math.min(matchPercentage, 15);
         } else {
           matchPercentage = Math.min(matchPercentage, 45);
@@ -672,9 +690,17 @@ export default function InterviewRoomPage() {
       }
     }
 
-    const finalScore = isPassed
-      ? Math.min(98.0, Math.max(70.0, 65.0 + Math.round(matchPercentage * 0.30)))
-      : Math.max(15.0, Math.round(matchPercentage * 0.70));
+    const finalScore = isQuestionCopy
+      ? 15.0
+      : (isPassed
+          ? Math.min(98.0, Math.max(70.0, 65.0 + Math.round(matchPercentage * 0.30)))
+          : Math.max(15.0, Math.round(matchPercentage * 0.70)));
+
+    const feedbackText = isQuestionCopy
+      ? "❌ NEEDS IMPROVEMENT (0% Match). You submitted the question text instead of providing a technical answer."
+      : (isPassed
+          ? `✅ PASSED (${matchPercentage}% Match ≥ 60%). Spoken answer accurately matched Expected Model Answer.`
+          : `❌ NEEDS IMPROVEMENT (${matchPercentage}% Match < 60%). Missing expected concepts: ${missing.slice(0, 3).join(", ") || "Technical Details"}. Expected Answer: "${benchmark.ideal}"`);
 
     const evalResult: QuestionEvaluationResult = {
       overall_score: finalScore,
@@ -684,11 +710,9 @@ export default function InterviewRoomPage() {
       practical_score: isPassed ? Math.min(95, finalScore + 4) : Math.max(15, finalScore - 4),
       communication_score: transcriptText.length > 10 ? 88.0 : 40.0,
       confidence_score: isPassed ? 90.0 : 45.0,
-      feedback: isPassed
-        ? `✅ PASSED (${matchPercentage}% Match ≥ 60%). Spoken answer accurately matched Expected Model Answer.`
-        : `❌ NEEDS IMPROVEMENT (${matchPercentage}% Match < 60%). Missing expected concepts: ${missing.slice(0, 3).join(", ") || "Technical Details"}. Expected Answer: "${benchmark.ideal}"`,
-      strengths: isPassed ? [`Matched expected solution parameters: ${matched.slice(0, 4).join(", ")}`] : ["Verbal response submitted"],
-      weaknesses: isPassed ? [] : [`Missing expected concepts: ${missing.slice(0, 3).join(", ")}`],
+      feedback: feedbackText,
+      strengths: isQuestionCopy ? ["Verbal response submitted"] : (isPassed ? [`Matched expected solution parameters: ${matched.slice(0, 4).join(", ")}`] : ["Verbal response submitted"]),
+      weaknesses: isQuestionCopy ? ["Submitted question text instead of technical solution"] : (isPassed ? [] : [`Missing expected concepts: ${missing.slice(0, 3).join(", ")}`]),
       missing_concepts: missing.slice(0, 4),
       recommendations: [`Expected Model Answer: ${benchmark.ideal}`],
       communication_metrics: {

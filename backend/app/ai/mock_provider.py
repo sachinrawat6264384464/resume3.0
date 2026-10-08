@@ -165,9 +165,10 @@ class MockAIProvider(AIProvider):
                 communication_metrics=comm_metrics
             )
 
+        q_text = (question_text or "").strip()
+        q_text_lower = q_text.lower()
         transcript_lower = transcript.lower().strip()
         ref_lower = ref_ans.lower().strip()
-        q_text_lower = (question_text or "").lower().strip()
 
         # Helper: Extract clean whole words > 2 chars ignoring punctuation
         def get_words(text: str) -> List[str]:
@@ -201,18 +202,28 @@ class MockAIProvider(AIProvider):
         ]
         is_begging = any(p in transcript_lower for p in begging_phrases)
 
-        # Check if question is an introduction / self intro prompt
-        is_intro = any(k in q_text_lower for k in ["introduce", "self introduction", "journey", "background", "about yourself"])
-        intro_keywords = {"sachin", "rawat", "name", "myself", "iam", "candidate", "student", "developer", "engineer", "cloud", "devops", "experience", "work", "role", "background", "journey", "achievement", "project"}
-        matched_intro_words = [w for w in cand_words if w in intro_keywords] if is_intro else []
+        # ------------------- QUESTION COPY / ANTI-CHEAT CHECK -------------------
+        q_words = set(get_words(q_text))
+        q_match_count = sum(1 for w in q_words if w in cand_words)
+        q_word_ratio = (q_match_count / max(len(q_words), 1)) if q_words else 0
+        cand_q_ratio = (q_match_count / max(len(cand_words), 1)) if cand_words else 0
 
-        # Direct exact or substring match check with Admin Expected Answer
+        is_question_copy = False
+        if len(q_text_lower) > 15:
+            if transcript_lower == q_text_lower or (len(transcript_lower) > 20 and (transcript_lower in q_text_lower or q_text_lower in transcript_lower)):
+                is_question_copy = True
+            elif q_word_ratio >= 0.65 and cand_q_ratio >= 0.55:
+                unique_cand_words = [w for w in cand_words if w not in q_words and w not in stop_words]
+                if len(unique_cand_words) < 2:
+                    is_question_copy = True
+
+        # Direct exact match check with Admin Expected Answer (NOT question text!)
         is_exact = False
-        if ref_lower and len(ref_lower) > 5:
-            if transcript_lower == ref_lower or (len(transcript_lower) > 15 and transcript_lower in ref_lower):
+        if ref_lower and len(ref_lower) > 5 and not is_question_copy:
+            if transcript_lower == ref_lower or (len(ref_words) >= 3 and len([w for w in ref_words if w in cand_words]) >= len(ref_words) * 0.85):
                 is_exact = True
 
-        # Count whole word overlaps
+        # Count whole word overlaps with Admin Expected Answer & Topics
         matched_admin_words = [w for w in admin_key_words if w in cand_words]
         
         # Build target topics from expected_topics
@@ -225,36 +236,39 @@ class MockAIProvider(AIProvider):
         missing_topics = [t for t in target_list if t not in matched_topics]
 
         match_percentage = 0
-        if is_exact:
+        if is_question_copy or is_begging:
+            match_percentage = 0 if is_question_copy else 15
+            is_passed = False
+        elif is_exact:
             match_percentage = 95
-        elif admin_key_words:
-            ratio = len(matched_admin_words) / len(admin_key_words)
-            match_percentage = round(ratio * 100)
-        elif target_list:
-            ratio = len(matched_topics) / max(len(target_list), 1)
-            match_percentage = round(ratio * 100)
-
-        if is_intro and len(matched_intro_words) >= 1 and not is_begging:
             is_passed = True
-            match_percentage = max(match_percentage, 80)
         else:
-            if is_begging:
-                is_passed = False
-            else:
-                is_passed = is_exact or (match_percentage >= 50 and len(matched_admin_words) >= 2) or (len(matched_topics) >= 1 and len(matched_admin_words) >= 1)
+            if admin_key_words:
+                ratio = len(matched_admin_words) / len(admin_key_words)
+                match_percentage = round(ratio * 100)
+            elif target_list:
+                ratio = len(matched_topics) / max(len(target_list), 1)
+                match_percentage = round(ratio * 100)
+
+            is_passed = (match_percentage >= 50 and len(matched_admin_words) >= 2) or (len(matched_topics) >= 1 and len(matched_admin_words) >= 1)
 
             if is_passed:
                 match_percentage = max(match_percentage, 65)
             else:
-                if is_begging or (len(matched_admin_words) == 0 and len(matched_topics) == 0):
+                if len(matched_admin_words) == 0 and len(matched_topics) == 0:
                     match_percentage = min(match_percentage, 15)
                 else:
                     match_percentage = min(match_percentage, 45)
 
-        if is_passed:
+        if is_question_copy:
+            overall_score = 15.0
+            feedback_msg = "❌ NEEDS IMPROVEMENT (0% Match). You submitted the question text instead of providing a technical answer."
+        elif is_passed:
             overall_score = round(min(98.0, max(70.0, 65.0 + (match_percentage * 0.30))), 1)
+            feedback_msg = f"✅ PASSED ({match_percentage}% Match ≥ 60%). Spoken answer accurately matched Expected Model Answer."
         else:
             overall_score = round(max(15.0, match_percentage * 0.70), 1)
+            feedback_msg = f"❌ NEEDS IMPROVEMENT ({match_percentage}% Match < 60%). Missing expected concepts: {', '.join(missing_topics[:3]) or 'Technical Details'}. Expected Answer: '{ref_ans}'" if ref_ans else f"❌ NEEDS IMPROVEMENT ({match_percentage}% Match < 60%)."
 
         coverage_ratio = (len(matched_topics) / max(len(target_list), 1)) if target_list else (match_percentage / 100.0)
 
@@ -283,11 +297,7 @@ class MockAIProvider(AIProvider):
         if ref_ans:
             recommendations.append(f"Expected Model Answer: {ref_ans}")
 
-        feedback = (
-            f"✅ PASSED ({match_percentage}% Match ≥ 60%). Spoken answer accurately matched Expected Model Answer."
-            if is_passed else
-            f"❌ NEEDS IMPROVEMENT ({match_percentage}% Match < 60%). Expected Model Answer: '{ref_ans}'" if ref_ans else f"❌ NEEDS IMPROVEMENT ({match_percentage}% Match < 60%)."
-        )
+        feedback = feedback_msg
 
         return QuestionEvaluationResult(
             technical_score=technical_score,
