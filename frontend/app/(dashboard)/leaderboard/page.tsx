@@ -325,58 +325,6 @@ export default function LeaderboardPage() {
   return (
     <div className="w-full flex flex-col gap-8 pb-16 text-slate-900 dark:text-slate-100 font-sans relative overflow-x-hidden">
       
-      {/* TOP COMMUNITY HEADER METRICS CARD */}
-      <div className="grid grid-cols-1 md:grid-cols-12 gap-5 sm:gap-6 bg-white dark:bg-slate-900/90 p-4 sm:p-8 rounded-[24px] sm:rounded-[32px] border-2 border-slate-200 dark:border-slate-800 shadow-xl dark:shadow-2xl">
-        
-        {/* Left Bonus Badges Pill */}
-        <div className="md:col-span-6 flex flex-col justify-between gap-4 border-b md:border-b-0 md:border-r border-slate-200 dark:border-slate-800 pb-5 md:pb-0 md:pr-8">
-          <div className="flex flex-col gap-1">
-            <span className="text-[11px] sm:text-xs font-mono font-black text-[#FF6B00] uppercase tracking-widest flex items-center gap-1.5">
-              <Trophy className="w-4 h-4 text-[#FF6B00]" />
-              COHORT LEADERBOARD & REWARDS
-            </span>
-            <h1 className="text-xl sm:text-3xl font-black text-slate-900 dark:text-white uppercase tracking-tight">
-              CloudOps & DevOps Community Leaderboard
-            </h1>
-          </div>
-
-          <div className="grid grid-cols-1 xs:grid-cols-2 gap-2.5 sm:gap-4">
-            <div className="p-3 sm:p-3.5 rounded-2xl bg-amber-50 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-800/60 flex items-center justify-between gap-2">
-              <span className="text-xs font-bold text-slate-700 dark:text-slate-300 font-mono">LinkedIn Contribution</span>
-              <span className="text-xs font-black text-[#FF6B00] bg-[#FF6B00]/15 px-2.5 py-1 rounded-full font-mono whitespace-nowrap shrink-0">+50 pts</span>
-            </div>
-            <div className="p-3 sm:p-3.5 rounded-2xl bg-amber-50 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-800/60 flex items-center justify-between gap-2">
-              <span className="text-xs font-bold text-slate-700 dark:text-slate-300 font-mono">Quality Bonus</span>
-              <span className="text-xs font-black text-[#FF6B00] bg-[#FF6B00]/15 px-2.5 py-1 rounded-full font-mono whitespace-nowrap shrink-0">Up to +45 pts</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Right Community Stats */}
-        <div className="md:col-span-6 grid grid-cols-2 gap-3 sm:gap-4 items-center">
-          
-          <div className="p-4 sm:p-6 rounded-2xl sm:rounded-3xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/80 flex flex-col gap-1 text-center justify-center">
-            <span className="text-2xl sm:text-4xl font-black text-slate-900 dark:text-white font-mono tracking-tight">
-              {members.reduce((sum, m) => sum + (m.pts || 0), 0).toLocaleString()}
-            </span>
-            <span className="text-[10px] sm:text-xs font-bold text-slate-500 uppercase tracking-wider">
-              Total Community Points
-            </span>
-          </div>
-
-          <div className="p-4 sm:p-6 rounded-2xl sm:rounded-3xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/80 flex flex-col gap-1 text-center justify-center">
-            <span className="text-2xl sm:text-4xl font-black text-slate-900 dark:text-white font-mono tracking-tight">
-              {members.filter(m => (m.badgeCountTotal || 0) > 0 || (m.allClaimedBadges || []).length > 0).length || members.length}
-            </span>
-            <span className="text-[10px] sm:text-xs font-bold text-slate-500 uppercase tracking-wider">
-              Certified Module Experts
-            </span>
-          </div>
-
-        </div>
-
-      </div>
-
       {/* FILTER & TIMEFRAME CONTROLS BAR */}
       <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-white dark:bg-slate-900 p-4 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm">
         
@@ -439,7 +387,7 @@ export default function LeaderboardPage() {
       <div className="w-full rounded-[32px] bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-800 shadow-xl overflow-hidden relative">
         
         <div className="overflow-x-auto max-h-[580px] sm:max-h-[650px] overflow-y-auto scroll-smooth">
-          <table className="w-full min-w-[880px] text-left text-xs font-sans border-collapse relative">
+          <table className="w-full min-w-[750px] text-left text-xs font-sans border-collapse relative">
             
             <thead className="sticky top-0 z-20 bg-slate-50/95 dark:bg-slate-900/95 backdrop-blur-md shadow-xs">
               <tr className="border-b-2 border-slate-200 dark:border-slate-800 text-slate-400 uppercase text-[10px] font-black tracking-wider">
@@ -447,21 +395,20 @@ export default function LeaderboardPage() {
                 <th className="py-4 px-6 bg-slate-50/95 dark:bg-slate-900/95">MEMBER</th>
                 <th className="py-4 px-6 text-center bg-slate-50/95 dark:bg-slate-900/95">BATCH</th>
                 <th className="py-4 px-6 text-center bg-slate-50/95 dark:bg-slate-900/95">CURRICULUM BADGES</th>
-                <th className="py-4 px-6 text-center bg-slate-50/95 dark:bg-slate-900/95">TOTAL PTS</th>
               </tr>
             </thead>
 
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60 font-bold">
               {isLoading ? (
                 <tr>
-                  <td colSpan={5} className="py-12 text-center text-slate-400">
+                  <td colSpan={4} className="py-12 text-center text-slate-400">
                     <Loader2 className="w-6 h-6 animate-spin mx-auto text-[#FF6B00] mb-2" />
                     <span>Loading real database leaderboard entries...</span>
                   </td>
                 </tr>
               ) : filteredMembers.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="py-12 text-center text-slate-400 italic">
+                  <td colSpan={4} className="py-12 text-center text-slate-400 italic">
                     No leaderboard members found matching your search.
                   </td>
                 </tr>
@@ -523,16 +470,6 @@ export default function LeaderboardPage() {
                             +{m.extraBadgesCount}
                           </div>
                         )}
-                      </div>
-                    </td>
-
-                    {/* Total Points */}
-                    <td className="py-4 px-6 text-center">
-                      <div className="flex flex-col items-center">
-                        <span className="text-base font-black font-mono text-slate-900 dark:text-white">
-                          {m.pts.toLocaleString()}
-                        </span>
-                        <span className="text-[10px] text-slate-400 uppercase font-mono">total pts</span>
                       </div>
                     </td>
 
