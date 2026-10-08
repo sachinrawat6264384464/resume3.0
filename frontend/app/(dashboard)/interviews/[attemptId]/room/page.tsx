@@ -242,19 +242,11 @@ export default function InterviewRoomPage() {
     };
   }, []);
 
-  // Dynamic fallback questions per stage and index to ensure candidate ALWAYS gets real technical questions (1 by 1)
+  // Dynamic fallback questions per stage and index (used ONLY if DB is empty)
   const STAGE_FALLBACK_QUESTIONS: Record<number, string[]> = {
     1: [
       "Please introduce yourself, walk through your technical journey in Cloud & DevOps, and highlight your most significant production achievement.",
-      "Demonstrate your background in CloudOps engineering. Explain how you automate AWS infrastructure deployments using Terraform and CI/CD pipelines.",
-      "When designing a cloud infrastructure solution, how do you balance cost optimization, high availability, and developer delivery speed?",
-      "Explain IAM security best practices when configuring service accounts and IRSA for Kubernetes workloads.",
-      "How do you configure high availability and multi-region failover across AWS EC2, S3, and RDS database clusters?",
-      "Describe how you monitor microservice health telemetry using Prometheus metrics and Grafana dashboards.",
-      "Explain how you handle a database connection pool exhaustion incident under sudden user traffic spikes.",
-      "How do you perform zero-downtime rolling deployments and canary rollouts using Kubernetes deployment strategies?",
-      "Explain how you configure cloud cost alerts and anomaly detection to prevent unexpected AWS cloud bill spikes.",
-      "Describe a critical production outage incident you resolved under tight SLA pressure and the post-mortem steps you took."
+      "Demonstrate your background in CloudOps engineering. Explain how you automate AWS infrastructure deployments using Terraform and CI/CD pipelines."
     ],
     2: [
       "Walk us through your daily technical workflow as a DevOps/Cloud engineer, from code commit to production deployment.",
@@ -297,10 +289,10 @@ export default function InterviewRoomPage() {
 
   const fallbackList = STAGE_FALLBACK_QUESTIONS[currentStageNum] || STAGE_FALLBACK_QUESTIONS[1] || [];
 
-  const dbTotalQCount = Math.max(
-    combinedQuestionsList.length,
-    fallbackList.length > 0 ? fallbackList.length : 1
-  );
+  // Strictly use DB questions count if questions are configured in DB by Admin!
+  const dbTotalQCount = combinedQuestionsList.length > 0
+    ? combinedQuestionsList.length
+    : (fallbackList.length > 0 ? fallbackList.length : 1);
 
   const maxQCount = dbTotalQCount;
 
