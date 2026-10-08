@@ -1287,6 +1287,7 @@ async def claim_badge(
 ):
     from app.services.auth_service import AuthService
     from app.services.candidate_service import CandidateService
+    from fastapi import HTTPException
 
     auth_svc = AuthService(db)
     user = await auth_svc.get_current_user_from_payload(payload)
@@ -1303,9 +1304,43 @@ async def claim_badge(
         )
         db.add(cand)
 
+    # Determine required stage number for requested badge
+    req_stage_map = {
+        "mod-1": 5, "STAGE 05": 5, "LINUX & CLOUD FOUNDATIONS": 5, "STAGE 05: LINUX & CLOUD FOUNDATIONS": 5,
+        "mod-2": 10, "STAGE 10": 10, "AWS & CI/CD AUTOMATION": 10, "STAGE 10: AWS & CI/CD AUTOMATION": 10,
+        "mod-3": 15, "STAGE 15": 15, "KUBERNETES & TERRAFORM": 15, "STAGE 15: KUBERNETES & TERRAFORM": 15,
+        "mod-4": 20, "STAGE 20": 20, "DEVSECOPS & MULTI-CLOUD": 20, "STAGE 20: DEVSECOPS & MULTI-CLOUD": 20,
+        "mod-5": 30, "STAGE 30": 30, "40 LPA BOSS LEGEND": 30, "STAGE 30: 40 LPA BOSS LEGEND": 30
+    }
+    target_key = (req.badge_id or req.badge_title or "").strip()
+    req_stage = req_stage_map.get(target_key, 5)
+
+    # Verify stage completion in DB
+    sa_stmt = (
+        select(StageAttempt.stage_number)
+        .join(InterviewAttempt, StageAttempt.interview_attempt_id == InterviewAttempt.id)
+        .where(InterviewAttempt.candidate_id == cand.id)
+        .where(
+            or_(
+                StageAttempt.status.in_(["PASSED", "COMPLETED"]),
+                StageAttempt.score >= 70.0
+            )
+        )
+    )
+    sa_res = await db.execute(sa_stmt)
+    passed_stages = [s for s in sa_res.scalars().all() if s is not None and s >= 1]
+    max_stage = max(passed_stages) if passed_stages else 0
+
+    if max_stage < req_stage and req_stage not in passed_stages:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Stage {req_stage} is not completed yet. Complete Stage {req_stage} to unlock this badge!"
+        )
+
     existing_badges = list(cand.badges_json or [])
-    if req.badge_title not in existing_badges:
-        existing_badges.append(req.badge_title)
+    clean_title = req.badge_title or f"STAGE {req_stage:02d} MILESTONE"
+    if clean_title not in existing_badges:
+        existing_badges.append(clean_title)
         cand.badges_json = existing_badges
 
     cand.xp = (cand.xp or 0) + 50
@@ -1314,10 +1349,10 @@ async def claim_badge(
     await db.refresh(cand)
 
     return StandardResponse(
-        message=f"🎉 Badge '{req.badge_title}' claimed successfully! +50 XP added to candidate profile.",
+        message=f"🎉 Badge '{clean_title}' claimed successfully! +50 XP added to candidate profile.",
         data={
             "xp": cand.xp,
             "badges": cand.badges_json,
-            "badge_title": req.badge_title
+            "badge_title": clean_title
         }
     )

@@ -648,7 +648,7 @@ async def seed_database():
                 readiness_score=88.5,
                 target_salary_band="₹18 - ₹40 LPA",
                 skills_matrix_json={"Linux": 90, "AWS": 85, "Docker": 92, "Kubernetes": 80, "Terraform": 86},
-                badges_json=["Registered Engineer", "AWS Certified", "Docker Specialist"]
+                badges_json=[]
             )
             db.add(sachin_profile)
             await db.flush()
@@ -685,7 +685,7 @@ async def seed_database():
                 readiness_score=94.0,
                 target_salary_band="₹25 - ₹45 LPA",
                 skills_matrix_json={"Linux": 95, "AWS": 96, "Docker": 94, "Kubernetes": 92, "Terraform": 90},
-                badges_json=["Top Performer", "Kubernetes Master", "Security Hero"]
+                badges_json=[]
             )
             db.add(alex_profile)
             await db.flush()

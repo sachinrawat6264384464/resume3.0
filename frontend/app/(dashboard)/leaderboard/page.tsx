@@ -90,16 +90,21 @@ const parseCandidateBadges = (rawBadges: any[]): CurriculumBadge[] => {
   MODULE_BADGES.forEach((mb) => {
     const isMatched = rawBadges.some((b) => {
       if (typeof b !== "string") return false;
-      const str = b.toLowerCase();
+      const str = b.trim().toLowerCase();
+      const modNumClean = mb.modNum.toLowerCase(); // e.g. "stage 05"
+      const modNumShort = modNumClean.replace("0", ""); // e.g. "stage 5"
+      const titleClean = mb.title.toLowerCase();
+
       return (
         str === mb.id.toLowerCase() ||
-        str.includes(mb.modNum.toLowerCase()) ||
-        str.includes(mb.title.toLowerCase()) ||
-        (mb.id === "mod-1" && (str.includes("linux") || str.includes("stage 05") || str.includes("stage 5"))) ||
-        (mb.id === "mod-2" && (str.includes("aws") || str.includes("ci/cd") || str.includes("stage 10"))) ||
-        (mb.id === "mod-3" && (str.includes("kubernetes") || str.includes("stage 15"))) ||
-        (mb.id === "mod-4" && (str.includes("devsecops") || str.includes("stage 20"))) ||
-        (mb.id === "mod-5" && (str.includes("boss") || str.includes("40 lpa") || str.includes("stage 30")))
+        str === modNumClean ||
+        str === modNumShort ||
+        str === titleClean ||
+        str === mb.sub.toLowerCase() ||
+        str === `${mb.modNum}: ${mb.title}`.toLowerCase() ||
+        str === `${mb.modNum} ${mb.title}`.toLowerCase() ||
+        (str.includes(modNumClean) && str.includes(titleClean)) ||
+        (str.includes(modNumShort) && str.includes(titleClean))
       );
     });
 

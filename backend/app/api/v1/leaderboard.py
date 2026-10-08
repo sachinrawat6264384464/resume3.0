@@ -39,6 +39,30 @@ async def get_leaderboard(
     res = await db.execute(stmt)
     candidates = res.scalars().all()
 
+    # Pre-fetch passed stages for candidates to compute real milestone badges
+    cand_ids = [c.id for c in candidates]
+    passed_stages_map: Dict[str, set] = {cid: set() for cid in cand_ids}
+    if cand_ids:
+        from app.models.stage_attempt import StageAttempt
+        from app.models.interview_attempt import InterviewAttempt
+        from sqlalchemy import or_
+
+        sa_stmt = (
+            select(InterviewAttempt.candidate_id, StageAttempt.stage_number)
+            .join(StageAttempt, StageAttempt.interview_attempt_id == InterviewAttempt.id)
+            .where(InterviewAttempt.candidate_id.in_(cand_ids))
+            .where(
+                or_(
+                    StageAttempt.status.in_(["PASSED", "COMPLETED"]),
+                    StageAttempt.score >= 70.0
+                )
+            )
+        )
+        sa_res = await db.execute(sa_stmt)
+        for cid, st_num in sa_res.all():
+            if st_num is not None and st_num >= 1:
+                passed_stages_map[cid].add(st_num)
+
     global_ranking: List[LeaderboardEntry] = []
     for idx, cand in enumerate(candidates, start=1):
         name = (cand.user.full_name if (cand.user and cand.user.full_name) else cand.full_name) or f"Candidate {cand.id[:6]}"
@@ -57,6 +81,20 @@ async def get_leaderboard(
             except Exception:
                 pass
 
+        # Compute dynamic earned milestone badges
+        cand_passed = passed_stages_map.get(cand.id, set())
+        earned_badges: List[str] = []
+        if any(s >= 5 for s in cand_passed):
+            earned_badges.append("STAGE 05: LINUX & CLOUD FOUNDATIONS")
+        if any(s >= 10 for s in cand_passed):
+            earned_badges.append("STAGE 10: AWS & CI/CD AUTOMATION")
+        if any(s >= 15 for s in cand_passed):
+            earned_badges.append("STAGE 15: KUBERNETES & TERRAFORM")
+        if any(s >= 20 for s in cand_passed):
+            earned_badges.append("STAGE 20: DEVSECOPS & MULTI-CLOUD")
+        if any(s >= 30 for s in cand_passed):
+            earned_badges.append("STAGE 30: 40 LPA BOSS LEGEND")
+
         global_ranking.append(LeaderboardEntry(
             rank=idx,
             candidate_id=cand.id,
@@ -70,7 +108,7 @@ async def get_leaderboard(
             streak_days=cand.streak_days or 1,
             readiness_score=score,
             target_salary_band=sal_band,
-            badges=cand.badges_json or ["Registered Engineer"],
+            badges=earned_badges,
             weekly_xp_gained=int((cand.xp or 0) * 0.45),
             linkedin_url=linkedin_url
         ))

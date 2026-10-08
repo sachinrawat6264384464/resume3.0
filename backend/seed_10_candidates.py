@@ -43,7 +43,7 @@ CANDIDATES_DATA = [
         "course": "DevOps Master Track",
         "batch": "2026-A",
         "skills_matrix": {"Linux": 95, "AWS": 92, "Docker": 90, "Kubernetes": 88, "Terraform": 94},
-        "badges": ["Registered Engineer", "Linux Warrior", "AWS Specialist", "K8s Architect"]
+        "badges": []
     },
     {
         "full_name": "Priya Patel",
@@ -61,7 +61,7 @@ CANDIDATES_DATA = [
         "course": "Cloud Architecture",
         "batch": "2026-A",
         "skills_matrix": {"Linux": 85, "AWS": 96, "Docker": 82, "Kubernetes": 78, "Terraform": 88},
-        "badges": ["Registered Engineer", "AWS Specialist", "Cloud Architect"]
+        "badges": []
     },
     {
         "full_name": "Rohan Gupta",
@@ -79,7 +79,7 @@ CANDIDATES_DATA = [
         "course": "Kubernetes SRE Track",
         "batch": "2026-A",
         "skills_matrix": {"Linux": 88, "AWS": 80, "Docker": 95, "Kubernetes": 94, "Terraform": 82},
-        "badges": ["Registered Engineer", "K8s Specialist", "Docker Master"]
+        "badges": []
     },
     {
         "full_name": "Ananya Verma",
@@ -97,7 +97,7 @@ CANDIDATES_DATA = [
         "course": "SRE & Incident Ops",
         "batch": "2026-A",
         "skills_matrix": {"Linux": 92, "AWS": 88, "Docker": 90, "Kubernetes": 91, "Terraform": 86},
-        "badges": ["Registered Engineer", "Incident Boss", "SRE Expert"]
+        "badges": []
     },
     {
         "full_name": "Vikram Singh",
@@ -115,7 +115,7 @@ CANDIDATES_DATA = [
         "course": "Infrastructure Track",
         "batch": "2026-B",
         "skills_matrix": {"Linux": 80, "AWS": 82, "Docker": 75, "Kubernetes": 70, "Terraform": 85},
-        "badges": ["Registered Engineer", "Terraform Associate"]
+        "badges": []
     },
     {
         "full_name": "Sneha Reddy",
@@ -133,7 +133,7 @@ CANDIDATES_DATA = [
         "course": "DevSecOps Security",
         "batch": "2026-A",
         "skills_matrix": {"Linux": 86, "AWS": 85, "Docker": 88, "Kubernetes": 84, "Terraform": 89},
-        "badges": ["Registered Engineer", "Security Champion"]
+        "badges": []
     },
     {
         "full_name": "Kabir Mehta",
@@ -151,7 +151,7 @@ CANDIDATES_DATA = [
         "course": "Platform Engineering",
         "batch": "2026-B",
         "skills_matrix": {"Linux": 78, "AWS": 74, "Docker": 80, "Kubernetes": 76, "Terraform": 72},
-        "badges": ["Registered Engineer"]
+        "badges": []
     },
     {
         "full_name": "Neha Nair",
@@ -169,7 +169,7 @@ CANDIDATES_DATA = [
         "course": "Multi-Cloud Master",
         "batch": "2026-A",
         "skills_matrix": {"Linux": 96, "AWS": 95, "Docker": 92, "Kubernetes": 94, "Terraform": 96},
-        "badges": ["Registered Engineer", "Multi-Cloud Master", "AWS Specialist", "K8s Architect"]
+        "badges": []
     },
     {
         "full_name": "Aditya Joshi",
@@ -187,7 +187,7 @@ CANDIDATES_DATA = [
         "course": "Linux Systems",
         "batch": "2026-B",
         "skills_matrix": {"Linux": 90, "AWS": 65, "Docker": 70, "Kubernetes": 60, "Terraform": 68},
-        "badges": ["Registered Engineer", "Linux Admin"]
+        "badges": []
     },
     {
         "full_name": "Riya Malhotra",
@@ -205,7 +205,7 @@ CANDIDATES_DATA = [
         "course": "Cloud Foundations",
         "batch": "2026-B",
         "skills_matrix": {"Linux": 70, "AWS": 68, "Docker": 65, "Kubernetes": 58, "Terraform": 60},
-        "badges": ["Registered Engineer"]
+        "badges": []
     }
 ]
 
