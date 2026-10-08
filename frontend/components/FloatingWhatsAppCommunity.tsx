@@ -161,9 +161,17 @@ export function FloatingWhatsAppCommunity() {
     setIsExpanded((prev) => !prev);
   };
 
+  const ensureAbsoluteUrl = (url?: string, fallback: string = "#") => {
+    if (!url || !url.trim()) return fallback;
+    const clean = url.trim();
+    if (clean.startsWith("http://") || clean.startsWith("https://")) return clean;
+    return `https://${clean}`;
+  };
+
   const openWhatsApp = (e: React.MouseEvent) => {
     e.stopPropagation();
-    const url = activeSession?.whatsapp_group_url || "https://chat.whatsapp.com/AIInterviewCommunity";
+    const rawUrl = activeSession?.whatsapp_group_url || "https://chat.whatsapp.com/AIInterviewCommunity";
+    const url = ensureAbsoluteUrl(rawUrl, "https://chat.whatsapp.com/AIInterviewCommunity");
     try {
       apiFetch("/live-sessions/track-click", {
         method: "POST",
@@ -181,7 +189,8 @@ export function FloatingWhatsAppCommunity() {
 
   const openZoomMeet = (e: React.MouseEvent) => {
     e.stopPropagation();
-    const url = activeSession?.meeting_url || "https://meet.google.com/xyz-cloudops-live";
+    const rawUrl = activeSession?.meeting_url || "https://meet.google.com/xyz-cloudops-live";
+    const url = ensureAbsoluteUrl(rawUrl, "https://meet.google.com/xyz-cloudops-live");
     try {
       apiFetch("/live-sessions/track-click", {
         method: "POST",

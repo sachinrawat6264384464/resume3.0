@@ -49,6 +49,13 @@ export default function AdminLiveSessionsPage() {
 
   const [saving, setSaving] = useState(false);
 
+  const ensureAbsoluteUrl = (url?: string, fallback: string = "#") => {
+    if (!url || !url.trim()) return fallback;
+    const clean = url.trim();
+    if (clean.startsWith("http://") || clean.startsWith("https://")) return clean;
+    return `https://${clean}`;
+  };
+
   const parseSessionDate = (dateStr: string): number => {
     if (!dateStr) return 0;
     const parsedDirect = new Date(dateStr).getTime();
@@ -522,7 +529,7 @@ export default function AdminLiveSessionsPage() {
 
                   <div className="flex items-center justify-between">
                     <a
-                      href={s.meeting_url || "#"}
+                      href={ensureAbsoluteUrl(s.meeting_url, "https://meet.google.com/xyz-cloudops-live")}
                       target="_blank"
                       rel="noreferrer"
                       className="text-xs font-bold text-[#FF6B00] hover:underline flex items-center gap-1"

@@ -13,6 +13,13 @@ import {
 import { useAuthStore } from "@/lib/store";
 import { apiFetch } from "@/lib/api";
 
+const ensureAbsoluteUrl = (url?: string, fallback: string = "#") => {
+  if (!url || !url.trim()) return fallback;
+  const clean = url.trim();
+  if (clean.startsWith("http://") || clean.startsWith("https://")) return clean;
+  return `https://${clean}`;
+};
+
 function parseSessionDate(dateStr: string): Date {
   if (!dateStr) return new Date(0);
   
@@ -653,7 +660,8 @@ Learn Today. Implement Today. Build Your Career for a Lifetime.
               <button
                 type="button"
                 onClick={() => {
-                  const url = activeLiveSession.meeting_url || "https://meet.google.com/xyz-cloudops-live";
+                  const rawUrl = activeLiveSession?.meeting_url || "https://meet.google.com/xyz-cloudops-live";
+                  const url = ensureAbsoluteUrl(rawUrl, "https://meet.google.com/xyz-cloudops-live");
                   try {
                     apiFetch("/live-sessions/track-click", {
                       method: "POST",
@@ -679,7 +687,8 @@ Learn Today. Implement Today. Build Your Career for a Lifetime.
               <button
                 type="button"
                 onClick={() => {
-                  const url = activeLiveSession.whatsapp_group_url || "https://chat.whatsapp.com/LOxsACQwbGgAudjaC3qhOJ";
+                  const rawUrl = activeLiveSession?.whatsapp_group_url || "https://chat.whatsapp.com/AIInterviewCommunity";
+                  const url = ensureAbsoluteUrl(rawUrl, "https://chat.whatsapp.com/AIInterviewCommunity");
                   try {
                     apiFetch("/live-sessions/track-click", {
                       method: "POST",
@@ -769,7 +778,8 @@ Learn Today. Implement Today. Build Your Career for a Lifetime.
               <button
                 type="button"
                 onClick={() => {
-                  const url = activeLiveSession?.meeting_url || "https://meet.google.com/xyz-cloudops-live";
+                  const rawUrl = activeLiveSession?.meeting_url || "https://meet.google.com/xyz-cloudops-live";
+                  const url = ensureAbsoluteUrl(rawUrl, "https://meet.google.com/xyz-cloudops-live");
                   try {
                     apiFetch("/live-sessions/track-click", {
                       method: "POST",
@@ -795,7 +805,8 @@ Learn Today. Implement Today. Build Your Career for a Lifetime.
               <button
                 type="button"
                 onClick={() => {
-                  const url = activeLiveSession?.whatsapp_group_url || "https://chat.whatsapp.com/AIInterviewCommunity";
+                  const rawUrl = activeLiveSession?.whatsapp_group_url || "https://chat.whatsapp.com/AIInterviewCommunity";
+                  const url = ensureAbsoluteUrl(rawUrl, "https://chat.whatsapp.com/AIInterviewCommunity");
                   try {
                     apiFetch("/live-sessions/track-click", {
                       method: "POST",
