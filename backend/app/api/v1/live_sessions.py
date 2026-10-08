@@ -81,7 +81,9 @@ def parse_session_datetime(date_str: Optional[str]) -> datetime:
 
 @router.get("/active", response_model=StandardResponse[List[dict]])
 async def get_active_live_sessions(db: AsyncSession = Depends(get_db)):
-    stmt = select(LiveSession).where(LiveSession.is_active == True)
+    stmt = select(LiveSession).where(
+        (LiveSession.is_active == True) | (LiveSession.status.in_(["LIVE_NOW", "LIVE_STREAMING"]))
+    )
     res = await db.execute(stmt)
     sessions = res.scalars().all()
 

@@ -118,7 +118,7 @@ export default function AdminLiveSessionsPage() {
       const isExpired = sTime > 0 && (sTime + SESSION_DURATION_MS) < now && !isLive;
 
       let computedStatus = s.status;
-      if (isExpired && s.status !== "COMPLETED") {
+      if (isExpired && s.status !== "COMPLETED" && !isLive) {
         computedStatus = "COMPLETED";
       }
 
@@ -266,30 +266,31 @@ export default function AdminLiveSessionsPage() {
     const nextStatus = isCurrentlyLive ? "COMPLETED" : "LIVE_NOW";
     const nextActive = !isCurrentlyLive;
 
+    const updatedObj = {
+      ...targetSession,
+      status: nextStatus,
+      is_active: nextActive
+    };
+
     // Single Active Live Session Logic: Revert all other sessions to UPCOMING if going live
     setSessions((prev) => {
       const list = prev.map((s) => {
         if (s.id === targetSession.id) {
-          return { ...s, status: nextStatus, is_active: nextActive };
+          return updatedObj;
         }
         if (nextStatus === "LIVE_NOW" && (s.status === "LIVE_NOW" || s.status === "LIVE_STREAMING")) {
           return { ...s, status: "UPCOMING", is_active: false };
         }
         return s;
       });
+      const reprocessed = processAndSortSessions(list);
       if (typeof window !== "undefined") {
         try {
-          sessionStorage.setItem("admin_cache_live_sessions", JSON.stringify(list));
+          sessionStorage.setItem("admin_cache_live_sessions", JSON.stringify(reprocessed));
         } catch {}
       }
-      return list;
+      return reprocessed;
     });
-
-    const updatedObj = {
-      ...targetSession,
-      status: nextStatus,
-      is_active: nextActive
-    };
 
     try {
       await apiFetch(`/live-sessions/admin/${targetSession.id}`, {

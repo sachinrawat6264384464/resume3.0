@@ -221,6 +221,8 @@ export default function CandidateDashboardPage() {
       if (e.key === "latest_live_session_updated") fetchLiveSessions();
     };
 
+    const pollInterval = setInterval(fetchLiveSessions, 10000);
+
     if (typeof window !== "undefined") {
       window.addEventListener("liveSessionUpdated", handleSessionUpdated);
       window.addEventListener("storage", handleStorageChange);
@@ -288,6 +290,7 @@ export default function CandidateDashboardPage() {
       window.addEventListener("userProfileUpdated", handleProfileUpdate);
     }
     return () => {
+      clearInterval(pollInterval);
       if (typeof window !== "undefined") {
         window.removeEventListener("userProfileUpdated", handleProfileUpdate);
         window.removeEventListener("liveSessionUpdated", handleSessionUpdated);
