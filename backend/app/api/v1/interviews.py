@@ -14,9 +14,11 @@ from app.schemas.common import StandardResponse
 
 router = APIRouter(prefix="/interviews", tags=["Interviews & Templates"])
 
+from app.core.security import verify_auth_token, verify_optional_auth_token
+
 @router.get("/payment-config", response_model=StandardResponse[dict])
 async def get_candidate_payment_config(
-    payload: Optional[dict] = Depends(verify_auth_token),
+    payload: Optional[dict] = Depends(verify_optional_auth_token),
     db: AsyncSession = Depends(get_db)
 ):
     from app.api.v1.payment_gateway import get_or_create_singleton_config

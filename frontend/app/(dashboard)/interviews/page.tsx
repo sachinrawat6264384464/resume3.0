@@ -902,17 +902,36 @@ export default function InterviewsPage() {
           </p>
         </div>
 
-        {/* Unlocked Counter Pill */}
-        <div className="flex items-center gap-4 bg-slate-50 dark:bg-slate-800/80 p-4 sm:p-5 rounded-2xl border border-slate-200 dark:border-slate-700/80 shrink-0 shadow-md">
-          <div className="w-12 h-12 rounded-2xl bg-[#FF6B00]/15 border border-[#FF6B00]/40 flex items-center justify-center text-[#FF6B00] shadow-sm">
-            <Trophy className="w-6 h-6" />
+        {/* Unlocked Counter Pill & PRO Pass Upgrade Action */}
+        <div className="flex flex-wrap items-center gap-3 shrink-0">
+          <div className="flex items-center gap-4 bg-slate-50 dark:bg-slate-800/80 p-4 sm:p-5 rounded-2xl border border-slate-200 dark:border-slate-700/80 shrink-0 shadow-md">
+            <div className="w-12 h-12 rounded-2xl bg-[#FF6B00]/15 border border-[#FF6B00]/40 flex items-center justify-center text-[#FF6B00] shadow-sm">
+              <Trophy className="w-6 h-6" />
+            </div>
+            <div className="flex flex-col">
+              <span className="text-[10px] font-mono font-black text-slate-400 uppercase tracking-widest">UNLOCKED STAGES</span>
+              <span className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white">
+                {mounted ? completedCount + 1 : 1} <span className="text-slate-400 text-sm font-bold">/ 30</span>
+              </span>
+            </div>
           </div>
-          <div className="flex flex-col">
-            <span className="text-[10px] font-mono font-black text-slate-400 uppercase tracking-widest">UNLOCKED STAGES</span>
-            <span className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white">
-              {mounted ? completedCount + 1 : 1} <span className="text-slate-400 text-sm font-bold">/ 30</span>
-            </span>
-          </div>
+
+          {isPaymentEnabled && !isSubscribed && (
+            <button
+              onClick={() => {
+                setSelectedStageForPayment(null);
+                setIsPaymentModalOpen(true);
+              }}
+              className="px-5 py-4 rounded-2xl bg-gradient-to-r from-[#FF9900] via-amber-400 to-orange-400 text-slate-950 text-xs font-black flex items-center gap-2.5 shadow-lg shadow-[#FF9900]/25 hover:scale-[1.03] transition-all cursor-pointer uppercase tracking-wider shrink-0"
+              title={`Pay ₹${configuredFee} Once & Unlock All 30 Stages`}
+            >
+              <Crown className="w-5 h-5 text-slate-950 fill-slate-950" />
+              <div className="flex flex-col text-left leading-none">
+                <span className="text-[9px] font-mono font-extrabold opacity-80">ONE-TIME PRO PASS</span>
+                <span className="text-xs font-black mt-0.5">Unlock All 30 Stages (₹{configuredFee})</span>
+              </div>
+            </button>
+          )}
         </div>
 
       </div>
