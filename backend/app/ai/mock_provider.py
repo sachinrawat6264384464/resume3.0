@@ -148,7 +148,12 @@ class MockAIProvider(AIProvider):
 
         ref_ans = (reference_answer or "").strip()
 
-        if not transcript or len(transcript.split()) < 2:
+        q_text = (question_text or "").strip()
+        q_text_lower = q_text.lower()
+        transcript_lower = transcript.lower().strip()
+        ref_lower = ref_ans.lower().strip()
+
+        if not transcript or (len(transcript.split()) < 2 and transcript_lower != ref_lower and ref_lower not in transcript_lower):
             return QuestionEvaluationResult(
                 technical_score=20.0,
                 concept_coverage_score=15.0,
@@ -208,10 +213,12 @@ class MockAIProvider(AIProvider):
                 if len(unique_cand_words) < 2:
                     is_question_copy = True
 
-        # Direct exact match check with Admin Expected Answer (NOT question text!)
+        # Direct exact or concept match check with Admin Expected Answer
         is_exact = False
-        if ref_lower and len(ref_lower) > 5 and not is_question_copy:
-            if transcript_lower == ref_lower or (len(ref_words) >= 3 and len([w for w in ref_words if w in cand_words]) >= len(ref_words) * 0.85):
+        if ref_lower and not is_question_copy:
+            if transcript_lower == ref_lower or transcript_lower in ref_lower or ref_lower in transcript_lower:
+                is_exact = True
+            elif ref_words and len([w for w in ref_words if w in cand_words]) >= max(1, len(ref_words) * 0.60):
                 is_exact = True
 
         # Count whole word overlaps with Admin Expected Model Answer ONLY
@@ -232,7 +239,8 @@ class MockAIProvider(AIProvider):
             else:
                 match_percentage = 50
 
-            is_passed = (match_percentage >= 50 and len(matched_admin_words) >= 2) or is_exact
+            min_required = min(2, max(1, len(admin_key_words)))
+            is_passed = (match_percentage >= 50 and len(matched_admin_words) >= min_required) or is_exact
 
             if is_passed:
                 match_percentage = max(match_percentage, 65)

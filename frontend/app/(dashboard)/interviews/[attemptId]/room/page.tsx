@@ -632,12 +632,14 @@ export default function InterviewRoomPage() {
       }
     }
 
-    // Direct exact match check ONLY with Admin Expected Answer (idealLower)
+    // Direct exact or concept match check ONLY with Admin Expected Answer (idealLower)
     const isExactMatch = Boolean(
       !isQuestionCopy &&
-      idealLower && idealLower.length > 5 && lower && (
+      idealLower && lower && (
         lower === idealLower ||
-        (idealWords.length >= 3 && idealWords.filter((w) => candWords.has(w)).length >= idealWords.length * 0.85)
+        lower.includes(idealLower) ||
+        idealLower.includes(lower) ||
+        (idealWords.length > 0 && idealWords.filter((w) => candWords.has(w)).length >= Math.max(1, Math.ceil(idealWords.length * 0.60)))
       )
     );
 
@@ -662,7 +664,8 @@ export default function InterviewRoomPage() {
         matchPercentage = 50;
       }
 
-      isPassed = (matchPercentage >= 50 && matchedAdminWords.length >= 2) || isExactMatch;
+      const minRequired = Math.min(2, Math.max(1, adminKeyWords.length));
+      isPassed = (matchPercentage >= 50 && matchedAdminWords.length >= minRequired) || isExactMatch;
 
       if (isPassed) {
         matchPercentage = Math.max(matchPercentage, 65);
