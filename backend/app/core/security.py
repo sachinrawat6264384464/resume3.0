@@ -66,8 +66,7 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -
 async def verify_auth_token(credentials: Optional[HTTPAuthorizationCredentials] = Depends(security_scheme)) -> Dict[str, Any]:
     """
     Verifies Firebase token or local JWT token depending on payload.
-    Supports local mock dev authentication as well with seamless fallback for candidates.
-    Revokes candidate tokens if payment gateway policies are updated by admin.
+    Supports local mock dev authentication as well with seamless fallback.
     """
     if credentials and credentials.credentials:
         token = credentials.credentials
@@ -75,19 +74,6 @@ async def verify_auth_token(credentials: Optional[HTTPAuthorizationCredentials] 
         # 1. Check if it's our internal JWT
         try:
             payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
-            user_role = (payload.get("role") or "").upper()
-
-            # Revoke candidate tokens if issued before global admin policy change
-            if user_role not in ["ADMIN", "SUPER_ADMIN"]:
-                token_ver = payload.get("auth_version", 1)
-                token_iat = payload.get("iat", 0)
-
-                if token_ver < _CANDIDATE_REVOCATION["version"] or (token_iat > 0 and token_iat < _CANDIDATE_REVOCATION["revoked_at"]):
-                    raise HTTPException(
-                        status_code=status.HTTP_401_UNAUTHORIZED,
-                        detail="Session expired due to payment policy update. Please sign in again."
-                    )
-
             return payload
         except JWTError:
             pass
@@ -110,11 +96,6 @@ async def verify_auth_token(credentials: Optional[HTTPAuthorizationCredentials] 
         if token.startswith("mock:"):
             parts = token.split(":")
             role = parts[2].upper() if len(parts) >= 3 else "CANDIDATE"
-            if role not in ["ADMIN", "SUPER_ADMIN"] and (_CANDIDATE_REVOCATION["version"] > 1 or _CANDIDATE_REVOCATION["revoked_at"] > 0):
-                raise HTTPException(
-                    status_code=status.HTTP_401_UNAUTHORIZED,
-                    detail="Session expired due to payment policy update. Please sign in again."
-                )
             if len(parts) >= 3:
                 return {
                     "sub": parts[1],
@@ -122,13 +103,6 @@ async def verify_auth_token(credentials: Optional[HTTPAuthorizationCredentials] 
                     "role": role,
                     "name": f"Mock {role.capitalize()}"
                 }
-
-    # 4. Default Fallback Candidate Payload (revoked if admin updated policy)
-    if _CANDIDATE_REVOCATION["version"] > 1 or _CANDIDATE_REVOCATION["revoked_at"] > 0:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Session expired due to payment policy update. Please sign in again."
-        )
 
     return {
         "sub": "candidate-default-id",

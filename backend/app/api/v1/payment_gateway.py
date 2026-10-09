@@ -46,85 +46,33 @@ import time
 
 SINGLETON_CONFIG_ID = "default_config"
 
-_PAYMENT_CONFIG_CACHE = {
-    "config": None,
-    "timestamp": 0
-}
-
-def invalidate_payment_config_cache():
-    _PAYMENT_CONFIG_CACHE["config"] = None
-    _PAYMENT_CONFIG_CACHE["timestamp"] = 0
-
 async def get_or_create_singleton_config(db: AsyncSession) -> PaymentGatewayConfig:
-    now_ts = time.time()
-    if _PAYMENT_CONFIG_CACHE["config"] is not None and (now_ts - _PAYMENT_CONFIG_CACHE["timestamp"]) < 300:
-        return _PAYMENT_CONFIG_CACHE["config"]
-
     stmt = select(PaymentGatewayConfig).where(PaymentGatewayConfig.id == SINGLETON_CONFIG_ID)
     res = await db.execute(stmt)
     config = res.scalar_one_or_none()
 
     if not config:
-        all_stmt = select(PaymentGatewayConfig)
-        all_res = await db.execute(all_stmt)
-        old_configs = all_res.scalars().all()
+        now = datetime.now(timezone.utc)
+        config = PaymentGatewayConfig(
+            id=SINGLETON_CONFIG_ID,
+            provider_name="razorpay",
+            is_enabled=True,
+            is_test_mode=True,
+            publishable_key="rzp_test_sampleKey123",
+            encrypted_secret_key=None,
+            webhook_secret="",
+            currency="INR",
+            amount="50",
+            additional_settings={
+                "payment_mode": "STAGE_WISE",
+                "paid_start_stage": 6
+            },
+            updated_at=now
+        )
+        db.add(config)
+        await db.commit()
+        await db.refresh(config)
 
-        if old_configs:
-            old_configs.sort(key=lambda x: x.updated_at if x.updated_at else datetime.min, reverse=True)
-            old = old_configs[0]
-            config = PaymentGatewayConfig(
-                id=SINGLETON_CONFIG_ID,
-                provider_name=old.provider_name or "razorpay",
-                is_enabled=old.is_enabled if old.is_enabled is not None else True,
-                is_test_mode=old.is_test_mode,
-                publishable_key=old.publishable_key,
-                encrypted_secret_key=old.encrypted_secret_key,
-                webhook_secret=old.webhook_secret,
-                currency=old.currency or "INR",
-                amount=getattr(old, "amount", "1") or "1",
-                additional_settings={
-                    "payment_mode": "STAGE_WISE",
-                    "paid_start_stage": 6
-                },
-                updated_at=datetime.now(timezone.utc)
-            )
-            db.add(config)
-            for o in old_configs:
-                await db.delete(o)
-            await db.commit()
-            await db.refresh(config)
-        else:
-            now = datetime.now(timezone.utc)
-            config = PaymentGatewayConfig(
-                id=SINGLETON_CONFIG_ID,
-                provider_name="razorpay",
-                is_enabled=True,
-                is_test_mode=True,
-                publishable_key="rzp_test_sampleKey123",
-                encrypted_secret_key=None,
-                webhook_secret="",
-                currency="INR",
-                amount="1",
-                additional_settings={
-                    "payment_mode": "STAGE_WISE",
-                    "paid_start_stage": 6
-                },
-                updated_at=now
-            )
-            db.add(config)
-            await db.commit()
-            await db.refresh(config)
-    else:
-        all_stmt = select(PaymentGatewayConfig).where(PaymentGatewayConfig.id != SINGLETON_CONFIG_ID)
-        all_res = await db.execute(all_stmt)
-        stale_configs = all_res.scalars().all()
-        if stale_configs:
-            for s in stale_configs:
-                await db.delete(s)
-            await db.commit()
-
-    _PAYMENT_CONFIG_CACHE["config"] = config
-    _PAYMENT_CONFIG_CACHE["timestamp"] = now_ts
     return config
 
 @router.get("/config", response_model=StandardResponse[dict])
@@ -205,11 +153,6 @@ async def update_payment_config(
 
     await db.commit()
     await db.refresh(config)
-
-    invalidate_payment_config_cache()
-
-    # Revoke all candidate tokens so all logged-in candidates log out automatically
-    revoke_all_candidate_sessions()
 
     has_secret = bool(config.encrypted_secret_key and len(config.encrypted_secret_key) > 3)
 
