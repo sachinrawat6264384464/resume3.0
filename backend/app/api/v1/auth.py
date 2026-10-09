@@ -20,7 +20,7 @@ otp_cache = {}
 async def find_user_by_email_or_phone(db: AsyncSession, target_email: str, target_phone: str) -> Optional[User]:
     conditions = []
     clean_email = (target_email or "").strip().lower()
-    if clean_email and "@" in clean_email and not clean_email.endswith("@cloudops.internal"):
+    if clean_email and "@" in clean_email:
         conditions.append(User.email == clean_email)
 
     clean_phone = (target_phone or "").strip()
@@ -29,6 +29,7 @@ async def find_user_by_email_or_phone(db: AsyncSession, target_email: str, targe
         if len(digits) >= 10:
             last10 = digits[-10:]
             conditions.append(User.phone_number.like(f"%{last10}%"))
+            conditions.append(User.email.like(f"%{last10}%"))
             
             # Also search Candidate table's phone column
             from app.models.candidate import Candidate
@@ -39,6 +40,7 @@ async def find_user_by_email_or_phone(db: AsyncSession, target_email: str, targe
                 conditions.append(User.id.in_(cand_uids))
         else:
             conditions.append(User.phone_number == clean_phone)
+
 
     if not conditions:
         return None

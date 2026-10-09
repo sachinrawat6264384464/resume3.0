@@ -184,7 +184,7 @@ export default function LoginPage() {
       const destinationPath = new URLSearchParams(window.location.search).get("redirect") || "/dashboard";
       setAuth(res.user, res.access_token);
       setInfoMsg(`🎉 Successfully authenticated as ${res.user.full_name || gName}! Redirecting...`);
-      router.push(destinationPath);
+      window.location.href = destinationPath;
     } catch (err: any) {
       console.warn("Social Auth notice:", err);
       setError(err?.message || "Google Authentication failed. Please try again.");
@@ -293,7 +293,8 @@ export default function LoginPage() {
       });
 
       setAuth(res.user, res.access_token);
-      router.push(destinationPath);
+      setInfoMsg(`🎉 Authentication successful! Redirecting...`);
+      window.location.href = destinationPath;
     } catch (err: any) {
       setError(err?.message || "Invalid OTP code. Please check your details and try again.");
     } finally {

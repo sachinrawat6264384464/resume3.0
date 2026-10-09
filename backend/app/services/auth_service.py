@@ -33,14 +33,27 @@ class AuthService:
         return org
 
     async def register_user(self, user_in: UserCreate) -> User:
-        # Check existing email
-        stmt = select(User).where(User.email == user_in.email)
+        # Check existing email or phone_number
+        conditions = [User.email == user_in.email]
+        if getattr(user_in, "phone_number", None):
+            conditions.append(User.phone_number == user_in.phone_number)
+
+        stmt = select(User).where(or_(*conditions))
         result = await self.db.execute(stmt)
-        if result.scalar_one_or_none():
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="User with this email already exists"
-            )
+        existing = result.scalars().first()
+        if existing:
+            dirty = False
+            if user_in.full_name and not existing.full_name:
+                existing.full_name = user_in.full_name
+                dirty = True
+            if getattr(user_in, "phone_number", None) and not existing.phone_number:
+                existing.phone_number = user_in.phone_number
+                dirty = True
+            if dirty:
+                await self.db.commit()
+                await self.db.refresh(existing)
+            return existing
+
 
         org_id = getattr(user_in, "organization_id", None)
         if not org_id:
