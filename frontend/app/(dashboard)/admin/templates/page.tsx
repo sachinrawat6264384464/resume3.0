@@ -524,15 +524,6 @@ export default function AdminTemplatesPage() {
               >
                 <div className="flex items-center gap-4 min-w-0 flex-1">
                   
-                  {/* Stage Icon (Clickable to edit) */}
-                  <button
-                    onClick={() => handleOpenEditStageModal(stage)}
-                    className="w-12 h-12 rounded-2xl bg-[#0B1E36] text-[#FF6B00] font-black text-lg flex items-center justify-center shrink-0 border border-[#FF6B00]/30 shadow-sm hover:scale-105 transition-transform cursor-pointer"
-                    title="Click to edit stage icon & title"
-                  >
-                    {stage.icon || "🏆"}
-                  </button>
-
                   <div className="flex flex-col min-w-0">
                     
                     {/* Interactive Clickable Badges Row */}
@@ -563,15 +554,6 @@ export default function AdminTemplatesPage() {
                         title="Click to edit Difficulty"
                       >
                         🔥 {stage.difficulty || "Medium"}
-                      </button>
-
-                      {/* XP Reward Badge (Clickable) */}
-                      <button
-                        onClick={() => handleOpenEditStageModal(stage)}
-                        className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-black text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-300/40 hover:scale-105 transition-transform cursor-pointer"
-                        title="Click to edit XP Reward"
-                      >
-                        ⚡ {stage.xp_reward || "+200 XP"}
                       </button>
 
                       {/* Duration Badge (Clickable) */}
@@ -671,27 +653,7 @@ export default function AdminTemplatesPage() {
                           <span>⚙ Edit Full Stage Settings</span>
                         </button>
 
-                        {/* Quick XP Selector */}
-                        <div className="p-2 flex flex-col gap-1 border-t border-slate-100 dark:border-slate-800 mt-1">
-                          <span className="text-[10px] text-emerald-500 font-mono font-black uppercase">
-                            ⚡ Quick XP Reward:
-                          </span>
-                          <div className="flex flex-wrap gap-1">
-                            {["+100 XP", "+200 XP", "+500 XP", "+1,000 XP", "+3,000 XP"].map((xpVal) => (
-                              <button
-                                key={xpVal}
-                                onClick={() => handleQuickUpdateStageField(stage, { xp_reward: xpVal })}
-                                className={`px-2 py-1 rounded-md text-[10px] font-mono font-bold transition-all cursor-pointer ${
-                                  stage.xp_reward === xpVal
-                                    ? "bg-emerald-600 text-white font-black"
-                                    : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-emerald-100"
-                                }`}
-                              >
-                                {xpVal}
-                              </button>
-                            ))}
-                          </div>
-                        </div>
+
 
                         {/* Quick Duration Selector */}
                         <div className="p-2 flex flex-col gap-1 border-t border-slate-100 dark:border-slate-800">

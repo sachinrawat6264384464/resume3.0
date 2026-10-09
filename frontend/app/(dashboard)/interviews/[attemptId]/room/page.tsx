@@ -242,27 +242,28 @@ export default function InterviewRoomPage() {
     };
   }, []);
 
-  // Dynamic fallback questions per stage and index (used ONLY if DB is empty)
+  // Dynamic fallback questions per stage and index (aligned 100% with PostgreSQL DB)
   const STAGE_FALLBACK_QUESTIONS: Record<number, string[]> = {
     1: [
       "Please introduce yourself, walk through your technical journey in Cloud & DevOps, and highlight your most significant production achievement.",
-      "Demonstrate your background in CloudOps engineering. Explain how you automate AWS infrastructure deployments using Terraform and CI/CD pipelines."
+      "When designing a cloud infrastructure solution, how do you balance cost optimization, high availability, and developer delivery speed?"
     ],
     2: [
+      "Explain Stage 2-3: Technical Introduction core operational concepts and step-by-step troubleshooting workflow.",
       "Walk us through your daily technical workflow as a DevOps/Cloud engineer, from code commit to production deployment.",
       "How do you approach learning and integrating new cloud-native technologies into an existing production stack?"
     ],
     3: [
-      "How do you investigate high disk I/O wait and identify which Linux process is causing heavy disk read/write operations?",
-      "Explain the difference between SIGTERM (15) and SIGKILL (9) process signals in Linux, and how applications handle them."
+      "Explain how AWS IAM Roles differ from IAM Users, and why IAM Roles with STS assume-role should be preferred for applications running on EC2 or EKS.",
+      "What is the difference between a Public Subnet and a Private Subnet in an AWS VPC, and how do database instances in a private subnet securely download patches from the internet?"
     ],
     4: [
-      "A critical systemd service failed to start on an Ubuntu server. Walk me through the exact terminal commands and steps you take to troubleshoot and recover it.",
-      "How do you triage a 'No space left on device' error when df -h shows disk space available, but df -i shows 100% inode usage?"
+      "What strategies do you use to optimize Docker image sizes and enhance container security in production Dockerfiles?",
+      "Explain the operational differences between Blue/Green deployment and Canary deployment. How do you automate rollback when error rates spike?"
     ],
     5: [
-      "Compare Virtual Machines (hypervisor-based) vs Containers (OS-level virtualization) in terms of architecture, performance, isolation, and resource overhead.",
-      "Explain the core principles of Infrastructure as Code (IaC) and how state lock/backend storage works in Terraform."
+      "Explain step-by-step how you would troubleshoot a Kubernetes pod that is continuously stuck in a CrashLoopBackOff state in production.",
+      "Users report receiving HTTP 502 Bad Gateway and 504 Gateway Timeout errors when visiting a web application behind an Nginx Ingress Controller on Kubernetes. How do you isolate the root cause?"
     ]
   };
 
@@ -271,6 +272,9 @@ export default function InterviewRoomPage() {
   // Match live DB stage fetched from /interviews/stages
   const liveDbStage = dbStagesData.find((s: any) => s.id === currentStageNum || s.stage_number === currentStageNum);
   const liveDbQuestions = (liveDbStage?.questions || []).filter((q: any) => q.is_active !== "INACTIVE");
+
+  const currentStageTitle = liveDbStage?.title || activeStage?.stage?.title || `Stage ${currentStageNum} Assessment`;
+  const currentStageCategory = liveDbStage?.category || liveDbStage?.levelName || activeStage?.stage?.category || "TECHNICAL ASSESSMENT";
 
   const stageQuestions = ((activeStage?.stage as any)?.questions || []).filter((q: any) => q.is_active !== "INACTIVE");
   const allQAttempts = activeStage?.question_attempts || [];
@@ -364,35 +368,28 @@ export default function InterviewRoomPage() {
   const rawQText = (!isGenericStageTitle(dbQuestionText) ? dbQuestionText : null) || defaultStageQ;
   const derivedKeywords = extractKeywordsFromText(rawQText);
 
-  // Dynamic fallback expected answers per stage and index (Admin Expected Answers)
+  // Dynamic fallback expected answers per stage and index (aligned 100% with PostgreSQL DB)
   const STAGE_FALLBACK_ANSWERS: Record<number, string[]> = {
     1: [
       "Detail your Cloud & DevOps background: present role, years of experience, core tech stack (AWS, Terraform, Docker, Kubernetes), key deployment workflows, and your most significant production achievement.",
-      "Demonstrate your background in CloudOps engineering: explain automated AWS infrastructure deployments using Terraform modules, state locking, and CI/CD pipelines.",
-      "Explain the architectural balance: high availability via Multi-AZ auto-scaling, cost governance via Spot/Reserved instances and right-sizing, and developer velocity via reusable IaC modules.",
-      "Detail IAM security best practices: service accounts, least privilege access, IRSA on EKS, role auto-rotation, and avoiding hardcoded credentials.",
-      "Detail multi-region HA configuration: EC2 auto-scaling groups across multi-AZs, S3 cross-region replication, RDS multi-AZ failover and read replicas.",
-      "Detail observability setup: Prometheus scraping metrics endpoints, Grafana dashboard visualization, alertmanager notifications, and latency SLAs.",
-      "Detail database triage workflow: connection pool limits, max_connections tuning, PgBouncer pooling, slow query analysis, and auto-scaling app pods.",
-      "Detail Kubernetes release strategies: zero-downtime rolling updates, maxSurge and maxUnavailable settings, canary deployments, and automated rollback triggers.",
-      "Detail FinOps practices: AWS Cost Explorer alerts, budget notifications, Spot instance usage, S3 lifecycle rules, and right-sizing idle resources.",
-      "Detail incident post-mortem: root cause analysis (RCA), timeline mapping, SLA restoration, blameless post-mortem document, and preventative action items."
+      "Explain the architectural triangle: 1) HA via Multi-AZ deployments with auto-scaling groups. 2) Cost governance using Spot/Reserved instances and right-sizing. 3) Developer velocity through standardized reusable IaC modules and automated CI/CD pipelines."
     ],
     2: [
+      "Provide a structured response covering architectural principles, diagnostic commands, and recovery steps.",
       "Detailed walkthrough: Developer feature branch -> PR review with automated SAST/unit tests -> CI container build & scanning -> CD deployment via Helm/ArgoCD -> Telemetry monitoring.",
       "Structured adoption: 1) Identify business problem & PoC evaluation. 2) Load & security benchmarking. 3) Staging pilot deployment. 4) Runbook creation and knowledge transfer."
     ],
     3: [
-      "1) Check CPU wait time (%wa) with top/vmstat. 2) Run 'iotop -o' to isolate active PID. 3) Use 'iostat -xz 1' to check disk device utilization. 4) Run 'lsof -p <PID>' or 'pidstat -d' to view open files.",
-      "SIGTERM (15) requests graceful shutdown, allowing the application to close connections and flush files. SIGKILL (9) is handled directly by the kernel and forcefully terminates the process immediately without cleanup."
+      "IAM Users represent persistent identities with long-lived static credentials (access keys) which risk exposure if hardcoded. IAM Roles issue short-lived temporary security credentials via STS assume-role, eliminating static credential storage and enforcing principle of least privilege automatically for EC2/EKS workloads via IRSA.",
+      "A Public Subnet has a route table entry (0.0.0.0/0) pointing to an Internet Gateway (IGW) and assigns public IPs. A Private Subnet has no IGW route and only private IPs. Database instances in a private subnet initiate outbound connections to download patches via a NAT Gateway located in a public subnet."
     ],
     4: [
-      "1) systemctl status <service> for exit code. 2) journalctl -u <service> -xe --no-pager for logs. 3) Verify config syntax and permissions. 4) ss -tulpn | grep <port> for port conflicts. 5) systemctl daemon-reload & restart.",
-      "Inode exhaustion happens when millions of tiny files exhaust file table entries. Fix: 1) Verify inodes with df -i. 2) Locate directory with excessive files via find command. 3) Delete temp/session files. 4) Check for unlinked open deleted files holding inodes using lsof +L1."
+      "1) Use Multi-Stage builds to exclude build tools/compilers from final runtime image. 2) Select minimal base images like Alpine or distroless. 3) Combine RUN commands and clean package manager caches in single layer. 4) Run containers as a non-root user and scan images with Trivy or Grype for vulnerabilities.",
+      "Blue/Green deploys a full identical environment alongside live traffic and switches load balancer router instantly, allowing zero-downtime and instant rollback by redirecting traffic back. Canary deploys new version to a small percentage of users (e.g., 5-10%), monitors error rate telemetry in Prometheus, and auto-rolls back via Helm/ArgoCD if errors exceed SLA threshold."
     ],
     5: [
-      "VMs run full guest OS instances on hypervisors (strong isolation, heavy overhead, minutes startup). Containers share the host OS kernel using Linux namespaces & cgroups (lightweight MB footprint, sub-second startup, process isolation).",
-      "Declarative IaC (Terraform) specifies the desired target state; the engine calculates execution steps automatically. Imperative scripts (Bash/AWS CLI) specify step-by-step commands which lack built-in idempotency and state management."
+      "1) Run 'kubectl describe pod <name>' and examine Events section for exit codes (e.g. OOMKilled exit 137, command error exit 1). 2) Fetch previous container logs using 'kubectl logs <pod> --previous'. 3) Verify container liveness/readiness probe settings and initialDelaySeconds. 4) Validate environment variables, mounted secret volumes, and memory limits.",
+      "1) Distinguish error codes: 502 indicates Nginx received invalid/refused connection from upstream application pod; 504 indicates upstream timeout. 2) Check ingress controller logs for upstream connection errors. 3) Verify target Kubernetes Service selector matches pod labels. 4) Check pod resource usage (CPU/memory throttling) and connection pool limits."
     ]
   };
 
@@ -1087,10 +1084,10 @@ export default function InterviewRoomPage() {
             <div className="flex flex-col gap-4">
               <div className="flex items-center gap-2">
                 <span className="px-3 py-1 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-mono text-[11px] font-bold uppercase tracking-wider">
-                  ROUND {currentQIndex + 1} · {activeStage?.stage?.category || "ABOUT YOU"}
+                  ROUND {currentQIndex + 1} · {currentStageCategory}
                 </span>
                 <span className="text-xs font-extrabold text-indigo-600 dark:text-indigo-400 tracking-wider uppercase">
-                  {activeStage?.stage?.title || "INTRODUCTION"}
+                  {currentStageTitle}
                 </span>
               </div>
 
