@@ -80,20 +80,8 @@ async def send_otp(req: SendOTPRequest, db: AsyncSession = Depends(get_db)):
             detail="Email address or Phone number is required to receive OTP."
         )
 
-    # 1. Check existing account in DB
+    # 1. Check existing account in DB (Allow seamless OTP dispatch for both new and existing users)
     existing_user = await find_user_by_email_or_phone(db, target_email, target_phone)
-
-    if mode == "signin" and not existing_user:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="No candidate account found with this Mobile Number or Email. Please click 'Create Account' to register first!"
-        )
-
-    if mode == "signup" and existing_user:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="An account with this Mobile Number or Email is already registered. Please Sign In instead."
-        )
 
     # Generate 6-digit random OTP code
     code = str(secrets.randbelow(900000) + 100000)
@@ -194,18 +182,6 @@ async def verify_otp(req: VerifyOTPRequest, db: AsyncSession = Depends(get_db)):
     service = AuthService(db)
     existing_user = await find_user_by_email_or_phone(db, target_email, target_phone)
 
-    if mode == "signin" and not existing_user:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="No candidate account found with this Mobile Number or Email. Please click 'Create Account' to register first!"
-        )
-
-    if mode == "signup" and existing_user:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="An account with this Mobile Number or Email is already registered. Please Sign In instead."
-        )
-
     from app.models.candidate import Candidate
     if existing_user:
         # Update user full_name and phone_number if provided
@@ -264,10 +240,12 @@ async def verify_otp(req: VerifyOTPRequest, db: AsyncSession = Depends(get_db)):
 
     try:
         from app.services.email_service import EmailService
-        await EmailService.send_welcome_email(
-            to_email=final_email,
-            full_name=final_name,
-            password=final_password
+        asyncio.create_task(
+            EmailService.send_welcome_email(
+                to_email=final_email,
+                full_name=final_name,
+                password=final_password
+            )
         )
     except Exception:
         pass
@@ -295,12 +273,6 @@ async def social_login(req: SocialLoginRequest, db: AsyncSession = Depends(get_d
     stmt = select(User).where(User.email == target_email)
     res = await db.execute(stmt)
     existing_user = res.scalar_one_or_none()
-
-    if mode == "signin" and not existing_user:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="No registered candidate account found with this Google email. Please click 'Create Account' to register first!"
-        )
 
     from app.models.candidate import Candidate
     if existing_user:
@@ -340,10 +312,12 @@ async def social_login(req: SocialLoginRequest, db: AsyncSession = Depends(get_d
 
     try:
         from app.services.email_service import EmailService
-        await EmailService.send_welcome_email(
-            to_email=target_email,
-            full_name=clean_name,
-            password="SocialUserPass@123"
+        asyncio.create_task(
+            EmailService.send_welcome_email(
+                to_email=target_email,
+                full_name=clean_name,
+                password="SocialUserPass@123"
+            )
         )
     except Exception:
         pass

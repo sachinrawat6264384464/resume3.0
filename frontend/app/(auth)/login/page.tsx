@@ -386,32 +386,6 @@ export default function LoginPage() {
             </span>
           </Link>
 
-          {/* Main Auth Mode Toggle: Sign In vs Create Account */}
-          <div className="flex items-center gap-1 p-1 rounded-xl sm:rounded-2xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-[11px] sm:text-xs font-black">
-            <button
-              type="button"
-              onClick={() => { setAuthMode("signin"); setOtpStep(1); setError(null); setInfoMsg(null); }}
-              className={`px-3 sm:px-4 py-1.5 rounded-lg sm:rounded-xl transition-all cursor-pointer ${
-                authMode === "signin"
-                  ? "bg-[#FF6B00] text-white shadow-xs"
-                  : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
-              }`}
-            >
-              Sign In
-            </button>
-            <button
-              type="button"
-              onClick={() => { setAuthMode("signup"); setOtpStep(1); setError(null); setInfoMsg(null); }}
-              className={`px-3 sm:px-4 py-1.5 rounded-lg sm:rounded-xl transition-all cursor-pointer ${
-                authMode === "signup"
-                  ? "bg-[#FF6B00] text-white shadow-xs"
-                  : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
-              }`}
-            >
-              Create Account
-            </button>
-          </div>
-
           <div className="ml-auto">
             <ThemeToggle />
           </div>
@@ -421,12 +395,10 @@ export default function LoginPage() {
           
           <div className="flex flex-col gap-1 sm:gap-1.5">
             <h2 className="text-xl xs:text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
-              {authMode === "signin" ? "Welcome Back, Candidate! 👋" : "Create Candidate Account 🚀"}
+              Welcome, Candidate! 👋
             </h2>
             <p className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 font-medium leading-relaxed">
-              {authMode === "signin"
-                ? "Sign in using Google or Mobile OTP to access your AI voice interviews & study roadmaps."
-                : "Sign up using Google or Mobile OTP to launch your CloudOps & DevOps assessment journey."}
+              Sign in using Google or Mobile OTP. New candidates will be registered automatically.
             </p>
           </div>
 
@@ -582,32 +554,12 @@ export default function LoginPage() {
                 ) : (
                   <>
                     <CheckCircle2 className="w-4 h-4" />
-                    <span>{authMode === "signup" ? "Verify & Launch Account" : "Verify & Access Dashboard"}</span>
+                    <span>Verify & Access Dashboard</span>
                   </>
                 )}
               </button>
             </form>
           )}
-
-
-          {/* Bottom Switch between Sign In / Sign Up */}
-          <div className="flex flex-col items-center gap-2 sm:gap-3 pt-3 sm:pt-4 border-t border-slate-200 dark:border-slate-800 text-xs">
-            <div className="flex items-center gap-1.5 font-medium text-slate-600 dark:text-slate-400">
-              <span>{authMode === "signin" ? "New to CloudOps AI?" : "Already registered?"}</span>
-              <button
-                type="button"
-                onClick={() => {
-                  setAuthMode(authMode === "signin" ? "signup" : "signin");
-                  setOtpStep(1);
-                  setError(null);
-                  setInfoMsg(null);
-                }}
-                className="font-bold text-[#FF6B00] hover:underline cursor-pointer"
-              >
-                {authMode === "signin" ? "Create Account" : "Sign In to Portal"}
-              </button>
-            </div>
-          </div>
 
         </div>
 
