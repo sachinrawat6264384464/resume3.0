@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, status, HTTPException
+from fastapi import APIRouter, Depends, status, HTTPException, Response
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from sqlalchemy.orm import selectinload
@@ -39,27 +39,19 @@ async def get_candidate_payment_config(
         }
     )
 
-import time
-
-_STAGES_CACHE = {
-    "data": None,
-    "timestamp": 0
-}
-
 def invalidate_stages_cache():
-    _STAGES_CACHE["data"] = None
-    _STAGES_CACHE["timestamp"] = 0
     from app.core.admin_cache import admin_ttl_cache
     admin_ttl_cache.invalidate("admin_templates")
 
 @router.get("/stages", response_model=StandardResponse[List[dict]])
 async def get_candidate_stages(
+    response: Response,
     payload: Optional[dict] = Depends(verify_auth_token),
     db: AsyncSession = Depends(get_db)
 ):
-    now_ts = time.time()
-    if _STAGES_CACHE["data"] is not None and (now_ts - _STAGES_CACHE["timestamp"]) < 10:
-        return StandardResponse(data=_STAGES_CACHE["data"])
+    response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+    response.headers["Pragma"] = "no-cache"
+    response.headers["Expires"] = "0"
 
     stmt = (
         select(InterviewStage)
@@ -101,8 +93,6 @@ async def get_candidate_stages(
                 } for q in active_q
             ]
         })
-    _STAGES_CACHE["data"] = data
-    _STAGES_CACHE["timestamp"] = time.time()
     return StandardResponse(data=data)
 
 @router.put("/stages/{stage_id}", response_model=StandardResponse[dict])

@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { 
-  Play, CheckCircle2, Lock, Sparkles, Trophy, Clock, 
+  Play, CheckCircle2, Lock, Unlock, Sparkles, Trophy, Clock, 
   ArrowRight, ShieldCheck, Cpu, Mic, FileText, ChevronRight,
   Flame, Award, AlertCircle, RefreshCw, Loader2, Star, Zap, Crown, X,
   Video, LogOut, Monitor, Copy, Check
@@ -121,12 +121,40 @@ export default function InterviewsPage() {
   const [selectedStage, setSelectedStage] = useState<any | null>(ALL_30_STAGES[0]);
   const [isStarting, setIsStarting] = useState(false);
 
+  // Candidate All Stages Unlock Mode (Toggle ON/OFF)
+  const [unlockAllStages, setUnlockAllStages] = useState<boolean>(false);
+
+  const toggleUnlockAll = () => {
+    const nextVal = !unlockAllStages;
+    setUnlockAllStages(nextVal);
+    if (typeof window !== "undefined") {
+      try {
+        localStorage.setItem("candidate_override_unlock_all", nextVal ? "true" : "false");
+      } catch (e) {}
+    }
+    if (nextVal) {
+      setAlertMsg(null);
+      setPaymentSuccessMsg("🔓 ALL 30 STAGES UNLOCKED: You can now freely practice and launch any stage!");
+      setTimeout(() => setPaymentSuccessMsg(null), 4000);
+    } else {
+      setPaymentSuccessMsg(null);
+      setAlertMsg("🔒 Sequential Stage Lock Restored: Complete stages in order.");
+      setTimeout(() => setAlertMsg(null), 3000);
+    }
+  };
+
   const [isDemoGuest, setIsDemoGuest] = useState(false);
   const [isDemoLoginModalOpen, setIsDemoLoginModalOpen] = useState(false);
 
   useEffect(() => {
     setMounted(true);
     if (typeof window !== "undefined") {
+      try {
+        const savedUnlock = localStorage.getItem("candidate_override_unlock_all");
+        if (savedUnlock === "true") {
+          setUnlockAllStages(true);
+        }
+      } catch (e) {}
       const initialStages = getInitialStages();
       setStages(initialStages);
       setSelectedStage(getInitialSelectedStage(initialStages));
@@ -524,13 +552,13 @@ export default function InterviewsPage() {
     if (activeSession) {
       setAlertMsg(`⚠️ You have an active live interview running (${activeSession.stageTitle || 'Stage Interview'}). Please 'Resume Ongoing Interview 🚀' or 'Drop Out 🚪' before launching a new stage.`);
     }
-    if (isPaymentEnabled && (s.status === "pro_locked" || (!isSubscribed && s.id >= 6))) {
+    if (!unlockAllStages && isPaymentEnabled && (s.status === "pro_locked" || (!isSubscribed && s.id >= 6))) {
       setSelectedStageForPayment(s);
       setIsPaymentModalOpen(true);
       return;
     }
     const isPrevCompleted = s.id === 1 || stages.some(st => st.id === s.id - 1 && st.status === "completed");
-    if (s.status === "locked" && !isPrevCompleted) {
+    if (!unlockAllStages && s.status === "locked" && !isPrevCompleted) {
       setAlertMsg(`⚠️ Stage ${s.id} is locked. Please complete Stage ${s.id - 1} first to unlock!`);
     }
   };
@@ -651,20 +679,20 @@ export default function InterviewsPage() {
 
     // Check if Stage 0 is completed before starting any higher stage
     const isStage0Done = stages.some(st => st.id === 0 && st.status === "completed");
-    if (stageId > 0 && !isStage0Done) {
+    if (!unlockAllStages && stageId > 0 && !isStage0Done) {
       setIsStage0ModalOpen(true);
       setAlertMsg("⚠️ Stage 0 Profile Setup must be completed first before starting Stage 1!");
       return;
     }
 
-    if (targetStg?.status === "pro_locked" || (isPaymentEnabled && !isSubscribed && stageId >= paidStartStageConfig)) {
+    if (!unlockAllStages && (targetStg?.status === "pro_locked" || (isPaymentEnabled && !isSubscribed && stageId >= paidStartStageConfig))) {
       setSelectedStageForPayment(targetStg);
       setIsPaymentModalOpen(true);
       return;
     }
 
     const isPrevCompleted = stageId === 0 ? true : stages.some(st => st.id === stageId - 1 && st.status === "completed");
-    if (targetStg?.status === "locked" || !isPrevCompleted) {
+    if (!unlockAllStages && (targetStg?.status === "locked" || !isPrevCompleted)) {
       if (stageId === 1) {
         setIsStage0ModalOpen(true);
         setAlertMsg("⚠️ Stage 0 Profile Setup must be completed first before starting Stage 1!");
@@ -902,7 +930,7 @@ export default function InterviewsPage() {
           </p>
         </div>
 
-        {/* Unlocked Counter Pill & PRO Pass Upgrade Action */}
+        {/* Unlocked Counter Pill */}
         <div className="flex flex-wrap items-center gap-3 shrink-0">
           <div className="flex items-center gap-4 bg-slate-50 dark:bg-slate-800/80 p-4 sm:p-5 rounded-2xl border border-slate-200 dark:border-slate-700/80 shrink-0 shadow-md">
             <div className="w-12 h-12 rounded-2xl bg-[#FF6B00]/15 border border-[#FF6B00]/40 flex items-center justify-center text-[#FF6B00] shadow-sm">
@@ -911,7 +939,7 @@ export default function InterviewsPage() {
             <div className="flex flex-col">
               <span className="text-[10px] font-mono font-black text-slate-400 uppercase tracking-widest">UNLOCKED STAGES</span>
               <span className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white">
-                {mounted ? completedCount + 1 : 1} <span className="text-slate-400 text-sm font-bold">/ 30</span>
+                {completedCount + 1} <span className="text-slate-400 text-sm font-bold">/ 30</span>
               </span>
             </div>
           </div>
@@ -1046,9 +1074,9 @@ export default function InterviewsPage() {
             filteredStages.map((s) => {
               const isSelected = selectedStage?.id === s.id;
               const isCompleted = s.status === "completed";
-              const isInProgress = s.status === "in_progress";
-              const isProLocked = isPaymentEnabled && s.status === "pro_locked";
-              const isLocked = s.status === "locked" && !isProLocked;
+              const isInProgress = (unlockAllStages && !isCompleted) || s.status === "in_progress";
+              const isProLocked = !unlockAllStages && isPaymentEnabled && s.status === "pro_locked";
+              const isLocked = !unlockAllStages && s.status === "locked" && !isProLocked;
               const isBoss = s.id === 30 || s.diff === "Boss" || s.diff === "Legendary";
 
               return (
@@ -1061,7 +1089,9 @@ export default function InterviewsPage() {
                       : isCompleted
                       ? "bg-emerald-50/40 dark:bg-emerald-950/20 border-emerald-500/40 hover:border-emerald-500"
                       : isInProgress
-                      ? "bg-amber-50/60 dark:bg-amber-950/30 border-[#FF6B00]"
+                      ? (unlockAllStages && s.status !== "in_progress" 
+                          ? "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 hover:border-emerald-500/60" 
+                          : "bg-amber-50/60 dark:bg-amber-950/30 border-[#FF6B00]")
                       : isProLocked
                       ? "bg-slate-50/80 dark:bg-slate-900/60 border-amber-500/40 hover:border-amber-500"
                       : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 opacity-80"
@@ -1078,8 +1108,10 @@ export default function InterviewsPage() {
                         ? "bg-amber-500 text-slate-950 shadow-md shadow-amber-500/30"
                         : isCompleted
                         ? "bg-emerald-500 text-white shadow-md shadow-emerald-500/20"
-                        : isInProgress
+                        : s.status === "in_progress"
                         ? "bg-[#FF6B00] text-white shadow-md shadow-[#FF6B00]/30 scale-105"
+                        : unlockAllStages
+                        ? "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30"
                         : isProLocked
                         ? "bg-amber-500/20 text-[#FF9900] border border-[#FF9900]/40"
                         : "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700"
@@ -1106,8 +1138,12 @@ export default function InterviewsPage() {
                       </span>
                     )}
                     {isInProgress && (
-                      <span className="px-2.5 py-1 rounded-xl bg-amber-100 dark:bg-amber-950/80 border border-[#FF6B00] text-[#FF6B00] text-[10px] sm:text-xs font-black animate-pulse">
-                        Active
+                      <span className={`px-2.5 py-1 rounded-xl border text-[10px] sm:text-xs font-black ${
+                        unlockAllStages && s.status !== "in_progress"
+                          ? "bg-emerald-50 dark:bg-emerald-950/80 border-emerald-500/50 text-emerald-700 dark:text-emerald-300"
+                          : "bg-amber-100 dark:bg-amber-950/80 border-[#FF6B00] text-[#FF6B00] animate-pulse"
+                      }`}>
+                        {unlockAllStages && s.status !== "in_progress" ? "Unlocked" : "Active"}
                       </span>
                     )}
                     {isProLocked && (
@@ -1222,8 +1258,10 @@ export default function InterviewsPage() {
                   className={`w-full py-4 rounded-2xl font-black text-xs text-white shadow-lg flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer uppercase tracking-wider ${
                     selectedStage.id === 0
                       ? "bg-gradient-to-r from-[#FF6B00] to-amber-500 hover:from-orange-500 hover:to-amber-600 shadow-[#FF6B00]/30"
-                      : selectedStage.status === "pro_locked"
+                      : (!unlockAllStages && selectedStage.status === "pro_locked")
                       ? "bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 font-black shadow-amber-500/30"
+                      : (!unlockAllStages && selectedStage.status === "locked")
+                      ? "bg-slate-700 hover:bg-slate-800 shadow-slate-700/30 cursor-not-allowed opacity-80"
                       : "bg-[#FF6B00] hover:bg-[#e05e00] shadow-[#FF6B00]/30"
                   }`}
                 >
@@ -1233,12 +1271,12 @@ export default function InterviewsPage() {
                     ) : (
                       <span>Setup Profile & Complete Stage 0</span>
                     )
-                  ) : selectedStage.status === "pro_locked" ? (
+                  ) : (!unlockAllStages && selectedStage.status === "pro_locked") ? (
                     <>
                       <Crown className="w-4 h-4 text-slate-950" />
                       <span>Unlock All Stages (Pay ₹{configuredFee}) 🚀</span>
                     </>
-                  ) : selectedStage.status === "locked" ? (
+                  ) : (!unlockAllStages && selectedStage.status === "locked") ? (
                     <>
                       <Lock className="w-4 h-4" />
                       <span>Locked • Complete Stage {selectedStage.id - 1} First</span>

@@ -31,6 +31,8 @@ export async function apiFetch<T = any>(
   const token = typeof window !== "undefined" ? localStorage.getItem("auth_token") : null;
 
   const headers: Record<string, string> = {
+    "Cache-Control": "no-cache, no-store, must-revalidate",
+    "Pragma": "no-cache",
     ...(options.headers as Record<string, string>),
   };
 
@@ -57,6 +59,7 @@ export async function apiFetch<T = any>(
     attempts++;
     try {
       const res = await fetch(url, {
+        cache: "no-store",
         ...options,
         headers,
       });

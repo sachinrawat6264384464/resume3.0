@@ -162,8 +162,8 @@ export default function InterviewRoomPage() {
   // Fetch Attempt State & Live Admin DB Stage Questions (Non-blocking background sync)
   const loadAttempt = useCallback(async () => {
     try {
-      // 1. Fetch live DB stages with all questions configured by Admin in /admin/templates
-      const resStages = await apiFetch("/interviews/stages").catch(() => null);
+      // 1. Fetch live DB stages with all questions configured by Admin in /admin/templates (cache-busting)
+      const resStages = await apiFetch(`/interviews/stages?_t=${Date.now()}`).catch(() => null);
       if (resStages?.data && Array.isArray(resStages.data)) {
         setDbStagesData(resStages.data);
       }
@@ -453,14 +453,15 @@ export default function InterviewRoomPage() {
 
   // Manual Voice Player — Candidate can click 'Listen Question 🔊' to hear question in Female AI Voice
   useEffect(() => {
-    // Ensure any previously playing voice is stopped when switching questions
+    // Re-sync live database questions and reference answers when moving between questions
+    loadAttempt();
     return () => {
       if (cancelSpeechRef.current) {
         cancelSpeechRef.current();
         setIsSpeaking(false);
       }
     };
-  }, [currentQIndex]);
+  }, [currentQIndex, loadAttempt]);
 
   // Start Recording + Live Web Speech-to-Text Recognition
   const handleStartRecording = () => {
@@ -761,7 +762,22 @@ export default function InterviewRoomPage() {
 
       const finalTranscriptText = (manualText || spokenTranscript).trim();
       setSubmittedAnswerText(finalTranscriptText);
-      const { evalResult: localEval, matchPercentage } = evaluateSpeechMatch(finalTranscriptText, currentBenchmark);
+
+      // Dynamically resolve latest reference answer from live DB questions if updated by Admin
+      const latestStage = dbStagesData.find((s: any) => s.id === currentStageNum || s.stage_number === currentStageNum);
+      const latestQs = (latestStage?.questions || []).filter((q: any) => q.is_active !== "INACTIVE");
+      const latestQ = latestQs[currentQIndex] || activeQItem;
+      const effectiveIdeal = (latestQ?.reference_answer && latestQ.reference_answer.trim().length > 0)
+        ? latestQ.reference_answer.trim()
+        : currentBenchmark.ideal;
+
+      const benchmarkToUse = {
+        ...currentBenchmark,
+        q: latestQ?.question_text || currentBenchmark.q,
+        ideal: effectiveIdeal
+      };
+
+      const { evalResult: localEval, matchPercentage } = evaluateSpeechMatch(finalTranscriptText, benchmarkToUse);
       
       const newAccumulated = [...accumulatedScores];
       newAccumulated[currentQIndex] = localEval.overall_score;
@@ -817,6 +833,7 @@ export default function InterviewRoomPage() {
         setLastMatchScore(null);
         setSpokenTranscript("");
         setSubmittedAnswerText("");
+        loadAttempt();
       } else {
         // Final Question Completed -> Calculate Stage Average & Gatekeeper Rules!
         const allScores = accumulatedScores.length > 0 ? accumulatedScores : [0];

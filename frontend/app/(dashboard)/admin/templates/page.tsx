@@ -349,6 +349,7 @@ export default function AdminTemplatesPage() {
       if (typeof window !== "undefined") {
         try {
           sessionStorage.removeItem("admin_cache_templates");
+          sessionStorage.removeItem("cached_interviews_stages");
         } catch {}
       }
       await loadTemplates();
