@@ -4,7 +4,7 @@ from datetime import datetime
 from app.models.user import UserRole
 
 class UserBase(BaseModel):
-    email: EmailStr
+    email: Optional[str] = None
     full_name: str
     phone_number: Optional[str] = None
     role: UserRole = UserRole.CANDIDATE

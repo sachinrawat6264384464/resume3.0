@@ -1,3 +1,4 @@
+from typing import Optional
 from sqlalchemy import Column, String, ForeignKey, Text, Integer, Float, DateTime, JSON
 from sqlalchemy.orm import relationship
 from app.models.base import TimeStampedModel

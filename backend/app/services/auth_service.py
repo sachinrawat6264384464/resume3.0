@@ -1,6 +1,6 @@
 from typing import Optional, Dict, Any
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
+from sqlalchemy import select, or_
 from fastapi import HTTPException, status
 from app.models.user import User, UserRole
 from app.models.organization import Organization
@@ -34,40 +34,47 @@ class AuthService:
 
     async def register_user(self, user_in: UserCreate) -> User:
         # Check existing email or phone_number
-        conditions = [User.email == user_in.email]
+        conditions = []
+        if user_in.email:
+            conditions.append(User.email == user_in.email)
         if getattr(user_in, "phone_number", None):
             conditions.append(User.phone_number == user_in.phone_number)
 
-        stmt = select(User).where(or_(*conditions))
-        result = await self.db.execute(stmt)
-        existing = result.scalars().first()
-        if existing:
-            dirty = False
-            if user_in.full_name and not existing.full_name:
-                existing.full_name = user_in.full_name
-                dirty = True
-            if getattr(user_in, "phone_number", None) and not existing.phone_number:
-                existing.phone_number = user_in.phone_number
-                dirty = True
-            if dirty:
-                await self.db.commit()
-                await self.db.refresh(existing)
-            return existing
-
+        if conditions:
+            stmt = select(User).where(or_(*conditions))
+            result = await self.db.execute(stmt)
+            existing = result.scalars().first()
+            if existing:
+                dirty = False
+                if user_in.full_name and not existing.full_name:
+                    existing.full_name = user_in.full_name
+                    dirty = True
+                if getattr(user_in, "phone_number", None) and not existing.phone_number:
+                    existing.phone_number = user_in.phone_number
+                    dirty = True
+                if getattr(user_in, "password", None) and not existing.hashed_password:
+                    existing.hashed_password = get_password_hash(user_in.password)
+                    dirty = True
+                if dirty:
+                    await self.db.commit()
+                    await self.db.refresh(existing)
+                return existing
 
         org_id = getattr(user_in, "organization_id", None)
         if not org_id:
             org = await self.get_or_create_default_org()
             org_id = org.id
 
-        hashed_pwd = get_password_hash(user_in.password) if getattr(user_in, "password", None) else None
+        raw_pwd = getattr(user_in, "password", None) or "Candidate@123"
+        hashed_pwd = get_password_hash(raw_pwd)
         
+        user_role_val = user_in.role.value if isinstance(user_in.role, UserRole) else str(user_in.role)
         user = User(
             email=user_in.email,
             phone_number=getattr(user_in, "phone_number", None),
-            full_name=user_in.full_name,
+            full_name=user_in.full_name or "Candidate User",
             hashed_password=hashed_pwd,
-            role=user_in.role.value if isinstance(user_in.role, UserRole) else str(user_in.role),
+            role=user_role_val,
             organization_id=org_id,
             firebase_uid=getattr(user_in, "firebase_uid", None),
             is_active=getattr(user_in, "is_active", True)
@@ -76,16 +83,20 @@ class AuthService:
         await self.db.flush()
 
         # If role is CANDIDATE, initialize candidate profile
-        if user.role == UserRole.CANDIDATE.value:
-            candidate = Candidate(
-                user_id=user.id,
-                organization_id=org_id,
-                target_role="CloudOps Engineer",
-                experience_level="JUNIOR",
-                phone=user_in.phone_number
-            )
-            self.db.add(candidate)
-            await self.db.flush()
+        if user.role == UserRole.CANDIDATE.value or str(user.role).upper() == "CANDIDATE":
+            stmt_cand = select(Candidate).where(Candidate.user_id == user.id)
+            c_res = await self.db.execute(stmt_cand)
+            cand = c_res.scalar_one_or_none()
+            if not cand:
+                candidate = Candidate(
+                    user_id=user.id,
+                    organization_id=org_id,
+                    target_role="CloudOps Engineer",
+                    experience_level="JUNIOR",
+                    phone=user.phone_number
+                )
+                self.db.add(candidate)
+                await self.db.flush()
 
         await self.db.commit()
         await self.db.refresh(user)

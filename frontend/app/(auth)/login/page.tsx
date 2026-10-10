@@ -274,8 +274,9 @@ export default function LoginPage() {
     setIsLoading(true);
 
     const cleanPhone = phoneNumber.trim().replace(/\D/g, "");
+    const phoneLast10 = cleanPhone.slice(-10);
     const fullFormattedPhone = cleanPhone ? (cleanPhone.startsWith("91") ? `+${cleanPhone}` : `+91${cleanPhone}`) : undefined;
-    const cleanEmail = email.trim().toLowerCase() || `${fullName.trim().toLowerCase().replace(/\s+/g, "")}@cloudops.internal`;
+    const cleanEmail = email.trim().toLowerCase() || (phoneLast10 ? `cand_${phoneLast10}@cloudops.internal` : undefined);
 
     const urlParams = typeof window !== "undefined" ? new URLSearchParams(window.location.search) : null;
     const destinationPath = urlParams?.get("redirect") || "/dashboard";
@@ -286,7 +287,7 @@ export default function LoginPage() {
         body: JSON.stringify({
           email: cleanEmail,
           phone_number: fullFormattedPhone,
-          full_name: fullName.trim(),
+          full_name: fullName.trim() || (phoneLast10 ? `Candidate ${phoneLast10.slice(-4)}` : "Candidate User"),
           otp: cleanCode,
           mode: authMode
         })

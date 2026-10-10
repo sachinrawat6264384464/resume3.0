@@ -1,3 +1,4 @@
+from typing import Optional
 from fastapi import APIRouter, Depends, status, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, or_
@@ -5,7 +6,7 @@ import secrets
 import logging
 import asyncio
 from app.core.database import get_db
-from app.core.security import verify_auth_token
+from app.core.security import verify_auth_token, create_access_token
 from app.services.auth_service import AuthService
 from app.schemas.user import UserCreate, LoginRequest, MockLoginRequest, FirebasePhoneLoginRequest, SendOTPRequest, VerifyOTPRequest, SocialLoginRequest, TokenResponse, UserOut
 from app.schemas.common import StandardResponse
@@ -20,7 +21,7 @@ otp_cache = {}
 async def find_user_by_email_or_phone(db: AsyncSession, target_email: str, target_phone: str) -> Optional[User]:
     conditions = []
     clean_email = (target_email or "").strip().lower()
-    if clean_email and "@" in clean_email:
+    if clean_email and "@" in clean_email and not clean_email.startswith("@"):
         conditions.append(User.email == clean_email)
 
     clean_phone = (target_phone or "").strip()
@@ -214,19 +215,22 @@ async def verify_otp(req: VerifyOTPRequest, db: AsyncSession = Depends(get_db)):
         await db.commit()
         await db.refresh(existing_user)
 
-        user_email = existing_user.email or f"user_{''.join(filter(str.isdigit, existing_user.phone_number or ''))}@cloudops.internal"
-        return await service.authenticate_mock(
-            MockLoginRequest(
-                email=user_email,
-                name=existing_user.full_name,
-                phone_number=target_phone or existing_user.phone_number
-            )
+        token_data = {
+            "sub": existing_user.id,
+            "email": existing_user.email,
+            "role": existing_user.role,
+            "organization_id": existing_user.organization_id,
+            "name": existing_user.full_name
+        }
+        return TokenResponse(
+            access_token=create_access_token(token_data),
+            user=UserOut.model_validate(existing_user)
         )
 
     # 2. REGISTER NEW CANDIDATE USER AUTOMATICALLY
     phone_digits = "".join(filter(str.isdigit, target_phone)) if target_phone else ""
     default_prefix = phone_digits if phone_digits else str(secrets.randbelow(900000))
-    final_email = (target_email if (target_email and "@" in target_email and not target_email.endswith("@cloudops.internal")) else f"cand_{default_prefix}@cloudops.internal")
+    final_email = (target_email if (target_email and "@" in target_email and not target_email.endswith("@cloudops.internal") and not target_email.startswith("@")) else f"cand_{default_prefix}@cloudops.internal")
     final_phone = target_phone if target_phone else (f"+91{phone_digits}" if len(phone_digits)>=10 else f"+91{secrets.randbelow(9000000000) + 1000000000}")
     final_name = (req.full_name or "").strip() or (f"Candidate {phone_digits[-4:]}" if len(phone_digits)>=4 else "Candidate User")
     final_password = req.password or "DefaultPass@123"
@@ -252,12 +256,16 @@ async def verify_otp(req: VerifyOTPRequest, db: AsyncSession = Depends(get_db)):
     except Exception:
         pass
 
-    return await service.authenticate_mock(
-        MockLoginRequest(
-            email=final_email,
-            name=final_name,
-            phone_number=final_phone
-        )
+    token_data = {
+        "sub": user.id,
+        "email": user.email,
+        "role": user.role,
+        "organization_id": user.organization_id,
+        "name": user.full_name
+    }
+    return TokenResponse(
+        access_token=create_access_token(token_data),
+        user=UserOut.model_validate(user)
     )
 
 @router.post("/social-login", response_model=TokenResponse)
@@ -295,9 +303,18 @@ async def social_login(req: SocialLoginRequest, db: AsyncSession = Depends(get_d
             )
             db.add(cand)
         await db.commit()
+        await db.refresh(existing_user)
 
-        return await service.authenticate_mock(
-            MockLoginRequest(email=existing_user.email, name=existing_user.full_name)
+        token_data = {
+            "sub": existing_user.id,
+            "email": existing_user.email,
+            "role": existing_user.role,
+            "organization_id": existing_user.organization_id,
+            "name": existing_user.full_name
+        }
+        return TokenResponse(
+            access_token=create_access_token(token_data),
+            user=UserOut.model_validate(existing_user)
         )
 
     clean_name = (req.full_name or "").strip() or f"Candidate {target_email.split('@')[0]}"
@@ -324,8 +341,16 @@ async def social_login(req: SocialLoginRequest, db: AsyncSession = Depends(get_d
     except Exception:
         pass
 
-    return await service.authenticate_mock(
-        MockLoginRequest(email=target_email, name=clean_name)
+    token_data = {
+        "sub": user.id,
+        "email": user.email,
+        "role": user.role,
+        "organization_id": user.organization_id,
+        "name": user.full_name
+    }
+    return TokenResponse(
+        access_token=create_access_token(token_data),
+        user=UserOut.model_validate(user)
     )
 
 @router.post("/register", response_model=StandardResponse[UserOut], status_code=status.HTTP_201_CREATED)
