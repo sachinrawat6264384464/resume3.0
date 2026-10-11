@@ -103,20 +103,30 @@ class AuthService:
         return user
 
     async def authenticate_local(self, login_data: LoginRequest) -> TokenResponse:
-        stmt = select(User).where(User.email == login_data.email)
+        clean_target = (login_data.email or "").strip().lower()
+        clean_raw = (login_data.email or "").strip()
+        conditions = [User.email == clean_target]
+        if clean_raw:
+            digits = "".join(filter(str.isdigit, clean_raw))
+            if len(digits) >= 10:
+                conditions.append(User.phone_number.like(f"%{digits[-10:]}%"))
+            else:
+                conditions.append(User.phone_number == clean_raw)
+
+        stmt = select(User).where(or_(*conditions))
         result = await self.db.execute(stmt)
-        user = result.scalar_one_or_none()
+        user = result.scalars().first()
         
         if not user or not user.hashed_password:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Incorrect email or password"
+                detail="Invalid credentials. Username/email or password does not match our database."
             )
             
         if not verify_password(login_data.password, user.hashed_password):
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Incorrect email or password"
+                detail="Invalid credentials. Incorrect password."
             )
 
         # Ensure Candidate profile exists

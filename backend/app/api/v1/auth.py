@@ -404,3 +404,65 @@ async def get_me(current_user: dict = Depends(verify_auth_token), db: AsyncSessi
         data=UserOut.model_validate(user)
     )
 
+@router.post("/staff-user", response_model=StandardResponse[dict])
+async def create_or_update_staff_user(
+    req: dict,
+    db: AsyncSession = Depends(get_db)
+):
+    from app.core.security import get_password_hash
+    service = AuthService(db)
+    
+    email = (req.get("email") or "").strip().lower()
+    full_name = (req.get("full_name") or req.get("name") or "Staff User").strip()
+    phone_number = (req.get("phone_number") or req.get("phone") or "").strip()
+    raw_pwd = (req.get("password") or "Staff@123").strip()
+    role_code = (req.get("role") or "ADMIN").strip().upper()
+    allowed_services = req.get("allowed_services") or []
+
+    if not email:
+        raise HTTPException(status_code=400, detail="Assigned user email is required.")
+
+    stmt = select(User).where(User.email == email)
+    res = await db.execute(stmt)
+    existing_user = res.scalar_one_or_none()
+
+    if existing_user:
+        existing_user.full_name = full_name
+        if phone_number:
+            existing_user.phone_number = phone_number
+        if raw_pwd:
+            existing_user.hashed_password = get_password_hash(raw_pwd)
+        existing_user.role = role_code
+        db.add(existing_user)
+        await db.commit()
+        await db.refresh(existing_user)
+        target_user = existing_user
+    else:
+        org = await service.get_or_create_default_org()
+        new_user = User(
+            email=email,
+            phone_number=phone_number or None,
+            full_name=full_name,
+            hashed_password=get_password_hash(raw_pwd),
+            role=role_code,
+            organization_id=org.id,
+            is_active=True
+        )
+        db.add(new_user)
+        await db.commit()
+        await db.refresh(new_user)
+        target_user = new_user
+
+    return StandardResponse(
+        message=f"Staff user '{full_name}' ({role_code}) successfully saved in authentication database.",
+        data={
+            "id": target_user.id,
+            "email": target_user.email,
+            "full_name": target_user.full_name,
+            "role": target_user.role,
+            "phone_number": target_user.phone_number,
+            "allowed_services": allowed_services
+        }
+    )
+
+

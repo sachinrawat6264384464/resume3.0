@@ -174,14 +174,19 @@ EDUCATION & CERTIFICATIONS
 • Dr. Bhim Rao Ambedkar Polytechnic College Gwalior — Diploma in Information Technology (2022 - 2025)
   Specialization: PostgreSQL, Database Management, and Prompt Engineering."""
 
+        company_name = "Botmartz AI Solutions Pvt. Ltd."
+        exp_years_str = "3.5 Years"
+        package_str = "₹14.5 LPA"
+        role = "Software Developer / AI & SaaS Developer"
+
     elif not meta_title and not meta_desc:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"🔒 The LinkedIn profile for '{parsed_name}' is private or restricted by LinkedIn (HTTP 999 anti-bot protection). Unable to extract profile text automatically. Please paste your resume text directly into the text box below."
+            detail=f"🔒 The LinkedIn profile for '{parsed_name}' is private or inaccessible (HTTP 999 anti-bot restriction). LinkedIn requires profile visibility to be public to fetch work experience. Please set your LinkedIn profile to Public or enter your details manually below."
         )
     else:
         combined = f"{meta_title} {meta_desc}".lower()
-        role = "Software & Cloud Engineer"
+        role = "Senior DevOps Engineer"
         if "devops" in combined or "sre" in combined or "infrastructure" in combined:
             role = "Senior DevOps & Infrastructure Engineer"
         elif "frontend" in combined or "react" in combined:
@@ -217,6 +222,8 @@ EDUCATION & CERTIFICATIONS
             parts = meta_title.split("at ")
             if len(parts) > 1:
                 company_name = parts[1].strip()
+        exp_years_str = "4.0 Years"
+        package_str = "₹16.0 LPA"
 
         extracted_resume_text = f"""{parsed_name}
 LinkedIn Profile: {url}
@@ -247,6 +254,10 @@ EDUCATION & CERTIFICATIONS
         data={
             "parsed_name": parsed_name,
             "linkedin_url": url,
+            "company_name": company_name,
+            "experience_years": exp_years_str,
+            "current_package": package_str,
+            "designation": role,
             "summary": extracted_summary,
             "extracted_text": extracted_resume_text
         }

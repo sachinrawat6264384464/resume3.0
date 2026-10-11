@@ -1,12 +1,47 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, Fragment } from "react";
 import { 
   Users, Search, RefreshCw, Mail, Phone, BookOpen, Award, Shield, 
   CheckCircle2, Clock, Eye, AlertCircle, ChevronRight, User, Loader2, Download, X,
-  Linkedin, ExternalLink, Trash2, AlertTriangle, MessageSquare, Star, Send
+  Linkedin, ExternalLink, Trash2, AlertTriangle, MessageSquare, Star, Send,
+  ChevronDown, Layers, CreditCard, Sparkles, Check, Flame
 } from "lucide-react";
 import { apiFetch } from "@/lib/api";
+
+const STAGE_TITLES_LIST = [
+  { num: 0, title: "Setup Your Interview Profile", level: "Foundation", cat: "Profile & Pitch" },
+  { num: 1, title: "Self Introduction & Career Pitch", level: "Foundation", cat: "Personal Pitch" },
+  { num: 2, title: "Technical Introduction & Core Stack", level: "Foundation", cat: "Core Tech" },
+  { num: 3, title: "Linux for Cloud Engineers", level: "Foundation", cat: "Linux Diagnostics" },
+  { num: 4, title: "Linux for DevOps Engineers", level: "Foundation", cat: "Linux Systems" },
+  { num: 5, title: "Cloud + DevOps Fundamentals", level: "Foundation", cat: "Cloud Architecture" },
+  { num: 6, title: "AWS Cloud Engineer", level: "Cloud", cat: "AWS Architecture" },
+  { num: 7, title: "GCP Cloud Engineer", level: "Cloud", cat: "GCP Infrastructure" },
+  { num: 8, title: "Azure Cloud Engineer", level: "Cloud", cat: "Azure Infrastructure" },
+  { num: 9, title: "Multi-Cloud Architecture", level: "Cloud", cat: "Multi-Cloud" },
+  { num: 10, title: "Cloud Real-Time Scenarios", level: "Cloud", cat: "Incident Response" },
+  { num: 11, title: "Git + GitHub Workflow", level: "DevOps", cat: "DevOps Practices" },
+  { num: 12, title: "Jenkins + CI/CD Pipelines", level: "DevOps", cat: "CI/CD Engineering" },
+  { num: 13, title: "Docker Containerization", level: "DevOps", cat: "Containerization" },
+  { num: 14, title: "Kubernetes Orchestration", level: "DevOps", cat: "Kubernetes" },
+  { num: 15, title: "Ansible + Terraform IaC", level: "DevOps", cat: "IaC Automation" },
+  { num: 16, title: "End-to-End CI/CD Project", level: "Advanced", cat: "GitOps & CI/CD" },
+  { num: 17, title: "Production Troubleshooting & Triage", level: "Advanced", cat: "Production Triage" },
+  { num: 18, title: "DevSecOps & Hardening", level: "Advanced", cat: "Security Engineering" },
+  { num: 19, title: "Real-Time DevOps Architecture", level: "Advanced", cat: "Cloud Architecture" },
+  { num: 20, title: "Final DevOps Mock Interview", level: "Advanced", cat: "Executive Panel" },
+  { num: 21, title: "Bonus 01: AIOps Challenge", level: "Bonus AI", cat: "AI Infrastructure" },
+  { num: 22, title: "Bonus 02: MLOps Challenge", level: "Bonus AI", cat: "AI Infrastructure" },
+  { num: 23, title: "Bonus 03: AI Integration Challenge", level: "Bonus AI", cat: "AI Infrastructure" },
+  { num: 24, title: "Bonus 04: AI + DevOps Automation", level: "Bonus AI", cat: "AI Automation" },
+  { num: 25, title: "Bonus 05: AI MCP Challenge", level: "Bonus AI", cat: "AI Integration" },
+  { num: 26, title: "Bonus 06: Azure DevOps Project", level: "Bonus AI", cat: "Azure & CI/CD" },
+  { num: 27, title: "Bonus 07: Project-Based CI/CD", level: "Bonus AI", cat: "Advanced CI/CD" },
+  { num: 28, title: "Bonus 08: Advanced DevSecOps Project", level: "Bonus AI", cat: "Security Engineering" },
+  { num: 29, title: "Bonus 09: Multi-Cloud + AI Architecture", level: "Bonus AI", cat: "Advanced Architecture" },
+  { num: 30, title: "👑 40 LPA Final Boss Interview Battle", level: "Bonus AI", cat: "Legendary Boss Battle" }
+];
 
 export default function AdminCandidatesPage() {
   const [candidates, setCandidates] = useState<any[]>(() => {
@@ -23,6 +58,11 @@ export default function AdminCandidatesPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCandidate, setSelectedCandidate] = useState<any | null>(null);
 
+  // Expandable stages breakdown state
+  const [expandedStagesCandidateId, setExpandedStagesCandidateId] = useState<string | null>(null);
+  const [togglingPaymentId, setTogglingPaymentId] = useState<string | null>(null);
+  const [stageFilterLevel, setStageFilterLevel] = useState<string>("ALL");
+
   // Delete candidate confirmation modal state
   const [candidateToDelete, setCandidateToDelete] = useState<any | null>(null);
   const [isDeleting, setIsDeleting] = useState<boolean>(false);
@@ -36,6 +76,36 @@ export default function AdminCandidatesPage() {
   const [fbImprovements, setFbImprovements] = useState<string>("");
   const [isSubmittingFb, setIsSubmittingFb] = useState<boolean>(false);
   const [fbSuccessMsg, setFbSuccessMsg] = useState<string | null>(null);
+
+  const toggleCandidatePayment = async (candidateId: string, currentStatus: boolean) => {
+    setTogglingPaymentId(candidateId);
+    try {
+      const res = await apiFetch(`/candidates/${candidateId}/payment-status`, {
+        method: "PUT",
+        body: JSON.stringify({ is_paid: !currentStatus })
+      });
+      if (res?.data) {
+        setCandidates(prev => prev.map(c => {
+          if (c.id === candidateId || c.user_id === candidateId) {
+            return {
+              ...c,
+              is_paid: !currentStatus,
+              payment_status: !currentStatus ? "PAID" : "UNPAID"
+            };
+          }
+          return c;
+        }));
+        setAlertMsg({
+          type: "success",
+          text: `Payment access ${!currentStatus ? "ACTIVATED ✅ Entire row is now highlighted in GREEN!" : "REVOKED"} for candidate.`
+        });
+      }
+    } catch (err: any) {
+      alert("Failed to update payment status: " + (err?.message || "Error"));
+    } finally {
+      setTogglingPaymentId(null);
+    }
+  };
 
   const getLinkedinUrl = (c: any) => {
     let rawUrl = c.linkedin_url || c.resume_data_json?.linkedin_url;
@@ -412,18 +482,18 @@ export default function AdminCandidatesPage() {
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
+            <table className="w-full text-left border-collapse min-w-[1250px]">
               <thead>
-                <tr className="border-b border-slate-100 dark:border-slate-800 text-[11px] font-black text-slate-400 uppercase tracking-wider bg-slate-50/50 dark:bg-slate-800/30">
-                  <th className="py-3.5 px-4">Candidate Name</th>
-                  <th className="py-3.5 px-4">Email & Contact</th>
-                  <th className="py-3.5 px-4">Current Designation</th>
-                  <th className="py-3.5 px-4">Target Role & Salary</th>
-                  <th className="py-3.5 px-4">Exp Level</th>
-                  <th className="py-3.5 px-4">LinkedIn Profile</th>
-                  <th className="py-3.5 px-4">Readiness</th>
-                  <th className="py-3.5 px-4">Level & XP</th>
-                  <th className="py-3.5 px-4 text-center">Actions</th>
+                <tr className="border-b border-slate-200 dark:border-slate-800 text-[11px] font-black text-slate-400 uppercase tracking-wider bg-slate-50/80 dark:bg-slate-800/40">
+                  <th className="py-3.5 px-4 w-[240px]">Candidate Name</th>
+                  <th className="py-3.5 px-4 w-[210px]">Email & Contact</th>
+                  <th className="py-3.5 px-4 w-[150px]">Current Designation</th>
+                  <th className="py-3.5 px-4 w-[190px]">Target Role & Salary</th>
+                  <th className="py-3.5 px-3 w-[95px] text-center">Exp Level</th>
+                  <th className="py-3.5 px-3 w-[110px] text-center">LinkedIn Profile</th>
+                  <th className="py-3.5 px-3 w-[110px] text-center">Readiness</th>
+                  <th className="py-3.5 px-3 w-[105px] text-center">Level & XP</th>
+                  <th className="py-3.5 px-4 w-[280px] text-right">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60 text-xs">
@@ -432,124 +502,331 @@ export default function AdminCandidatesPage() {
                   const desig = getDesignation(c);
                   const expLvl = getExperienceLevel(c);
                   const salary = getTargetSalaryBand(c);
+                  const isPaid = !!(c.is_paid || c.payment_status === "PAID");
+                  const isExpanded = expandedStagesCandidateId === c.id;
+
+                  // Candidate stages map
+                  const stagesList = c.stages_summary && Array.isArray(c.stages_summary) && c.stages_summary.length > 0
+                    ? c.stages_summary
+                    : STAGE_TITLES_LIST.map((st) => {
+                        const isStg0Done = st.num === 0 && (
+                          c.resume_data_json?.mark_stage_0_complete || 
+                          c.resume_data_json?.stage_0_completed || 
+                          (typeof c.notes === "string" && c.notes.toLowerCase().includes("stage_0"))
+                        );
+                        return {
+                          stage_number: st.num,
+                          title: st.title,
+                          status: isStg0Done ? "COMPLETED" : "LOCKED",
+                          score: isStg0Done ? 100 : 0,
+                          level: st.level,
+                          category: st.cat
+                        };
+                      });
+
+                  const completedStagesCount = stagesList.filter((s: any) => s.status === "COMPLETED" || s.status === "PASSED").length;
 
                   return (
-                    <tr key={c.id} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors">
-                      <td className="py-4 px-4">
-                        <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-full bg-[#0B1E36] text-[#FF6B00] font-black flex items-center justify-center shrink-0">
-                            {(c.user?.full_name || c.full_name || "C").charAt(0)}
+                    <Fragment key={c.id}>
+                      <tr 
+                        className={`transition-all duration-200 ${
+                          isPaid 
+                            ? "bg-emerald-500/10 dark:bg-emerald-950/40 border-l-4 border-l-emerald-500 hover:bg-emerald-500/15 dark:hover:bg-emerald-900/40" 
+                            : "hover:bg-slate-50/80 dark:hover:bg-slate-800/40"
+                        }`}
+                      >
+                        <td className="py-3.5 px-4 w-[240px]">
+                          <div className="flex items-center gap-3">
+                            <div className={`w-9 h-9 rounded-full font-black flex items-center justify-center shrink-0 shadow-xs ${
+                              isPaid 
+                                ? "bg-emerald-600 text-white ring-2 ring-emerald-500/50" 
+                                : "bg-[#0B1E36] text-[#FF6B00]"
+                            }`}>
+                              {(c.user?.full_name || c.full_name || "C").charAt(0)}
+                            </div>
+                            <div className="flex flex-col gap-0.5 min-w-0">
+                              <span className="font-extrabold text-slate-900 dark:text-white truncate flex items-center gap-1.5 flex-wrap">
+                                <span>{c.user?.full_name || c.full_name || "Sachin Rawat"}</span>
+                                {isPaid && (
+                                  <span className="px-1.5 py-0.5 rounded-md text-[9px] font-black uppercase tracking-wider bg-emerald-500 text-white shadow-2xs shrink-0">
+                                    PAID ACCESS ✅
+                                  </span>
+                                )}
+                              </span>
+                              <span className="text-[10px] font-mono text-slate-400 truncate">{c.student_id || c.id?.slice(0, 8)}</span>
+                            </div>
                           </div>
-                          <div className="flex flex-col">
-                            <span className="font-extrabold text-slate-900 dark:text-white">
-                              {c.user?.full_name || c.full_name || "Sachin Rawat"}
+                        </td>
+
+                        <td className="py-3.5 px-4 w-[210px] font-mono text-slate-600 dark:text-slate-300">
+                          <div className="flex flex-col min-w-0">
+                            <span className="font-bold text-slate-900 dark:text-white truncate text-[11px]" title={c.user?.email || c.email}>
+                              {c.user?.email && !c.user.email.endsWith("@cloudops.internal") 
+                                ? c.user.email 
+                                : (c.email && !c.email.endsWith("@cloudops.internal") ? c.email : "📱 Mobile Registered")}
                             </span>
-                            <span className="text-[10px] font-mono text-slate-400">{c.student_id || c.id?.slice(0, 8)}</span>
+                            <span className="text-[10px] text-[#FF6B00] font-mono font-bold">
+                              {getPhoneDisplay(c)}
+                            </span>
                           </div>
-                        </div>
-                      </td>
+                        </td>
 
-                      <td className="py-4 px-4 font-mono text-slate-600 dark:text-slate-300">
-                        <div className="flex flex-col">
-                          <span className="font-bold text-slate-900 dark:text-white">
-                            {c.user?.email && !c.user.email.endsWith("@cloudops.internal") 
-                              ? c.user.email 
-                              : (c.email && !c.email.endsWith("@cloudops.internal") ? c.email : "📱 Mobile Registered")}
+                        <td className="py-3.5 px-4 w-[150px]">
+                          <span className="inline-block font-bold text-slate-800 dark:text-slate-200 bg-slate-100 dark:bg-slate-800 px-2.5 py-1 rounded-lg text-[11px] truncate max-w-[140px]" title={desig}>
+                            {desig}
                           </span>
-                          <span className="text-[10px] text-[#FF6B00] font-mono font-bold">
-                            {getPhoneDisplay(c)}
+                        </td>
+                        
+                        <td className="py-3.5 px-4 w-[190px]">
+                          <div className="flex flex-col min-w-0">
+                            <span className="font-extrabold text-slate-900 dark:text-white truncate text-[11px]" title={c.target_role || "Senior DevOps Engineer"}>
+                              {c.target_role || "Senior DevOps Engineer"}
+                            </span>
+                            <span className="text-[10px] font-mono text-[#FF6B00] font-black">
+                              {salary}
+                            </span>
+                          </div>
+                        </td>
+
+                        <td className="py-3.5 px-3 w-[95px] text-center">
+                          <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-black uppercase bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
+                            {expLvl}
                           </span>
-                        </div>
-                      </td>
+                        </td>
 
-                      <td className="py-4 px-4">
-                        <span className="font-bold text-slate-800 dark:text-slate-200 bg-slate-100 dark:bg-slate-800 px-2.5 py-1 rounded-lg text-[11px]">
-                          {desig}
-                        </span>
-                      </td>
-                      
-                      <td className="py-4 px-4">
-                        <div className="flex flex-col">
-                          <span className="font-extrabold text-slate-900 dark:text-white">
-                            {c.target_role || "Senior DevOps Engineer"}
+                        <td className="py-3.5 px-3 w-[110px] text-center">
+                          {linkedinUrl ? (
+                            <a
+                              href={linkedinUrl.startsWith("http") ? linkedinUrl : `https://${linkedinUrl}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-blue-500/10 hover:bg-blue-500/20 text-[#0A66C2] dark:text-blue-400 font-extrabold text-[11px] transition-all border border-blue-500/20 shadow-2xs"
+                            >
+                              <Linkedin className="w-3.5 h-3.5 fill-current" />
+                              <span>Profile</span>
+                              <ExternalLink className="w-2.5 h-2.5 opacity-70" />
+                            </a>
+                          ) : (
+                            <span className="text-slate-400 italic text-[11px]">Not Provided</span>
+                          )}
+                        </td>
+
+                        <td className="py-3.5 px-3 w-[110px] text-center">
+                          <span className={`px-2 py-0.5 rounded-full text-[10.5px] font-black ${
+                            (c.readiness_score || 0) >= 80 
+                              ? "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30" 
+                              : (c.readiness_score || 0) >= 40 
+                                ? "bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-500/30" 
+                                : "bg-slate-100 dark:bg-slate-800 text-slate-500 border border-slate-200 dark:border-slate-700"
+                          }`}>
+                            {Math.round(c.readiness_score || 0)}% READY
                           </span>
-                          <span className="text-[10px] font-mono text-[#FF6B00] font-black">
-                            {salary}
+                        </td>
+
+                        <td className="py-3.5 px-3 w-[105px] text-center font-mono">
+                          <span className="font-bold text-slate-700 dark:text-slate-300 text-[11px]">
+                            Lvl {c.level || 1} • {c.xp || 0} XP
                           </span>
-                        </div>
-                      </td>
+                        </td>
 
-                      <td className="py-4 px-4">
-                        <span className="px-2.5 py-1 rounded-full text-[10px] font-mono font-black uppercase bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
-                          {expLvl}
-                        </span>
-                      </td>
+                        <td className="py-3.5 px-4 w-[280px] text-right whitespace-nowrap">
+                          <div className="flex items-center justify-end gap-1.5">
+                            {/* Stages 0-30 Dropdown Button */}
+                            <button
+                              type="button"
+                              onClick={() => setExpandedStagesCandidateId(isExpanded ? null : c.id)}
+                              className={`px-2.5 py-1.5 rounded-xl text-[11px] font-black transition-all flex items-center gap-1 cursor-pointer border shadow-2xs ${
+                                isExpanded
+                                  ? "bg-[#FF6B00] text-white border-[#FF6B00] shadow-sm shadow-[#FF6B00]/30"
+                                  : isPaid
+                                    ? "bg-emerald-500/15 text-emerald-800 dark:text-emerald-200 border-emerald-500/30 hover:bg-emerald-500/25"
+                                    : "bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700"
+                              }`}
+                              title="Toggle detailed status of all 31 Stages (0 to 30)"
+                            >
+                              <Layers className="w-3.5 h-3.5" />
+                              <span>Stages (0–30)</span>
+                              <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${isExpanded ? "rotate-180" : ""}`} />
+                            </button>
 
-                      <td className="py-4 px-4">
-                        {linkedinUrl ? (
-                          <a
-                            href={linkedinUrl.startsWith("http") ? linkedinUrl : `https://${linkedinUrl}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-blue-500/10 hover:bg-blue-500/20 text-[#0A66C2] dark:text-blue-400 font-extrabold text-[11px] transition-all border border-blue-500/20 shadow-2xs"
-                          >
-                            <Linkedin className="w-3.5 h-3.5 fill-current" />
-                            <span>Profile</span>
-                            <ExternalLink className="w-3 h-3 opacity-70" />
-                          </a>
-                        ) : (
-                          <span className="text-slate-400 italic text-[11px]">Not Provided</span>
-                        )}
-                      </td>
+                            {/* Payment Status Toggle Button */}
+                            <button
+                              type="button"
+                              onClick={() => toggleCandidatePayment(c.id, isPaid)}
+                              disabled={togglingPaymentId === c.id}
+                              className={`px-2.5 py-1.5 rounded-xl text-[11px] font-black transition-all flex items-center gap-1.5 cursor-pointer border shadow-2xs ${
+                                isPaid
+                                  ? "bg-emerald-600 hover:bg-emerald-700 text-white border-emerald-600"
+                                  : "bg-white hover:bg-emerald-50 dark:bg-slate-800 dark:hover:bg-emerald-950/40 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:text-emerald-600 hover:border-emerald-300"
+                              }`}
+                              title={isPaid ? "Paid member: Click to revoke access" : "Candidate unpaid: Click to mark as Paid (Row will turn green)"}
+                            >
+                              {togglingPaymentId === c.id ? (
+                                <Loader2 className="w-3 h-3 animate-spin" />
+                              ) : (
+                                <CreditCard className={`w-3 h-3 ${isPaid ? "text-white" : "text-emerald-500"}`} />
+                              )}
+                              <span>{isPaid ? "Paid ✅" : "Mark Paid"}</span>
+                            </button>
 
-                      <td className="py-4 px-4">
-                        <span className="font-black text-amber-600 dark:text-amber-400 bg-amber-500/10 px-2.5 py-1 rounded-full text-xs">
-                          {Math.round(c.readiness_score || 0)}% READY
-                        </span>
-                      </td>
+                            {/* Feedback Button */}
+                            <button
+                              onClick={() => {
+                                setFeedbackCandidate(c);
+                                setFbRating(5);
+                                setFbText("");
+                                setFbStrengths("");
+                                setFbImprovements("");
+                                setFbSuccessMsg(null);
+                              }}
+                              className="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-emerald-600 hover:text-white text-slate-600 dark:text-slate-300 font-bold transition-all border border-slate-200 dark:border-slate-700 cursor-pointer"
+                              title="Give Admin Feedback to Candidate"
+                            >
+                              <MessageSquare className="w-3.5 h-3.5" />
+                            </button>
 
-                      <td className="py-4 px-4 font-mono">
-                        <span className="font-bold text-slate-700 dark:text-slate-300">
-                          Lvl {c.level || 1} • {c.xp || 0} XP
-                        </span>
-                      </td>
+                            {/* Inspect Button */}
+                            <button
+                              onClick={() => setSelectedCandidate(c)}
+                              className="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-[#FF6B00] hover:text-white text-slate-600 dark:text-slate-300 font-bold transition-all border border-slate-200 dark:border-slate-700 cursor-pointer"
+                              title="Inspect Candidate Details"
+                            >
+                              <Eye className="w-3.5 h-3.5" />
+                            </button>
+                            
+                            {/* Delete Button */}
+                            <button
+                              onClick={() => setCandidateToDelete(c)}
+                              className="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-rose-600 hover:text-white text-slate-400 hover:text-white font-bold transition-all border border-slate-200 dark:border-slate-700 cursor-pointer"
+                              title="Permanently Delete User Account"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
 
-                      <td className="py-4 px-5 text-center">
-                        <div className="flex items-center justify-center gap-2">
-                          <button
-                            onClick={() => {
-                              setFeedbackCandidate(c);
-                              setFbRating(5);
-                              setFbText("");
-                              setFbStrengths("");
-                              setFbImprovements("");
-                              setFbSuccessMsg(null);
-                            }}
-                            className="px-2.5 py-1.5 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 hover:bg-emerald-600 hover:text-white text-emerald-600 dark:text-emerald-400 font-bold transition-all text-[11px] flex items-center gap-1 cursor-pointer border border-emerald-200 dark:border-emerald-900/50"
-                            title="Give Admin Feedback to Candidate"
-                          >
-                            <MessageSquare className="w-3.5 h-3.5" />
-                            <span>Feedback</span>
-                          </button>
+                      {/* EXPANDABLE 31 STAGES (0 to 30) BREAKDOWN DRAWER */}
+                      {isExpanded && (
+                        <tr className={`${isPaid ? "bg-emerald-500/5 dark:bg-emerald-950/30 border-l-4 border-l-emerald-500" : "bg-slate-50/80 dark:bg-slate-900/80"}`}>
+                          <td colSpan={9} className="p-4 sm:p-6 border-b border-slate-200 dark:border-slate-800">
+                            <div className="flex flex-col gap-4 animate-fadeIn">
+                              
+                              {/* Expanded Drawer Header */}
+                              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-200/80 dark:border-slate-700/80">
+                                <div className="flex items-center gap-2.5">
+                                  <div className="w-8 h-8 rounded-xl bg-[#0B1E36] text-[#FF6B00] flex items-center justify-center font-black">
+                                    <Layers className="w-4 h-4" />
+                                  </div>
+                                  <div>
+                                    <h4 className="text-sm font-black text-slate-900 dark:text-white flex items-center gap-2">
+                                      <span>All 31 Stages (0–30) Breakdown for {c.user?.full_name || c.full_name}</span>
+                                      {isPaid && (
+                                        <span className="px-2 py-0.5 rounded-full text-[9px] font-black uppercase bg-emerald-500 text-white">
+                                          Paid Access Active
+                                        </span>
+                                      )}
+                                    </h4>
+                                    <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">
+                                      Track completed, in-progress, and locked interview stages with exact scores & evaluation statuses.
+                                    </p>
+                                  </div>
+                                </div>
 
-                          <button
-                            onClick={() => setSelectedCandidate(c)}
-                            className="px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-[#FF6B00] hover:text-white text-slate-700 dark:text-slate-300 font-bold transition-all text-[11px] cursor-pointer"
-                          >
-                            Inspect
-                          </button>
-                          
-                          <button
-                            onClick={() => setCandidateToDelete(c)}
-                            className="px-2.5 py-1.5 rounded-lg bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-600 hover:text-white text-rose-600 dark:text-rose-400 font-bold transition-all text-[11px] flex items-center gap-1 cursor-pointer border border-rose-200 dark:border-rose-900/50"
-                            title="Permanently Delete User Account"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                            <span>Delete</span>
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
+                                <div className="flex items-center gap-3">
+                                  <div className="flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-xs">
+                                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
+                                    <span>{completedStagesCount} / 31 Stages Completed ({Math.round((completedStagesCount / 31) * 100)}%)</span>
+                                  </div>
+
+                                  <button
+                                    type="button"
+                                    onClick={() => toggleCandidatePayment(c.id, isPaid)}
+                                    className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 cursor-pointer shadow-xs ${
+                                      isPaid
+                                        ? "bg-rose-50 text-rose-600 hover:bg-rose-600 hover:text-white border border-rose-200"
+                                        : "bg-emerald-600 hover:bg-emerald-700 text-white"
+                                    }`}
+                                  >
+                                    <CreditCard className="w-3.5 h-3.5" />
+                                    <span>{isPaid ? "Revoke Paid Access" : "Grant Paid Pro Access"}</span>
+                                  </button>
+                                </div>
+                              </div>
+
+                              {/* 31 Stage Cards Grid */}
+                              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 max-h-[460px] overflow-y-auto pr-1">
+                                {stagesList.map((st: any) => {
+                                  const isCompleted = st.status === "COMPLETED" || st.status === "PASSED";
+                                  const isInProgress = st.status === "IN_PROGRESS";
+                                  const isFailed = st.status === "FAILED";
+
+                                  return (
+                                    <div
+                                      key={st.stage_number}
+                                      className={`p-3 rounded-2xl border transition-all flex flex-col justify-between gap-2 shadow-2xs ${
+                                        isCompleted
+                                          ? "bg-emerald-50/80 dark:bg-emerald-950/40 border-emerald-300 dark:border-emerald-800"
+                                          : isInProgress
+                                            ? "bg-amber-50/80 dark:bg-amber-950/40 border-amber-300 dark:border-amber-800"
+                                            : isFailed
+                                              ? "bg-rose-50/80 dark:bg-rose-950/40 border-rose-300 dark:border-rose-800"
+                                              : "bg-white dark:bg-slate-800/60 border-slate-200 dark:border-slate-700 opacity-70"
+                                      }`}
+                                    >
+                                      <div className="flex items-start justify-between gap-2">
+                                        <div className="flex items-center gap-2">
+                                          <span className={`w-7 h-7 rounded-xl text-xs font-mono font-black flex items-center justify-center shrink-0 ${
+                                            isCompleted
+                                              ? "bg-emerald-600 text-white shadow-2xs"
+                                              : isInProgress
+                                                ? "bg-amber-500 text-white"
+                                                : isFailed
+                                                  ? "bg-rose-600 text-white"
+                                                  : "bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300"
+                                          }`}>
+                                            S{st.stage_number}
+                                          </span>
+                                          <div className="flex flex-col min-w-0">
+                                            <span className="text-xs font-bold text-slate-900 dark:text-white line-clamp-1">
+                                              {st.title}
+                                            </span>
+                                            <span className="text-[10px] text-slate-400 font-medium">
+                                              {st.category || (st.stage_number === 30 ? "Boss Battle" : "Core Stage")}
+                                            </span>
+                                          </div>
+                                        </div>
+                                      </div>
+
+                                      <div className="flex items-center justify-between pt-1 border-t border-slate-200/50 dark:border-slate-700/50">
+                                        <span className={`text-[10px] font-black uppercase px-2 py-0.5 rounded-full flex items-center gap-1 ${
+                                          isCompleted
+                                            ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900 dark:text-emerald-300"
+                                            : isInProgress
+                                              ? "bg-amber-100 text-amber-700 dark:bg-amber-900 dark:text-amber-300 animate-pulse"
+                                              : isFailed
+                                                ? "bg-rose-100 text-rose-700 dark:bg-rose-900 dark:text-rose-300"
+                                                : "bg-slate-100 text-slate-500 dark:bg-slate-700 dark:text-slate-400"
+                                        }`}>
+                                          {isCompleted ? "✅ Completed" : isInProgress ? "⏳ In Progress" : isFailed ? "❌ Failed" : "🔒 Locked"}
+                                        </span>
+
+                                        {isCompleted && (
+                                          <span className="text-xs font-mono font-black text-emerald-600 dark:text-emerald-400">
+                                            {Math.round(st.score || 85)}% Score
+                                          </span>
+                                        )}
+                                      </div>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+                    </Fragment>
                   );
                 })}
               </tbody>

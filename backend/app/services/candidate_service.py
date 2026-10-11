@@ -6,8 +6,44 @@ from fastapi import HTTPException, status
 from app.models.candidate import Candidate
 from app.models.user import User, UserRole
 from app.models.interview_attempt import InterviewAttempt
+from app.models.stage_attempt import StageAttempt
+from app.models.payment_gateway import PaymentTransaction
 from app.schemas.candidate import CandidateCreate, CandidateUpdate, CandidateOut, CandidateWithAttemptsOut
 from app.core.security import get_password_hash
+
+STAGE_TITLES = {
+    0: "Setup Your Interview Profile",
+    1: "Self Introduction & Career Pitch",
+    2: "Technical Introduction & Core Stack",
+    3: "Linux for Cloud Engineers",
+    4: "Linux for DevOps Engineers",
+    5: "Cloud + DevOps Fundamentals",
+    6: "AWS Cloud Engineer",
+    7: "GCP Cloud Engineer",
+    8: "Azure Cloud Engineer",
+    9: "Multi-Cloud Architecture",
+    10: "Cloud Real-Time Scenarios",
+    11: "Git + GitHub Workflow",
+    12: "Jenkins + CI/CD Pipelines",
+    13: "Docker Containerization",
+    14: "Kubernetes Orchestration",
+    15: "Ansible + Terraform IaC",
+    16: "End-to-End CI/CD Project",
+    17: "Production Troubleshooting & Triage",
+    18: "DevSecOps & Hardening",
+    19: "Real-Time DevOps Architecture",
+    20: "Final DevOps Mock Interview",
+    21: "Bonus 01: AIOps Challenge",
+    22: "Bonus 02: MLOps Challenge",
+    23: "Bonus 03: AI Integration Challenge",
+    24: "Bonus 04: AI + DevOps Automation",
+    25: "Bonus 05: AI MCP Challenge",
+    26: "Bonus 06: Azure DevOps Project",
+    27: "Bonus 07: Project-Based CI/CD",
+    28: "Bonus 08: Advanced DevSecOps Project",
+    29: "Bonus 09: Multi-Cloud + AI Architecture",
+    30: "👑 40 LPA Final Boss Interview Battle"
+}
 
 class CandidateService:
     def __init__(self, db: AsyncSession):
@@ -26,7 +62,10 @@ class CandidateService:
             select(Candidate)
             .join(User, Candidate.user_id == User.id)
             .where(User.role == UserRole.CANDIDATE.value)
-            .options(selectinload(Candidate.user), selectinload(Candidate.attempts))
+            .options(
+                selectinload(Candidate.user), 
+                selectinload(Candidate.attempts).selectinload(InterviewAttempt.stage_attempts)
+            )
         )
 
         if search:
@@ -52,6 +91,15 @@ class CandidateService:
         query = query.order_by(desc(Candidate.created_at)).offset((page - 1) * size).limit(size)
         result = await self.db.execute(query)
         candidates = result.scalars().all()
+
+        # Query successful payment transactions
+        pay_stmt = select(PaymentTransaction).where(PaymentTransaction.status == "success")
+        pay_res = await self.db.execute(pay_stmt)
+        payments = pay_res.scalars().all()
+        paid_cand_ids = {p.candidate_id for p in payments if p.candidate_id}
+        paid_emails = {p.candidate_email.lower().strip() for p in payments if p.candidate_email}
+        paid_phones = {"".join(filter(str.isdigit, p.candidate_phone or "")) for p in payments if p.candidate_phone}
+        paid_phones.discard("")
 
         output = []
         for cand in candidates:
@@ -132,6 +180,64 @@ class CandidateService:
                 if cand.user and not cand.user.phone_number:
                     cand.user.phone_number = c_phone
 
+            # Aggregate stage attempts for this candidate
+            cand_stage_attempts = []
+            for a in attempts:
+                if hasattr(a, "stage_attempts") and a.stage_attempts:
+                    cand_stage_attempts.extend(a.stage_attempts)
+
+            stage_status_map = {}
+            for sa in cand_stage_attempts:
+                s_num = sa.stage_number
+                existing = stage_status_map.get(s_num)
+                if not existing or sa.status == "PASSED" or (sa.score or 0) > (existing.get("score") or 0):
+                    stage_status_map[s_num] = {
+                        "status": "COMPLETED" if (sa.status == "PASSED" or (sa.score or 0) >= 70) else sa.status,
+                        "score": sa.score or 0.0
+                    }
+
+            # Check payment status
+            clean_phone_digits = "".join(filter(str.isdigit, c_phone or ""))
+            is_paid = (
+                cand.id in paid_cand_ids or
+                cand.user_id in paid_cand_ids or
+                (cand.user and cand.user.email and cand.user.email.lower().strip() in paid_emails) or
+                (cand.user and cand.user.phone_number and "".join(filter(str.isdigit, cand.user.phone_number)) in paid_phones) or
+                (clean_phone_digits and clean_phone_digits in paid_phones) or
+                (cand.notes and "paid" in cand.notes.lower()) or
+                (isinstance(cand.resume_data_json, dict) and cand.resume_data_json.get("payment_status") == "paid")
+            )
+
+            # Build full 31 stages (0-30) progression summary
+            stages_summary = []
+            for s_num in range(31):
+                st_info = stage_status_map.get(s_num)
+                if st_info:
+                    st_status = st_info["status"]
+                    st_score = st_info["score"]
+                else:
+                    if s_num == 0:
+                        c_notes_str = (cand.notes or "").lower()
+                        c_res = cand.resume_data_json if isinstance(cand.resume_data_json, dict) else {}
+                        is_stg0_done = (
+                            "stage_0" in c_notes_str or 
+                            "mark_stage_0_complete" in c_notes_str or 
+                            bool(c_res.get("stage_0_completed")) or 
+                            bool(c_res.get("mark_stage_0_complete"))
+                        )
+                        st_status = "COMPLETED" if is_stg0_done else ("IN_PROGRESS" if (cand.phone or c_res) else "NOT_STARTED")
+                        st_score = 100.0 if is_stg0_done else 0.0
+                    else:
+                        st_status = "LOCKED"
+                        st_score = 0.0
+
+                stages_summary.append({
+                    "stage_number": s_num,
+                    "title": STAGE_TITLES.get(s_num, f"Stage {s_num}"),
+                    "status": st_status,
+                    "score": st_score
+                })
+
             output.append(CandidateWithAttemptsOut(
                 id=cand.id,
                 user_id=cand.user_id,
@@ -158,6 +264,9 @@ class CandidateService:
                 passed_interviews=passed,
                 latest_score=latest_attempt.overall_score if latest_attempt else None,
                 latest_status=latest_attempt.status if latest_attempt else None,
+                is_paid=is_paid,
+                payment_status="PAID" if is_paid else "UNPAID",
+                stages_summary=stages_summary,
                 created_at=cand.created_at,
                 updated_at=cand.updated_at
             ))

@@ -58,3 +58,6 @@ class CandidateWithAttemptsOut(CandidateOut):
     passed_interviews: int = 0
     latest_score: Optional[float] = None
     latest_status: Optional[str] = None
+    is_paid: bool = False
+    payment_status: Optional[str] = "UNPAID"
+    stages_summary: Optional[List[Dict[str, Any]]] = None

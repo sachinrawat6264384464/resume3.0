@@ -16,10 +16,85 @@ from app.schemas.common import StandardResponse, PaginatedResponse
 from app.models import (
     Candidate, CandidateRoadmap, CandidateCertificate, SupportTicket, 
     StageAttempt, InterviewStage, User, InterviewAttempt, ResumeAudit, 
-    QuestionAttempt, StudyTask, Reminder
+    QuestionAttempt, StudyTask, Reminder, PaymentTransaction
 )
 
 router = APIRouter(prefix="/candidates", tags=["Candidates"])
+
+class CandidatePaymentUpdate(BaseModel):
+    is_paid: bool
+
+@router.put("/{candidate_id}/payment-status", response_model=StandardResponse[dict])
+async def update_candidate_payment_status(
+    candidate_id: str,
+    body: CandidatePaymentUpdate,
+    payload: dict = Depends(verify_auth_token),
+    db: AsyncSession = Depends(get_db)
+):
+    cand_stmt = select(Candidate).options(selectinload(Candidate.user)).where(or_(Candidate.id == candidate_id, Candidate.user_id == candidate_id))
+    cand_res = await db.execute(cand_stmt)
+    cand = cand_res.scalar_one_or_none()
+    if not cand:
+        raise HTTPException(status_code=404, detail="Candidate not found")
+
+    import json
+    existing_notes = dict()
+    if cand.notes:
+        try:
+            existing_notes = json.loads(cand.notes) if isinstance(cand.notes, str) else cand.notes
+        except Exception:
+            existing_notes = {"notes": cand.notes}
+    existing_notes["is_paid"] = body.is_paid
+    existing_notes["payment_status"] = "paid" if body.is_paid else "unpaid"
+    cand.notes = json.dumps(existing_notes)
+
+    c_name = cand.user.full_name if (cand.user and cand.user.full_name) else "Candidate"
+    c_email = cand.user.email if (cand.user and cand.user.email) else ""
+    c_phone = cand.phone or (cand.user.phone_number if cand.user else "")
+
+    # Sync PaymentTransaction record
+    if body.is_paid:
+        existing_pay_stmt = select(PaymentTransaction).where(
+            or_(
+                PaymentTransaction.candidate_id == cand.id,
+                PaymentTransaction.candidate_id == cand.user_id
+            )
+        )
+        existing_pay = (await db.execute(existing_pay_stmt)).scalars().first()
+        if not existing_pay:
+            new_tx = PaymentTransaction(
+                candidate_id=cand.id,
+                candidate_name=c_name,
+                candidate_email=c_email,
+                candidate_phone=c_phone,
+                amount="1",
+                currency="INR",
+                status="success",
+                provider="razorpay",
+                payment_method="admin_activation"
+            )
+            db.add(new_tx)
+        else:
+            existing_pay.status = "success"
+            db.add(existing_pay)
+    else:
+        existing_pay_stmt = select(PaymentTransaction).where(
+            or_(
+                PaymentTransaction.candidate_id == cand.id,
+                PaymentTransaction.candidate_id == cand.user_id
+            )
+        )
+        existing_pays = (await db.execute(existing_pay_stmt)).scalars().all()
+        for p in existing_pays:
+            p.status = "refunded"
+            db.add(p)
+
+    db.add(cand)
+    await db.commit()
+    return StandardResponse(
+        message=f"Candidate payment status updated to {'PAID' if body.is_paid else 'UNPAID'} successfully",
+        data={"candidate_id": cand.id, "is_paid": body.is_paid}
+    )
 
 @router.get("", response_model=PaginatedResponse[CandidateWithAttemptsOut])
 async def list_candidates(
@@ -27,7 +102,7 @@ async def list_candidates(
     role: Optional[str] = None,
     experience_level: Optional[str] = None,
     page: int = Query(1, ge=1),
-    size: int = Query(20, ge=1, le=100),
+    size: int = Query(20, ge=1, le=1000),
     payload: dict = Depends(verify_auth_token),
     db: AsyncSession = Depends(get_db)
 ):
@@ -1422,3 +1497,55 @@ async def claim_badge(
             "badge_title": clean_title
         }
     )
+
+@router.put("/{candidate_id}/batch", response_model=StandardResponse[dict])
+async def update_candidate_batch(
+    candidate_id: str,
+    req: dict,
+    db: AsyncSession = Depends(get_db)
+):
+    from sqlalchemy import or_
+    stmt = (
+        select(Candidate)
+        .options(selectinload(Candidate.user))
+        .join(User, Candidate.user_id == User.id)
+        .where(
+            or_(
+                Candidate.id == candidate_id,
+                Candidate.user_id == candidate_id,
+                User.email == candidate_id,
+                User.full_name == candidate_id
+            )
+        )
+    )
+    res = await db.execute(stmt)
+    cand = res.scalar_one_or_none()
+
+    if not cand:
+        raise HTTPException(status_code=404, detail="Candidate record not found")
+
+    new_batch = (req.get("batch") or "Batch 45").strip()
+    cand.batch = new_batch
+
+    # Also sync into notes / resume_data_json if appropriate
+    res_data = dict(cand.resume_data_json or {})
+    res_data["batch"] = new_batch
+    cand.resume_data_json = res_data
+
+    db.add(cand)
+    await db.commit()
+    await db.refresh(cand)
+
+    invalidate_candidate_metrics_cache(cand.user_id)
+    _DASHBOARD_LEADERBOARD_CACHE["timestamp"] = 0 # invalidate leaderboard cache
+
+    return StandardResponse(
+        message=f"Candidate batch updated to {new_batch} successfully",
+        data={
+            "candidate_id": cand.id,
+            "user_id": cand.user_id,
+            "name": cand.full_name,
+            "batch": cand.batch
+        }
+    )
+

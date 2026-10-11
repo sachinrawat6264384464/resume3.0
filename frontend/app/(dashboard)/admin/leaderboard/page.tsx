@@ -112,6 +112,21 @@ const parseCandidateBadges = (rawBadges: any[]): CurriculumBadge[] => {
 
 export default function AdminLeaderboardPage() {
   const [activeTab, setActiveTab] = useState<"global" | "weekly" | "improved" | "tech">("global");
+  const DEFAULT_BATCHES = Array.from({ length: 21 }, (_, i) => `Batch ${40 + i}`);
+  const [batches, setBatches] = useState<string[]>(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const stored = localStorage.getItem("admin_custom_batches");
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          const merged = Array.from(new Set([...DEFAULT_BATCHES, ...parsed]));
+          return merged;
+        }
+      } catch {}
+    }
+    return DEFAULT_BATCHES;
+  });
+
   const [selectedTech, setSelectedTech] = useState<string>("AWS");
   const [selectedBatchFilter, setSelectedBatchFilter] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState("");
@@ -120,6 +135,13 @@ export default function AdminLeaderboardPage() {
   const [selectedCandidateAudit, setSelectedCandidateAudit] = useState<any | null>(null);
   const [isAuditModalOpen, setIsAuditModalOpen] = useState(false);
   const [claimedBonus, setClaimedBonus] = useState(false);
+
+  // Dynamic Batch Management State
+  const [updatingCandidateId, setUpdatingCandidateId] = useState<string | null>(null);
+  const [isNewBatchModalOpen, setIsNewBatchModalOpen] = useState(false);
+  const [newBatchName, setNewBatchName] = useState("");
+  const [candidateForNewBatch, setCandidateForNewBatch] = useState<any | null>(null);
+  const [toastMsg, setToastMsg] = useState<{ text: string; type: "success" | "error" } | null>(null);
 
   // Leaderboard Members List
   const [members, setMembers] = useState<any[]>(() => {
@@ -159,6 +181,8 @@ export default function AdminLeaderboardPage() {
             const realLinkedin = item.linkedin_url && typeof item.linkedin_url === "string" && item.linkedin_url.trim() && !item.linkedin_url.includes("sachin-rawat") && !item.linkedin_url.includes("alex-vance") ? item.linkedin_url : null;
 
             return {
+              id: item.candidate_id || item.id,
+              userId: item.user_id,
               rank: idx + 1,
               name: nameStr,
               initials: init,
@@ -191,6 +215,58 @@ export default function AdminLeaderboardPage() {
 
     loadLeaderboardData();
   }, []);
+
+  const handleCandidateBatchChange = async (candidate: any, newBatch: string) => {
+    if (!newBatch || newBatch === candidate.batch) return;
+    const candId = candidate.id || candidate.userId || candidate.name;
+    setUpdatingCandidateId(candId);
+    try {
+      await apiFetch(`/candidates/${candId}/batch`, {
+        method: "PUT",
+        body: JSON.stringify({ batch: newBatch })
+      });
+      
+      setMembers(prev => prev.map(m => (m.id === candidate.id || m.name === candidate.name) ? { ...m, batch: newBatch } : m));
+      if (candidate.userId) {
+        localStorage.setItem(`candidate_batch_${candidate.userId}`, newBatch);
+      }
+      setToastMsg({ text: `🎉 Assigned ${candidate.name} to ${newBatch}! Synchronized in database.`, type: "success" });
+      setTimeout(() => setToastMsg(null), 4000);
+    } catch (err: any) {
+      console.error("Batch update error:", err);
+      setToastMsg({ text: `Failed to update batch: ${err.message || 'Error'}`, type: "error" });
+      setTimeout(() => setToastMsg(null), 4000);
+    } finally {
+      setUpdatingCandidateId(null);
+    }
+  };
+
+  const handleCreateNewBatch = (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    const trimmed = newBatchName.trim();
+    if (!trimmed) return;
+    const formattedBatch = trimmed.toLowerCase().startsWith("batch") ? trimmed : `Batch ${trimmed}`;
+    if (!batches.includes(formattedBatch)) {
+      const updated = [...batches, formattedBatch].sort((a, b) => {
+        const numA = parseInt(a.replace(/\D/g, "")) || 0;
+        const numB = parseInt(b.replace(/\D/g, "")) || 0;
+        return numA - numB;
+      });
+      setBatches(updated);
+      if (typeof window !== "undefined") {
+        const customOnly = updated.filter(b => !DEFAULT_BATCHES.includes(b));
+        localStorage.setItem("admin_custom_batches", JSON.stringify(customOnly));
+      }
+    }
+    if (candidateForNewBatch) {
+      handleCandidateBatchChange(candidateForNewBatch, formattedBatch);
+      setCandidateForNewBatch(null);
+    }
+    setNewBatchName("");
+    setIsNewBatchModalOpen(false);
+    setToastMsg({ text: `🚀 New Cohort '${formattedBatch}' created and ready for assignment!`, type: "success" });
+    setTimeout(() => setToastMsg(null), 3500);
+  };
 
   // Handle Social Sharing Redirects
   const handleShareLinkedIn = (member: any) => {
@@ -318,15 +394,32 @@ export default function AdminLeaderboardPage() {
             />
           </div>
 
-          <select
-            value={selectedBatchFilter}
-            onChange={(e) => setSelectedBatchFilter(e.target.value)}
-            className="px-4 py-2.5 rounded-2xl text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white font-bold focus:outline-none focus:border-[#FF6B00] cursor-pointer"
-          >
-            <option value="all">All Batches (40 - 50)</option>
-            <option value="batch 44">Batch 44</option>
-            <option value="batch 45">Batch 45</option>
-          </select>
+          <div className="flex items-center gap-2">
+            <select
+              value={selectedBatchFilter}
+              onChange={(e) => setSelectedBatchFilter(e.target.value)}
+              className="px-4 py-2.5 rounded-2xl text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white font-bold focus:outline-none focus:border-[#FF6B00] cursor-pointer"
+            >
+              <option value="all">All Batches (40 - 60+)</option>
+              {batches.map((b) => (
+                <option key={b} value={b.toLowerCase()}>
+                  {b}
+                </option>
+              ))}
+            </select>
+
+            <button
+              type="button"
+              onClick={() => {
+                setCandidateForNewBatch(null);
+                setIsNewBatchModalOpen(true);
+              }}
+              className="px-3.5 py-2.5 rounded-2xl text-xs font-black bg-[#FF6B00] hover:bg-orange-600 text-white transition-all shadow-md shadow-[#FF6B00]/20 flex items-center gap-1.5 shrink-0 cursor-pointer"
+              title="Create New Batch"
+            >
+              <span>+ Add Batch</span>
+            </button>
+          </div>
 
         </div>
 
@@ -429,11 +522,35 @@ export default function AdminLeaderboardPage() {
                       </div>
                     </td>
 
-                    {/* Batch */}
+                    {/* Batch - Interactive Dropdown per Candidate */}
                     <td className="py-4 px-3 text-center whitespace-nowrap">
-                      <span className="px-3 py-1 rounded-xl text-xs font-mono font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 inline-block whitespace-nowrap">
-                        {m.batch}
-                      </span>
+                      <div className="inline-flex items-center gap-1.5">
+                        <select
+                          value={m.batch || "Batch 45"}
+                          disabled={updatingCandidateId === (m.id || m.userId || m.name)}
+                          onChange={(e) => {
+                            if (e.target.value === "__NEW_BATCH__") {
+                              setCandidateForNewBatch(m);
+                              setIsNewBatchModalOpen(true);
+                            } else {
+                              handleCandidateBatchChange(m, e.target.value);
+                            }
+                          }}
+                          className="px-2.5 py-1.5 rounded-xl text-xs font-mono font-bold bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-300 dark:border-slate-700 shadow-xs hover:border-[#FF6B00] focus:outline-none focus:ring-1 focus:ring-[#FF6B00] cursor-pointer transition-all"
+                        >
+                          {batches.map((b) => (
+                            <option key={b} value={b}>
+                              {b}
+                            </option>
+                          ))}
+                          <option value="__NEW_BATCH__" className="font-bold text-[#FF6B00]">
+                            + Create New Batch...
+                          </option>
+                        </select>
+                        {updatingCandidateId === (m.id || m.userId || m.name) && (
+                          <Loader2 className="w-3.5 h-3.5 text-[#FF6B00] animate-spin" />
+                        )}
+                      </div>
                     </td>
 
                     {/* Curriculum 3D Hexagon Badges (Max 3 visible + extra count pill) */}
@@ -542,6 +659,77 @@ export default function AdminLeaderboardPage() {
               )}
             </div>
 
+          </div>
+        </div>
+      )}
+
+      {/* TOAST ALERT FEEDBACK */}
+      {toastMsg && (
+        <div className={`fixed bottom-6 right-6 z-50 px-5 py-3 rounded-2xl shadow-xl border text-xs font-black flex items-center gap-2 animate-bounce ${
+          toastMsg.type === "success" 
+            ? "bg-emerald-900/90 text-emerald-100 border-emerald-500" 
+            : "bg-red-900/90 text-red-100 border-red-500"
+        }`}>
+          <span>{toastMsg.text}</span>
+        </div>
+      )}
+
+      {/* CREATE NEW BATCH MODAL */}
+      {isNewBatchModalOpen && (
+        <div className="fixed inset-0 bg-slate-950/70 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-800 rounded-[28px] max-w-sm w-full p-6 shadow-2xl flex flex-col gap-4 relative">
+            <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+              <h3 className="text-sm font-black text-slate-900 dark:text-white flex items-center gap-2">
+                <span>➕ Create New Batch / Cohort</span>
+              </h3>
+              <button
+                type="button"
+                onClick={() => {
+                  setIsNewBatchModalOpen(false);
+                  setCandidateForNewBatch(null);
+                }}
+                className="p-1.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400"
+              >
+                <XIcon className="w-4 h-4" />
+              </button>
+            </div>
+
+            <form onSubmit={handleCreateNewBatch} className="flex flex-col gap-3">
+              <p className="text-xs text-slate-500 dark:text-slate-400">
+                {candidateForNewBatch 
+                  ? `Create a new batch to immediately assign to ${candidateForNewBatch.name}:`
+                  : "Enter the cohort batch identifier (e.g. Batch 61, Batch 62):"}
+              </p>
+
+              <input
+                type="text"
+                required
+                autoFocus
+                placeholder="e.g. Batch 61"
+                value={newBatchName}
+                onChange={(e) => setNewBatchName(e.target.value)}
+                className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-xs font-mono font-bold focus:outline-none focus:border-[#FF6B00]"
+              />
+
+              <div className="flex items-center justify-end gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsNewBatchModalOpen(false);
+                    setCandidateForNewBatch(null);
+                  }}
+                  className="px-4 py-2 rounded-xl text-xs font-bold text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-5 py-2 rounded-xl text-xs font-black bg-[#FF6B00] text-white hover:bg-orange-600 shadow-md shadow-[#FF6B00]/25"
+                >
+                  Create Batch 🚀
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

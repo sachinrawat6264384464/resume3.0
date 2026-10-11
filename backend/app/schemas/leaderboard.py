@@ -18,6 +18,7 @@ class LeaderboardEntry(BaseSchema):
     badges: List[str] = []
     weekly_xp_gained: Optional[int] = 0
     linkedin_url: Optional[str] = None
+    batch: Optional[str] = "Batch 45"
 
 class LeaderboardResponse(BaseSchema):
     global_ranking: List[LeaderboardEntry]

@@ -82,9 +82,40 @@ export function Sidebar({ isOpenMobile = false, onCloseMobile }: SidebarProps) {
     router.push("/login");
   };
 
-  const isUserAdmin = user?.role === "ADMIN" || user?.role === "SUPER_ADMIN" || (user as any)?.is_admin === true || user?.email === "admin@cloudops.internal";
+  const isSuperAdmin = user?.role === "SUPER_ADMIN" || user?.role === "ADMIN" || user?.email === "admin@cloudops.internal";
+  const isStaffOrAdmin = isSuperAdmin || (Boolean(user?.role) && user?.role !== "CANDIDATE") || (user as any)?.is_admin === true;
+  const isAdminMode = isStaffOrAdmin && (pathname.startsWith("/admin") || process.env.NEXT_PUBLIC_IS_ADMIN_PORTAL === "true" || user?.role !== "CANDIDATE");
 
-  const isAdminMode = isUserAdmin && (pathname.startsWith("/admin") || process.env.NEXT_PUBLIC_IS_ADMIN_PORTAL === "true");
+  const [customAllowedServices, setCustomAllowedServices] = useState<string[] | null>(null);
+
+  useEffect(() => {
+    const loadRolePermissions = () => {
+      if (typeof window !== "undefined" && user) {
+        const roleKey = user.role ? `user_role_permissions_${user.role}` : null;
+        const emailKey = user.email ? `user_role_permissions_${user.email.toLowerCase()}` : null;
+        
+        const cachedByEmail = emailKey ? localStorage.getItem(emailKey) : null;
+        const cachedByRole = roleKey ? localStorage.getItem(roleKey) : null;
+        
+        if (cachedByEmail || cachedByRole) {
+          try {
+            const parsed = JSON.parse((cachedByEmail || cachedByRole)!);
+            if (Array.isArray(parsed) && parsed.length > 0) {
+              setCustomAllowedServices(parsed);
+              return;
+            }
+          } catch {}
+        }
+        setCustomAllowedServices(null);
+      }
+    };
+
+    loadRolePermissions();
+    if (typeof window !== "undefined") {
+      window.addEventListener("userRolesUpdated", loadRolePermissions);
+      return () => window.removeEventListener("userRolesUpdated", loadRolePermissions);
+    }
+  }, [user]);
 
   const candidateNavItems = [
     { label: "Candidate Dashboard", href: "/dashboard", icon: LayoutDashboard },
@@ -110,7 +141,13 @@ export function Sidebar({ isOpenMobile = false, onCloseMobile }: SidebarProps) {
     { label: "Leaderboard", href: "/admin/leaderboard", icon: Trophy },
   ];
 
-  const navItems = isAdminMode ? adminNavItems : candidateNavItems;
+  const filteredAdminNavItems = isSuperAdmin
+    ? adminNavItems
+    : (customAllowedServices && customAllowedServices.length > 0)
+    ? adminNavItems.filter((item) => customAllowedServices.includes(item.href))
+    : adminNavItems;
+
+  const navItems = isAdminMode ? filteredAdminNavItems : candidateNavItems;
 
   const userXp = dbUser?.xp ?? (user as any)?.xp ?? 0;
   const userLevel = dbUser?.level ?? (user as any)?.level ?? 1;

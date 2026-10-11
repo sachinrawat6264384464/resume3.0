@@ -110,7 +110,8 @@ async def get_leaderboard(
             target_salary_band=sal_band,
             badges=earned_badges,
             weekly_xp_gained=int((cand.xp or 0) * 0.45),
-            linkedin_url=linkedin_url
+            linkedin_url=linkedin_url,
+            batch=cand.batch or "Batch 45"
         ))
 
     # Weekly Sprint (sorted by weekly xp)

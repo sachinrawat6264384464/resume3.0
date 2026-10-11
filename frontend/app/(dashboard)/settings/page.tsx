@@ -4,7 +4,8 @@ import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { 
   Settings as SettingsIcon, User, Phone, Briefcase, DollarSign, 
-  Save, Loader2, CheckCircle2, ChevronDown, Cpu, Layers, Sparkles
+  Save, Loader2, CheckCircle2, ChevronDown, Cpu, Layers, Sparkles,
+  Linkedin, AlertTriangle, ExternalLink
 } from "lucide-react";
 import { apiFetch } from "@/lib/api";
 import { useAuthStore } from "@/lib/store";
@@ -24,32 +25,64 @@ export default function SettingsPage() {
   const [companyName, setCompanyName] = useState("CloudOps Inc / Stealth Startup");
   const [totalExpYears, setTotalExpYears] = useState("3.5 Years");
   const [currentPackage, setCurrentPackage] = useState("₹14.5 LPA");
+  const [linkedInUrl, setLinkedInUrl] = useState("");
   const [linkedInFetched, setLinkedInFetched] = useState(false);
   const [fetchingLinkedIn, setFetchingLinkedIn] = useState(false);
+  const [linkedInError, setLinkedInError] = useState<string | null>(null);
 
   const handleFetchLinkedInProfile = async () => {
+    const cleanUrl = linkedInUrl.trim();
+    if (!cleanUrl) {
+      setLinkedInError("⚠️ No LinkedIn Profile URL added on this profile! Please enter your LinkedIn Profile URL in the field below or in Stage 0 Setup.");
+      return;
+    }
+
+    if (!cleanUrl.toLowerCase().includes("linkedin.com/in/")) {
+      setLinkedInError("⚠️ Please enter a valid LinkedIn Profile URL (e.g. https://www.linkedin.com/in/username/)");
+      return;
+    }
+
     setFetchingLinkedIn(true);
+    setLinkedInError(null);
+    setMsg("");
+
     try {
-      const res = await apiFetch("/linkedin/status");
-      if (res?.data) {
-        setCompanyName("CloudOps Tech Pvt Ltd");
-        setTotalExpYears("4.0 Years");
-        setCurrentPackage("₹16.0 LPA");
-        setLinkedInFetched(true);
-        setMsg("Successfully fetched company, total experience, and current package from LinkedIn!");
+      if (typeof window !== "undefined") {
+        localStorage.setItem("candidate_linkedin_url", cleanUrl);
       }
-    } catch (e) {
-      setCompanyName("CloudOps Tech Pvt Ltd");
-      setTotalExpYears("4.0 Years");
-      setCurrentPackage("₹16.0 LPA");
-      setLinkedInFetched(true);
-      setMsg("Fetched profile data from LinkedIn sync!");
+      const res = await apiFetch("/linkedin/extract-profile", {
+        method: "POST",
+        body: JSON.stringify({ linkedin_url: cleanUrl })
+      });
+
+      if (res?.data) {
+        if (res.data.company_name) setCompanyName(res.data.company_name);
+        if (res.data.experience_years) setTotalExpYears(res.data.experience_years);
+        if (res.data.current_package) setCurrentPackage(res.data.current_package);
+        if (res.data.designation) setTargetRole(res.data.designation);
+        setLinkedInFetched(true);
+        setMsg(`✅ Successfully synced LinkedIn profile details for ${res.data.parsed_name || fullName}!`);
+      }
+    } catch (err: any) {
+      console.warn("LinkedIn fetch failed:", err);
+      const rawMsg = err?.message || "";
+      if (rawMsg.includes("private") || rawMsg.includes("restricted") || rawMsg.includes("999") || rawMsg.includes("inaccessible")) {
+        setLinkedInError("🔒 This LinkedIn Profile is Private or Inaccessible: LinkedIn restricts automated data extraction for private profiles. Please set your LinkedIn profile visibility to Public or enter details manually.");
+      } else {
+        setLinkedInError(rawMsg || "⚠️ Failed to fetch LinkedIn profile. Please verify your profile URL or enter details manually.");
+      }
     } finally {
       setFetchingLinkedIn(false);
     }
   };
 
   useEffect(() => {
+    // 1. Preload LinkedIn URL from localStorage if saved in Stage 0
+    if (typeof window !== "undefined") {
+      const savedUrl = localStorage.getItem("candidate_linkedin_url");
+      if (savedUrl) setLinkedInUrl(savedUrl);
+    }
+
     const fetchProfile = async () => {
       try {
         const res = await apiFetch("/candidates/me/profile");
@@ -58,6 +91,12 @@ export default function SettingsPage() {
           if (res.data.target_role) setTargetRole(res.data.target_role);
           if (res.data.target_salary_band) setSalaryBand(res.data.target_salary_band);
           if (res.data.experience_level) setExperienceLevel(res.data.experience_level);
+          if (res.data.resume_data_json?.linkedin_url && !linkedInUrl) {
+            setLinkedInUrl(res.data.resume_data_json.linkedin_url);
+          }
+          if (res.data.resume_data_json?.company_name) setCompanyName(res.data.resume_data_json.company_name);
+          if (res.data.resume_data_json?.experience_years) setTotalExpYears(res.data.resume_data_json.experience_years);
+          if (res.data.resume_data_json?.current_package) setCurrentPackage(res.data.resume_data_json.current_package);
         }
       } catch (e) {
         console.warn("Profile fetch error:", e);
@@ -154,35 +193,75 @@ export default function SettingsPage() {
             </div>
           </div>
 
-          {/* LinkedIn Synced Profile Details (Editable if not fetched) */}
-          <div className="p-4 rounded-2xl bg-blue-50/60 dark:bg-slate-800/60 border border-blue-200 dark:border-slate-700 flex flex-col gap-4 mt-2">
+          {/* LinkedIn Synced Profile Details (Editable & Fetchable) */}
+          <div className="p-4 sm:p-5 rounded-2xl bg-blue-50/70 dark:bg-slate-800/70 border border-blue-200 dark:border-slate-700 flex flex-col gap-4 mt-2">
             <div className="flex items-center justify-between flex-wrap gap-2">
               <div className="flex items-center gap-2">
-                <Sparkles className="w-4 h-4 text-blue-600" />
+                <Linkedin className="w-4 h-4 text-[#0A66C2] fill-current" />
                 <span className="text-xs font-black text-slate-900 dark:text-white">
                   LinkedIn Work Experience & Compensation Sync
                 </span>
                 {linkedInFetched ? (
                   <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-blue-600 text-white uppercase tracking-wider">
-                    Fetched from LinkedIn
+                    Synced from LinkedIn ✅
                   </span>
                 ) : (
                   <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 uppercase tracking-wider">
-                    Editable Profile
+                    Stage 0 Sync / Editable
                   </span>
                 )}
               </div>
-
-              <button
-                type="button"
-                onClick={handleFetchLinkedInProfile}
-                disabled={fetchingLinkedIn}
-                className="px-3 py-1.5 rounded-xl text-xs font-black text-white bg-blue-600 hover:bg-blue-700 shadow-sm flex items-center gap-1.5 cursor-pointer"
-              >
-                {fetchingLinkedIn ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5" />}
-                <span>Fetch from LinkedIn</span>
-              </button>
             </div>
+
+            {/* LinkedIn Profile URL Input Bar */}
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[11px] font-bold text-slate-700 dark:text-slate-300 flex items-center justify-between">
+                <span>Candidate LinkedIn Profile URL:</span>
+                {linkedInUrl && (
+                  <a
+                    href={linkedInUrl.startsWith("http") ? linkedInUrl : `https://${linkedInUrl}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-[10px] text-[#0A66C2] dark:text-blue-400 font-bold hover:underline flex items-center gap-1"
+                  >
+                    <span>View Profile</span>
+                    <ExternalLink className="w-3 h-3" />
+                  </a>
+                )}
+              </label>
+              <div className="flex items-center gap-2">
+                <div className="relative flex-1">
+                  <Linkedin className="w-3.5 h-3.5 text-[#0A66C2] absolute left-3 top-1/2 -translate-y-1/2" />
+                  <input
+                    type="url"
+                    value={linkedInUrl}
+                    onChange={(e) => {
+                      setLinkedInUrl(e.target.value);
+                      setLinkedInError(null);
+                    }}
+                    placeholder="https://www.linkedin.com/in/sachin-rawat-devops/"
+                    className="w-full pl-9 pr-3 py-2.5 rounded-xl text-xs bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white font-mono font-medium focus:outline-none focus:border-blue-600"
+                  />
+                </div>
+                <button
+                  type="button"
+                  onClick={handleFetchLinkedInProfile}
+                  disabled={fetchingLinkedIn}
+                  className="px-4 py-2.5 rounded-xl text-xs font-black text-white bg-blue-600 hover:bg-blue-700 shadow-sm flex items-center gap-1.5 shrink-0 transition-all cursor-pointer disabled:opacity-50"
+                >
+                  {fetchingLinkedIn ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5" />}
+                  <span>{fetchingLinkedIn ? "Fetching..." : "Fetch from LinkedIn"}</span>
+                </button>
+              </div>
+            </div>
+
+            {/* LinkedIn Error Alert Display */}
+            {linkedInError && (
+              <div className="p-3 rounded-xl bg-rose-50 dark:bg-rose-950/60 border border-rose-200 dark:border-rose-800 text-xs font-bold text-rose-700 dark:text-rose-300 flex items-start gap-2 animate-fadeIn">
+                <AlertTriangle className="w-4 h-4 text-rose-500 shrink-0 mt-0.5" />
+                <span className="leading-relaxed">{linkedInError}</span>
+              </div>
+            )}
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div className="flex flex-col gap-1">

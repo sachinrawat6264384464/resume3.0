@@ -6,7 +6,8 @@ import {
   Play, Pause, Volume2, VolumeX, Maximize2, Sparkles, 
   LayoutDashboard, Mic, FileText, Calendar, Bell, 
   TrendingUp, Trophy, CheckCircle2, ArrowRight, Video, 
-  ShieldCheck, Eye, Layers, Star, Zap, Globe
+  ShieldCheck, Eye, Layers, Star, Zap, Globe,
+  ChevronLeft, ChevronRight, LayoutGrid, SlidersHorizontal
 } from "lucide-react";
 import { getFirebaseVideos, VideoWalkthroughItem } from "@/lib/firebase-admin-store";
 
@@ -221,6 +222,54 @@ export function PlatformDemoSection() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [services, setServices] = useState<CandidateServiceDemo[]>(STATIC_SERVICES);
 
+  // Tabs scroll & layout state
+  const [isWrapView, setIsWrapView] = useState<boolean>(false);
+  const tabsScrollRef = useRef<HTMLDivElement>(null);
+  const [canScrollLeft, setCanScrollLeft] = useState<boolean>(false);
+  const [canScrollRight, setCanScrollRight] = useState<boolean>(true);
+
+  const updateScrollButtons = () => {
+    if (!tabsScrollRef.current) return;
+    const { scrollLeft, scrollWidth, clientWidth } = tabsScrollRef.current;
+    setCanScrollLeft(scrollLeft > 6);
+    setCanScrollRight(scrollLeft + clientWidth < scrollWidth - 6);
+  };
+
+  useEffect(() => {
+    const el = tabsScrollRef.current;
+    if (!el) return;
+    
+    // Initial check
+    updateScrollButtons();
+
+    const handleScroll = () => updateScrollButtons();
+    el.addEventListener("scroll", handleScroll, { passive: true });
+    window.addEventListener("resize", updateScrollButtons);
+
+    // Mouse wheel horizontal scrolling (maps vertical wheel to horizontal tab strip)
+    const handleWheel = (e: WheelEvent) => {
+      if (el.scrollWidth > el.clientWidth) {
+        if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
+          e.preventDefault();
+          el.scrollBy({ left: e.deltaY * 1.4, behavior: "smooth" });
+        }
+      }
+    };
+    el.addEventListener("wheel", handleWheel, { passive: false });
+
+    return () => {
+      el.removeEventListener("scroll", handleScroll);
+      window.removeEventListener("resize", updateScrollButtons);
+      el.removeEventListener("wheel", handleWheel);
+    };
+  }, [isWrapView, services]);
+
+  const scrollTabs = (direction: "left" | "right") => {
+    if (!tabsScrollRef.current) return;
+    const offset = direction === "left" ? -300 : 300;
+    tabsScrollRef.current.scrollBy({ left: offset, behavior: "smooth" });
+  };
+
   // Sync Firebase Walkthrough Videos
   useEffect(() => {
     async function syncFirebaseVideos() {
@@ -294,30 +343,155 @@ export function PlatformDemoSection() {
           </p>
         </div>
 
-        {/* Horizontal Navigation Tabs (All Candidate Services including All Project Overview) */}
-        <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none justify-start lg:justify-center w-full max-w-full">
-          {services.map((service) => {
-            const IconComp = service.icon;
-            const isActive = service.id === activeTabId;
-            return (
+        {/* Navigation Tabs Bar Container */}
+        <div className="w-full flex flex-col gap-2.5">
+          {/* Controls Bar: Count Indicator + Wrap/Scroll Mode Toggle */}
+          <div className="flex items-center justify-between px-1 sm:px-2">
+            <div className="flex items-center gap-2">
+              <span className="w-2.5 h-2.5 rounded-full bg-[#FF6B00] animate-pulse"></span>
+              <span className="text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-200">
+                Candidate Services ({services.length} Modules)
+              </span>
+              <span className="hidden md:inline-block text-[11px] text-slate-400 dark:text-slate-500 font-medium">
+                • Scroll with mouse wheel or click arrows
+              </span>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setIsWrapView(!isWrapView)}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-[#FF6B00]/70 text-slate-700 dark:text-slate-300 hover:text-[#FF6B00] text-xs font-bold transition-all shadow-sm cursor-pointer select-none"
+              title={isWrapView ? "Switch back to horizontal scroll bar" : "View all 8 buttons neatly arranged without scrolling"}
+            >
+              {isWrapView ? (
+                <>
+                  <SlidersHorizontal className="w-3.5 h-3.5 text-[#FF6B00]" />
+                  <span>⇄ Single Scroll Strip</span>
+                </>
+              ) : (
+                <>
+                  <LayoutGrid className="w-3.5 h-3.5 text-[#FF6B00]" />
+                  <span>☷ View All 8 Tabs (No Scroll)</span>
+                </>
+              )}
+            </button>
+          </div>
+
+          {/* Navigation Tabs */}
+          {isWrapView ? (
+            /* Multi-row Wrap View: ALL 8 buttons visible at a glance */
+            <div className="w-full flex flex-wrap items-center justify-center gap-2.5 p-3 rounded-2xl bg-slate-100/60 dark:bg-slate-900/50 border border-slate-200/80 dark:border-slate-800/80 shadow-inner">
+              {services.map((service) => {
+                const IconComp = service.icon;
+                const isActive = service.id === activeTabId;
+                return (
+                  <button
+                    key={service.id}
+                    onClick={() => {
+                      setActiveTabId(service.id);
+                      setProgress(0);
+                      setIsPlaying(true);
+                    }}
+                    className={`px-4 py-2.5 rounded-2xl text-xs font-black transition-all flex items-center gap-2 border cursor-pointer select-none whitespace-nowrap ${
+                      isActive
+                        ? "bg-[#FF6B00] text-white border-[#FF6B00] shadow-lg shadow-[#FF6B00]/30 scale-[1.03]"
+                        : "bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-800 hover:border-[#FF6B00]/50 hover:bg-slate-50 dark:hover:bg-slate-800/80"
+                    }`}
+                  >
+                    <IconComp className={`w-4 h-4 shrink-0 ${isActive ? "text-white" : service.accentColor}`} />
+                    <span>{service.name}</span>
+                  </button>
+                );
+              })}
+            </div>
+          ) : (
+            /* Horizontal Scroll Strip with Left & Right Chevrons & Wheel listener */
+            <div className="relative w-full group py-1">
+              {/* Left Arrow Button */}
               <button
-                key={service.id}
-                onClick={() => {
-                  setActiveTabId(service.id);
-                  setProgress(0);
-                  setIsPlaying(true);
-                }}
-                className={`px-4 py-2.5 rounded-2xl text-xs font-black transition-all flex items-center gap-2 shrink-0 border cursor-pointer ${
-                  isActive
-                    ? "bg-[#FF6B00] text-white border-[#FF6B00] shadow-lg shadow-[#FF6B00]/30 scale-[1.02]"
-                    : "bg-white/80 dark:bg-slate-900/80 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-800 hover:border-[#FF6B00]/50"
+                type="button"
+                onClick={() => scrollTabs("left")}
+                disabled={!canScrollLeft}
+                aria-label="Scroll tabs left"
+                className={`absolute left-0 top-1/2 -translate-y-1/2 z-20 w-9 h-9 rounded-full flex items-center justify-center bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 shadow-xl transition-all duration-200 select-none ${
+                  canScrollLeft
+                    ? "text-slate-800 dark:text-slate-100 hover:bg-[#FF6B00] hover:text-white hover:border-[#FF6B00] hover:scale-110 active:scale-95 cursor-pointer opacity-100"
+                    : "text-slate-300 dark:text-slate-600 opacity-20 cursor-not-allowed pointer-events-none"
                 }`}
               >
-                <IconComp className={`w-4 h-4 ${isActive ? "text-white" : service.accentColor}`} />
-                <span>{service.name}</span>
+                <ChevronLeft className="w-5 h-5" />
               </button>
-            );
-          })}
+
+              {/* Left Edge Gradient Fade */}
+              <div
+                className={`absolute left-0 top-0 bottom-0 w-12 bg-gradient-to-r from-white dark:from-slate-950 via-white/80 dark:via-slate-950/80 to-transparent z-10 pointer-events-none transition-opacity duration-200 ${
+                  canScrollLeft ? "opacity-100" : "opacity-0"
+                }`}
+              />
+
+              {/* Scrollable Container */}
+              <div
+                ref={tabsScrollRef}
+                className="w-full overflow-x-auto pb-3 pt-1 scroll-smooth"
+                style={{
+                  scrollbarWidth: "thin",
+                  scrollbarColor: "rgba(255, 107, 0, 0.4) transparent"
+                }}
+              >
+                <div className="flex items-center gap-2.5 w-max px-10 sm:px-14 mx-auto justify-start">
+                  {services.map((service) => {
+                    const IconComp = service.icon;
+                    const isActive = service.id === activeTabId;
+                    return (
+                      <button
+                        key={service.id}
+                        onClick={(e) => {
+                          setActiveTabId(service.id);
+                          setProgress(0);
+                          setIsPlaying(true);
+                          e.currentTarget.scrollIntoView({
+                            behavior: "smooth",
+                            inline: "center",
+                            block: "nearest"
+                          });
+                        }}
+                        className={`px-4 py-2.5 rounded-2xl text-xs font-black transition-all flex items-center gap-2 shrink-0 border cursor-pointer select-none whitespace-nowrap ${
+                          isActive
+                            ? "bg-[#FF6B00] text-white border-[#FF6B00] shadow-lg shadow-[#FF6B00]/30 scale-[1.02]"
+                            : "bg-white/95 dark:bg-slate-900/95 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-800 hover:border-[#FF6B00]/50 hover:bg-slate-50 dark:hover:bg-slate-800"
+                        }`}
+                      >
+                        <IconComp className={`w-4 h-4 shrink-0 ${isActive ? "text-white" : service.accentColor}`} />
+                        <span className="whitespace-nowrap">{service.name}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Right Edge Gradient Fade */}
+              <div
+                className={`absolute right-0 top-0 bottom-0 w-12 bg-gradient-to-l from-white dark:from-slate-950 via-white/80 dark:via-slate-950/80 to-transparent z-10 pointer-events-none transition-opacity duration-200 ${
+                  canScrollRight ? "opacity-100" : "opacity-0"
+                }`}
+              />
+
+              {/* Right Arrow Button */}
+              <button
+                type="button"
+                onClick={() => scrollTabs("right")}
+                disabled={!canScrollRight}
+                aria-label="Scroll tabs right"
+                className={`absolute right-0 top-1/2 -translate-y-1/2 z-20 w-9 h-9 rounded-full flex items-center justify-center bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 shadow-xl transition-all duration-200 select-none ${
+                  canScrollRight
+                    ? "text-slate-800 dark:text-slate-100 hover:bg-[#FF6B00] hover:text-white hover:border-[#FF6B00] hover:scale-110 active:scale-95 cursor-pointer opacity-100"
+                    : "text-slate-300 dark:text-slate-600 opacity-20 cursor-not-allowed pointer-events-none"
+                }`}
+              >
+                <ChevronRight className="w-5 h-5" />
+              </button>
+            </div>
+          )}
         </div>
 
         {/* DEMO PLAYER & DETAILS MAIN DUAL PANEL GRID */}

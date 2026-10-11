@@ -822,6 +822,25 @@ export default function InterviewRoomPage() {
     }
   };
 
+  // Candidate Action to Retry This Question as many times as needed
+  const handleRetryQuestion = () => {
+    setLastEvalResult(null);
+    setLastMatchScore(null);
+    setSpokenTranscript("");
+    setSubmittedAnswerText("");
+    baseTranscriptRef.current = "";
+    setQuestionSeconds(0);
+    setIsRecording(false);
+    isRecordingRef.current = false;
+    if (speechRecognitionRef.current) {
+      try {
+        speechRecognitionRef.current.onend = null;
+        speechRecognitionRef.current.onerror = null;
+        speechRecognitionRef.current.stop();
+      } catch (e) {}
+    }
+  };
+
   // Explicit Candidate Action to Proceed to Next Question (Prevents evaluation banner from disappearing automatically)
   const handleProceedToNextQuestion = async () => {
     setIsProceedingNext(true);
@@ -1265,27 +1284,38 @@ export default function InterviewRoomPage() {
                   <span className="font-mono text-slate-200">"{currentBenchmark.ideal}"</span>
                 </div>
 
-                <button
-                  onClick={handleProceedToNextQuestion}
-                  disabled={isProceedingNext}
-                  className="w-full py-3.5 px-6 rounded-2xl font-black text-xs text-slate-950 bg-gradient-to-r from-amber-400 via-orange-400 to-amber-500 hover:from-amber-300 hover:to-orange-400 shadow-lg flex items-center justify-center gap-2 transition-all uppercase tracking-wider cursor-pointer"
-                >
-                  {isProceedingNext ? (
-                    <>
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                      <span>Proceeding...</span>
-                    </>
-                  ) : (
-                    <>
-                      <span>
-                        {currentQIndex + 1 < maxQCount
-                          ? `Proceed to Question ${currentQIndex + 2} of ${maxQCount} ➔`
-                          : "View Final Stage Performance Summary 🏆"}
-                      </span>
-                      <ArrowRight className="w-4 h-4" />
-                    </>
-                  )}
-                </button>
+                <div className="flex flex-col sm:flex-row items-center gap-3 pt-2">
+                  <button
+                    type="button"
+                    onClick={handleRetryQuestion}
+                    className="w-full sm:w-auto px-6 py-3.5 rounded-2xl font-black text-xs text-white bg-slate-800 hover:bg-slate-700 border border-slate-700 hover:border-amber-400 shadow-lg flex items-center justify-center gap-2 transition-all uppercase tracking-wider cursor-pointer"
+                  >
+                    <RefreshCw className="w-4 h-4 text-amber-400" />
+                    <span>🔄 Retry This Question</span>
+                  </button>
+
+                  <button
+                    onClick={handleProceedToNextQuestion}
+                    disabled={isProceedingNext}
+                    className="flex-1 w-full py-3.5 px-6 rounded-2xl font-black text-xs text-slate-950 bg-gradient-to-r from-amber-400 via-orange-400 to-amber-500 hover:from-amber-300 hover:to-orange-400 shadow-lg flex items-center justify-center gap-2 transition-all uppercase tracking-wider cursor-pointer"
+                  >
+                    {isProceedingNext ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        <span>Proceeding...</span>
+                      </>
+                    ) : (
+                      <>
+                        <span>
+                          {currentQIndex + 1 < maxQCount
+                            ? `Proceed to Question ${currentQIndex + 2} of ${maxQCount} ➔`
+                            : "View Final Stage Performance Summary 🏆"}
+                        </span>
+                        <ArrowRight className="w-4 h-4" />
+                      </>
+                    )}
+                  </button>
+                </div>
               </div>
             )}
 

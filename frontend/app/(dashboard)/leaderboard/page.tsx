@@ -227,7 +227,7 @@ export default function LeaderboardPage() {
             name: `${user.full_name} (YOU)`,
             initials: myInit,
             linkedinUrl: "https://www.linkedin.com/",
-            batch: "Batch 45",
+            batch: existingInList?.batch || myPerfData?.batch || (typeof window !== "undefined" ? localStorage.getItem(`candidate_batch_${userId}`) : null) || "Batch 45",
             allClaimedBadges: myRealBadges,
             badges: myVisibleBadges,
             extraBadgesCount: myExtraCount,

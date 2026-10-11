@@ -17,6 +17,7 @@ import {
   addFirebaseAuditLog 
 } from "@/lib/firebase-admin-store";
 import { useAuthStore } from "@/lib/store";
+import { apiFetch } from "@/lib/api";
 
 const ALL_SIDEBAR_SERVICES = [
   { id: "/admin", name: "Admin Dashboard Overview", category: "Admin OS" },
@@ -57,14 +58,26 @@ export default function AdminRolesPermissionsPage() {
   const [editingRole, setEditingRole] = useState<SystemRoleItem | null>(null);
   const [alertMsg, setAlertMsg] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
+const PRESET_ROLES = [
+  { code: "TECH_INTERVIEWER", name: "Technical Interviewer", desc: "Access to candidate roster, live mock rooms & interview evaluation", defaultServices: ["/admin", "/admin/candidates", "/admin/live-sessions"] },
+  { code: "OPS_MANAGER", name: "Operations & Cohort Manager", desc: "Oversee candidate batches, leaderboard standings & analytics", defaultServices: ["/admin", "/admin/candidates", "/admin/leaderboard", "/admin/reports"] },
+  { code: "RESUME_AUDITOR", name: "ATS Resume Auditor", desc: "Manage resume parsing blueprints, JDs & keyword evaluation", defaultServices: ["/admin", "/admin/candidates", "/admin/templates", "/admin/reports"] },
+  { code: "PROCTOR_MENTOR", name: "Live Proctor & Mentor", desc: "Conduct live sessions, monitor webinars & student reminders", defaultServices: ["/admin", "/admin/live-sessions", "/admin/reminders", "/admin/candidates"] },
+  { code: "CUSTOM", name: "Custom Role (Enter Manually)", desc: "Define custom role permissions and title manually", defaultServices: ["/admin", "/admin/candidates"] }
+];
+
   // Form State for Custom Role Creation
   const [formData, setFormData] = useState({
     id: "",
-    roleName: "",
-    roleCode: "",
-    description: "",
+    fullName: "",
+    phoneNumber: "",
     assignedEmail: "",
-    allowedServices: [] as string[]
+    password: "",
+    selectedPreset: "TECH_INTERVIEWER",
+    roleName: "Technical Interviewer",
+    roleCode: "TECH_INTERVIEWER",
+    description: "Access to candidate roster, live mock rooms & interview evaluation",
+    allowedServices: ["/admin", "/admin/candidates", "/admin/live-sessions"] as string[]
   });
 
   const loadData = async () => {
@@ -93,27 +106,59 @@ export default function AdminRolesPermissionsPage() {
     loadData();
   }, []);
 
+  const handlePresetSelect = (presetCode: string) => {
+    const found = PRESET_ROLES.find(p => p.code === presetCode);
+    if (found) {
+      if (presetCode === "CUSTOM") {
+        setFormData(prev => ({
+          ...prev,
+          selectedPreset: "CUSTOM",
+          roleName: prev.roleName === "Technical Interviewer" ? "" : prev.roleName,
+          roleCode: prev.roleCode === "TECH_INTERVIEWER" ? "" : prev.roleCode
+        }));
+      } else {
+        setFormData(prev => ({
+          ...prev,
+          selectedPreset: presetCode,
+          roleName: found.name,
+          roleCode: found.code,
+          description: found.desc,
+          allowedServices: [...found.defaultServices]
+        }));
+      }
+    }
+  };
+
   const handleOpenAddModal = () => {
     setEditingRole(null);
     setFormData({
       id: `role-${Date.now()}`,
-      roleName: "",
-      roleCode: "",
-      description: "",
+      fullName: "",
+      phoneNumber: "",
       assignedEmail: "",
-      allowedServices: ["/admin", "/admin/candidates", "/admin/roles-permissions"]
+      password: "",
+      selectedPreset: "TECH_INTERVIEWER",
+      roleName: "Technical Interviewer",
+      roleCode: "TECH_INTERVIEWER",
+      description: "Access to candidate roster, live mock rooms & interview evaluation",
+      allowedServices: ["/admin", "/admin/candidates", "/admin/live-sessions"]
     });
     setIsModalOpen(true);
   };
 
   const handleOpenEditModal = (role: SystemRoleItem) => {
     setEditingRole(role);
+    const matchedPreset = PRESET_ROLES.find(p => p.code === role.roleCode || p.name.toLowerCase() === role.roleName.toLowerCase());
     setFormData({
       id: role.id,
+      fullName: (role as any).fullName || (role as any).assignedName || "",
+      phoneNumber: (role as any).phoneNumber || (role as any).assignedPhone || "",
+      assignedEmail: role.assignedEmail || "",
+      password: "",
+      selectedPreset: matchedPreset ? matchedPreset.code : "CUSTOM",
       roleName: role.roleName,
       roleCode: role.roleCode,
       description: role.description,
-      assignedEmail: role.assignedEmail || "",
       allowedServices: [...role.allowedServices]
     });
     setIsModalOpen(true);
@@ -136,12 +181,16 @@ export default function AdminRolesPermissionsPage() {
       setAlertMsg({ type: "error", text: "Please enter a Role Name." });
       return;
     }
+    if (!formData.assignedEmail.trim()) {
+      setAlertMsg({ type: "error", text: "Please enter an Assigned User Email for login." });
+      return;
+    }
 
     const generatedCode = formData.roleCode.trim() 
       ? formData.roleCode.toUpperCase().replace(/\s+/g, "_")
       : formData.roleName.toUpperCase().replace(/\s+/g, "_");
 
-    // Prevent Duplicate Roles (by Role Name or Role Code)
+    // Prevent Duplicate Roles (by Role Name or Role Code) for different roles
     const isDuplicateName = roles.some(
       r => r.id !== formData.id && r.roleName.toLowerCase() === formData.roleName.trim().toLowerCase()
     );
@@ -162,28 +211,58 @@ export default function AdminRolesPermissionsPage() {
       roleName: formData.roleName.trim(),
       roleCode: generatedCode,
       description: formData.description.trim() || `Custom system role with ${formData.allowedServices.length} allocated services.`,
-      assignedEmail: formData.assignedEmail.trim() || undefined,
+      assignedEmail: formData.assignedEmail.trim(),
       allowedServices: formData.allowedServices,
       userCount: editingRole ? editingRole.userCount : 1,
       isSystemDefault: editingRole ? editingRole.isSystemDefault : false,
       createdAt: editingRole ? editingRole.createdAt : new Date().toISOString(),
       updatedAt: new Date().toISOString()
     };
+    (newRole as any).fullName = formData.fullName.trim();
+    (newRole as any).phoneNumber = formData.phoneNumber.trim();
 
     try {
+      // 1. Save Role in Firebase Firestore / localStorage
       await saveFirebaseRole(newRole);
+
+      // 2. Save Staff User in PostgreSQL DB with credentials so they can log in!
+      try {
+        await apiFetch("/auth/staff-user", {
+          method: "POST",
+          body: JSON.stringify({
+            email: formData.assignedEmail.trim(),
+            full_name: formData.fullName.trim() || formData.roleName.trim(),
+            phone_number: formData.phoneNumber.trim(),
+            password: formData.password.trim() || "Staff@123",
+            role: generatedCode,
+            allowed_services: formData.allowedServices
+          })
+        });
+      } catch (dbErr) {
+        console.warn("Staff user DB sync notice:", dbErr);
+      }
+
+      // 3. Cache role allowed services mapping locally for immediate sidebar enforcement
+      if (typeof window !== "undefined") {
+        try {
+          localStorage.setItem(`user_role_permissions_${generatedCode}`, JSON.stringify(formData.allowedServices));
+          localStorage.setItem(`user_role_permissions_${formData.assignedEmail.trim().toLowerCase()}`, JSON.stringify(formData.allowedServices));
+          window.dispatchEvent(new Event("userRolesUpdated"));
+        } catch {}
+      }
+
       await addFirebaseAuditLog({
-        userName: user?.full_name || "Alex Vance (Admin)",
+        userName: user?.full_name || "Admin",
         userEmail: formData.assignedEmail.trim() || user?.email || "admin@cloudops.internal",
         roleName: newRole.roleName,
-        action: editingRole ? `Updated Role Permissions: '${newRole.roleName}'` : `Created New Role: '${newRole.roleName}'`,
+        action: editingRole ? `Updated Role Permissions: '${newRole.roleName}'` : `Created New Role & Staff User: '${newRole.roleName}'`,
         pageLocation: "/admin/roles-permissions",
         status: isAuthenticated && user ? "ONLINE" : "OFFLINE"
       });
 
       setAlertMsg({
         type: "success",
-        text: `Role '${newRole.roleName}' successfully saved & synced to Firebase Firestore!`
+        text: `Role '${newRole.roleName}' & User '${formData.assignedEmail}' successfully saved in database! They can now log in.`
       });
       setIsModalOpen(false);
       await loadData();
@@ -523,17 +602,34 @@ export default function AdminRolesPermissionsPage() {
 
             <form onSubmit={handleSaveRole} className="flex flex-col gap-5 text-xs font-medium">
               
+              {/* Full Name at top */}
+              <div className="flex flex-col gap-1.5">
+                <label className="font-bold text-slate-700 dark:text-slate-300">Staff / User Full Name *</label>
+                <input
+                  type="text"
+                  required
+                  value={formData.fullName}
+                  onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
+                  placeholder="e.g. Rahul Sharma"
+                  className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-bold focus:outline-none focus:border-purple-500"
+                />
+              </div>
+
+              {/* Role Selection Dropdown + Identifier */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="flex flex-col gap-1.5">
-                  <label className="font-bold text-slate-700 dark:text-slate-300">Custom Role Name *</label>
-                  <input
-                    type="text"
-                    required
-                    value={formData.roleName}
-                    onChange={(e) => setFormData({ ...formData, roleName: e.target.value })}
-                    placeholder="e.g. Senior Technical Interviewer"
-                    className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-bold focus:outline-none focus:border-purple-500"
-                  />
+                  <label className="font-bold text-slate-700 dark:text-slate-300">Select Role *</label>
+                  <select
+                    value={formData.selectedPreset}
+                    onChange={(e) => handlePresetSelect(e.target.value)}
+                    className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-bold focus:outline-none focus:border-purple-500 text-slate-800 dark:text-white"
+                  >
+                    {PRESET_ROLES.map((preset) => (
+                      <option key={preset.code} value={preset.code}>
+                        {preset.name}
+                      </option>
+                    ))}
+                  </select>
                 </div>
 
                 <div className="flex flex-col gap-1.5">
@@ -543,10 +639,27 @@ export default function AdminRolesPermissionsPage() {
                     value={formData.roleCode}
                     onChange={(e) => setFormData({ ...formData, roleCode: e.target.value })}
                     placeholder="e.g. TECH_INTERVIEWER"
-                    className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 font-mono text-xs focus:outline-none focus:border-purple-500"
+                    readOnly={formData.selectedPreset !== "CUSTOM"}
+                    className={`p-3 rounded-xl border border-slate-200 dark:border-slate-700 font-mono text-xs focus:outline-none focus:border-purple-500 ${
+                      formData.selectedPreset !== "CUSTOM" ? "bg-slate-100 dark:bg-slate-900/60 opacity-80" : "bg-slate-50 dark:bg-slate-800"
+                    }`}
                   />
                 </div>
               </div>
+
+              {formData.selectedPreset === "CUSTOM" && (
+                <div className="flex flex-col gap-1.5">
+                  <label className="font-bold text-slate-700 dark:text-slate-300">Custom Role Name *</label>
+                  <input
+                    type="text"
+                    required
+                    value={formData.roleName}
+                    onChange={(e) => setFormData({ ...formData, roleName: e.target.value })}
+                    placeholder="e.g. Lead Technical Proctor"
+                    className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-bold focus:outline-none focus:border-purple-500"
+                  />
+                </div>
+              )}
 
               <div className="flex flex-col gap-1.5">
                 <label className="font-bold text-slate-700 dark:text-slate-300">Role Description</label>
@@ -559,70 +672,92 @@ export default function AdminRolesPermissionsPage() {
                 />
               </div>
 
-              <div className="flex flex-col gap-1.5">
-                <label className="font-bold text-slate-700 dark:text-slate-300">Assigned Admin User Email (For Login)</label>
-                <input
-                  type="email"
-                  value={formData.assignedEmail}
-                  onChange={(e) => setFormData({ ...formData, assignedEmail: e.target.value })}
-                  placeholder="e.g. tech.interviewer@cloudops.internal"
-                  className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-mono font-bold focus:outline-none focus:border-purple-500"
-                />
+              {/* Login Credentials: Email, Phone, Password */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div className="flex flex-col gap-1.5">
+                  <label className="font-bold text-slate-700 dark:text-slate-300">Login Email *</label>
+                  <input
+                    type="email"
+                    required
+                    value={formData.assignedEmail}
+                    onChange={(e) => setFormData({ ...formData, assignedEmail: e.target.value })}
+                    placeholder="staff@cloudops.internal"
+                    className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-mono font-bold focus:outline-none focus:border-purple-500"
+                  />
+                </div>
+
+                <div className="flex flex-col gap-1.5">
+                  <label className="font-bold text-slate-700 dark:text-slate-300">WhatsApp / Phone</label>
+                  <input
+                    type="tel"
+                    value={formData.phoneNumber}
+                    onChange={(e) => setFormData({ ...formData, phoneNumber: e.target.value })}
+                    placeholder="9876543210"
+                    className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-mono focus:outline-none focus:border-purple-500"
+                  />
+                </div>
+
+                <div className="flex flex-col gap-1.5">
+                  <label className="font-bold text-slate-700 dark:text-slate-300">Login Password</label>
+                  <input
+                    type="password"
+                    value={formData.password}
+                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                    placeholder={editingRole ? "(Leave empty to keep)" : "Enter password"}
+                    className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-mono focus:outline-none focus:border-purple-500"
+                  />
+                </div>
               </div>
 
               {/* Sidebar Service Allocations Checkbox Grid */}
               <div className="flex flex-col gap-2.5 pt-2">
-                <label className="font-bold text-slate-700 dark:text-slate-300 flex items-center justify-between">
-                  <span>Allocate Allowed Sidebar Services ({formData.allowedServices.length} Selected):</span>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      // Select available unallocated or current services
-                      const availableServices = ALL_SIDEBAR_SERVICES.map(s => s.id);
-                      setFormData({ ...formData, allowedServices: availableServices });
-                    }}
-                    className="text-[11px] font-mono text-purple-600 dark:text-purple-400 font-bold hover:underline"
-                  >
-                    Select All Services
-                  </button>
-                </label>
+                <div className="flex items-center justify-between">
+                  <label className="font-bold text-slate-700 dark:text-slate-300">
+                    Allocate Allowed Sidebar Services ({formData.allowedServices.length} Selected):
+                  </label>
+                  <div className="flex items-center gap-3">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setFormData({ ...formData, allowedServices: ALL_SIDEBAR_SERVICES.map(s => s.id) });
+                      }}
+                      className="text-[11px] font-mono text-purple-600 dark:text-purple-400 font-bold hover:underline"
+                    >
+                      Select All Services
+                    </button>
+                    <span className="text-slate-300 dark:text-slate-700">|</span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setFormData({ ...formData, allowedServices: [] });
+                      }}
+                      className="text-[11px] font-mono text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 hover:underline"
+                    >
+                      Deselect All
+                    </button>
+                  </div>
+                </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-56 overflow-y-auto p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700">
                   {ALL_SIDEBAR_SERVICES.map((sObj) => {
                     const isChecked = formData.allowedServices.includes(sObj.id);
-                    // Check if service is already allocated to ANOTHER role
-                    const allocatedToRole = roles.find(
-                      r => r.id !== formData.id && r.allowedServices.includes(sObj.id)
-                    );
-                    const isAllocatedOther = !!allocatedToRole && !isChecked;
 
                     return (
                       <div
                         key={sObj.id}
-                        onClick={() => {
-                          if (!isAllocatedOther) toggleService(sObj.id);
-                        }}
-                        className={`p-2.5 rounded-xl border flex items-center justify-between transition-all ${
-                          isAllocatedOther
-                            ? "bg-slate-100/60 dark:bg-slate-900/40 border-slate-200 dark:border-slate-800 text-slate-400 opacity-60 cursor-not-allowed"
-                            : isChecked
-                            ? "bg-purple-50 dark:bg-purple-950/60 border-purple-300 dark:border-purple-800 text-purple-900 dark:text-purple-200 cursor-pointer"
-                            : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 cursor-pointer hover:border-purple-400"
+                        onClick={() => toggleService(sObj.id)}
+                        className={`p-2.5 rounded-xl border flex items-center justify-between cursor-pointer transition-all ${
+                          isChecked
+                            ? "bg-purple-50 dark:bg-purple-950/60 border-purple-400 dark:border-purple-600 text-purple-900 dark:text-purple-100 shadow-sm"
+                            : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:border-purple-300 dark:hover:border-purple-700"
                         }`}
                       >
                         <div className="flex flex-col min-w-0 pr-2">
                           <span className="font-bold text-xs truncate">{sObj.name}</span>
                           <span className="font-mono text-[10px] text-slate-400">{sObj.id}</span>
-                          {allocatedToRole && (
-                            <span className="text-[9.5px] font-mono font-bold text-amber-500 mt-0.5">
-                              Allocated to: {allocatedToRole.roleName}
-                            </span>
-                          )}
                         </div>
                         {isChecked ? (
                           <CheckSquare className="w-4 h-4 text-purple-600 dark:text-purple-400 shrink-0" />
-                        ) : isAllocatedOther ? (
-                          <Lock className="w-3.5 h-3.5 text-slate-400 shrink-0" />
                         ) : (
                           <Square className="w-4 h-4 text-slate-400 shrink-0" />
                         )}

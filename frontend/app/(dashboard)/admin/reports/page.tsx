@@ -71,7 +71,15 @@ export default function AdminReportsPage() {
     if (typeof window !== "undefined") {
       try {
         const stored = sessionStorage.getItem("admin_cache_analytics");
-        if (stored) return JSON.parse(stored);
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          const s30 = parsed?.stage_pass_rates?.find((s: any) => s.stage_number === 30);
+          if (s30 && s30.pass_rate_percentage > 0) {
+            sessionStorage.removeItem("admin_cache_analytics");
+            return null;
+          }
+          return parsed;
+        }
       } catch {}
     }
     return null;
@@ -85,7 +93,7 @@ export default function AdminReportsPage() {
     }
     return [];
   });
-  const [loading, setLoading] = useState(() => !metrics && candidates.length === 0);
+  const [loading, setLoading] = useState<boolean>(true);
   
   // Filter States
   const [activeTab, setActiveTab] = useState<string>("ALL");
@@ -96,21 +104,22 @@ export default function AdminReportsPage() {
   const fetchReports = async () => {
     if (!metrics && candidates.length === 0) setLoading(true);
     try {
-      const [resOverview, resCand] = await Promise.all([
+      const [resOverviewSettled, resCandSettled] = await Promise.allSettled([
         apiFetch("/admin/analytics/overview"),
-        apiFetch("/candidates?size=1000")
+        apiFetch("/candidates?size=100")
       ]);
 
-      if (resOverview?.data) {
-        setMetrics(resOverview.data);
+      if (resOverviewSettled.status === "fulfilled" && resOverviewSettled.value?.data) {
+        setMetrics(resOverviewSettled.value.data);
         if (typeof window !== "undefined") {
           try {
-            sessionStorage.setItem("admin_cache_analytics", JSON.stringify(resOverview.data));
+            sessionStorage.setItem("admin_cache_analytics", JSON.stringify(resOverviewSettled.value.data));
           } catch {}
         }
       }
 
-      if (resCand) {
+      if (resCandSettled.status === "fulfilled" && resCandSettled.value) {
+        const resCand = resCandSettled.value;
         const rawList = Array.isArray(resCand) 
           ? resCand 
           : (resCand.items ? resCand.items : (resCand.data ? (Array.isArray(resCand.data) ? resCand.data : (resCand.data.items || [])) : []));
