@@ -5,7 +5,7 @@ import {
   Users, Search, RefreshCw, Mail, Phone, BookOpen, Award, Shield, 
   CheckCircle2, Clock, Eye, AlertCircle, ChevronRight, User, Loader2, Download, X,
   Linkedin, ExternalLink, Trash2, AlertTriangle, MessageSquare, Star, Send,
-  ChevronDown, Layers, CreditCard, Sparkles, Check, Flame
+  ChevronDown, Layers, CreditCard, Sparkles, Check, Flame, Pencil, Plus
 } from "lucide-react";
 import { apiFetch } from "@/lib/api";
 
@@ -68,14 +68,16 @@ export default function AdminCandidatesPage() {
   const [isDeleting, setIsDeleting] = useState<boolean>(false);
   const [alertMsg, setAlertMsg] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
-  // Admin Feedback modal state
+  // Admin Feedback modal & edit states
   const [feedbackCandidate, setFeedbackCandidate] = useState<any | null>(null);
+  const [editingFeedbackId, setEditingFeedbackId] = useState<string | null>(null);
   const [fbRating, setFbRating] = useState<number>(5);
   const [fbText, setFbText] = useState<string>("");
   const [fbStrengths, setFbStrengths] = useState<string>("");
   const [fbImprovements, setFbImprovements] = useState<string>("");
   const [isSubmittingFb, setIsSubmittingFb] = useState<boolean>(false);
   const [fbSuccessMsg, setFbSuccessMsg] = useState<string | null>(null);
+  const [deletingFbId, setDeletingFbId] = useState<string | null>(null);
 
   const toggleCandidatePayment = async (candidateId: string, currentStatus: boolean) => {
     setTogglingPaymentId(candidateId);
@@ -167,6 +169,43 @@ export default function AdminCandidatesPage() {
     }
   };
 
+  const openCreateFeedbackModal = (c: any) => {
+    setFeedbackCandidate(c);
+    setEditingFeedbackId(null);
+    setFbRating(5);
+    setFbText("");
+    setFbStrengths("");
+    setFbImprovements("");
+    setFbSuccessMsg(null);
+  };
+
+  const openEditFeedbackModal = (c: any, fb: any) => {
+    setFeedbackCandidate(c);
+    setEditingFeedbackId(fb.id);
+    setFbRating(fb.rating || 5);
+    setFbText(fb.feedback_text || "");
+    setFbStrengths(fb.strengths || "");
+    setFbImprovements(fb.areas_of_improvement || "");
+    setFbSuccessMsg(null);
+  };
+
+  const handleDeleteFeedback = async (candidateId: string, feedbackId: string) => {
+    if (!window.confirm("Are you sure you want to delete this evaluation feedback? This action cannot be undone.")) {
+      return;
+    }
+    setDeletingFbId(feedbackId);
+    try {
+      await apiFetch(`/candidates/${candidateId}/feedback/${feedbackId}`, {
+        method: "DELETE"
+      });
+      await fetchCandidates();
+    } catch (err: any) {
+      alert("Failed to delete feedback: " + (err?.message || "Unknown error"));
+    } finally {
+      setDeletingFbId(null);
+    }
+  };
+
   const handleSendFeedback = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!feedbackCandidate) return;
@@ -177,8 +216,13 @@ export default function AdminCandidatesPage() {
 
     try {
       const targetId = feedbackCandidate.id || feedbackCandidate.user_id;
-      await apiFetch(`/candidates/${targetId}/feedback`, {
-        method: "POST",
+      const endpoint = editingFeedbackId 
+        ? `/candidates/${targetId}/feedback/${editingFeedbackId}`
+        : `/candidates/${targetId}/feedback`;
+      const method = editingFeedbackId ? "PUT" : "POST";
+
+      await apiFetch(endpoint, {
+        method,
         body: JSON.stringify({
           rating: fbRating,
           feedback_text: fbText.trim(),
@@ -188,16 +232,25 @@ export default function AdminCandidatesPage() {
         })
       });
 
-      setFbSuccessMsg(`🎉 Feedback saved & published to Candidate ${feedbackCandidate.user?.full_name || feedbackCandidate.full_name}'s My Progress panel!`);
+      setFbSuccessMsg(
+        editingFeedbackId
+          ? `🎉 Feedback successfully updated for Candidate ${feedbackCandidate.user?.full_name || feedbackCandidate.full_name}!`
+          : `🎉 Feedback saved & published to Candidate ${feedbackCandidate.user?.full_name || feedbackCandidate.full_name}'s My Progress panel!`
+      );
+      
+      // Refresh candidates list so dropdown and cards reflect latest feedback immediately
+      await fetchCandidates();
+
       setTimeout(() => {
         setFeedbackCandidate(null);
+        setEditingFeedbackId(null);
         setFbSuccessMsg(null);
         setFbText("");
         setFbStrengths("");
         setFbImprovements("");
-      }, 2000);
+      }, 1500);
     } catch (err: any) {
-      alert("Failed to send feedback: " + (err?.message || "Unknown error"));
+      alert("Failed to save feedback: " + (err?.message || "Unknown error"));
     } finally {
       setIsSubmittingFb(false);
     }
@@ -525,6 +578,7 @@ export default function AdminCandidatesPage() {
                       });
 
                   const completedStagesCount = stagesList.filter((s: any) => s.status === "COMPLETED" || s.status === "PASSED").length;
+                  const candidateFeedbacks = (c.resume_data_json?.admin_feedback || []) as any[];
 
                   return (
                     <Fragment key={c.id}>
@@ -671,14 +725,7 @@ export default function AdminCandidatesPage() {
 
                             {/* Feedback Button */}
                             <button
-                              onClick={() => {
-                                setFeedbackCandidate(c);
-                                setFbRating(5);
-                                setFbText("");
-                                setFbStrengths("");
-                                setFbImprovements("");
-                                setFbSuccessMsg(null);
-                              }}
+                              onClick={() => openCreateFeedbackModal(c)}
                               className="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-emerald-600 hover:text-white text-slate-600 dark:text-slate-300 font-bold transition-all border border-slate-200 dark:border-slate-700 cursor-pointer"
                               title="Give Admin Feedback to Candidate"
                             >
@@ -820,6 +867,146 @@ export default function AdminCandidatesPage() {
                                     </div>
                                   );
                                 })}
+                              </div>
+
+                              {/* 💬 CANDIDATE ADMIN FEEDBACK & EVALUATION HISTORY SECTION (PROPERLY UNDER STAGES) */}
+                              <div className="pt-5 border-t border-slate-200/80 dark:border-slate-800 flex flex-col gap-3.5">
+                                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white dark:bg-slate-900/90 p-3.5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-2xs">
+                                  <div className="flex items-center gap-2.5">
+                                    <div className="w-8 h-8 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-black">
+                                      <MessageSquare className="w-4 h-4" />
+                                    </div>
+                                    <div>
+                                      <h5 className="text-xs font-black text-slate-900 dark:text-white flex items-center gap-2">
+                                        <span>Admin Evaluation Feedback & Performance Remarks</span>
+                                        <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
+                                          {candidateFeedbacks.length} Feedback{candidateFeedbacks.length === 1 ? "" : "s"}
+                                        </span>
+                                      </h5>
+                                      <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">
+                                        Official feedback given to {c.user?.full_name || c.full_name}. Visible to candidate on their My Progress panel.
+                                      </p>
+                                    </div>
+                                  </div>
+
+                                  <button
+                                    type="button"
+                                    onClick={() => openCreateFeedbackModal(c)}
+                                    className="px-3.5 py-2 rounded-xl text-xs font-black text-white bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 shadow-sm flex items-center gap-1.5 transition-all cursor-pointer w-fit shrink-0"
+                                  >
+                                    <Plus className="w-3.5 h-3.5" />
+                                    <span>+ Give New Feedback</span>
+                                  </button>
+                                </div>
+
+                                {/* Feedback Cards Grid / Empty State */}
+                                {candidateFeedbacks.length === 0 ? (
+                                  <div className="p-6 rounded-2xl bg-white dark:bg-slate-900/60 border border-dashed border-slate-200 dark:border-slate-800 text-center flex flex-col items-center justify-center gap-2">
+                                    <MessageSquare className="w-8 h-8 text-slate-300 dark:text-slate-600" />
+                                    <p className="text-xs font-bold text-slate-600 dark:text-slate-400">
+                                      No admin feedback given to this candidate yet.
+                                    </p>
+                                    <button
+                                      type="button"
+                                      onClick={() => openCreateFeedbackModal(c)}
+                                      className="text-xs font-black text-emerald-600 hover:text-emerald-700 dark:text-emerald-400 underline cursor-pointer"
+                                    >
+                                      Click here to give first feedback & rating
+                                    </button>
+                                  </div>
+                                ) : (
+                                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-[380px] overflow-y-auto pr-1">
+                                    {candidateFeedbacks.map((fb: any, fbIdx: number) => {
+                                      const fbId = fb.id || `fb-${fbIdx}`;
+                                      return (
+                                        <div
+                                          key={fbId}
+                                          className="p-4 rounded-2xl bg-white dark:bg-slate-850 border border-slate-200 dark:border-slate-850 shadow-2xs flex flex-col justify-between gap-3 relative hover:border-emerald-500/40 transition-colors"
+                                        >
+                                          {/* Feedback Header: Rating & Author & Actions */}
+                                          <div className="flex items-center justify-between gap-2">
+                                            <div className="flex items-center gap-2">
+                                              <div className="flex items-center gap-0.5 text-amber-500">
+                                                {[1, 2, 3, 4, 5].map((star) => (
+                                                  <Star
+                                                    key={star}
+                                                    className={`w-3.5 h-3.5 ${
+                                                      star <= Math.round(fb.rating || 5)
+                                                        ? "fill-amber-500 text-amber-500"
+                                                        : "text-slate-300 dark:text-slate-700"
+                                                    }`}
+                                                  />
+                                                ))}
+                                              </div>
+                                              <span className="text-xs font-mono font-black text-slate-800 dark:text-slate-200">
+                                                {fb.rating || 5}.0
+                                              </span>
+                                            </div>
+
+                                            {/* Action Buttons: Edit & Delete */}
+                                            <div className="flex items-center gap-1.5">
+                                              <button
+                                                type="button"
+                                                onClick={() => openEditFeedbackModal(c, { ...fb, id: fbId })}
+                                                className="px-2.5 py-1 rounded-lg bg-amber-50 hover:bg-amber-500 hover:text-white dark:bg-amber-950/40 dark:hover:bg-amber-500 text-amber-700 dark:text-amber-300 text-xs font-bold transition-all border border-amber-200 dark:border-amber-800 cursor-pointer flex items-center gap-1 shadow-2xs"
+                                                title="Edit this feedback"
+                                              >
+                                                <Pencil className="w-3 h-3" />
+                                                <span>Edit</span>
+                                              </button>
+
+                                              <button
+                                                type="button"
+                                                onClick={() => handleDeleteFeedback(c.id, fbId)}
+                                                disabled={deletingFbId === fbId}
+                                                className="px-2.5 py-1 rounded-lg bg-rose-50 hover:bg-rose-600 hover:text-white dark:bg-rose-950/40 dark:hover:bg-rose-600 text-rose-700 dark:text-rose-300 text-xs font-bold transition-all border border-rose-200 dark:border-rose-800 cursor-pointer flex items-center gap-1 shadow-2xs disabled:opacity-50"
+                                                title="Delete this feedback"
+                                              >
+                                                {deletingFbId === fbId ? (
+                                                  <Loader2 className="w-3 h-3 animate-spin" />
+                                                ) : (
+                                                  <Trash2 className="w-3 h-3" />
+                                                )}
+                                                <span>Delete</span>
+                                              </button>
+                                            </div>
+                                          </div>
+
+                                          {/* Feedback Text Quote */}
+                                          <p className="text-xs text-slate-700 dark:text-slate-200 leading-relaxed font-medium bg-slate-50 dark:bg-slate-900/60 p-2.5 rounded-xl border border-slate-100 dark:border-slate-800/80">
+                                            "{fb.feedback_text}"
+                                          </p>
+
+                                          {/* Strengths & Improvements Tags if available */}
+                                          {(fb.strengths || fb.areas_of_improvement) && (
+                                            <div className="flex flex-col gap-1.5 pt-1 border-t border-slate-100 dark:border-slate-800/60 text-[11px]">
+                                              {fb.strengths && (
+                                                <div className="flex items-start gap-1.5">
+                                                  <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 uppercase shrink-0">Strengths:</span>
+                                                  <span className="text-slate-600 dark:text-slate-300 font-medium">{fb.strengths}</span>
+                                                </div>
+                                              )}
+                                              {fb.areas_of_improvement && (
+                                                <div className="flex items-start gap-1.5">
+                                                  <span className="text-[10px] font-bold text-amber-600 dark:text-amber-400 uppercase shrink-0">Improve:</span>
+                                                  <span className="text-slate-600 dark:text-slate-300 font-medium">{fb.areas_of_improvement}</span>
+                                                </div>
+                                              )}
+                                            </div>
+                                          )}
+
+                                          {/* Footer with Timestamp & Admin Name */}
+                                          <div className="flex items-center justify-between text-[10px] font-medium text-slate-400 pt-1 border-t border-slate-100 dark:border-slate-800/40">
+                                            <span>By {fb.admin_name || "Admin Evaluator"}</span>
+                                            <span>
+                                              {fb.created_at ? new Date(fb.created_at).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" }) : "Recent"}
+                                            </span>
+                                          </div>
+                                        </div>
+                                      );
+                                    })}
+                                  </div>
+                                )}
                               </div>
 
                             </div>
@@ -1001,7 +1188,7 @@ export default function AdminCandidatesPage() {
         </div>
       )}
 
-      {/* GIVE ADMIN FEEDBACK MODAL */}
+      {/* GIVE / EDIT ADMIN FEEDBACK MODAL */}
       {feedbackCandidate && (
         <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-xs z-50 flex items-center justify-center p-3 sm:p-4 animate-fadeIn">
           <div className="bg-white dark:bg-slate-900 border-2 border-emerald-500/30 rounded-[32px] max-w-lg w-full p-5 sm:p-7 shadow-2xl flex flex-col gap-5 text-left relative overflow-hidden">
@@ -1013,7 +1200,7 @@ export default function AdminCandidatesPage() {
                 </div>
                 <div>
                   <h3 className="text-base font-black text-slate-900 dark:text-white leading-snug">
-                    Give Feedback & Performance Rating
+                    {editingFeedbackId ? "Edit Admin Evaluation Feedback" : "Give Feedback & Performance Rating"}
                   </h3>
                   <p className="text-[11px] font-mono text-emerald-600 dark:text-emerald-400 font-bold">
                     Target Candidate: {feedbackCandidate.user?.full_name || feedbackCandidate.full_name}
@@ -1022,7 +1209,10 @@ export default function AdminCandidatesPage() {
               </div>
 
               <button
-                onClick={() => setFeedbackCandidate(null)}
+                onClick={() => {
+                  setFeedbackCandidate(null);
+                  setEditingFeedbackId(null);
+                }}
                 className="p-2 rounded-xl text-slate-400 hover:text-slate-900 dark:hover:text-white cursor-pointer"
               >
                 <X className="w-5 h-5" />
@@ -1108,7 +1298,10 @@ export default function AdminCandidatesPage() {
                 <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-100 dark:border-slate-800">
                   <button
                     type="button"
-                    onClick={() => setFeedbackCandidate(null)}
+                    onClick={() => {
+                      setFeedbackCandidate(null);
+                      setEditingFeedbackId(null);
+                    }}
                     disabled={isSubmittingFb}
                     className="px-4 py-2.5 rounded-xl text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 cursor-pointer disabled:opacity-50"
                   >
@@ -1121,7 +1314,11 @@ export default function AdminCandidatesPage() {
                     className="px-5 py-2.5 rounded-xl text-xs font-black text-white bg-emerald-600 hover:bg-emerald-700 shadow-md shadow-emerald-600/30 flex items-center gap-2 cursor-pointer disabled:opacity-50 uppercase tracking-wider"
                   >
                     {isSubmittingFb ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
-                    <span>{isSubmittingFb ? "Submitting Feedback..." : "Publish Feedback to Candidate"}</span>
+                    <span>
+                      {isSubmittingFb
+                        ? (editingFeedbackId ? "Updating Feedback..." : "Submitting Feedback...")
+                        : (editingFeedbackId ? "Save Changes" : "Publish Feedback to Candidate")}
+                    </span>
                   </button>
                 </div>
 

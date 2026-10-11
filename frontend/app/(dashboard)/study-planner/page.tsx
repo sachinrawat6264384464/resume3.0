@@ -539,7 +539,7 @@ const FULL_DEVOPS_ROADMAP = [
 ];
 
 export default function StudyPlannerPage() {
-  const [activeTab, setActiveTab] = useState<"all_tasks" | "roadmap">("all_tasks");
+  const [activeTab, setActiveTab] = useState<"all_tasks" | "roadmap">("roadmap");
   
   const [summary, setSummary] = useState<any>(null);
   const [tasks, setTasks] = useState<any[]>([]);
@@ -743,6 +743,21 @@ export default function StudyPlannerPage() {
         
         <div className="flex items-center gap-2 bg-slate-100 dark:bg-slate-900 p-1.5 rounded-2xl border border-slate-200 dark:border-slate-800 w-fit">
           <button
+            onClick={() => setActiveTab("roadmap")}
+            className={`py-2.5 px-5 rounded-xl text-xs font-black transition-all cursor-pointer flex items-center gap-2 uppercase tracking-wider ${
+              activeTab === "roadmap"
+                ? "bg-gradient-to-r from-[#FF9900] to-amber-500 text-slate-950 shadow-md shadow-[#FF9900]/25 scale-[1.02]"
+                : "text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800"
+            }`}
+          >
+            <Layers className="w-4 h-4" />
+            <span>DevOps & Cloud AI Roadmap</span>
+            <span className="px-2 py-0.5 rounded-full text-[10px] bg-emerald-500 text-slate-950 font-bold font-mono">
+              50 DAYS
+            </span>
+          </button>
+
+          <button
             onClick={() => setActiveTab("all_tasks")}
             className={`py-2.5 px-5 rounded-xl text-xs font-black transition-all cursor-pointer flex items-center gap-2 uppercase tracking-wider ${
               activeTab === "all_tasks"
@@ -757,21 +772,6 @@ export default function StudyPlannerPage() {
                 {tasks.length}
               </span>
             )}
-          </button>
-
-          <button
-            onClick={() => setActiveTab("roadmap")}
-            className={`py-2.5 px-5 rounded-xl text-xs font-black transition-all cursor-pointer flex items-center gap-2 uppercase tracking-wider ${
-              activeTab === "roadmap"
-                ? "bg-gradient-to-r from-[#FF9900] to-amber-500 text-slate-950 shadow-md shadow-[#FF9900]/25 scale-[1.02]"
-                : "text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800"
-            }`}
-          >
-            <Layers className="w-4 h-4" />
-            <span>DevOps & Cloud AI Roadmap</span>
-            <span className="px-2 py-0.5 rounded-full text-[10px] bg-emerald-500 text-slate-950 font-bold font-mono">
-              50 DAYS
-            </span>
           </button>
         </div>
 

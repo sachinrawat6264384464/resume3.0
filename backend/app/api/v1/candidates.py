@@ -1061,6 +1061,11 @@ async def submit_candidate_feedback(
         "created_at": datetime.now(timezone.utc).isoformat()
     }
 
+    # Ensure all previous entries have an id
+    for idx, f in enumerate(fb_list):
+        if not f.get("id"):
+            f["id"] = f"fb-{secrets.token_hex(4)}"
+
     # Prepend new feedback so candidate sees latest first, without overwriting previous feedback history (up to 50 entries)
     fb_list.insert(0, new_fb)
     fb_list = fb_list[:50]
@@ -1076,6 +1081,160 @@ async def submit_candidate_feedback(
     return StandardResponse(
         message="Candidate feedback submitted successfully",
         data=new_fb
+    )
+
+
+@router.get("/{candidate_id}/feedback", response_model=StandardResponse[List[dict]])
+async def get_candidate_feedback_list(
+    candidate_id: str,
+    payload: dict = Depends(verify_auth_token),
+    db: AsyncSession = Depends(get_db)
+):
+    stmt = (
+        select(Candidate)
+        .where(
+            or_(
+                Candidate.id == candidate_id,
+                Candidate.user_id == candidate_id,
+                Candidate.email == candidate_id
+            )
+        )
+    )
+    res = await db.execute(stmt)
+    cand = res.scalar_one_or_none()
+    if not cand:
+        return StandardResponse(data=[])
+    res_json = cand.resume_data_json or {}
+    fb_list = list(res_json.get("admin_feedback") or [])
+    # Ensure all have an id
+    for idx, f in enumerate(fb_list):
+        if not f.get("id"):
+            f["id"] = f"fb-{idx}"
+    return StandardResponse(data=fb_list)
+
+
+@router.put("/{candidate_id}/feedback/{feedback_id}", response_model=StandardResponse[dict])
+async def update_candidate_feedback(
+    candidate_id: str,
+    feedback_id: str,
+    req: dict,
+    payload: dict = Depends(verify_auth_token),
+    db: AsyncSession = Depends(get_db)
+):
+    stmt = (
+        select(Candidate)
+        .options(selectinload(Candidate.user))
+        .join(User, Candidate.user_id == User.id, isouter=True)
+        .where(
+            or_(
+                Candidate.id == candidate_id,
+                Candidate.user_id == candidate_id,
+                Candidate.email == candidate_id,
+                User.email == candidate_id
+            )
+        )
+    )
+    res = await db.execute(stmt)
+    cand = res.scalar_one_or_none()
+
+    if not cand:
+        raise HTTPException(status_code=404, detail="Candidate not found")
+
+    fb_text = (req.get("feedback_text") or req.get("comments") or "").strip()
+    if not fb_text:
+        raise HTTPException(status_code=400, detail="Feedback text is required")
+
+    rating = float(req.get("rating", 5.0))
+    strengths = (req.get("strengths") or "").strip()
+    improvements = (req.get("areas_of_improvement") or "").strip()
+
+    res_json = dict(cand.resume_data_json or {})
+    fb_list = list(res_json.get("admin_feedback") or [])
+
+    found = False
+    updated_fb = None
+    for idx, fb in enumerate(fb_list):
+        current_id = fb.get("id") or f"fb-{idx}"
+        if current_id == feedback_id or str(idx) == feedback_id:
+            fb["id"] = current_id
+            fb["feedback_text"] = fb_text
+            fb["rating"] = rating
+            fb["strengths"] = strengths
+            fb["areas_of_improvement"] = improvements
+            fb["updated_at"] = datetime.now(timezone.utc).isoformat()
+            updated_fb = fb
+            found = True
+            break
+
+    if not found:
+        raise HTTPException(status_code=404, detail="Feedback entry not found")
+
+    res_json["admin_feedback"] = fb_list
+    cand.resume_data_json = dict(res_json)
+
+    from sqlalchemy.orm.attributes import flag_modified
+    flag_modified(cand, "resume_data_json")
+
+    db.add(cand)
+    await db.commit()
+
+    return StandardResponse(
+        message="Candidate feedback updated successfully",
+        data=updated_fb
+    )
+
+
+@router.delete("/{candidate_id}/feedback/{feedback_id}", response_model=StandardResponse[dict])
+async def delete_candidate_feedback(
+    candidate_id: str,
+    feedback_id: str,
+    payload: dict = Depends(verify_auth_token),
+    db: AsyncSession = Depends(get_db)
+):
+    stmt = (
+        select(Candidate)
+        .options(selectinload(Candidate.user))
+        .join(User, Candidate.user_id == User.id, isouter=True)
+        .where(
+            or_(
+                Candidate.id == candidate_id,
+                Candidate.user_id == candidate_id,
+                Candidate.email == candidate_id,
+                User.email == candidate_id
+            )
+        )
+    )
+    res = await db.execute(stmt)
+    cand = res.scalar_one_or_none()
+
+    if not cand:
+        raise HTTPException(status_code=404, detail="Candidate not found")
+
+    res_json = dict(cand.resume_data_json or {})
+    fb_list = list(res_json.get("admin_feedback") or [])
+
+    initial_len = len(fb_list)
+    new_fb_list = []
+    for idx, fb in enumerate(fb_list):
+        current_id = fb.get("id") or f"fb-{idx}"
+        if current_id != feedback_id and str(idx) != feedback_id:
+            new_fb_list.append(fb)
+
+    if len(new_fb_list) == initial_len:
+        raise HTTPException(status_code=404, detail="Feedback entry not found")
+
+    res_json["admin_feedback"] = new_fb_list
+    cand.resume_data_json = dict(res_json)
+
+    from sqlalchemy.orm.attributes import flag_modified
+    flag_modified(cand, "resume_data_json")
+
+    db.add(cand)
+    await db.commit()
+
+    return StandardResponse(
+        message="Candidate feedback deleted successfully",
+        data={"deleted_id": feedback_id}
     )
 
 
