@@ -39,7 +39,8 @@ export function FloatingWhatsAppCommunity() {
       apiFetch("/live-sessions/active")
         .then((res) => {
           if (res?.data && Array.isArray(res.data) && res.data.length > 0) {
-            setActiveSession(res.data[0]);
+            const liveNow = res.data.find((s: any) => s.status === "LIVE_NOW" || s.status === "LIVE_STREAMING");
+            setActiveSession(liveNow || res.data[0]);
           }
         })
         .catch(() => {});
@@ -52,6 +53,8 @@ export function FloatingWhatsAppCommunity() {
       if (e.key === "latest_live_session_updated") fetchActiveSession();
     };
 
+    const pollInterval = setInterval(fetchActiveSession, 4000);
+
     if (typeof window !== "undefined") {
       window.addEventListener("liveSessionUpdated", handleSessionUpdated);
       window.addEventListener("storage", handleStorageChange);
@@ -59,6 +62,7 @@ export function FloatingWhatsAppCommunity() {
     }
 
     return () => {
+      clearInterval(pollInterval);
       if (typeof window !== "undefined") {
         window.removeEventListener("liveSessionUpdated", handleSessionUpdated);
         window.removeEventListener("storage", handleStorageChange);
@@ -170,14 +174,14 @@ export function FloatingWhatsAppCommunity() {
 
   const openWhatsApp = (e: React.MouseEvent) => {
     e.stopPropagation();
-    const rawUrl = activeSession?.whatsapp_group_url || "https://chat.whatsapp.com/AIInterviewCommunity";
+    const rawUrl = activeSession?.whatsapp_group_url;
     const url = ensureAbsoluteUrl(rawUrl, "https://chat.whatsapp.com/AIInterviewCommunity");
     try {
       apiFetch("/live-sessions/track-click", {
         method: "POST",
         body: JSON.stringify({
-          live_session_id: activeSession?.id || "live-default-001",
-          session_title: activeSession?.title || "👑 WhatsApp Community Group",
+          live_session_id: activeSession?.id || "live-session",
+          session_title: activeSession?.title || "WhatsApp Community Group",
           candidate_name: user?.full_name || "Candidate",
           candidate_email: user?.email || "candidate@cloudops.internal",
           platform_clicked: "WHATSAPP"
@@ -189,14 +193,14 @@ export function FloatingWhatsAppCommunity() {
 
   const openZoomMeet = (e: React.MouseEvent) => {
     e.stopPropagation();
-    const rawUrl = activeSession?.meeting_url || "https://meet.google.com/xyz-cloudops-live";
-    const url = ensureAbsoluteUrl(rawUrl, "https://meet.google.com/xyz-cloudops-live");
+    const rawUrl = activeSession?.meeting_url;
+    const url = ensureAbsoluteUrl(rawUrl, "https://us02web.zoom.us");
     try {
       apiFetch("/live-sessions/track-click", {
         method: "POST",
         body: JSON.stringify({
-          live_session_id: activeSession?.id || "live-default-001",
-          session_title: activeSession?.title || "👑 Zoom Live Support Room",
+          live_session_id: activeSession?.id || "live-session",
+          session_title: activeSession?.title || "Zoom Live Support Room",
           candidate_name: user?.full_name || "Candidate",
           candidate_email: user?.email || "candidate@cloudops.internal",
           platform_clicked: "ZOOM"

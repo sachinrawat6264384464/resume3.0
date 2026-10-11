@@ -114,13 +114,7 @@ export default function AdminLiveSessionsPage() {
 
     return sorted.map((s) => {
       const isLive = s.status === "LIVE_NOW" || s.status === "LIVE_STREAMING";
-      const sTime = parseSessionDate(s.session_date);
-      const isExpired = sTime > 0 && (sTime + SESSION_DURATION_MS) < now && !isLive;
-
       let computedStatus = s.status;
-      if (isExpired && s.status !== "COMPLETED" && !isLive) {
-        computedStatus = "COMPLETED";
-      }
 
       if (isLive) {
         if (!hasLiveSession) {
@@ -139,7 +133,7 @@ export default function AdminLiveSessionsPage() {
           return {
             ...s,
             status: "UPCOMING",
-            is_active: false,
+            is_active: true,
             queue_position: queueCounter,
             is_candidate_visible: false,
             badge_label: `⏳ QUEUED SESSION (Queue #${queueCounter})`
@@ -154,7 +148,7 @@ export default function AdminLiveSessionsPage() {
           is_active: false,
           queue_position: null,
           is_candidate_visible: false,
-          badge_label: "✓ COMPLETED / EXPIRED"
+          badge_label: "✓ COMPLETED"
         };
       }
 
@@ -165,7 +159,7 @@ export default function AdminLiveSessionsPage() {
       return {
         ...s,
         status: computedStatus,
-        is_active: isCandidateVisible,
+        is_active: true,
         queue_position: queueCounter,
         is_candidate_visible: isCandidateVisible,
         badge_label: isCandidateVisible 
@@ -279,7 +273,7 @@ export default function AdminLiveSessionsPage() {
           return updatedObj;
         }
         if (nextStatus === "LIVE_NOW" && (s.status === "LIVE_NOW" || s.status === "LIVE_STREAMING")) {
-          return { ...s, status: "UPCOMING", is_active: false };
+          return { ...s, status: "UPCOMING", is_active: true };
         }
         return s;
       });
@@ -297,6 +291,7 @@ export default function AdminLiveSessionsPage() {
         method: "PUT",
         body: JSON.stringify(updatedObj)
       });
+      await fetchSessions();
     } catch (e) {
       console.warn("API toggle live notice:", e);
     }
@@ -333,36 +328,20 @@ export default function AdminLiveSessionsPage() {
           body: JSON.stringify(newSessionObj)
         });
       } else {
-        await apiFetch("/live-sessions/admin/create", {
+        const createRes = await apiFetch("/live-sessions/admin/create", {
           method: "POST",
           body: JSON.stringify(newSessionObj)
         });
+        if (createRes?.data?.id) {
+          newSessionObj.id = createRes.data.id;
+        }
       }
     } catch (err: any) {
       console.warn("API save warning, updating local state:", err);
     }
 
-    // Single Active Live Session Logic Enforcement for local state
-    setSessions((prev) => {
-      let list = editingSession
-        ? prev.map((item) => (item.id === editingSession.id ? newSessionObj : item))
-        : [newSessionObj, ...prev];
-
-      if (isGoingLive) {
-        list = list.map((item) => {
-          if (item.id !== newSessionObj.id && (item.status === "LIVE_NOW" || item.status === "LIVE_STREAMING")) {
-            return { ...item, status: "UPCOMING", is_active: false };
-          }
-          return item;
-        });
-      }
-      if (typeof window !== "undefined") {
-        try {
-          sessionStorage.setItem("admin_cache_live_sessions", JSON.stringify(list));
-        } catch {}
-      }
-      return list;
-    });
+    // Refresh sessions from DB directly to ensure absolute sync
+    await fetchSessions();
 
     if (typeof window !== "undefined") {
       window.dispatchEvent(new Event("liveSessionUpdated"));

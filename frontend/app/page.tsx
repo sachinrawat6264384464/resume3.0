@@ -64,7 +64,7 @@ export default function LandingPage() {
   }, [typedText, isDeleting, loopNum]);
 
   return (
-    <div className="min-h-screen bg-grid-pattern text-slate-900 dark:text-slate-100 font-sans selection:bg-[#FF6B00] selection:text-white overflow-x-hidden relative transition-colors duration-300 w-full">
+    <div className="min-h-screen bg-grid-pattern text-slate-900 dark:text-slate-100 font-sans selection:bg-[#FF6B00] selection:text-white overflow-x-clip relative transition-colors duration-300 w-full">
       
       {/* CONTINUOUS DYNAMIC SPACE ANIMATED STARFIELD & NEBULA BACKGROUND */}
       <SpaceBackground />
@@ -84,8 +84,8 @@ export default function LandingPage() {
         }
       `}</style>
 
-      {/* 1. TOP NAVBAR (Transparent Floating Navbar - Grid Background Visible) */}
-      <header className="sticky top-0 z-50 bg-transparent border-b border-slate-300/40 dark:border-slate-800/60 transition-all duration-300 w-full overflow-x-hidden">
+      {/* 1. TOP NAVBAR (Fixed Top Navbar - Guaranteed to Always Stay Visible on Scroll) */}
+      <header className="fixed top-0 left-0 right-0 z-50 bg-white/90 dark:bg-[#070b14]/90 backdrop-blur-xl border-b border-slate-200/80 dark:border-slate-800/80 shadow-xs transition-all duration-300 w-full">
         <div className="w-full px-2 sm:px-8 lg:px-20 h-14 sm:h-20 flex items-center justify-between gap-1 sm:gap-4 max-w-full">
           
           {/* Logo */}
@@ -133,6 +133,9 @@ export default function LandingPage() {
 
         </div>
       </header>
+
+      {/* Spacer so fixed header doesn't overlap top content */}
+      <div className="h-14 sm:h-20 shrink-0 pointer-events-none" aria-hidden="true" />
 
       {/* SECTION 1: HERO (PERFECT RESPONSIVE SPACING & BALANCED VERTICAL FLOW) */}
       <section className="relative z-10 pt-4 sm:pt-10 pb-8 sm:pb-16 overflow-hidden w-full">

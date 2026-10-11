@@ -70,22 +70,10 @@ export default function CandidateDashboardPage() {
   const router = useRouter();
   const { user, setAuth } = useAuthStore();
   
-  const defaultLiveSession = {
-    id: "live-default-001",
-    title: "👑 40 LPA DevOps Architecture & Outage Troubleshooting Masterclass",
-    description: "Live Q&A, mock interview feedback & ATS resume review session with Vikas Sir.",
-    session_date: "Tomorrow • 8:15 PM IST",
-    meeting_url: "https://meet.google.com/xyz-cloudops-live",
-    whatsapp_group_url: "https://chat.whatsapp.com/AIInterviewCommunity",
-    banner_url: "/banner-live.png",
-    status: "UPCOMING",
-    host_name: "Vikas Sir"
-  };
-
   const [dbMetrics, setDbMetrics] = useState<any>(null);
   const [candProfile, setCandProfile] = useState<any>(null);
   const [allLiveSessions, setAllLiveSessions] = useState<any[]>([]);
-  const [activeLiveSession, setActiveLiveSession] = useState<any | null>(defaultLiveSession);
+  const [activeLiveSession, setActiveLiveSession] = useState<any | null>(null);
   const [selectedGroupTab, setSelectedGroupTab] = useState<string>("ALL");
 
   // Helper to evaluate currently active session from array sorted by date/time
@@ -120,19 +108,13 @@ export default function CandidateDashboardPage() {
       return;
     }
 
-    // Sort chronologically by session_date (earliest first)
+    // Sort: LIVE_NOW first, then upcoming
     const sorted = [...rawItems].sort((a, b) => {
       const isLiveA = a.status === "LIVE_NOW" || a.status === "LIVE_STREAMING";
       const isLiveB = b.status === "LIVE_NOW" || b.status === "LIVE_STREAMING";
       if (isLiveA) return -1;
       if (isLiveB) return 1;
-
-      let dtA = a.parsed_dt ? new Date(a.parsed_dt).getTime() : parseSessionDate(a.session_date).getTime();
-      let dtB = b.parsed_dt ? new Date(b.parsed_dt).getTime() : parseSessionDate(b.session_date).getTime();
-      if (isNaN(dtA)) dtA = 0;
-      if (isNaN(dtB)) dtB = 0;
-
-      return dtA - dtB;
+      return 0;
     });
 
     setAllLiveSessions(sorted);
@@ -160,13 +142,6 @@ export default function CandidateDashboardPage() {
 
     const updateCountdown = () => {
       const now = Date.now();
-
-      // Check if session date has passed (more than 2 hours ago)
-      if (targetMs > 0 && (now - targetMs > 2 * 60 * 60 * 1000) && activeLiveSession.status !== "LIVE_NOW") {
-        evaluateCurrentActiveSession(allLiveSessions);
-        return;
-      }
-
       const diff = Math.max(0, targetMs - now);
       
       const d = Math.floor(diff / (1000 * 60 * 60 * 24));
@@ -203,14 +178,14 @@ export default function CandidateDashboardPage() {
     const fetchLiveSessions = () => {
       apiFetch("/live-sessions/active")
         .then((res) => {
-          if (res?.data && Array.isArray(res.data)) {
+          if (res?.data && Array.isArray(res.data) && res.data.length > 0) {
             processSessions(res.data);
           } else {
-            processSessions([defaultLiveSession]);
+            processSessions([]);
           }
         })
         .catch(() => {
-          processSessions([defaultLiveSession]);
+          processSessions([]);
         });
     };
 
@@ -221,7 +196,7 @@ export default function CandidateDashboardPage() {
       if (e.key === "latest_live_session_updated") fetchLiveSessions();
     };
 
-    const pollInterval = setInterval(fetchLiveSessions, 10000);
+    const pollInterval = setInterval(fetchLiveSessions, 5000);
 
     if (typeof window !== "undefined") {
       window.addEventListener("liveSessionUpdated", handleSessionUpdated);
@@ -663,14 +638,14 @@ Learn Today. Implement Today. Build Your Career for a Lifetime.
               <button
                 type="button"
                 onClick={() => {
-                  const rawUrl = activeLiveSession?.meeting_url || "https://meet.google.com/xyz-cloudops-live";
-                  const url = ensureAbsoluteUrl(rawUrl, "https://meet.google.com/xyz-cloudops-live");
+                  const rawUrl = activeLiveSession?.meeting_url;
+                  const url = ensureAbsoluteUrl(rawUrl, "https://us02web.zoom.us");
                   try {
                     apiFetch("/live-sessions/track-click", {
                       method: "POST",
                       body: JSON.stringify({
-                        live_session_id: activeLiveSession?.id || "live-default-001",
-                        session_title: activeLiveSession?.title || "40 LPA DevOps Architecture Masterclass",
+                        live_session_id: activeLiveSession?.id || "live-session",
+                        session_title: activeLiveSession?.title || "Live Mock Interview",
                         candidate_name: candidateName,
                         candidate_email: (user as any)?.email || "candidate@cloudops.internal",
                         platform_clicked: "ZOOM"
@@ -690,14 +665,14 @@ Learn Today. Implement Today. Build Your Career for a Lifetime.
               <button
                 type="button"
                 onClick={() => {
-                  const rawUrl = activeLiveSession?.whatsapp_group_url || "https://chat.whatsapp.com/AIInterviewCommunity";
-                  const url = ensureAbsoluteUrl(rawUrl, "https://chat.whatsapp.com/AIInterviewCommunity");
+                  const rawUrl = activeLiveSession?.whatsapp_group_url;
+                  const url = ensureAbsoluteUrl(rawUrl, "https://chat.whatsapp.com");
                   try {
                     apiFetch("/live-sessions/track-click", {
                       method: "POST",
                       body: JSON.stringify({
-                        live_session_id: activeLiveSession?.id || "live-default-001",
-                        session_title: activeLiveSession?.title || "40 LPA DevOps Architecture Masterclass",
+                        live_session_id: activeLiveSession?.id || "live-session",
+                        session_title: activeLiveSession?.title || "Live Mock Interview",
                         candidate_name: candidateName,
                         candidate_email: (user as any)?.email || "candidate@cloudops.internal",
                         platform_clicked: "WHATSAPP"

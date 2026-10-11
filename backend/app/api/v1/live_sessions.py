@@ -81,58 +81,44 @@ def parse_session_datetime(date_str: Optional[str]) -> datetime:
 
 @router.get("/active", response_model=StandardResponse[List[dict]])
 async def get_active_live_sessions(db: AsyncSession = Depends(get_db)):
-    stmt = select(LiveSession).where(
-        (LiveSession.is_active == True) | (LiveSession.status.in_(["LIVE_NOW", "LIVE_STREAMING"]))
-    )
+    # 1. Fetch real sessions from database
+    stmt = select(LiveSession).order_by(desc(LiveSession.created_at))
     res = await db.execute(stmt)
-    sessions = res.scalars().all()
-
-    now = datetime.now(timezone.utc)
+    all_sessions = res.scalars().all()
 
     items = []
-    for s in sessions:
-        s_dt = parse_session_datetime(s.session_date)
+    # Priority: sessions marked LIVE_NOW or LIVE_STREAMING, then upcoming active sessions
+    live_sessions = [s for s in all_sessions if s.status in ["LIVE_NOW", "LIVE_STREAMING"]]
+    upcoming_sessions = [s for s in all_sessions if s.status != "COMPLETED" and s not in live_sessions]
+    other_sessions = [s for s in all_sessions if s not in live_sessions and s not in upcoming_sessions]
 
+    chosen_sessions = live_sessions + upcoming_sessions
+    if not chosen_sessions and all_sessions:
+        chosen_sessions = all_sessions
+
+    for s in chosen_sessions:
+        s_dt = parse_session_datetime(s.session_date)
         items.append({
             "id": s.id,
             "title": s.title,
-            "description": s.description,
+            "description": s.description or "",
             "session_date": s.session_date,
-            "meeting_url": s.meeting_url or "https://meet.google.com/xyz-cloudops-live",
-            "whatsapp_group_url": s.whatsapp_group_url or "https://chat.whatsapp.com/AIInterviewCommunity",
-            "banner_url": s.banner_url,
+            "meeting_url": s.meeting_url or "",
+            "whatsapp_group_url": s.whatsapp_group_url or "",
+            "banner_url": s.banner_url or "",
             "status": s.status,
             "host_name": s.host_name or "Vikas Sir",
+            "is_active": s.is_active,
             "parsed_dt": s_dt.isoformat()
         })
 
-    if db.dirty:
-        await db.commit()
+    # Sort items: LIVE_NOW / LIVE_STREAMING always first (#0)
+    def sort_key(item):
+        is_live = item.get("status") in ["LIVE_NOW", "LIVE_STREAMING"]
+        return 0 if is_live else 1
+    items.sort(key=sort_key)
 
-    # Dynamic fallback session (always scheduled 24 hours in future if no session in DB)
-    if not items:
-        tomorrow_dt = now + timedelta(days=1)
-        formatted_date = tomorrow_dt.strftime("%d %b %Y • 8:15 PM IST")
-        items = [{
-            "id": "live-default-001",
-            "title": "👑 40 LPA DevOps Architecture & Outage Troubleshooting Masterclass",
-            "description": "Join Vikas Sir and Sachin Rawat for live interactive Q&A, mock interview feedback & ATS resume reviews.",
-            "session_date": formatted_date,
-            "meeting_url": "https://meet.google.com/xyz-cloudops-live",
-            "whatsapp_group_url": "https://chat.whatsapp.com/AIInterviewCommunity",
-            "banner_url": "/banner-live.png",
-            "status": "UPCOMING",
-            "host_name": "Vikas Sir & Sachin Rawat",
-            "parsed_dt": tomorrow_dt.isoformat()
-        }]
-    else:
-        # Sort items: LIVE_NOW / LIVE_STREAMING first, then earliest upcoming session (ascending by date)
-        def sort_key(item):
-            is_live = item.get("status") in ["LIVE_NOW", "LIVE_STREAMING"]
-            dt = parse_session_datetime(item.get("session_date"))
-            return (0 if is_live else 1, dt)
-        items.sort(key=sort_key)
-
+    # NO DUMMY FALLBACK: If no session in DB, return empty list []
     return StandardResponse(data=items)
 
 
@@ -176,7 +162,7 @@ async def create_live_session(
         prev_res = await db.execute(prev_stmt)
         for prev_s in prev_res.scalars().all():
             prev_s.status = "UPCOMING"
-            prev_s.is_active = False
+            prev_s.is_active = True
 
     session = LiveSession(
         title=req.title,
@@ -247,7 +233,7 @@ async def update_live_session(
         prev_res = await db.execute(prev_stmt)
         for prev_s in prev_res.scalars().all():
             prev_s.status = "UPCOMING"
-            prev_s.is_active = False
+            prev_s.is_active = True
 
     session.title = req.title
     session.description = req.description

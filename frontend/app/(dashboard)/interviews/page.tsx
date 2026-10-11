@@ -873,11 +873,9 @@ export default function InterviewsPage() {
   const completedCount = stages.filter((s) => s.status === "completed").length;
 
   return (
-    <div className="w-full flex flex-col gap-8 pb-16 text-slate-900 dark:text-slate-100 font-sans relative overflow-x-hidden">
+    <div className="w-full flex flex-col gap-4 pb-16 text-slate-900 dark:text-slate-100 font-sans relative overflow-x-hidden">
       {/* BACKGROUND VERTICAL GRID LINES */}
       <div className="fixed inset-0 pointer-events-none z-0 grid grid-cols-4 md:grid-cols-6 lg:grid-cols-12 w-full px-6 opacity-15">
-
-
         <div className="border-r border-slate-300 dark:border-slate-800 h-full"></div>
         <div className="border-r border-slate-300 dark:border-slate-800 h-full hidden md:block"></div>
         <div className="border-r border-slate-300 dark:border-slate-800 h-full"></div>
@@ -893,53 +891,50 @@ export default function InterviewsPage() {
       </div>
 
       {isDemoGuest && (
-        <div className="relative z-20 p-4 sm:p-5 rounded-2xl bg-amber-500/10 border-2 border-amber-500/40 text-amber-600 dark:text-amber-400 flex flex-col sm:flex-row items-center justify-between gap-4 backdrop-blur-xl">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-amber-500/20 flex items-center justify-center text-amber-500 font-bold shrink-0">
+        <div className="relative z-20 p-3 sm:p-4 rounded-xl bg-amber-500/10 border border-amber-500/40 text-amber-600 dark:text-amber-400 flex flex-col sm:flex-row items-center justify-between gap-3 backdrop-blur-xl">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-lg bg-amber-500/20 flex items-center justify-center text-amber-500 font-bold shrink-0 text-sm">
               👁️
             </div>
             <div className="flex flex-col">
-              <span className="text-xs font-mono font-black uppercase tracking-wider text-amber-500">
+              <span className="text-[11px] font-mono font-black uppercase tracking-wider text-amber-500">
                 GUEST DEMO MODE ACTIVE
               </span>
               <p className="text-xs text-slate-700 dark:text-slate-300 font-medium">
-                You are currently previewing the candidate panel. Stages 1-3 are open for trial. No data will be saved.
+                You are previewing the candidate panel. Stages 1-3 are open for trial.
               </p>
             </div>
           </div>
           <button
             onClick={() => router.push("/login")}
-            className="px-4 py-2 rounded-xl text-xs font-black text-white bg-[#FF6B00] hover:bg-orange-600 shadow-md transition-colors shrink-0 uppercase tracking-wider"
+            className="px-3.5 py-1.5 rounded-lg text-xs font-black text-white bg-[#FF6B00] hover:bg-orange-600 shadow-md transition-colors shrink-0 uppercase tracking-wider"
           >
             Login for Full Access →
           </button>
         </div>
       )}
 
-      {/* AGENCY THEME HERO BANNER */}
-      <div className="relative z-10 p-6 sm:p-10 rounded-[32px] bg-white dark:bg-slate-900/90 border-2 border-slate-200 dark:border-slate-800 shadow-xl dark:shadow-2xl flex flex-col md:flex-row items-center justify-between gap-6 backdrop-blur-xl">
-        
-        <div className="flex flex-col gap-3 max-w-3xl">
-          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight text-slate-900 dark:text-white uppercase">
+      {/* COMPACT & STREAMLINED HERO BANNER */}
+      <div className="relative z-10 p-4 sm:p-5 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200/90 dark:border-slate-800 shadow-md flex flex-col md:flex-row items-start md:items-center justify-between gap-4 backdrop-blur-xl">
+        <div className="flex flex-col gap-1 max-w-2xl">
+          <h1 className="text-xl sm:text-2xl font-black tracking-tight text-slate-900 dark:text-white uppercase leading-snug">
             MOCK INTERVIEW <span className="text-[#FF6B00]">CHALLENGE JOURNEY</span>
           </h1>
-
-          <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 font-medium leading-relaxed">
-            <strong className="text-slate-900 dark:text-white">"Learn Today. Implement Today. Build Your Career for a Lifetime."</strong><br />
-            Complete stages sequentially to master real-world Cloud & DevOps engineering challenges.
+          <p className="text-xs text-slate-500 dark:text-slate-400 font-medium leading-relaxed">
+            &ldquo;Learn Today. Implement Today. Build Your Career for a Lifetime.&rdquo; Master real-world Cloud & DevOps challenges sequentially.
           </p>
         </div>
 
-        {/* Unlocked Counter Pill */}
-        <div className="flex flex-wrap items-center gap-3 shrink-0">
-          <div className="flex items-center gap-4 bg-slate-50 dark:bg-slate-800/80 p-4 sm:p-5 rounded-2xl border border-slate-200 dark:border-slate-700/80 shrink-0 shadow-md">
-            <div className="w-12 h-12 rounded-2xl bg-[#FF6B00]/15 border border-[#FF6B00]/40 flex items-center justify-center text-[#FF6B00] shadow-sm">
-              <Trophy className="w-6 h-6" />
+        {/* Compact Unlocked Counter Pill */}
+        <div className="flex items-center gap-2.5 shrink-0 self-end md:self-auto">
+          <div className="flex items-center gap-2.5 bg-slate-50 dark:bg-slate-800/80 px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-700/80 shrink-0 shadow-xs">
+            <div className="w-8 h-8 rounded-lg bg-[#FF6B00]/15 border border-[#FF6B00]/40 flex items-center justify-center text-[#FF6B00]">
+              <Trophy className="w-4 h-4" />
             </div>
             <div className="flex flex-col">
-              <span className="text-[10px] font-mono font-black text-slate-400 uppercase tracking-widest">UNLOCKED STAGES</span>
-              <span className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white">
-                {completedCount + 1} <span className="text-slate-400 text-sm font-bold">/ 30</span>
+              <span className="text-[9px] font-mono font-black text-slate-400 uppercase tracking-wider">UNLOCKED</span>
+              <span className="text-sm font-black text-slate-900 dark:text-white leading-none">
+                {completedCount + 1} <span className="text-slate-400 text-xs font-bold">/ 30</span>
               </span>
             </div>
           </div>
@@ -950,58 +945,51 @@ export default function InterviewsPage() {
                 setSelectedStageForPayment(null);
                 setIsPaymentModalOpen(true);
               }}
-              className="px-5 py-4 rounded-2xl bg-gradient-to-r from-[#FF9900] via-amber-400 to-orange-400 text-slate-950 text-xs font-black flex items-center gap-2.5 shadow-lg shadow-[#FF9900]/25 hover:scale-[1.03] transition-all cursor-pointer uppercase tracking-wider shrink-0"
+              className="px-3.5 py-2 rounded-xl bg-gradient-to-r from-[#FF9900] via-amber-400 to-orange-400 text-slate-950 text-xs font-black flex items-center gap-2 shadow-md shadow-[#FF9900]/20 hover:scale-[1.02] transition-all cursor-pointer uppercase tracking-wider shrink-0"
               title={`Pay ₹${configuredFee} Once & Unlock All 30 Stages`}
             >
-              <Crown className="w-5 h-5 text-slate-950 fill-slate-950" />
-              <div className="flex flex-col text-left leading-none">
-                <span className="text-[9px] font-mono font-extrabold opacity-80">ONE-TIME PRO PASS</span>
-                <span className="text-xs font-black mt-0.5">Unlock All 30 Stages (₹{configuredFee})</span>
-              </div>
+              <Crown className="w-4 h-4 text-slate-950 fill-slate-950 shrink-0" />
+              <span>PRO Pass (₹{configuredFee})</span>
             </button>
           )}
         </div>
-
       </div>
 
       {/* 🎥 ACTIVE LIVE INTERVIEW SESSION BANNER */}
       {activeSession && (
-        <div className="relative z-20 p-6 sm:p-7 rounded-[30px] bg-gradient-to-r from-rose-950/95 via-slate-900 to-amber-950/95 border-2 border-rose-500/70 shadow-2xl backdrop-blur-xl flex flex-col md:flex-row items-center justify-between gap-6 animate-pulse ring-4 ring-rose-500/30">
-          <div className="flex items-center gap-4">
-            <div className="w-14 h-14 rounded-2xl bg-rose-500/20 border-2 border-rose-500/60 flex items-center justify-center text-rose-400 shrink-0 shadow-lg">
-              <Video className="w-7 h-7 animate-bounce" />
+        <div className="relative z-20 p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-rose-950/95 via-slate-900 to-amber-950/95 border border-rose-500/70 shadow-xl backdrop-blur-xl flex flex-col md:flex-row items-center justify-between gap-4 animate-pulse">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-rose-500/20 border border-rose-500/60 flex items-center justify-center text-rose-400 shrink-0 shadow-md">
+              <Video className="w-5 h-5 animate-bounce" />
             </div>
-            <div className="flex flex-col gap-1 text-left">
+            <div className="flex flex-col gap-0.5 text-left">
               <div className="flex items-center gap-2">
-                <span className="w-2.5 h-2.5 rounded-full bg-rose-500 animate-ping" />
-                <span className="px-3 py-0.5 rounded-full text-[10px] font-mono font-black bg-rose-500 text-white uppercase tracking-widest">
-                  LIVE INTERVIEW IN PROGRESS
+                <span className="w-2 h-2 rounded-full bg-rose-500 animate-ping" />
+                <span className="px-2 py-0.5 rounded-full text-[9px] font-mono font-black bg-rose-500 text-white uppercase tracking-widest">
+                  LIVE INTERVIEW ACTIVE
                 </span>
               </div>
-              <h2 className="text-xl sm:text-2xl font-black text-white tracking-tight uppercase">
+              <h2 className="text-sm sm:text-base font-black text-white tracking-tight uppercase">
                 {activeSession.stageTitle || `Stage ${activeSession.stageId || 1} Session`}
               </h2>
-              <p className="text-xs text-slate-300 font-medium">
-                You have an active interview room running. You must resume or drop out before starting a new stage.
-              </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-3 shrink-0 w-full md:w-auto">
+          <div className="flex items-center gap-2.5 shrink-0 w-full md:w-auto">
             <button
               onClick={() => router.push(activeSession.roomUrl || `/interviews/${activeSession.attemptId}/room`)}
-              className="flex-1 md:flex-none px-6 py-3.5 rounded-2xl font-black text-xs text-white bg-gradient-to-r from-rose-500 via-orange-500 to-amber-500 hover:from-rose-400 hover:to-amber-400 shadow-xl shadow-rose-500/30 flex items-center justify-center gap-2 transition-all cursor-pointer uppercase tracking-wider scale-105"
+              className="flex-1 md:flex-none px-4 py-2.5 rounded-xl font-black text-xs text-white bg-gradient-to-r from-rose-500 via-orange-500 to-amber-500 hover:from-rose-400 hover:to-amber-400 shadow-md shadow-rose-500/30 flex items-center justify-center gap-2 transition-all cursor-pointer uppercase tracking-wider"
             >
-              <Video className="w-4 h-4" />
-              <span>Resume Ongoing Interview 🚀</span>
+              <Video className="w-3.5 h-3.5" />
+              <span>Resume Interview 🚀</span>
             </button>
 
             <button
               onClick={handleDropOutActiveSession}
-              className="px-4 py-3.5 rounded-2xl font-black text-xs text-rose-300 bg-rose-950/80 hover:bg-rose-900 border border-rose-500/50 flex items-center justify-center gap-1.5 transition-all cursor-pointer"
+              className="px-3 py-2.5 rounded-xl font-black text-xs text-rose-300 bg-rose-950/80 hover:bg-rose-900 border border-rose-500/50 flex items-center justify-center gap-1 transition-all cursor-pointer"
               title="Drop Out & Abort Active Interview Session"
             >
-              <LogOut className="w-4 h-4 text-rose-400" />
+              <LogOut className="w-3.5 h-3.5 text-rose-400" />
               <span>Drop Out 🚪</span>
             </button>
           </div>
@@ -1010,21 +998,21 @@ export default function InterviewsPage() {
 
       {/* ALERT / SUCCESS MESSAGES */}
       {paymentSuccessMsg && (
-        <div className="relative z-10 p-4 rounded-2xl bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-300 dark:border-emerald-800 text-xs font-black text-emerald-700 dark:text-emerald-300 flex items-center gap-2">
-          <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
+        <div className="relative z-10 p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-300 dark:border-emerald-800 text-xs font-black text-emerald-700 dark:text-emerald-300 flex items-center gap-2">
+          <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
           <span>{paymentSuccessMsg}</span>
         </div>
       )}
 
       {alertMsg && (
-        <div className="relative z-10 p-4 rounded-2xl bg-amber-50 dark:bg-amber-950/60 border border-amber-300 dark:border-amber-800 text-xs font-black text-amber-800 dark:text-amber-200 flex items-center gap-2">
-          <AlertCircle className="w-5 h-5 text-amber-500 shrink-0" />
+        <div className="relative z-10 p-3 rounded-xl bg-amber-50 dark:bg-amber-950/60 border border-amber-300 dark:border-amber-800 text-xs font-black text-amber-800 dark:text-amber-200 flex items-center gap-2">
+          <AlertCircle className="w-4 h-4 text-amber-500 shrink-0" />
           <span>{alertMsg}</span>
         </div>
       )}
 
-      {/* AGENCY FILTER PILLS WITH HORIZONTAL SCROLLING */}
-      <div className="relative z-10 p-2 sm:p-3 rounded-2xl bg-white/90 dark:bg-slate-900/90 border-2 border-slate-200 dark:border-slate-800 shadow-md backdrop-blur-xl flex items-center gap-2.5 overflow-x-auto w-full max-w-full scroll-smooth">
+      {/* COMPACT FILTER PILLS WITH HORIZONTAL SCROLLING */}
+      <div className="relative z-10 p-1.5 sm:p-2 rounded-xl bg-white/90 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 shadow-xs backdrop-blur-xl flex items-center gap-2 overflow-x-auto w-full max-w-full scroll-smooth">
         {[
           { key: "ALL", icon: "🔥", title: "All 30 Stages", badge: "ALL", badgeClass: "bg-slate-200/70 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-300 dark:border-slate-700" },
           { key: "LEVEL1", icon: "🐧", title: "Track 1: Foundation", badge: !isPaymentEnabled ? "FREE" : (paidStartStageConfig > 5 ? "FREE" : (paidStartStageConfig <= 1 ? "PRO" : "PARTIAL")), badgeClass: (!isPaymentEnabled || paidStartStageConfig > 5) ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30" : "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30" },
@@ -1038,15 +1026,15 @@ export default function InterviewsPage() {
             <button
               key={tab.key}
               onClick={() => setActiveTab(tab.key)}
-              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap shrink-0 ${
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer whitespace-nowrap shrink-0 ${
                 isActive
-                  ? "bg-gradient-to-r from-[#FF6B00] to-[#FF8533] text-white shadow-md shadow-[#FF6B00]/30 scale-[1.02]"
+                  ? "bg-gradient-to-r from-[#FF6B00] to-[#FF8533] text-white shadow-xs scale-[1.02]"
                   : "bg-slate-100 dark:bg-slate-800/80 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 hover:text-slate-900 dark:hover:text-white"
               }`}
             >
               <span className="font-black tracking-tight">{tab.title}</span>
               <span
-                className={`px-2 py-0.5 rounded-md text-[9.5px] font-black tracking-wider uppercase border ${
+                className={`px-1.5 py-0.5 rounded text-[9px] font-black tracking-wider uppercase border ${
                   isActive
                     ? "bg-white/20 text-white border-white/40"
                     : tab.badgeClass
@@ -1060,10 +1048,10 @@ export default function InterviewsPage() {
       </div>
 
       {/* 30-STAGE PIPELINE GRID */}
-      <div className="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+      <div className="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-5 sm:gap-6 items-start">
         
         {/* LEFT: STAGE LIST */}
-        <div className="lg:col-span-7 flex flex-col gap-3.5 max-h-[550px] sm:max-h-[650px] lg:max-h-[750px] overflow-y-auto pr-1 sm:pr-2">
+        <div className="lg:col-span-7 flex flex-col gap-2.5 max-h-[calc(100vh-210px)] min-h-[500px] overflow-y-auto pr-1 sm:pr-2">
           
           {isLoadingStages ? (
             <div className="flex flex-col gap-3 p-8 items-center justify-center min-h-[320px] rounded-2xl bg-slate-900/40 border border-white/5">
@@ -1441,10 +1429,9 @@ export default function InterviewsPage() {
               
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div className="flex flex-col gap-1">
-                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300">Full Name *</label>
+                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300">Full Name</label>
                   <input
                     type="text"
-                    required
                     value={stage0Form.fullName}
                     onChange={(e) => setStage0Form({ ...stage0Form, fullName: e.target.value })}
                     placeholder="e.g. Rahul Luthra"
@@ -1453,10 +1440,9 @@ export default function InterviewsPage() {
                 </div>
 
                 <div className="flex flex-col gap-1">
-                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300">Email Address *</label>
+                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300">Email Address</label>
                   <input
                     type="email"
-                    required
                     value={stage0Form.email}
                     onChange={(e) => setStage0Form({ ...stage0Form, email: e.target.value })}
                     placeholder="you@example.com"
@@ -1467,10 +1453,9 @@ export default function InterviewsPage() {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div className="flex flex-col gap-1">
-                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300">Mobile Number *</label>
+                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300">Mobile Number</label>
                   <input
                     type="tel"
-                    required
                     value={stage0Form.phone}
                     onChange={(e) => setStage0Form({ ...stage0Form, phone: e.target.value })}
                     placeholder="+91 98765 43210"
@@ -1479,7 +1464,7 @@ export default function InterviewsPage() {
                 </div>
 
                 <div className="flex flex-col gap-1">
-                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300">Highest Qualification *</label>
+                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300">Highest Qualification</label>
                   <select
                     value={stage0Form.highestQualification}
                     onChange={(e) => setStage0Form({ ...stage0Form, highestQualification: e.target.value })}
@@ -1499,7 +1484,7 @@ export default function InterviewsPage() {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div className="flex flex-col gap-1">
-                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300">Years of Experience *</label>
+                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300">Years of Experience</label>
                   <select
                     value={stage0Form.yearsOfExperience}
                     onChange={(e) => setStage0Form({ ...stage0Form, yearsOfExperience: e.target.value })}
@@ -1516,10 +1501,9 @@ export default function InterviewsPage() {
                 </div>
 
                 <div className="flex flex-col gap-1">
-                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300">Target Role *</label>
+                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300">Target Role</label>
                   <input
                     type="text"
-                    required
                     value={stage0Form.targetRole}
                     onChange={(e) => setStage0Form({ ...stage0Form, targetRole: e.target.value })}
                     placeholder="e.g. Senior DevOps Specialist"
