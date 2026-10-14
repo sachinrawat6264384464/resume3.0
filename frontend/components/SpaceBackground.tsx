@@ -127,16 +127,10 @@ export function SpaceBackground() {
         const currentRadius = Math.max(0.6, (distanceRatio * 1.0 + 0.4) * star.size);
         const currentAlpha = Math.min(1.0, (distanceRatio * 0.7 + 0.4) * star.alpha);
 
-        // Draw 100% PURE WHITE Crisp Visible Star
+        // Draw 100% PURE WHITE Crisp Visible Star without expensive per-frame shadowBlur filters
         ctx.beginPath();
         ctx.arc(px, py, currentRadius, 0, Math.PI * 2);
         ctx.fillStyle = `rgba(255, 255, 255, ${currentAlpha})`;
-        if (currentRadius > 1.2) {
-          ctx.shadowBlur = 4;
-          ctx.shadowColor = "rgba(255, 255, 255, 0.8)";
-        } else {
-          ctx.shadowBlur = 0;
-        }
         ctx.fill();
       }
 

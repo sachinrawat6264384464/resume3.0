@@ -56,8 +56,8 @@ class StageService:
         started = started or now_naive
         total_duration = max(0.0, (now_naive - started).total_seconds())
 
-        # Standard Stage Gatekeeper Rule: 60%+ Threshold AND at least 50% of questions correct
-        threshold = 60.0
+        # Stage Gatekeeper Rule: Dynamic threshold from DB stage config (Default 80.0%)
+        threshold = stage_att.stage.minimum_score if (stage_att.stage and stage_att.stage.minimum_score is not None) else 80.0
         min_required_correct = max(1, len(q_attempts) // 2)
         passed = (stage_score >= threshold) and (correct_count >= min_required_correct)
 
@@ -123,6 +123,23 @@ class StageService:
             print(f"Stage XP award failed: {e}")
 
         await self.db.commit()
+
+        # Precompute summary report in background so Results page loads in milliseconds
+        try:
+            import asyncio
+            from app.core.database import AsyncSessionLocal
+            att_id = stage_att.interview_attempt_id
+            async def _precompute_report(attempt_id: str):
+                try:
+                    async with AsyncSessionLocal() as session:
+                        rep_svc = ReportService(session)
+                        await rep_svc.synthesize_final_report(attempt_id)
+                        await session.commit()
+                except Exception as bg_err:
+                    print(f"Background report precompute notice: {bg_err}")
+            asyncio.create_task(_precompute_report(att_id))
+        except Exception:
+            pass
 
         feedback = (
             f"Stage {current_num} completed with a score of {stage_score}%. "

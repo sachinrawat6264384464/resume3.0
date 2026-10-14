@@ -189,8 +189,9 @@ class MockAIProvider(AIProvider):
             "assessment", "question", "answer", "round", "main", "karun", "bus", "kya"
         }
 
-        # Key target words are extracted STRICTLY AND EXCLUSIVELY from reference_answer (ref_words)! NOT expected_topics, NOT question_text!
-        admin_key_words = [w for w in ref_words if w not in stop_words]
+        # Key target words are extracted from reference_answer and expected_topics
+        expected_words = [w for topic in (expected_topics or []) for w in get_words(topic) if w not in stop_words]
+        admin_key_words = list(dict.fromkeys([w for w in ref_words if w not in stop_words] + expected_words))
 
         begging_phrases = [
             "give me pass", "pass me", "dont know", "don't know", "dont have", "don't have",
@@ -239,11 +240,14 @@ class MockAIProvider(AIProvider):
             else:
                 match_percentage = 50
 
+            topic_match_count = sum(1 for topic in (expected_topics or []) if any(w in cand_words for w in get_words(topic)))
+            topic_ratio = (topic_match_count / len(expected_topics)) if expected_topics else 0.0
+
             min_required = min(2, max(1, len(admin_key_words)))
-            is_passed = (match_percentage >= 50 and len(matched_admin_words) >= min_required) or is_exact
+            is_passed = (match_percentage >= 50 and len(matched_admin_words) >= min_required) or (topic_ratio >= 0.60) or is_exact
 
             if is_passed:
-                match_percentage = max(match_percentage, 65)
+                match_percentage = max(match_percentage, int(topic_ratio * 100), 65)
             else:
                 if len(matched_admin_words) == 0:
                     match_percentage = min(match_percentage, 15)

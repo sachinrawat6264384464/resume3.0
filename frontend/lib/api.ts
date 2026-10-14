@@ -59,6 +59,7 @@ export async function apiFetch<T = any>(
     attempts++;
     try {
       const res = await fetch(url, {
+        keepalive: true,
         cache: "no-store",
         ...options,
         headers,

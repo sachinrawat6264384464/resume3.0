@@ -784,37 +784,33 @@ export default function InterviewRoomPage() {
       setAccumulatedScores(newAccumulated);
       setLastMatchScore(matchPercentage);
 
-      let finalEvalData: QuestionEvaluationResult = localEval;
+      // Instantaneous UI Feedback: Candidate sees evaluation result in <15ms
+      setLastEvalResult(localEval);
+      setIsProcessing(false);
 
       if (chamberMode === "INTERVIEW" && activeQuestionAttempt) {
-        // REAL INTERVIEW MODE: Save directly to Neon PostgreSQL Database
-        try {
-          const fetchPromise = apiFetch(`/attempts/${attemptId}/questions/${activeQuestionAttempt.id}/submit-json`, {
-            method: "POST",
-            body: JSON.stringify({
-              transcript: finalTranscriptText,
-              duration_seconds: questionSeconds || 10.0,
-            }),
-          });
-          const timeoutPromise = new Promise((resolve) => setTimeout(() => resolve(null), 3500));
-          const res: any = await Promise.race([fetchPromise, timeoutPromise]);
-
+        // Asynchronous non-blocking Database sync
+        apiFetch(`/attempts/${attemptId}/questions/${activeQuestionAttempt.id}/submit-json`, {
+          method: "POST",
+          body: JSON.stringify({
+            transcript: finalTranscriptText,
+            duration_seconds: questionSeconds || 10.0,
+          }),
+        }).then((res: any) => {
           if (res?.data) {
-            finalEvalData = res.data;
+            setLastEvalResult(res.data);
             if (res.data.overall_score !== undefined) {
               const bScore = Number(res.data.overall_score);
               setLastMatchScore(Math.round(bScore));
-              newAccumulated[currentQIndex] = bScore;
-              setAccumulatedScores(newAccumulated);
+              const updatedScores = [...newAccumulated];
+              updatedScores[currentQIndex] = bScore;
+              setAccumulatedScores(updatedScores);
             }
           }
-        } catch (e) {
-          console.warn("Backend submit notice, using local evaluation:", e);
-        }
+        }).catch((e) => {
+          console.warn("Background submit notice:", e);
+        });
       }
-
-      setLastEvalResult(finalEvalData);
-      // setXpToast(`+${Math.floor(finalEvalData.overall_score / 5)} XP Earned!`);
     } catch (err: any) {
       console.warn("Processed answer evaluation notice:", err);
     } finally {
@@ -852,7 +848,6 @@ export default function InterviewRoomPage() {
         setLastMatchScore(null);
         setSpokenTranscript("");
         setSubmittedAnswerText("");
-        loadAttempt();
       } else {
         // Final Question Completed -> Calculate Stage Average & Gatekeeper Rules!
         const allScores = accumulatedScores.length > 0 ? accumulatedScores : [0];

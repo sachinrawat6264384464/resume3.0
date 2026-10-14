@@ -59,14 +59,6 @@ const ALL_30_STAGES = [
 const getInitialStages = () => {
   if (typeof window === "undefined") return ALL_30_STAGES;
   try {
-    const cached = sessionStorage.getItem("cached_interviews_stages");
-    if (cached) {
-      const parsedCache = JSON.parse(cached);
-      if (parsedCache?.data && Array.isArray(parsedCache.data) && parsedCache.data.length > 0) {
-        return parsedCache.data;
-      }
-    }
-
     const rawList = localStorage.getItem("completed_stages_list");
     const completedSet = new Set<number>();
     if (rawList) {
@@ -412,14 +404,7 @@ export default function InterviewsPage() {
       }
 
       setStages(merged);
-      if (typeof window !== "undefined") {
-        try {
-          sessionStorage.setItem("cached_interviews_stages", JSON.stringify({
-            data: merged,
-            timestamp: Date.now()
-          }));
-        } catch (e) {}
-      }
+
       setSelectedStage((prev: any) => {
         if (typeof window !== "undefined") {
           const params = new URLSearchParams(window.location.search);

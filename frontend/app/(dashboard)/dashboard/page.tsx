@@ -164,67 +164,38 @@ export default function CandidateDashboardPage() {
 
   useEffect(() => {
     setMounted(true);
-    if (typeof window !== "undefined") {
-      try {
-        const cachedM = localStorage.getItem("cached_dash_metrics");
-        if (cachedM) setDbMetrics(JSON.parse(cachedM));
-        const cachedP = localStorage.getItem("cached_user_profile");
-        if (cachedP) setCandProfile(JSON.parse(cachedP));
-      } catch {}
-    }
   }, []);
 
   useEffect(() => {
-    const fetchLiveSessions = () => {
-      apiFetch("/live-sessions/active")
-        .then((res) => {
-          if (res?.data && Array.isArray(res.data) && res.data.length > 0) {
-            processSessions(res.data);
-          } else {
-            processSessions([]);
-          }
-        })
-        .catch(() => {
-          processSessions([]);
-        });
-    };
+    let isCancelled = false;
 
-    fetchLiveSessions();
-
-    const handleSessionUpdated = () => fetchLiveSessions();
-    const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === "latest_live_session_updated") fetchLiveSessions();
-    };
-
-    const pollInterval = setInterval(fetchLiveSessions, 5000);
-
-    if (typeof window !== "undefined") {
-      window.addEventListener("liveSessionUpdated", handleSessionUpdated);
-      window.addEventListener("storage", handleStorageChange);
-      window.addEventListener("focus", fetchLiveSessions);
-    }
-
-    // 2. Fetch Real User DB Metrics & Profile data
-    const fetchUserData = async () => {
+    // Fast Parallel Live Data Fetch - 0 Cache, 0 LocalStorage, Pure Live Data
+    const fetchAllDashboardData = async () => {
       try {
-        const [userRes, profileRes, metricsRes, resumeRes] = await Promise.all([
+        const [userRes, profileRes, metricsRes, resumeRes, liveRes] = await Promise.all([
           apiFetch("/auth/me").catch(() => null),
           apiFetch("/candidates/me/profile").catch(() => null),
           apiFetch("/candidates/me/dashboard-metrics").catch(() => null),
-          apiFetch("/resumes/latest").catch(() => null)
+          apiFetch("/resumes/latest").catch(() => null),
+          apiFetch("/live-sessions/active").catch(() => null)
         ]);
+
+        if (isCancelled) return;
 
         if (userRes?.data) {
           const token = localStorage.getItem("auth_token") || "";
           setAuth(userRes.data, token);
         }
+
         if (profileRes?.data) {
           setCandProfile(profileRes.data);
-          if (typeof window !== "undefined") {
-            localStorage.setItem("cached_user_profile", JSON.stringify(profileRes.data));
-          }
         }
 
+        if (liveRes?.data && Array.isArray(liveRes.data)) {
+          processSessions(liveRes.data);
+        } else {
+          processSessions([]);
+        }
 
         if (metricsRes?.data) {
           let mergedMetrics = { ...metricsRes.data };
@@ -247,30 +218,30 @@ export default function CandidateDashboardPage() {
             }
           }
           setDbMetrics(mergedMetrics);
-          if (typeof window !== "undefined") {
-            localStorage.setItem("cached_dash_metrics", JSON.stringify(mergedMetrics));
-          }
         }
       } catch (e) {
         console.warn("Dashboard fetch notice:", e);
       }
     };
-    fetchUserData();
 
-    const handleProfileUpdate = () => {
-      fetchUserData();
+    fetchAllDashboardData();
+
+    const handleDataUpdate = () => {
+      fetchAllDashboardData();
     };
 
     if (typeof window !== "undefined") {
-      window.addEventListener("userProfileUpdated", handleProfileUpdate);
+      window.addEventListener("liveSessionUpdated", handleDataUpdate);
+      window.addEventListener("userProfileUpdated", handleDataUpdate);
+      window.addEventListener("focus", handleDataUpdate);
     }
+
     return () => {
-      clearInterval(pollInterval);
+      isCancelled = true;
       if (typeof window !== "undefined") {
-        window.removeEventListener("userProfileUpdated", handleProfileUpdate);
-        window.removeEventListener("liveSessionUpdated", handleSessionUpdated);
-        window.removeEventListener("storage", handleStorageChange);
-        window.removeEventListener("focus", fetchLiveSessions);
+        window.removeEventListener("liveSessionUpdated", handleDataUpdate);
+        window.removeEventListener("userProfileUpdated", handleDataUpdate);
+        window.removeEventListener("focus", handleDataUpdate);
       }
     };
   }, []);
