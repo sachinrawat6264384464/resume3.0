@@ -1,0 +1,58 @@
+sequenceDiagram
+    autonumber
+    actor User as Candidate / Administrator
+    participant Browser as Frontend (Next.js 14)
+    participant Store as Zustand AuthStore (localStorage)
+    participant API as FastAPI Backend (/api/v1/auth)
+    participant Sec as Security Core (security.py)
+    participant DB as PostgreSQL Database (users)
+    participant SMS as SMSService / EmailService
+    participant FB as Firebase Admin SDK (Optional)
+
+    %% Flow 1: Registration / OTP Request
+    Note over User, SMS: STEP 1: Registration or OTP Request
+    User->>Browser: Enters Phone / Email & Full Name
+    Browser->>API: POST /api/v1/auth/send-otp { phone_number, email }
+    API->>SMS: Dispatch 6-digit OTP (AiSensy WhatsApp / SMTP Email)
+    SMS-->>User: Delivers OTP via WhatsApp message or Email
+    API-->>Browser: { success: true, message: "OTP sent successfully" }
+
+    %% Flow 2: OTP Verification / Login
+    Note over User, Store: STEP 2: Credential Verification & Token Generation
+    User->>Browser: Inputs 6-Digit OTP / Password
+    Browser->>API: POST /api/v1/auth/login or /verify-otp { email/phone, code/password }
+    
+    alt Phone Auth with Firebase
+        API->>FB: Verify Firebase ID Token (verify_id_token)
+        FB-->>API: Decoded UID & Phone Claims
+    else Standard Password / Local OTP Auth
+        API->>DB: Query User by Email or Phone
+        DB-->>API: Returns User Record (hashed_password, role, is_active)
+        API->>Sec: verify_password(plain, hashed_password)
+        Sec-->>API: Password Validated (Boolean)
+    end
+
+    API->>Sec: create_access_token(payload={sub: user.id, role: user.role, org_id})
+    Sec-->>API: Signed HS256 JWT String (Valid for 7 days)
+    API-->>Browser: { access_token, token_type: "bearer", user: {...} }
+    Browser->>Store: setAuth(user, token) -> writes to localStorage
+
+    %% Flow 3: Authenticated Request to Protected Route
+    Note over User, DB: STEP 3: Protected Route Request & RBAC Validation
+    User->>Browser: Navigates to /interviews or /admin
+    Browser->>API: GET /api/v1/candidates/me/profile<br/>Header: Authorization: Bearer <JWT>
+    API->>Sec: verify_auth_token(credentials)
+    Sec->>Sec: jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
+    Sec->>Sec: Check token expiration (exp) and revocation (_CANDIDATE_REVOCATION)
+    
+    alt Token Invalid or Expired
+        Sec-->>Browser: 401 Unauthorized { detail: "Could not validate credentials" }
+    else Token Valid
+        Sec-->>API: Returns Decoded Token Payload dict
+        API->>DB: Query User & Candidate details by user_id
+        DB-->>API: Candidate Profile Data
+        API->>API: Validate RBAC Role (User.role == "ADMIN" or "CANDIDATE")
+        API-->>Browser: 200 OK StandardResponse[CandidateOut]
+        Browser-->>User: Renders Candidate Dashboard Screen
+    end
+

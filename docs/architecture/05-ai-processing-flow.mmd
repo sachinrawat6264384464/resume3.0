@@ -1,0 +1,56 @@
+sequenceDiagram
+    autonumber
+    actor Candidate as Candidate
+    participant Mic as Browser MediaRecorder (WebM)
+    participant UI as Next.js Interview UI
+    participant Backend as FastAPI Backend (/api/v1/attempts)
+    participant Storage as Storage Provider (S3 / Cloudinary)
+    participant STT as Speech-to-Text (faster-whisper)
+    participant Signals as Signal Analyzer (Pacing, WPM, Fillers)
+    participant LLM as AI Provider (OpenAI / Ollama)
+    participant DB as PostgreSQL Database
+
+    Candidate->>UI: Clicks "Start Recording" & Speaks Technical Answer
+    Mic->>UI: Captures Audio Stream & Emits WebM Chunks
+    Candidate->>UI: Clicks "Finish Answer & Submit"
+    UI->>UI: Compiles Final Audio Blob + Web Speech API Transcript (if enabled)
+    
+    UI->>Backend: POST /api/v1/attempts/submit-answer<br/>(Multipart Form: question_attempt_id, audio_file, duration_seconds)
+    
+    critical Audio Ingestion & Storage
+        Backend->>Storage: upload_file(audio_bytes, filename, org_id, candidate_id)
+        Storage-->>Backend: { view_url, file_identifier, storage_provider }
+    end
+
+    critical Speech Transcription
+        alt Transcript Provided by Frontend
+            Backend->>Backend: Use direct transcript string
+        else Audio File Uploaded Only
+            Backend->>STT: transcribe(audio_file_path)
+            STT-->>Backend: { transcript: "In Kubernetes, a pod is...", confidence: 0.94, duration: 42.5 }
+        end
+    end
+
+    critical Telemetry & Behavioral Analytics
+        Backend->>Signals: analyze_communication_signals(transcript, duration_seconds)
+        Signals-->>Backend: { wpm: 128, filler_word_count: 2, filler_words: ["um", "like"], pace_score: 90, clarity_score: 88 }
+    end
+
+    critical 5-Pillar Rubric AI Evaluation
+        Backend->>DB: Query Question (expected_topics, reference_answer, evaluation_rubric)
+        DB-->>Backend: Gold standard answer and key scoring pillars
+        Backend->>LLM: evaluate_answer(question_text, expected_topics, reference_answer, transcript, rubric)
+        LLM-->>Backend: Returns QuestionEvaluationResult JSON:<br/>- Technical Accuracy (40%)<br/>- Concept Coverage (25%)<br/>- Reasoning Quality (20%)<br/>- Practical Depth (10%)<br/>- Communication Clarity (5%)<br/>- Overall Score (0-100)<br/>- Strengths & Key Missed Concepts
+    end
+
+    critical Data Persistence & Gamification
+        Backend->>DB: Update QuestionAttempt (scores, transcript, evaluation_json, completed_at)
+        Backend->>DB: Create/Update Recording (view_url, file_size, storage_provider)
+        Backend->>DB: Increment Candidate XP (+10 XP) & Recalculate Level
+        Backend->>DB: Check if Stage Complete -> Aggregate StageAttempt Score
+        DB-->>Backend: Transaction Committed (ACID)
+    end
+
+    Backend-->>UI: 200 OK StandardResponse[QuestionEvaluationResult]
+    UI-->>Candidate: Live Scorecard Displays: Radar Chart, Score Ring, Breakdown & Next Question
+

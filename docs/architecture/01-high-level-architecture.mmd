@@ -1,0 +1,97 @@
+flowchart TD
+    %% Global High-Level Architecture (HLD) for CloudOps AI 3.0 Platform
+
+    subgraph ClientLayer["1. Client & Presentation Layer"]
+        User["Candidate / Admin / Recruiter"]
+        Browser["Modern Web Browser (Chrome, Safari, Firefox, Edge)"]
+        NextApp["Next.js 14 Frontend App (SSR & Client Hydration)<br/>TypeScript + Tailwind CSS + Zustand Store"]
+        AudioAPI["Web MediaRecorder API (Microphone Capture)"]
+    end
+
+    subgraph EdgeLayer["2. Edge, DNS & Gateway Layer"]
+        DNS["Route 53 / Custom DNS"]
+        CDN["Vercel Edge Network / CloudFront CDN"]
+        ALB["Reverse Proxy / Application Load Balancer<br/>HTTPS (Port 443) -> Port 8000"]
+    end
+
+    subgraph BackendLayer["3. FastAPI Application Server (Port 8000)"]
+        ASGI["Uvicorn ASGI Server / Gunicorn Workers"]
+        
+        subgraph Middlewares["Middleware Stack"]
+            CORS["CORS Middleware (Allowed Origins & Regex)"]
+            Telemetry["API Performance Telemetry (X-Process-Time)"]
+            ExHandler["Global Exception Handler"]
+        end
+
+        subgraph RouterLayer["API v1 Router (/api/v1)"]
+            AuthRoutes["/auth (JWT, Login, OTP)"]
+            CandRoutes["/candidates & /performance"]
+            IntRoutes["/interviews & /attempts"]
+            ResumeRoutes["/resumes (ATS & Parser)"]
+            AdminRoutes["/admin (Metrics, Overrides)"]
+            OtherRoutes["/leaderboard, /reminders, /live-sessions"]
+        end
+
+        subgraph ServiceLayer["Core Domain Services"]
+            AuthSvc["AuthService & Security"]
+            CandSvc["CandidateService"]
+            EvalSvc["EvaluationService (5-Pillar Rubric)"]
+            ResumeSvc["ResumeService & TF-IDF Matcher"]
+            AdminSvc["AdminService & RetentionService"]
+            NotifSvc["EmailService & SMSService (WhatsApp)"]
+        end
+    end
+
+    subgraph DataStorageLayer["4. Data Persistence & Cache"]
+        PostgresDB[("PostgreSQL 16 Database<br/>(Async SQLAlchemy 2.0 + asyncpg pool)")]
+        LocalCache["In-Memory Admin TTL Cache<br/>(admin_ttl_cache, 60s TTL)"]
+        ObjectStore["Object Storage<br/>(Cloudinary / AWS S3 / Local Disk)"]
+        LogFiles["Persistent File System<br/>(backend/logs/api_performance.log)"]
+    end
+
+    subgraph AIEngineLayer["5. AI & Speech Processing Engine"]
+        LLM["AI Provider: OpenAI GPT-4o-mini / Ollama Llama3"]
+        STT["STT Provider: faster-whisper / Mock Provider"]
+        NLP["Scikit-Learn TF-IDF Matcher & JDCleaner"]
+        Signals["Communication & Speech Signal Analyzer (WPM, Fillers)"]
+    end
+
+    subgraph ExternalIntegrations["6. External Third-Party Services"]
+        Firebase["Firebase Admin SDK (Phone OTP)"]
+        WhatsApp["AiSensy & Meta Cloud WhatsApp APIs"]
+        SMTPServer["SMTP Server (Gmail App Password)"]
+    end
+
+    %% Connections
+    User --> Browser
+    Browser --> NextApp
+    Browser --> AudioAPI
+    AudioAPI -.->|Audio Blobs: webm/wav| NextApp
+
+    NextApp -->|Static Content & Pages| CDN
+    CDN --> DNS
+    NextApp -->|HTTPS REST API Requests with Bearer JWT| ALB
+
+    ALB --> ASGI
+    ASGI --> Middlewares
+    Middlewares --> RouterLayer
+    RouterLayer --> ServiceLayer
+
+    %% Service to Storage
+    ServiceLayer -->|Async SQL Queries| PostgresDB
+    ServiceLayer -->|Read / Write TTL Cache| LocalCache
+    ServiceLayer -->|Upload Resumes & Audio Recordings| ObjectStore
+    Telemetry -->|Append JSON Lines| LogFiles
+
+    %% Service to AI
+    EvalSvc -->|Evaluate Rubrics & Synthesize Plan| LLM
+    EvalSvc -->|Transcribe Answer Audio| STT
+    EvalSvc -->|Pacing & Filler Word Counts| Signals
+    ResumeSvc -->|JD Keyword Alignment & Cosine Similarity| NLP
+    ResumeSvc -->|STAR Bullet Rewrite & Profile Extraction| LLM
+
+    %% Service to External
+    AuthSvc -->|Verify Phone Token| Firebase
+    NotifSvc -->|Dispatch OTP & Alerts| WhatsApp
+    NotifSvc -->|Send Transactional Emails| SMTPServer
+

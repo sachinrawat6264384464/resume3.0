@@ -1,0 +1,118 @@
+<mxfile host="app.diagrams.net" modified="2026-10-30T00:00:00.000Z" agent="CloudOps Architect" version="21.0.0" type="device">
+  <diagram id="cloudops-architecture" name="CloudOps AI 3.0 Architecture">
+    <mxGraphModel dx="1422" dy="794" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" background="#F8FAFC" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        
+        <!-- Client Layer Group -->
+        <mxCell id="grp_client" value="1. Client &amp; Presentation Layer" style="swimlane;whiteSpace=wrap;html=1;fillColor=#EFF6FF;strokeColor=#3B82F6;fontStyle=1;fontSize=13;fontColor=#1E3A8A;rounded=1;" vertex="1" parent="1">
+          <mxGeometry x="40" y="40" width="300" height="220" as="geometry" />
+        </mxCell>
+        <mxCell id="c_user" value="End User (Candidate / Admin)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#93C5FD;fontColor=#1E293B;fontStyle=1;" vertex="1" parent="grp_client">
+          <mxGeometry x="30" y="40" width="240" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="c_frontend" value="Next.js 14 Frontend UI&#xa;(TypeScript + Tailwind CSS + Zustand)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#93C5FD;fontColor=#1E293B;" vertex="1" parent="grp_client">
+          <mxGeometry x="30" y="100" width="240" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="c_media" value="MediaRecorder Web API&#xa;(Microphone Audio Capture)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#93C5FD;fontColor=#1E293B;fontSize=11;" vertex="1" parent="grp_client">
+          <mxGeometry x="30" y="165" width="240" height="40" as="geometry" />
+        </mxCell>
+
+        <!-- Edge & Gateway Layer -->
+        <mxCell id="grp_edge" value="2. Edge, CDN &amp; Gateway" style="swimlane;whiteSpace=wrap;html=1;fillColor=#F1F5F9;strokeColor=#64748B;fontStyle=1;fontSize=13;fontColor=#0F172A;rounded=1;" vertex="1" parent="1">
+          <mxGeometry x="380" y="40" width="280" height="220" as="geometry" />
+        </mxCell>
+        <mxCell id="e_dns" value="Amazon Route 53 (DNS)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#CBD5E1;fontColor=#1E293B;" vertex="1" parent="grp_edge">
+          <mxGeometry x="25" y="40" width="230" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="e_cdn" value="CloudFront CDN / Vercel Edge&#xa;(ACM Managed SSL/TLS)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#CBD5E1;fontColor=#1E293B;" vertex="1" parent="grp_edge">
+          <mxGeometry x="25" y="95" width="230" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="e_alb" value="Application Load Balancer (ALB)&#xa;Path: /api/v1/* -&gt; Port 8000" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#CBD5E1;fontColor=#1E293B;" vertex="1" parent="grp_edge">
+          <mxGeometry x="25" y="160" width="230" height="45" as="geometry" />
+        </mxCell>
+
+        <!-- Backend Application Layer -->
+        <mxCell id="grp_backend" value="3. FastAPI Backend Application (AWS ECS Fargate / EC2)" style="swimlane;whiteSpace=wrap;html=1;fillColor=#ECFDF5;strokeColor=#10B981;fontStyle=1;fontSize=13;fontColor=#064E3B;rounded=1;" vertex="1" parent="1">
+          <mxGeometry x="700" y="40" width="420" height="340" as="geometry" />
+        </mxCell>
+        <mxCell id="b_asgi" value="Uvicorn ASGI Server (Port 8000)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#6EE7B7;fontColor=#064E3B;fontStyle=1;" vertex="1" parent="grp_backend">
+          <mxGeometry x="30" y="35" width="360" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="b_router" value="API Router (/api/v1)&#xa;Auth | Candidates | Interviews | Attempts | Resumes | Admin" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#6EE7B7;fontColor=#064E3B;" vertex="1" parent="grp_backend">
+          <mxGeometry x="30" y="80" width="360" height="45" as="geometry" />
+        </mxCell>
+        <mxCell id="b_services" value="Core Domain Services:&#xa;• EvaluationService (5-Pillar Rubric)&#xa;• ResumeService (TF-IDF Matcher &amp; ATS)&#xa;• CandidateService &amp; StageService&#xa;• AuthService &amp; RetentionService" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#6EE7B7;fontColor=#064E3B;align=left;spacingLeft=10;" vertex="1" parent="grp_backend">
+          <mxGeometry x="30" y="135" width="360" height="110" as="geometry" />
+        </mxCell>
+        <mxCell id="b_sched" value="Background Scheduler (AsyncIOScheduler)&#xa;90-Day Retention Cleanup" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#6EE7B7;fontColor=#064E3B;fontSize=11;" vertex="1" parent="grp_backend">
+          <mxGeometry x="30" y="260" width="360" height="40" as="geometry" />
+        </mxCell>
+
+        <!-- Data & Storage Layer -->
+        <mxCell id="grp_data" value="4. Database &amp; Object Storage Layer" style="swimlane;whiteSpace=wrap;html=1;fillColor=#FEF3C7;strokeColor=#F59E0B;fontStyle=1;fontSize=13;fontColor=#78350F;rounded=1;" vertex="1" parent="1">
+          <mxGeometry x="40" y="420" width="500" height="230" as="geometry" />
+        </mxCell>
+        <mxCell id="d_db" value="Amazon RDS PostgreSQL 16&#xa;(Async SQLAlchemy 2.0 + asyncpg pool)&#xa;Users, Candidates, Attempts, Questions, Stages" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=15;fillColor=#FFFFFF;strokeColor=#FCD34D;fontColor=#78350F;fontStyle=1;" vertex="1" parent="grp_data">
+          <mxGeometry x="30" y="45" width="200" height="155" as="geometry" />
+        </mxCell>
+        <mxCell id="d_s3" value="Amazon S3 Object Storage&#xa;Prefixes: /recordings, /resumes&#xa;(Lifecycle: 90-day auto-purge)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#FCD34D;fontColor=#78350F;fontStyle=1;" vertex="1" parent="grp_data">
+          <mxGeometry x="260" y="50" width="210" height="65" as="geometry" />
+        </mxCell>
+        <mxCell id="d_cache" value="Admin In-Memory TTL Cache&#xa;(admin_ttl_cache, 60s TTL)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#FCD34D;fontColor=#78350F;" vertex="1" parent="grp_data">
+          <mxGeometry x="260" y="135" width="210" height="65" as="geometry" />
+        </mxCell>
+
+        <!-- AI Engine & External Services -->
+        <mxCell id="grp_ai" value="5. AI Processing &amp; External Integrations" style="swimlane;whiteSpace=wrap;html=1;fillColor=#F3E8FF;strokeColor=#A855F7;fontStyle=1;fontSize=13;fontColor=#581C87;rounded=1;" vertex="1" parent="1">
+          <mxGeometry x="580" y="420" width="540" height="230" as="geometry" />
+        </mxCell>
+        <mxCell id="ai_llm" value="OpenAI GPT-4o-mini / Ollama Llama3&#xa;Evaluation, Rubrics, Question Gen" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#D8B4FE;fontColor=#581C87;fontStyle=1;" vertex="1" parent="grp_ai">
+          <mxGeometry x="25" y="45" width="230" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="ai_stt" value="faster-whisper STT Provider&#xa;Audio Transcription &amp; Telemetry" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#D8B4FE;fontColor=#581C87;fontStyle=1;" vertex="1" parent="grp_ai">
+          <mxGeometry x="25" y="115" width="230" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="ext_notif" value="AiSensy WhatsApp &amp; SMTP Email&#xa;OTP Dispatch &amp; Alerts" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#D8B4FE;fontColor=#581C87;" vertex="1" parent="grp_ai">
+          <mxGeometry x="285" y="45" width="230" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="ext_fb" value="Firebase Admin SDK&#xa;Phone Number Token Verification" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#D8B4FE;fontColor=#581C87;" vertex="1" parent="grp_ai">
+          <mxGeometry x="285" y="115" width="230" height="55" as="geometry" />
+        </mxCell>
+
+        <!-- Connecting Edges -->
+        <mxCell id="edge1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;strokeColor=#2563EB;strokeWidth=2;" edge="1" parent="1" source="c_frontend" target="e_cdn">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge2" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;strokeColor=#2563EB;strokeWidth=2;" edge="1" parent="1" source="e_alb" target="b_asgi">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge3" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;entryPerimeter=0;strokeColor=#059669;strokeWidth=2;" edge="1" parent="1" source="b_services" target="d_db">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="880" y="400" />
+              <mxPoint x="170" y="400" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge4" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;strokeColor=#059669;strokeWidth=2;" edge="1" parent="1" source="b_services" target="d_s3">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="880" y="400" />
+              <mxPoint x="405" y="400" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge5" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;strokeColor=#9333EA;strokeWidth=2;" edge="1" parent="1" source="b_services" target="ai_llm">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="880" y="400" />
+              <mxPoint x="720" y="400" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

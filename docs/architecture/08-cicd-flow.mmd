@@ -1,0 +1,73 @@
+flowchart TD
+    %% Continuous Integration & Continuous Deployment (CI/CD) Workflow
+
+    subgraph SourceControl["1. Source Control & Versioning"]
+        Dev["Developer / DevOps Engineer"]
+        GitRepo["GitHub Repository (AI_Interview3.0)<br/>Branch: main / release"]
+    end
+
+    subgraph CI_Pipeline["2. GitHub Actions CI (Continuous Integration)"]
+        Trigger["GitHub Action Workflow Trigger<br/>on: push to main / pull_request"]
+        
+        subgraph CodeQuality["Code Quality & Linters"]
+            PyLint["Python Checks: black, flake8, ruff"]
+            NodeLint["Next.js Checks: npm run lint, tsc --noEmit"]
+        end
+
+        subgraph AutomatedTesting["Automated Test Suite"]
+            PyTest["PyTest Suite (pytest -v, pytest-asyncio)<br/>API routes, Rubrics, TF-IDF test"]
+            E2ETest["Playwright E2E Tests (Candidate flow)"]
+        end
+
+        subgraph SecurityScanning["DevSecOps Security Scanning"]
+            TrivyScan["Trivy Container & FS Vulnerability Scan"]
+            BanditScan["Bandit Python SAST (Hardcoded secrets check)"]
+        end
+    end
+
+    subgraph ContainerBuild["3. Build & Artifact Packaging"]
+        DockerBuild["Docker Multi-Stage Build<br/>docker build -t cloudops-backend:sha-xyz"]
+        ECRPush["Push Image to Amazon ECR<br/>123456789.dkr.ecr.region.amazonaws.com/cloudops-backend"]
+        VercelDeploy["Vercel GitHub Integration<br/>Automated Edge Build & Preview/Prod Deploy"]
+    end
+
+    subgraph DatabaseMigration["4. Database Schema Migration"]
+        AlembicRunner["Alembic Migration Step<br/>(One-off ECS Task / GitHub Runner)<br/>alembic upgrade head"]
+        RDSInstance[("Amazon RDS PostgreSQL 16")]
+    end
+
+    subgraph CD_Deployment["5. AWS ECS Fargate Rolling Deployment"]
+        UpdateTask["Register New ECS Task Definition<br/>Points to new ECR image tag"]
+        DeployService["Update ECS Service with New Task Definition"]
+        NewContainer["Spin Up New Fargate Containers (Tasks)"]
+        HealthCheck["ALB Target Group Health Check<br/>GET /api/v1/health (Expect 200 OK)"]
+        DrainOld["Gracefully Drain & Terminate Old Containers"]
+    end
+
+    subgraph MonitoringAlerts["6. Post-Deployment Verification & Alerting"]
+        CloudWatch["CloudWatch Deployment Metric Logged"]
+        Notification["Slack / Discord Webhook Notification<br/>'Deployment Succeeded'"]
+    end
+
+    %% Pipeline flow
+    Dev -->|git push origin main| GitRepo
+    GitRepo --> Trigger
+    Trigger --> CodeQuality
+    CodeQuality --> AutomatedTesting
+    AutomatedTesting --> SecurityScanning
+    SecurityScanning --> DockerBuild
+    SecurityScanning --> VercelDeploy
+
+    DockerBuild --> ECRPush
+    ECRPush --> AlembicRunner
+    AlembicRunner -->|Apply DDL Scripts| RDSInstance
+    AlembicRunner --> UpdateTask
+
+    UpdateTask --> DeployService
+    DeployService --> NewContainer
+    NewContainer --> HealthCheck
+
+    HealthCheck -->|Healthy 200 OK| DrainOld
+    DrainOld --> CloudWatch
+    CloudWatch --> Notification
+

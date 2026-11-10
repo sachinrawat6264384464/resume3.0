@@ -1,0 +1,108 @@
+flowchart LR
+    %% Low-Level Architecture (LLD) - Backend Code & Execution Pipeline
+
+    subgraph FastAPICore["FastAPI Kernel & Lifespan"]
+        AppInstance["app = FastAPI()"]
+        Lifespan["@asynccontextmanager lifespan()"]
+        Scheduler["AsyncIOScheduler (APScheduler)<br/>24h Interval Recording Retention Job"]
+        Engine["create_async_engine (SQLAlchemy 2.0)<br/>pool_size=20, max_overflow=10, pool_pre_ping=True"]
+        SessionLocal["async_sessionmaker (AsyncSessionLocal)"]
+        GetDB["get_db() Async Generator Dependency"]
+    end
+
+    subgraph SecurityModule["Security & Authentication Core"]
+        VerifyToken["verify_auth_token(credentials: HTTPBearer)"]
+        JWTDecoder["jose.jwt.decode(token, SECRET_KEY, HS256)"]
+        RevocationCheck["_CANDIDATE_REVOCATION timestamp check"]
+        BcryptModule["bcrypt (hashpw & checkpw)"]
+        FirebaseAuth["Firebase Admin Auth (Phone OTP Token)"]
+    end
+
+    subgraph APIRoutes["API Sub-Routers (/api/v1)"]
+        direction TB
+        R_Auth["auth.py"]
+        R_Cand["candidates.py"]
+        R_Attempts["attempts.py"]
+        R_Interviews["interviews.py"]
+        R_Resumes["resumes.py"]
+        R_Questions["questions.py"]
+        R_Admin["admin.py"]
+        R_Leaderboard["leaderboard.py"]
+        R_Payment["payment_gateway.py"]
+        R_Live["live_sessions.py"]
+    end
+
+    subgraph DomainServices["Service Layer (Business Logic)"]
+        direction TB
+        S_Auth["AuthService"]
+        S_Cand["CandidateService"]
+        S_Eval["EvaluationService"]
+        S_Stage["StageService"]
+        S_Resume["ResumeService"]
+        S_TFIDF["TFIDFResumeMatcher"]
+        S_JDClean["JDCleaner"]
+        S_Admin["AdminService"]
+        S_Retention["RetentionService"]
+        S_Email["EmailService"]
+        S_SMS["SMSService"]
+    end
+
+    subgraph PydanticSchemas["Pydantic v2 Schemas (Validation & Serialization)"]
+        direction TB
+        Sch_Auth["LoginRequest, RegisterRequest, TokenResponse"]
+        Sch_Cand["CandidateCreate, CandidateOut, CandidateWithAttemptsOut"]
+        Sch_Eval["QuestionEvaluationResult, 5-Pillar Scores"]
+        Sch_Resume["ResumeATSResponse, ATSScoreBreakdown"]
+        Sch_Common["StandardResponse[T], PaginatedResponse[T]"]
+    end
+
+    subgraph ORMModels["SQLAlchemy Async ORM Entities"]
+        direction TB
+        M_User["User (users)"]
+        M_Cand["Candidate (candidates)"]
+        M_Attempt["InterviewAttempt (interview_attempts)"]
+        M_StageAttempt["StageAttempt (stage_attempts)"]
+        M_QAttempt["QuestionAttempt (question_attempts)"]
+        M_Recording["Recording (recordings)"]
+        M_Resume["ResumeAudit (resume_audits)"]
+        M_Template["InterviewTemplate (interview_templates)"]
+        M_Stage["InterviewStage (interview_stages)"]
+        M_Question["Question (questions)"]
+        M_Payment["PaymentTransaction (payment_transactions)"]
+    end
+
+    %% Pipeline bindings
+    AppInstance --> Lifespan
+    Lifespan --> Scheduler
+    Lifespan --> Engine
+    Engine --> SessionLocal
+    SessionLocal --> GetDB
+
+    APIRoutes -->|Dependency Injection| GetDB
+    APIRoutes -->|Dependency Injection| VerifyToken
+    VerifyToken --> JWTDecoder
+    JWTDecoder --> RevocationCheck
+    VerifyToken -.-> FirebaseAuth
+
+    R_Auth --> S_Auth
+    R_Cand --> S_Cand
+    R_Attempts --> S_Eval
+    R_Attempts --> S_Stage
+    R_Resumes --> S_Resume
+    R_Admin --> S_Admin
+    Scheduler -.-> S_Retention
+
+    S_Resume --> S_TFIDF
+    S_Resume --> S_JDClean
+
+    APIRoutes -.->|Validates Request & Formats Output| PydanticSchemas
+
+    S_Auth --> M_User
+    S_Cand --> M_Cand
+    S_Cand --> M_Attempt
+    S_Eval --> M_QAttempt
+    S_Eval --> M_Recording
+    S_Stage --> M_StageAttempt
+    S_Resume --> M_Resume
+    S_Admin --> M_Payment
+

@@ -1,0 +1,95 @@
+flowchart TD
+    %% AWS Production Cloud Infrastructure & Deployment Architecture
+
+    subgraph InternetClients["Internet & End Users"]
+        CandidateClient["Candidate Browser"]
+        AdminClient["Admin / Recruiter Dashboard"]
+    end
+
+    subgraph EdgeDelivery["Edge & CDN Delivery Layer"]
+        Route53["Amazon Route 53 (DNS Service)"]
+        VercelCDN["Vercel Global Edge Network (Frontend SSR)<br/>Custom Domain: app.cloudops.ai"]
+        CloudFront["Amazon CloudFront CDN (API & Media Cache)<br/>api.cloudops.ai + media.cloudops.ai"]
+        ACM["AWS Certificate Manager (ACM)<br/>Managed Wildcard SSL/TLS Certificate"]
+    end
+
+    subgraph AWSCloud["AWS Region (e.g. ap-south-1 / us-east-1)"]
+        WAF["AWS WAF (Web Application Firewall)<br/>DDoS Mitigation, Rate Limiting, OWASP Top 10"]
+        
+        subgraph VPC["Amazon VPC (CIDR: 10.0.0.0/16)"]
+            
+            subgraph PublicSubnets["Public Subnets (AZ-1 & AZ-2)"]
+                ALB["Application Load Balancer (ALB)<br/>Listens: 443 HTTPS | Health: /api/v1/health"]
+                NATGateway["NAT Gateway (Outbound Internet for Tasks)"]
+                InternetGateway["Internet Gateway (IGW)"]
+            end
+
+            subgraph PrivateAppSubnets["Private Application Subnets (AZ-1 & AZ-2)"]
+                subgraph ECSCluster["Amazon ECS Cluster (Fargate Serverless Containers)"]
+                    Task1["FastAPI Task 1 (Container)<br/>Port: 8000 | 1 vCPU, 2GB RAM"]
+                    Task2["FastAPI Task 2 (Container)<br/>Port: 8000 | 1 vCPU, 2GB RAM"]
+                end
+                AppAutoScaling["Target Tracking Auto Scaling Policy<br/>Scale on CPU > 70% or High Request Count"]
+            end
+
+            subgraph PrivateDataSubnets["Private Data Subnets (Isolated, No Public IP)"]
+                RDSPrimary[("Amazon RDS PostgreSQL 16 Primary<br/>db.t4g.small / db.m6g.large")]
+                RDSStandby[("Amazon RDS Standby Replica<br/>(Multi-AZ Synchronous Replication)")]
+            end
+
+            subgraph VPCEndpoints["AWS PrivateLink / VPC Endpoints"]
+                S3Endpoint["Gateway VPC Endpoint for Amazon S3"]
+                SecretsEndpoint["Interface Endpoint for Secrets Manager"]
+                ECREndpoint["Interface Endpoint for Amazon ECR"]
+            end
+        end
+
+        subgraph AWSManagedServices["Managed AWS Services (Outside VPC)"]
+            S3Bucket[("Amazon S3 Bucket: cloudops-media-assets<br/>Prefixes: /recordings, /resumes<br/>AES-256 Server-Side Encryption + Lifecycle Rules")]
+            ECR["Amazon Elastic Container Registry (ECR)<br/>cloudops-backend:latest"]
+            SecretsManager["AWS Secrets Manager / SSM Parameter Store<br/>DATABASE_URL, SECRET_KEY, OPENAI_API_KEY"]
+            CloudWatch["Amazon CloudWatch Logs & Metrics<br/>Alarms: 5xx Errors, High Latency, DB CPU"]
+            SES["Amazon SES (Simple Email Service)<br/>Production Transactional Emails"]
+        end
+    end
+
+    %% Network Connections
+    CandidateClient -->|DNS Resolution| Route53
+    AdminClient -->|DNS Resolution| Route53
+    Route53 -->|Frontend Traffic| VercelCDN
+    Route53 -->|API Traffic| CloudFront
+    
+    CloudFront --> ACM
+    CloudFront --> WAF
+    WAF --> InternetGateway
+    InternetGateway --> ALB
+
+    VercelCDN -->|Direct HTTPS REST Calls to Backend| CloudFront
+
+    ALB -->|Forward Traffic Port 8000| Task1
+    ALB -->|Forward Traffic Port 8000| Task2
+    AppAutoScaling -.->|Trigger Scale Out/In| ECSCluster
+
+    Task1 --> S3Endpoint
+    Task2 --> S3Endpoint
+    S3Endpoint --> S3Bucket
+
+    Task1 -->|Pull Config & Secrets at Launch| SecretsEndpoint
+    SecretsEndpoint --> SecretsManager
+
+    Task1 -->|Async SQL Port 5432| RDSPrimary
+    Task2 -->|Async SQL Port 5432| RDSPrimary
+    RDSPrimary -.->|Sync Replication| RDSStandby
+
+    Task1 -->|Outbound LLM / WhatsApp Requests| NATGateway
+    NATGateway --> InternetGateway
+
+    Task1 -.->|Container Stdout/Stderr Streaming| CloudWatch
+    Task2 -.->|Container Stdout/Stderr Streaming| CloudWatch
+
+    Task1 -.->|Send Emails| SES
+    Task2 -.->|Send Emails| SES
+
+    ECR -.->|Pull Image on Deployment| Task1
+    ECR -.->|Pull Image on Deployment| Task2
+

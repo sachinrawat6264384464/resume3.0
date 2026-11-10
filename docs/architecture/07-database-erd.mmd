@@ -1,0 +1,177 @@
+erDiagram
+    %% Entity Relationship Diagram (ERD) for CloudOps AI 3.0 Platform
+
+    ORGANIZATION ||--o{ USER : "has"
+    ORGANIZATION ||--o{ CANDIDATE : "manages"
+    ORGANIZATION ||--o{ INTERVIEW_TEMPLATE : "owns"
+
+    USER ||--|| CANDIDATE : "candidate_profile"
+    
+    CANDIDATE ||--o{ INTERVIEW_ATTEMPT : "undertakes"
+    CANDIDATE ||--o{ RESUME_AUDIT : "submits"
+    CANDIDATE ||--o{ PAYMENT_TRANSACTION : "executes"
+    CANDIDATE ||--o{ SUPPORT_TICKET : "files"
+    CANDIDATE ||--o{ STUDY_PLAN : "assigned"
+    CANDIDATE ||--o{ REMINDER : "receives"
+
+    INTERVIEW_TEMPLATE ||--o{ INTERVIEW_STAGE : "configured_with"
+    INTERVIEW_TEMPLATE ||--o{ INTERVIEW_ATTEMPT : "instantiates"
+
+    INTERVIEW_STAGE ||--o{ QUESTION : "contains"
+    INTERVIEW_STAGE ||--o{ STAGE_ATTEMPT : "tracks"
+
+    INTERVIEW_ATTEMPT ||--o{ STAGE_ATTEMPT : "comprises"
+    INTERVIEW_ATTEMPT ||--o{ RECORDING : "stores"
+
+    STAGE_ATTEMPT ||--o{ QUESTION_ATTEMPT : "evaluates"
+
+    QUESTION ||--o{ QUESTION_ATTEMPT : "referenced_in"
+    QUESTION_ATTEMPT ||--o| RECORDING : "linked_audio"
+
+    USER {
+        string id PK "UUID"
+        string organization_id FK
+        string firebase_uid UK
+        string email UK
+        string phone_number UK
+        string hashed_password
+        string full_name
+        string role "SUPER_ADMIN | ADMIN | CANDIDATE"
+        boolean is_active
+        datetime created_at
+        datetime updated_at
+    }
+
+    CANDIDATE {
+        string id PK "UUID"
+        string user_id FK, UK
+        string organization_id FK
+        string student_id
+        string phone
+        string course
+        string batch
+        string experience_level "JUNIOR | MID | SENIOR"
+        string target_role
+        int xp
+        int level
+        int streak_days
+        float readiness_score
+        string target_salary_band
+        json skills_matrix_json
+        json resume_data_json
+        float latest_ats_score
+    }
+
+    INTERVIEW_TEMPLATE {
+        string id PK "UUID"
+        string organization_id FK
+        string title
+        string target_role
+        string experience_level
+        boolean is_active
+        int total_stages
+    }
+
+    INTERVIEW_STAGE {
+        string id PK "UUID"
+        string interview_template_id FK
+        int stage_number
+        string title
+        string category "CLOUD | DEVOPS | LINUX | ARCHITECTURE"
+        float passing_score
+        int time_limit_seconds
+    }
+
+    QUESTION {
+        string id PK "UUID"
+        string interview_stage_id FK
+        text question_text
+        string difficulty "JUNIOR | MID | SENIOR"
+        string question_type "THEORETICAL | SCENARIO | TROUBLESHOOTING"
+        text reference_answer
+        json expected_topics
+        json evaluation_rubric
+    }
+
+    INTERVIEW_ATTEMPT {
+        string id PK "UUID"
+        string candidate_id FK
+        string interview_template_id FK
+        string organization_id FK
+        string status "IN_PROGRESS | COMPLETED | ABANDONED"
+        float current_stage_number
+        float overall_score
+        float technical_score
+        float communication_score
+        string decision "PASS | NEEDS_IMPROVEMENT | FAILED"
+        datetime started_at
+        datetime completed_at
+        json summary_report_json
+    }
+
+    STAGE_ATTEMPT {
+        string id PK "UUID"
+        string interview_attempt_id FK
+        string interview_stage_id FK
+        int stage_number
+        string status "LOCKED | NOT_STARTED | IN_PROGRESS | PASSED | FAILED"
+        float score
+        boolean is_override
+        string override_reason
+        string override_by
+        json feedback_summary
+    }
+
+    QUESTION_ATTEMPT {
+        string id PK "UUID"
+        string stage_attempt_id FK
+        string interview_attempt_id FK
+        string question_id FK
+        string recording_id FK
+        text question_text_snapshot
+        text answer_transcript
+        string status "PENDING | RECORDING | PROCESSING | EVALUATED | FAILED"
+        float technical_score
+        float concept_coverage_score
+        float reasoning_score
+        float practical_score
+        float communication_score
+        float confidence_score
+        float overall_score
+        json evaluation_json
+    }
+
+    RECORDING {
+        string id PK "UUID"
+        string interview_attempt_id FK
+        string question_attempt_id FK
+        string storage_provider "CLOUDINARY | S3 | LOCAL"
+        string file_identifier
+        string view_url
+        int file_size_bytes
+        int duration_seconds
+        string mime_type
+    }
+
+    RESUME_AUDIT {
+        string id PK "UUID"
+        string candidate_id FK
+        float ats_score
+        string target_job_title
+        json matching_skills
+        json missing_skills
+        json bullet_improvements
+        string resume_file_url
+    }
+
+    PAYMENT_TRANSACTION {
+        string id PK "UUID"
+        string candidate_id FK
+        string candidate_email
+        string amount
+        string currency
+        string status "pending | success | failed | refunded"
+        string provider "razorpay | stripe"
+        string transaction_id
+    }
+

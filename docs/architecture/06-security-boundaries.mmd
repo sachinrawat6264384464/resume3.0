@@ -1,0 +1,56 @@
+flowchart TD
+    %% Security Architecture & Trust Boundaries
+
+    subgraph UntrustedZone["1. Untrusted Zone (Public Internet)"]
+        Attacker["Potential Threat Actors<br/>(DDoS, SQLi, XSS, Brute Force)"]
+        LegitUser["Legitimate Candidates & Admins"]
+    end
+
+    subgraph EdgeDMZ["2. Edge Demilitarized Zone (DMZ)"]
+        WAF["AWS WAF (Web Application Firewall)<br/>- Rate Limiting (1000 req / 5 min)<br/>- SQL Injection Rules<br/>- XSS Protection<br/>- IP Reputation Lists"]
+        CloudFrontEdge["CloudFront / Vercel Edge<br/>- HTTPS Enforcement (TLS 1.2+)<br/>- DDoS Shield Standard<br/>- Geo-restriction (Optional)"]
+    end
+
+    subgraph PublicSubnetZone["3. Public Subnet Boundary (Ingress Only)"]
+        ALB["Application Load Balancer (ALB)<br/>- Security Group: Inbound 443 only from CloudFront/WAF<br/>- Drops Non-TLS (HTTP 80 -> 301 HTTPS)<br/>- Path-based routing (/api/v1/*)"]
+        NAT["NAT Gateway (Egress Only)<br/>- Static Egress Elastic IP<br/>- Prevents Inbound Connections to Private Subnets"]
+    end
+
+    subgraph PrivateAppZone["4. Private Application Boundary (Compute)"]
+        subgraph FargateTasks["ECS Fargate Tasks / App Containers"]
+            FastAPISec["FastAPI Security Layer:<br/>- HTTPBearer Header Validation<br/>- HS256 JWT Signature & Expiry Check<br/>- Role-Based Access Control (RBAC)<br/>- Pydantic Input Sanitation & Size Limit<br/>- CORS Whitelist Protection"]
+            AppEnv["Container Secrets:<br/>Injected via AWS Systems Manager Parameter Store<br/>Never committed to Git or baked in image"]
+        end
+    end
+
+    subgraph IsolatedDataZone["5. Isolated Data & Storage Boundary (Zero Public Ingress)"]
+        RDSSec["Amazon RDS PostgreSQL 16:<br/>- Security Group: Inbound 5432 ONLY from ECS Security Group<br/>- Storage Encrypted with AWS KMS (AES-256)<br/>- SSL Connection Enforced (sslmode=require)<br/>- Automated Daily Snapshots & Backups"]
+        
+        S3Sec["Amazon S3 Storage Bucket:<br/>- Block Public Access: ENABLED (All 4 settings ON)<br/>- Server-Side Encryption: AWS-KMS / SSE-S3<br/>- Access restricted via IAM Task Role / Presigned URLs<br/>- Lifecycle Rule: 90-day auto-purge for GDPR/DPDP"]
+    end
+
+    subgraph OutboundServices["6. Outbound Integration Boundary"]
+        OpenAIAPI["OpenAI API (api.openai.com:443)"]
+        WhatsAppAPI["AiSensy / Meta Cloud API:443"]
+        SMTPEgress["Email SMTP Server:587"]
+    end
+
+    %% Edge Flow
+    LegitUser --> CloudFrontEdge
+    Attacker -.->|Blocked by WAF Rules| WAF
+    CloudFrontEdge --> WAF
+    WAF --> ALB
+
+    %% Ingress to App
+    ALB -->|Forward via Internal VPC IP| FastAPISec
+
+    %% App to Data
+    FastAPISec -->|Encrypted TLS (Port 5432)| RDSSec
+    FastAPISec -->|Signed IAM API Calls via VPC Endpoint| S3Sec
+
+    %% Outbound Egress
+    FastAPISec --> NAT
+    NAT --> OpenAIAPI
+    NAT --> WhatsAppAPI
+    NAT --> SMTPEgress
+
