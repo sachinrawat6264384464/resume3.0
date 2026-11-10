@@ -37,7 +37,7 @@ class Settings(BaseSettings):
     # Security / Auth
     SECRET_KEY: str = "cloudops-ai-assessment-super-secret-key-change-in-production"
     ALGORITHM: str = "HS256"
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 7  # 7 days
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 365 * 2  # 2 years persistent session
     FIREBASE_PROJECT_ID: Optional[str] = None
     FIREBASE_CREDENTIALS_PATH: Optional[str] = None
     MOCK_AUTH_ENABLED: bool = True  # Allows instant dev/demo login without external Firebase setup

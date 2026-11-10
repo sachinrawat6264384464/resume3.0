@@ -54,6 +54,24 @@ export default function LoginPage() {
 
   const recaptchaVerifierRef = useRef<any>(null);
 
+  // Persistent Login Check: If candidate is already authenticated, redirect straight to dashboard
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const token = localStorage.getItem("auth_token");
+      const userStr = localStorage.getItem("auth_user");
+      if (token && userStr && userStr.trim() && userStr !== "undefined") {
+        try {
+          const u = JSON.parse(userStr);
+          if (u && u.id) {
+            const redirectPath = new URLSearchParams(window.location.search).get("redirect") || 
+              (u.role === "ADMIN" || u.role === "SUPER_ADMIN" ? "/admin" : "/dashboard");
+            router.replace(redirectPath);
+          }
+        } catch (e) {}
+      }
+    }
+  }, [router]);
+
   // Check for Google OAuth Token in URL hash or Firebase redirect when page mounts
   useEffect(() => {
     if (typeof window !== "undefined") {

@@ -10,10 +10,30 @@ interface AuthState {
   logout: () => void;
 }
 
+const getInitialAuth = (): { user: User | null; token: string | null; isAuthenticated: boolean } => {
+  if (typeof window !== "undefined") {
+    try {
+      const storedToken = localStorage.getItem("auth_token");
+      const storedUser = localStorage.getItem("auth_user");
+      if (storedToken && storedUser && storedUser.trim() && storedUser !== "undefined") {
+        const parsed = JSON.parse(storedUser);
+        if (parsed && typeof parsed === "object" && parsed.id) {
+          return { user: parsed, token: storedToken, isAuthenticated: true };
+        }
+      }
+    } catch (e) {
+      console.warn("Notice: reading initial auth:", e);
+    }
+  }
+  return { user: null, token: null, isAuthenticated: false };
+};
+
+const initialAuth = getInitialAuth();
+
 export const useAuthStore = create<AuthState>((set) => ({
-  user: null,
-  token: null,
-  isAuthenticated: false,
+  user: initialAuth.user,
+  token: initialAuth.token,
+  isAuthenticated: initialAuth.isAuthenticated,
   setAuth: (user, token) => {
     if (typeof window !== "undefined") {
       try {

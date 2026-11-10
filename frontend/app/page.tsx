@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useAuthStore } from "@/lib/store";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { SpaceBackground } from "@/components/SpaceBackground";
 import { SunThemeTransition } from "@/components/SunThemeTransition";
@@ -12,6 +14,8 @@ import {
 } from "lucide-react";
 
 export default function LandingPage() {
+  const router = useRouter();
+  const { user, isAuthenticated } = useAuthStore();
   const [mounted, setMounted] = useState(false);
   const [typedText, setTypedText] = useState("");
   const [isDeleting, setIsDeleting] = useState(false);
@@ -19,10 +23,25 @@ export default function LandingPage() {
 
   useEffect(() => {
     setMounted(true);
-    if (typeof window !== "undefined" && process.env.NEXT_PUBLIC_IS_ADMIN_PORTAL === "true") {
-      window.location.href = "/login?admin=true";
+    if (typeof window !== "undefined") {
+      if (process.env.NEXT_PUBLIC_IS_ADMIN_PORTAL === "true") {
+        window.location.href = "/login?admin=true";
+        return;
+      }
+      // Persistent Login Check: If candidate is already logged in, redirect directly to dashboard
+      const token = localStorage.getItem("auth_token");
+      const userStr = localStorage.getItem("auth_user");
+      if (token && userStr && userStr.trim() && userStr !== "undefined") {
+        try {
+          const u = JSON.parse(userStr);
+          if (u && u.id) {
+            router.replace(u.role === "ADMIN" || u.role === "SUPER_ADMIN" ? "/admin" : "/dashboard");
+            return;
+          }
+        } catch (e) {}
+      }
     }
-  }, []);
+  }, [router]);
 
   // Ultra-Smooth 5-Heading Typewriter Animation Effect
   useEffect(() => {
@@ -114,21 +133,21 @@ export default function LandingPage() {
           <div className="flex items-center gap-1 sm:gap-3 shrink-0">
             <ThemeToggle />
 
-            <Link prefetch={false} 
-              href="/login" 
-              className="text-[10px] sm:text-xs font-black text-slate-800 hover:text-slate-950 dark:text-slate-300 dark:hover:text-white px-1.5 py-1 sm:px-5 sm:py-2.5 rounded-full hover:bg-slate-200/50 dark:hover:bg-slate-900 border border-slate-300 dark:border-slate-800 transition-all uppercase tracking-wider whitespace-nowrap shrink-0"
-            >
-              Sign In
-            </Link>
-
-            <Link prefetch={false} 
-              href="/register" 
-              className="text-[10px] sm:text-xs font-black text-white bg-[#FF6B00] hover:bg-[#e05e00] px-2.5 py-1.5 sm:px-6 sm:py-3 rounded-full shadow-lg shadow-[#FF6B00]/30 flex items-center gap-1 sm:gap-2 hover:scale-[1.03] active:scale-[0.98] transition-all cursor-pointer uppercase tracking-wider shrink-0 whitespace-nowrap"
-            >
-              <span className="hidden sm:inline">Get Started</span>
-              <span className="inline sm:hidden">Start</span>
-              <ArrowUpRight className="w-3 h-3 sm:w-4 sm:h-4" />
-            </Link>
+            {mounted && isAuthenticated ? (
+              <Link prefetch={false} 
+                href={user?.role === "ADMIN" || user?.role === "SUPER_ADMIN" ? "/admin" : "/dashboard"} 
+                className="text-[10px] sm:text-xs font-black text-white bg-[#FF6B00] hover:bg-[#e05e00] px-3 py-1.5 sm:px-5 sm:py-2.5 rounded-full shadow-lg shadow-[#FF6B00]/30 transition-all uppercase tracking-wider whitespace-nowrap shrink-0"
+              >
+                Dashboard →
+              </Link>
+            ) : (
+              <Link prefetch={false} 
+                href="/login" 
+                className="text-[10px] sm:text-xs font-black text-slate-800 hover:text-slate-950 dark:text-slate-300 dark:hover:text-white px-2.5 py-1 sm:px-5 sm:py-2.5 rounded-full hover:bg-slate-200/50 dark:hover:bg-slate-900 border border-slate-300 dark:border-slate-800 transition-all uppercase tracking-wider whitespace-nowrap shrink-0"
+              >
+                Sign In
+              </Link>
+            )}
           </div>
 
         </div>
@@ -173,33 +192,7 @@ export default function LandingPage() {
 
           </div>
 
-          {/* SUBTEXT & GET STARTED ACTION BAR */}
-          <div className="grid grid-cols-1 md:grid-cols-12 gap-5 sm:gap-6 items-center mt-4 sm:mt-10 pt-5 sm:pt-8 border-t border-slate-200 dark:border-transparent w-full">
-            
-            {/* Left Narrative */}
-            <div className="md:col-span-8 flex flex-col gap-2">
-              <p className="text-base sm:text-xl lg:text-2xl text-slate-900 dark:text-slate-100 font-extrabold leading-snug sm:leading-relaxed max-w-3xl">
-                &ldquo;Learn Today. Implement Today. Build Your Career for a Lifetime.&rdquo;
-              </p>
-              <p className="text-xs sm:text-base text-slate-600 dark:text-slate-400 font-medium leading-relaxed max-w-3xl">
-                Upload Resume → Match with JD → Fix Resume with STAR Formula → Practice Voice AI → Land High-Paying Multi-Cloud & DevOps Roles.
-              </p>
-            </div>
 
-            {/* Right Quick Action Button */}
-            <div className="md:col-span-4 flex items-center justify-start md:justify-end gap-3 mt-3 sm:mt-0">
-              <Link 
-                href="/register" 
-                className="relative group px-7 py-4 sm:px-8 sm:py-4 rounded-full bg-white dark:bg-slate-900/90 border-2 border-slate-300 dark:border-slate-700 hover:border-[#FF6B00] dark:hover:border-[#FF6B00] text-slate-900 dark:text-white font-black text-xs sm:text-sm uppercase tracking-widest transition-all duration-300 shadow-xl hover:shadow-[#FF6B00]/25 flex items-center gap-3 backdrop-blur-xl w-full sm:w-auto justify-center"
-              >
-                <span>GET IN TOUCH & START FREE</span>
-                <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-[#FF6B00] text-white flex items-center justify-center group-hover:translate-x-1 transition-transform shrink-0">
-                  <ArrowRight className="w-3.5 h-3.5 sm:w-4 sm:h-4 stroke-[3]" />
-                </div>
-              </Link>
-            </div>
-
-          </div>
 
         </div>
       </section>
