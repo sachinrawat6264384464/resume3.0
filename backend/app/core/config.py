@@ -21,7 +21,7 @@ class Settings(BaseSettings):
     
     # CORS
     BACKEND_CORS_ORIGINS: List[str] = [
-        "https://resume3-0.vercel.app",
+        "https://resume3-0-mu.vercel.app",
         "https://resume3-admin.vercel.app",
         "http://localhost:3000",
         "http://localhost:3001",

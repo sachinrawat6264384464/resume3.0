@@ -58,7 +58,7 @@ app = FastAPI(
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
-        "https://resume3-0.vercel.app",
+        "https://resume3-0-mu.vercel.app",
         "https://resume3-admin.vercel.app",
         "https://resume3-0.onrender.com",
         "http://localhost:3000",
