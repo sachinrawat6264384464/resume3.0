@@ -180,7 +180,7 @@ export function Header({ onToggleMobileSidebar }: HeaderProps) {
       const prefix = email.split("@")[0];
       if (prefix && prefix !== "candidate" && prefix !== "demo") {
         const clean = prefix.replace(/\d+$/, "");
-        if (clean.toLowerCase().startsWith("sachi")) return "Sachin Rawat";
+        
         if (clean.length > 2) return clean.charAt(0).toUpperCase() + clean.slice(1);
         return prefix.charAt(0).toUpperCase() + prefix.slice(1);
       }

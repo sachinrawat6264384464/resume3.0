@@ -54,9 +54,22 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   const isAdminUser = checkIsAdmin();
 
+  const isCandidateAuthenticated = Boolean(
+    user?.id || (typeof window !== "undefined" && localStorage.getItem("auth_token"))
+  );
+
   useEffect(() => {
-    if (mounted && isAdminRoute && !isAdminUser) {
-      router.replace("/admin/login");
+    if (!mounted) return;
+    if (isAdminRoute) {
+      if (!isAdminUser) {
+        router.replace("/admin/login");
+      }
+    } else {
+      const storedToken = localStorage.getItem("auth_token");
+      const storedUser = localStorage.getItem("auth_user");
+      if (!storedToken || !storedUser) {
+        router.replace("/login");
+      }
     }
   }, [mounted, isAdminRoute, isAdminUser, router]);
 
@@ -67,6 +80,18 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         <Loader2 className="w-9 h-9 text-[#FF6B00] animate-spin mb-3" />
         <span className="text-xs font-mono font-bold text-slate-400 uppercase tracking-widest">
           Redirecting to Administrator Login Portal...
+        </span>
+      </div>
+    );
+  }
+
+  // If visiting candidate dashboard route without authentication, redirect to login
+  if (mounted && !isAdminRoute && !isCandidateAuthenticated) {
+    return (
+      <div className="min-h-screen w-full bg-slate-950 text-slate-100 flex flex-col items-center justify-center p-6">
+        <Loader2 className="w-9 h-9 text-[#FF6B00] animate-spin mb-3" />
+        <span className="text-xs font-mono font-bold text-slate-400 uppercase tracking-widest">
+          Redirecting to Candidate Login Portal...
         </span>
       </div>
     );

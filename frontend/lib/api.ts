@@ -38,8 +38,9 @@ export async function apiFetch<T = any>(
 
   headers["ngrok-skip-browser-warning"] = "true";
 
-  const authToken = token || "mock:candidate:CANDIDATE";
-  headers["Authorization"] = `Bearer ${authToken}`;
+  if (token && token.trim() && !token.startsWith("mock:")) {
+    headers["Authorization"] = `Bearer ${token}`;
+  }
 
   if (!(options.body instanceof FormData)) {
     headers["Content-Type"] = "application/json";

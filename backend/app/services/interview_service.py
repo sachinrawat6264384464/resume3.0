@@ -176,20 +176,20 @@ class InterviewService:
                 stg1_sa.started_at = datetime.now(timezone.utc)
             has_new_attempts = True
 
+        # Batch query all InterviewStage records to eliminate N+1 latency (from 30 roundtrips down to 1)
+        all_stg_stmt = select(InterviewStage).options(selectinload(InterviewStage.questions))
+        all_stg_res = await self.db.execute(all_stg_stmt)
+        all_stg_records = all_stg_res.scalars().all()
+        stages_by_num = {}
+        for s in all_stg_records:
+            stages_by_num.setdefault(s.stage_number, []).append(s)
+
         # Ensure question attempts exist for all stage questions and auto-map to real DB stages
         for sa in attempt.stage_attempts:
             if sa.stage_number == 0:
                 continue
 
-            # Query all InterviewStage records matching this stage_number to pick the best stage with most active questions
-            stg_stmt = (
-                select(InterviewStage)
-                .where(InterviewStage.stage_number == sa.stage_number)
-                .options(selectinload(InterviewStage.questions))
-            )
-            stg_res = await self.db.execute(stg_stmt)
-            matching_stages = stg_res.scalars().all()
-
+            matching_stages = stages_by_num.get(sa.stage_number, [])
             if matching_stages:
                 best_stage = max(
                     matching_stages,

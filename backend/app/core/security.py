@@ -92,8 +92,8 @@ async def verify_auth_token(credentials: Optional[HTTPAuthorizationCredentials] 
             except Exception:
                 pass
 
-        # 3. Fallback for mock/dev token format "mock:user_id:role"
-        if token.startswith("mock:"):
+        # 3. Fallback for mock/dev token ONLY in local development
+        if settings.ENVIRONMENT == "development" and settings.MOCK_AUTH_ENABLED and token.startswith("mock:"):
             parts = token.split(":")
             role = parts[2].upper() if len(parts) >= 3 else "CANDIDATE"
             if len(parts) >= 3:
@@ -101,15 +101,14 @@ async def verify_auth_token(credentials: Optional[HTTPAuthorizationCredentials] 
                     "sub": parts[1],
                     "email": f"{parts[1]}@cloudops.internal",
                     "role": role,
-                    "name": f"Mock {role.capitalize()}"
+                    "name": f"Dev {role.capitalize()}"
                 }
 
-    return {
-        "sub": "candidate-default-id",
-        "email": "sachin@cloudops.internal",
-        "role": "CANDIDATE",
-        "name": "sachin"
-    }
+    raise HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Could not validate credentials. Please log in.",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
 
 async def verify_optional_auth_token(credentials: Optional[HTTPAuthorizationCredentials] = Depends(security_scheme)) -> Optional[Dict[str, Any]]:
     if not credentials:

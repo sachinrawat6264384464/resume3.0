@@ -162,45 +162,128 @@ export default function InterviewRoomPage() {
   // Fetch Attempt State & Live Admin DB Stage Questions (Non-blocking background sync)
   const loadAttempt = useCallback(async () => {
     try {
-      // 1. Fetch live DB stages with all questions configured by Admin in /admin/templates (cache-busting)
-      const resStages = await apiFetch(`/interviews/stages?_t=${Date.now()}`).catch(() => null);
+      // 1. Fetch live DB stages with questions
+      const resStages = await apiFetch(`/interviews/stages`).catch(() => null);
       if (resStages?.data && Array.isArray(resStages.data)) {
         setDbStagesData(resStages.data);
       }
 
-      if (attemptId) {
-        const targetStageNum = parseInt(attemptId.replace(/\D/g, ""), 10) || 1;
+      // 2. Resolve exact target stage number from multiple sources (prevents Stage 2 reset bug)
+      let targetStageNum = 1;
+      if (typeof window !== "undefined") {
+        const qStage = new URLSearchParams(window.location.search).get("stage");
+        if (qStage) {
+          const parsed = parseInt(qStage, 10);
+          if (!isNaN(parsed) && parsed >= 1 && parsed <= 30) targetStageNum = parsed;
+        }
+      }
+      if (targetStageNum === 1 && attemptId && attemptId.startsWith("stage-")) {
+        const parsed = parseInt(attemptId.replace("stage-", ""), 10);
+        if (!isNaN(parsed) && parsed >= 1 && parsed <= 30) targetStageNum = parsed;
+      }
+      if (targetStageNum === 1 && typeof window !== "undefined") {
+        try {
+          const rawSession = localStorage.getItem("active_interview_session");
+          if (rawSession) {
+            const s = JSON.parse(rawSession);
+            if (s && typeof s.stageId === "number" && s.stageId >= 1) targetStageNum = s.stageId;
+          }
+        } catch {}
+      }
 
-        if (!attemptId.startsWith("stage-") && !attemptId.startsWith("demo-")) {
-          const res = await apiFetch(`/attempts/${attemptId}`).catch(() => null);
-          if (res?.data) {
-            const att: InterviewAttempt = res.data;
-            setAttempt(att);
-
-            // Match exact target stage_number (e.g. Stage 1) instead of matching stage 0
-            const current = att.stage_attempts?.find((s) => s.stage_number === targetStageNum) 
-              || att.stage_attempts?.find((s) => s.status === "IN_PROGRESS" && s.stage_number >= 1)
-              || att.stage_attempts?.find((s) => s.stage_number >= 1)
-              || att.stage_attempts?.[0];
-              
-            const stgNum = current?.stage_number ?? targetStageNum;
-
-            if (current) setActiveStage(current);
-
-            if (typeof window !== "undefined") {
-              const sessionData = {
-                userId: user?.id,
-                userEmail: user?.email,
-                attemptId,
-                stageId: stgNum,
-                stageTitle: att.template?.title || current?.stage?.title || `Stage ${stgNum} Assessment`,
-                roomUrl: `/interviews/${attemptId}/room`,
-                startedAt: Date.now()
-              };
-              localStorage.setItem("active_interview_session", JSON.stringify(sessionData));
+      // 3. Resolve real attempt ID from session if route uses temporary 'stage-X'
+      let effectiveAttemptId = attemptId;
+      if ((!effectiveAttemptId || effectiveAttemptId.startsWith("stage-") || effectiveAttemptId.startsWith("demo-")) && typeof window !== "undefined") {
+        try {
+          const rawSession = localStorage.getItem("active_interview_session");
+          if (rawSession) {
+            const s = JSON.parse(rawSession);
+            if (s && s.attemptId && !s.attemptId.startsWith("stage-") && !s.attemptId.startsWith("demo-")) {
+              effectiveAttemptId = s.attemptId;
             }
           }
+        } catch {}
+      }
+
+      let attData: InterviewAttempt | null = null;
+      if (effectiveAttemptId && !effectiveAttemptId.startsWith("stage-") && !effectiveAttemptId.startsWith("demo-")) {
+        const res = await apiFetch(`/attempts/${effectiveAttemptId}`).catch(() => null);
+        if (res?.data) {
+          attData = res.data;
         }
+      }
+
+      // Seamless background DB attempt creation if missing
+      if (!attData && targetStageNum >= 1) {
+        try {
+          const startRes = await apiFetch("/attempts/start", {
+            method: "POST",
+            body: JSON.stringify({
+              interview_template_id: `stage-${targetStageNum}-template`,
+              stage_number: targetStageNum
+            })
+          }).catch(() => null);
+          if (startRes?.data) {
+            attData = startRes.data;
+            effectiveAttemptId = String(startRes.data.id);
+          }
+        } catch (e) {}
+      }
+
+      let matchedStageAttempt: any = null;
+      if (attData) {
+        setAttempt(attData);
+        // STRICT match for targetStageNum: Never default to Stage 1 when target stage is e.g. Stage 3, 4, 5+
+        const current = attData.stage_attempts?.find((s) => Number(s.stage_number) === Number(targetStageNum));
+        if (current) {
+          matchedStageAttempt = current;
+          setActiveStage(current);
+        }
+      }
+
+      // Robust fallback active stage wrapper: Ensure activeStage ALWAYS matches targetStageNum with its exact questions
+      if (!matchedStageAttempt) {
+        const dbStg = resStages?.data?.find((s: any) => Number(s.id) === targetStageNum || Number(s.stage_number) === targetStageNum);
+        const stgQuestions = (dbStg?.questions || []).filter((q: any) => q.is_active !== "INACTIVE");
+        const fallbackQs = (stgQuestions.length > 0)
+          ? stgQuestions
+          : (STAGE_FALLBACK_QUESTIONS[targetStageNum] || []).map((text: string, i: number) => ({
+              id: `fallback-q-${targetStageNum}-${i}`,
+              question_text: text,
+              reference_answer: (STAGE_FALLBACK_ANSWERS[targetStageNum] || [])[i] || "",
+              expected_topics: (STAGE_FALLBACK_TOPICS[targetStageNum] || [])[i] || []
+            }));
+
+        const fallbackStage: any = {
+          id: dbStg?.stage_id || `stage-${targetStageNum}`,
+          stage_number: targetStageNum,
+          stage: dbStg || {
+            id: `stage-${targetStageNum}`,
+            stage_number: targetStageNum,
+            title: `Stage ${targetStageNum} Assessment`,
+            questions: fallbackQs
+          },
+          question_attempts: fallbackQs.map((q: any, i: number) => ({
+            id: q.id || `fallback-qa-${targetStageNum}-${i}`,
+            question_id: q.id,
+            question_text_snapshot: q.question_text,
+            question: q
+          }))
+        };
+        setActiveStage(fallbackStage);
+      }
+
+      if (typeof window !== "undefined") {
+        const sessionData = {
+          userId: user?.id,
+          userEmail: user?.email,
+          attemptId: effectiveAttemptId,
+          stageId: targetStageNum,
+          stageTitle: `Stage ${targetStageNum} Assessment`,
+          roomUrl: `/interviews/${effectiveAttemptId}/room?stage=${targetStageNum}`,
+          startedAt: Date.now()
+        };
+        localStorage.setItem("active_interview_session", JSON.stringify(sessionData));
       }
     } catch (err: any) {
       console.warn("Attempt load fallback notice:", err);
@@ -242,7 +325,7 @@ export default function InterviewRoomPage() {
     };
   }, []);
 
-  // Dynamic fallback questions per stage and index (aligned 100% with PostgreSQL DB)
+  // Dynamic fallback questions, answers and topics for ALL 30 STAGES (aligned 100% with DB)
   const STAGE_FALLBACK_QUESTIONS: Record<number, string[]> = {
     1: [
       "Please introduce yourself, walk through your technical journey in Cloud & DevOps, and highlight your most significant production achievement.",
@@ -264,10 +347,338 @@ export default function InterviewRoomPage() {
     5: [
       "Explain step-by-step how you would troubleshoot a Kubernetes pod that is continuously stuck in a CrashLoopBackOff state in production.",
       "Users report receiving HTTP 502 Bad Gateway and 504 Gateway Timeout errors when visiting a web application behind an Nginx Ingress Controller on Kubernetes. How do you isolate the root cause?"
-    ]
+    ],
+    6: [
+      "Explain how AWS IAM Roles differ from IAM Users, and why IAM Roles with STS assume-role should be preferred for applications running on EC2 or EKS.",
+      "What is the difference between a Public Subnet and a Private Subnet in an AWS VPC, and how do database instances in a private subnet securely download patches from the internet?"
+    ],
+    7: [
+      "Explain the GCP Resource Hierarchy (Organization -> Folders -> Projects -> Resources) and how IAM policy inheritance works across these levels.",
+      "Compare Google Kubernetes Engine (GKE) Autopilot vs GKE Standard in terms of node management, cost model, and cluster operational overhead."
+    ],
+    8: [
+      "How do Azure Managed Identities eliminate the need for credential management in application code when connecting to Azure Key Vault or SQL Database?",
+      "What is Azure VNet Peering and how do Network Security Groups (NSGs) control traffic flow between peered VNets?"
+    ],
+    9: [
+      "How do you design an inter-cloud network topology connecting AWS VPCs and Azure VNets securely using IPsec VPN or Megaport Cloud Router?",
+      "What strategies do you implement to avoid cloud vendor lock-in when deploying containerized microservices across multi-cloud environments?"
+    ],
+    10: [
+      "AWS us-east-1 experiences a major outage. Walk through how Route53 DNS Failover and multi-region database read replicas automatically shift traffic to us-west-2.",
+      "An AWS S3 bucket containing sensitive customer documents accidentally became publicly readable. How do you detect, isolate, and remediate this instantly?"
+    ],
+    11: [
+      "Explain the difference between `git merge` and `git rebase`. When should you use interactive rebase vs a squash merge in a team workflow?",
+      "How do you use `git bisect` to pinpoint the exact commit that introduced a performance regression in a large codebase?"
+    ],
+    12: [
+      "How do Jenkins Shared Libraries simplify enterprise pipeline maintenance and enforce security scanning standards across hundreds of microservices?",
+      "Explain how Jenkins Matrix Builds optimize build execution times for multi-platform application testing."
+    ],
+    13: [
+      "What strategies do you use to optimize Docker image sizes and enhance container security in production Dockerfiles?",
+      "Explain how Linux Namespaces (PID, NET, MNT, IPC, UTS) and Control Groups (cgroups) form the runtime foundation of Docker containers."
+    ],
+    14: [
+      "Explain step-by-step how you would troubleshoot a Kubernetes pod that is continuously stuck in a CrashLoopBackOff state in production.",
+      "What is the difference between a Kubernetes Deployment and a StatefulSet? How does StatefulSet maintain persistent network identities and volume ordinal bindings?"
+    ],
+    15: [
+      "How do you configure Terraform Remote State with S3 and DynamoDB state locking to prevent concurrent state corruption in multi-engineer teams?",
+      "Explain Ansible Idempotency and how you design Playbooks to ensure running them multiple times produces identical target system states without unintended side effects."
+    ],
+    16: [
+      "Design a zero-downtime GitOps continuous delivery pipeline using GitHub Actions, Helm, and ArgoCD to deploy microservices to Amazon EKS.",
+      "How do you manage multi-environment promotion (Dev -> Staging -> Prod) in GitOps without duplicating Helm values files?"
+    ],
+    17: [
+      "Users report receiving HTTP 502 Bad Gateway and 504 Gateway Timeout errors when visiting a web application behind an Nginx Ingress Controller on Kubernetes. How do you isolate the root cause?",
+      "A Node.js/Python microservice in Kubernetes experiences a slow memory leak, eventually triggering OOMKilled (Exit Code 137) every 6 hours. Walk through your profiling methodology."
+    ],
+    18: [
+      "How do you integrate HashiCorp Vault with Amazon EKS using Vault Agent Injector sidecars so applications access dynamic database credentials without static secrets?",
+      "What is Software Supply Chain Security and how do tools like Cosign and In-Toto enforce digital signature verification before deploying container images to production Kubernetes clusters?"
+    ],
+    19: [
+      "Design a high-throughput, low-latency microservices architecture capable of processing 100,000 requests per second with 99.99% uptime.",
+      "How do you implement Distributed Tracing across microservices using OpenTelemetry, Jaeger, and W3C Trace Context headers?"
+    ],
+    20: [
+      "You are appointed Lead Principal CloudOps Engineer for an enterprise migrating legacy monolithic applications to AWS EKS. Present your 90-day migration strategy.",
+      "How do you establish SLA, SLO, and SLI objectives across an enterprise microservices ecosystem, and how do Error Budgets dictate deployment velocity?"
+    ],
+    21: [
+      "How do AIOps engines analyze high-cardinality Prometheus metrics to detect infrastructure anomalies before hard threshold alerts trigger?"
+    ],
+    22: [
+      "Design a scalable ML Model Serving infrastructure on Kubernetes using Triton Inference Server, GPU node pools, and auto-scaling based on GPU queue latency."
+    ],
+    23: [
+      "How do you architect an AI API Gateway to enforce token bucket rate limiting, fallback routing between OpenAI and Claude, and semantic cache with Redis Vector Search?"
+    ],
+    24: [
+      "Explain how an autonomous AI agent can monitor Kubernetes event streams, analyze crash logs with LLMs, and safely generate a Pull Request to fix the deployment configuration."
+    ],
+    25: [
+      "What is the Model Context Protocol (MCP) and how do MCP Tool declarations allow LLMs to safely query cloud infrastructure state and trigger DevOps actions?"
+    ],
+    26: [
+      "Walk through constructing an Azure Pipelines YAML multi-stage pipeline with environment approvals, Azure Key Vault secrets task, and deployment to Azure Kubernetes Service."
+    ],
+    27: [
+      "How do Flagger and Istio Service Mesh automate Progressive Traffic Shifting (Canary 5% -> 20% -> 50% -> 100%) based on real-time Prometheus HTTP success metrics?"
+    ],
+    28: [
+      "Write a Rego policy for OPA Gatekeeper that rejects any Kubernetes Pod deployment that does not specify CPU/Memory resource requests and limits."
+    ],
+    29: [
+      "Architect a global Active-Active multi-cloud topology across AWS, GCP, and Azure using Cloudflare Magic WAN and an AI-driven global traffic router."
+    ],
+    30: [
+      "Final Boss Battle: You are interviewing for a \u20b940 LPA Staff CloudOps Engineer role. Pitch your comprehensive enterprise architecture vision for 99.999% availability, zero-trust security, AI self-healing operations, and FinOps cost efficiency.",
+      "How do you lead organization-wide post-mortem incidents after a catastrophic multi-region outage to foster a blameless culture while enforcing systemic architecture preventions?"
+    ],
   };
 
-  const currentStageNum = activeStage?.stage_number || (activeStage?.stage as any)?.stage_number || (attemptId ? (parseInt(attemptId.replace(/\D/g, ""), 10) || 1) : 1);
+  const STAGE_FALLBACK_ANSWERS: Record<number, string[]> = {
+    1: [
+      "Provide",
+      "Explain the architectural triangle: 1) HA via Multi-AZ deployments with auto-scaling groups. 2) Cost governance using Spot instances for non-prod, right-sizing via CloudWatch metrics, and AWS Savings Plans. 3) Developer velocity through standardized Terraform modules and automated ephemeral preview environments."
+    ],
+    2: [
+      "Provide a structured response covering architectural principles, diagnostic commands, and recovery steps.",
+      "Detailed walkthrough: Developer feature branch -> PR review with automated SAST/unit tests -> CI container build & scanning -> CD deployment via Helm/ArgoCD -> Telemetry monitoring.",
+      "Structured adoption: 1) Identify business problem & PoC evaluation. 2) Load & security benchmarking. 3) Staging pilot deployment. 4) Runbook creation and knowledge transfer."
+    ],
+    3: [
+      "represent",
+      "Public"
+    ],
+    4: [
+      "1) Use Multi-Stage builds to separate build dependencies/compilers from final runtime artifact. 2) Choose minimal base images like Alpine or Distroless. 3) Run containers as a non-root user (e.g. USER appuser). 4) Combine RUN instructions and clean package caches to minimize layers. 5) Use .dockerignore to exclude local binaries and .git directories. 6) Scan images in CI/CD using Trivy.",
+      "Blue/Green provisions an identical new environment (Green) alongside live (Blue) and flips the load balancer router instantly (100% switch). Canary routes a small fraction (e.g. 5%) of live traffic to the new version, gradually increasing traffic while monitoring error rates and latency. If Prometheus metrics detect 5xx error spikes or latency anomalies, the pipeline immediately scales down the canary and restores routing."
+    ],
+    5: [
+      "1) Run `kubectl describe pod <name>`: inspect Events table at the bottom and check LastState termination reason & exit code. 2) If Exit Code 137 -> OOMKilled, increase memory limits. 3) If Exit Code 1/2 -> application crash, run `kubectl logs <name> --previous` to inspect the exact fatal exception stack trace before crash. 4) Verify missing environment variables or unmounted ConfigMaps/Secrets. 5) Check if failing Liveness probes are repeatedly killing the container. 6) Apply fix in Deployment manifest and rollout.",
+      "1) Distinguish error types: HTTP 502 means Nginx received an immediate connection refused / invalid response from the upstream pod. HTTP 504 means the upstream pod accepted the connection but timed out responding. 2) Inspect Nginx ingress logs with `kubectl logs -n ingress-nginx <controller-pod>` to identify the upstream target IP and request latency. 3) Run `kubectl get endpoints <service>` to verify if active pod IPs exist. 4) Check backend pod metrics (CPU throttling, database lock contention). 5) Adjust ingress proxy-connect-timeout or scale backend replicas."
+    ],
+    6: [
+      "IAM Users have permanent static access keys vulnerable to leakage. IAM Roles use temporary Security Token Service (STS) credentials that auto-rotate without hardcoded secrets (using Instance Profiles or IRSA on EKS).",
+      "Public Subnets route 0.0.0.0/0 to an IGW and assign public IPs. Private Subnets have no IGW route; outbound internet traffic routes through a NAT Gateway in a public subnet for egress-only access."
+    ],
+    7: [
+      "GCP hierarchy propagates policies top-down. Policies applied at Organization or Folder level inherit automatically down to child Projects and Resources, enforcing enterprise guardrails.",
+      "GKE Standard requires manual node pool sizing, OS upgrades, and capacity planning billed per node. GKE Autopilot manages all node infrastructure, auto-scaling, and security hardening, billing strictly per Pod resource request."
+    ],
+    8: [
+      "Azure Managed Identities provide an automatically managed identity in Entra ID for Azure resources. Applications acquire short-lived OAuth tokens via local IMDS endpoints without storing client secrets in code.",
+      "VNet Peering connects VNets via Microsoft backbone with low latency. NSGs contain stateful firewall rules (priority, source, destination, port) evaluated at subnet or NIC level to filter peered traffic."
+    ],
+    9: [
+      "Design Dual IPsec VPN tunnels with BGP dynamic routing between AWS Virtual Private Gateway / Transit Gateway and Azure VPN Gateway, or utilize an Equinix / Megaport cloud router for high-throughput private peering.",
+      "1) Standardize on vanilla Kubernetes (EKS/GKE/AKS). 2) Use Cloud-agnostic Terraform modules. 3) Deploy open-source data stores (PostgreSQL/Kafka) or multi-cloud abstraction layers (CockroachDB). 4) Use OpenTelemetry for telemetry."
+    ],
+    10: [
+      "1) Route53 Health Checks detect primary endpoint failure. 2) DNS failover updates record target to us-west-2 ALB. 3) Cross-Region RDS Read Replica is promoted to primary standalone DB. 4) App services in us-west-2 resume write operations within target RTO/RPO limits.",
+      "1) AWS Config / GuardDuty detects non-compliant S3 ACL change. 2) EventBridge triggers automated Lambda remediation script to apply 'S3 Block Public Access'. 3) Query CloudTrail logs (`s3:PutBucketPolicy`, `s3:GetObject`) to audit external IP access."
+    ],
+    11: [
+      "Git merge preserves history with a merge commit. Git rebase rewrites feature commits on top of base branch for a linear history. Interactive rebase (`git rebase -i`) cleans up feature commits locally before squash merging into main.",
+      "Provide a structured technical introduction summarizing your experience in Cloud & DevOps, including core infrastructure automation (AWS, Terraform, Kubernetes), CI/CD pipeline optimization, key metrics, and your most significant production reliability achievement."
+    ],
+    12: [
+      "Jenkins Shared Libraries externalize pipeline logic in Groovy repos (`vars/`). Centralizing stages (build, SonarQube SAST, Trivy scan, ArgoCD trigger) ensures all microservices automatically inherit enforced enterprise security standards.",
+      "Matrix builds define multidimensional execution axes (e.g. Node 18/20 x Ubuntu/RHEL). Jenkins launches parallel build agents across nodes simultaneously, reducing multi-platform test suite duration drastically."
+    ],
+    13: [
+      "1) Multi-Stage builds to exclude build tools. 2) Distroless/Alpine base images. 3) Non-root `USER` directive. 4) `.dockerignore` to exclude local artifacts. 5) Trivy scanning in CI.",
+      "Namespaces provide runtime process isolation (PID), network interfaces (NET), and mount points (MNT). Control Groups (cgroups) restrict and account for CPU, memory, and I/O resource consumption per container."
+    ],
+    14: [
+      "1) `kubectl describe pod` for Events and LastState exit code. 2) If Exit Code 137 -> OOMKilled (increase memory limit). 3) If Exit Code 1/2 -> App crash, check `kubectl logs <pod> --previous`. 4) Verify ConfigMaps/Secrets mounts and Liveness probe settings.",
+      "Deployments manage stateless pods with random hashes and shared storage. StatefulSets manage stateful workloads (databases) providing deterministic ordinal names (pod-0, pod-1), dedicated PersistentVolumeClaims per pod, and ordered deployment/scaling."
+    ],
+    15: [
+      "Configure `backend \"s3\"` with `bucket`, `key`, `encrypt = true`, and `dynamodb_table = \"terraform-locks\"`. When running `terraform apply`, Terraform writes a LockID to DynamoDB, blocking concurrent executions until state release.",
+      "Idempotency ensures running a playbook repeatedly yields the same state. Use declarative Ansible modules (`apt: state=present`, `copy`, `service: state=started`) instead of raw shell commands, so tasks skip execution when state is already satisfied."
+    ],
+    16: [
+      "1) GitHub Actions compiles code, runs Trivy scan, builds OCI image, and pushes to ECR. 2) CI updates image tag in GitOps Helm repo. 3) ArgoCD detects Git commit and executes sync to EKS cluster with rolling update and automatic health check rollback.",
+      "Use Kustomize overlays or Helm umbrella charts with environment-specific values files (`values-dev.yaml`, `values-prod.yaml`). Promote builds by submitting automated PRs containing updated image tags from Staging to Prod environment folders."
+    ],
+    17: [
+      "1) Distinguish 502 (Connection Refused / backend pod crash) vs 504 (Upstream Timeout / slow app/DB). 2) Check ingress logs (`kubectl logs -n ingress-nginx`). 3) Check endpoints (`kubectl get ep`). 4) Inspect pod CPU/RAM and database connection pool.",
+      "1) Monitor memory growth via Prometheus `container_memory_working_set_bytes`. 2) Attach profiler (`node --inspect` heap snapshot or `py-spy` for Python) in staging. 3) Compare heap diffs before and after load tests to isolate uncollected object references."
+    ],
+    18: [
+      "1) Annotate Pod with Vault Agent annotations (`vault.hashicorp.com/agent-inject`). 2) Vault Agent authenticates via Kubernetes ServiceAccount token. 3) Vault Database Secrets Engine generates short-lived DB credentials and injects them to `/vault/secrets/db-cred` in tmpfs.",
+      "1) CI pipeline signs container image digest using Cosign keyless signatures & generates SBOM. 2) Kubernetes Admission Controller (Kyverno/OPA) verifies cryptographic signatures before allowing Pod scheduling, blocking unsigned images."
+    ],
+    19: [
+      "1) AWS NLB distributing traffic to EKS ingress nodes. 2) Karpenter autoscaling node capacity. 3) Redis Cluster for caching hot data (sub-5ms). 4) Event-driven Apache Kafka for async decoupling. 5) Aurora PostgreSQL with read replicas and connection pooling (PgBouncer).",
+      "1) Instrument microservices with OpenTelemetry SDKs. 2) Inject HTTP `traceparent` headers across microservice RPC calls. 3) Push trace spans to OpenTelemetry Collector, exporting to Grafana Tempo/Jaeger to visualize call graphs."
+    ],
+    20: [
+      "Days 1-30: Architecture discovery, dependency mapping & Terraform baseline. Days 31-60: CI/CD automation, EKS cluster creation, security guardrails & Strangler Fig pattern for microservices. Days 61-90: Pilot migration, performance tuning, fallback runbooks & final cutover.",
+      "SLI is the quantitative measure (e.g. 99.9% successful HTTP requests). SLO is the internal target (99.9% uptime over 30 days). SLA is the business contract. Error Budget (100% - SLO = 0.1%) represents acceptable downtime; if depleted, feature releases freeze to focus on reliability."
+    ],
+    21: [
+      "AIOps tools ingest real-time Prometheus metric streams, establishing dynamic seasonal baselines via unsupervised ML models. By evaluating metric variance rate of change, AIOps detects subtle degradation prior to hard threshold breaches."
+    ],
+    22: [
+      "Deploy Triton Inference Server on EKS GPU node pools using NVIDIA GPU operator. Use KEDA (Kubernetes Event-driven Autoscaling) configured with Prometheus NVIDIA DCGM GPU utilization and inference queue duration metrics to scale pods dynamically."
+    ],
+    23: [
+      "1) Envoy / Kong API gateway with custom Lua or WebAssembly plugin for token bucket rate limiting. 2) Redis Vector Search to cache semantically similar prompts (sub-10ms response). 3) Multi-provider router automatically falling back to Anthropic/OpenAI on HTTP 429/5xx errors."
+    ],
+    24: [
+      "1) Watcher service listens to K8s OOMKilled/CrashLoop events. 2) Log snippet & deployment spec sent to LLM for root cause diagnosis. 3) LLM generates recommended patch. 4) Agent opens GitHub PR with fix, requiring Human-in-the-Loop review before merge."
+    ],
+    25: [
+      "MCP provides a standardized protocol (JSON-RPC) enabling AI models to inspect external resources and execute tools. Tool declarations expose structured JSON schemas defining parameters, requiring strict permission sandboxing before executing cloud mutations."
+    ],
+    26: [
+      "1) Define stages: Build -> Staging -> Production in `azure-pipelines.yml`. 2) Fetch secrets via `AzureKeyVault@2` task using Azure Service Principal. 3) Enforce Manual Approval checks on Production environment in Azure DevOps portal."
+    ],
+    27: [
+      "Flagger controls Istio VirtualService weights, incrementing canary traffic (5% step). At each interval, Flagger queries Prometheus for HTTP 5xx error rate and p99 latency; if thresholds fail, Flagger resets traffic to primary instantly."
+    ],
+    28: [
+      "Create ConstraintTemplate defining Rego rule `violation[{\"msg\": msg}]` checking `input.review.object.spec.containers[_].resources.requests` and `limits`. Gatekeeper admission webhook rejects non-compliant Pod manifests at API server entry."
+    ],
+    29: [
+      "1) Cloudflare Anycast Magic WAN handles global ingress. 2) Real-time telemetry evaluates regional latency and cloud provider health. 3) AI Router dynamically adjusts BGP / DNS weights to route users to the lowest-latency healthy cloud region."
+    ],
+    30: [
+      "A masterclass executive defense: 1) Multi-region active-active architecture (Five Nines). 2) Zero-Trust security with mTLS and dynamic Vault secrets. 3) Autonomous AIOps self-healing incident mitigation. 4) FinOps cost optimization saving millions. 5) Engineering culture & mentorship vision.",
+      "1) Reconstruct precise chronological incident timeline from logs & traces. 2) Conduct a Blameless Post-Mortem utilizing '5 Whys' root cause analysis. 3) Focus on process and architectural safeguards rather than human error. 4) Assign tracking tickets with strict SLAs for systemic prevention."
+    ],
+  };
+
+  const STAGE_FALLBACK_TOPICS: Record<number, string[][]> = {
+    1: [
+      ["present role", "years of experience", "core stack (AWS/K8s/Terraform)", "quantifiable accomplishment", "passion for reliability"],
+      ["trade-offs", "multi-AZ vs multi-region", "auto-scaling", "Spot/Reserved instances", "CI/CD automated testing"]
+    ],
+    2: [
+      ["architectural principles", "diagnostic commands", "recovery steps"],
+      ["code commit", "pr review", "ci build", "helm argocd", "telemetry"],
+      ["poc evaluation", "security benchmarking", "staging pilot", "runbook creation"]
+    ],
+    3: [
+      ["temporary credentials", "STS (Security Token Service)", "no hardcoded access keys", "automatic credential rotation", "least privilege role assumption", "IRSA"],
+      ["Internet Gateway (IGW)", "Route Tables", "NAT Gateway", "Public vs Private IP", "outbound-only egress traffic"]
+    ],
+    4: [
+      ["multi-stage builds", "minimal base images (Alpine/Distroless)", "non-root user (USER directive)", ".dockerignore", "layer caching", "vulnerability scanning (Trivy)"],
+      ["traffic routing percentage", "Blue/Green instant cutover", "Canary progressive rollout", "health check metrics (HTTP 5xx rate)", "automated rollback triggers"]
+    ],
+    5: [
+      ["kubectl get pods", "kubectl describe pod (LastState, Exit Codes, Events)", "kubectl logs --previous", "OOMKilled (Exit Code 137)", "Liveness probe failures", "ConfigMap / Secret missing"],
+      ["Ingress controller logs", "Service endpoints (kubectl get ep)", "upstream timeout vs upstream connection refused", "backend pod CPU throttling / health", "keepalive settings"]
+    ],
+    6: [
+      ["temporary credentials", "STS (Security Token Service)", "no static access keys", "automatic rotation", "IRSA"],
+      ["Internet Gateway (IGW)", "Route Tables", "NAT Gateway", "Public IP", "outbound-only egress"]
+    ],
+    7: [
+      ["organization node", "folders structure", "project level", "iam policy inheritance", "least privilege"],
+      ["gke autopilot", "gke standard", "fully managed nodes", "pod-level billing", "node pool tuning"]
+    ],
+    8: [
+      ["system-assigned identity", "user-assigned identity", "entra id (azure ad)", "token acquisition", "zero hardcoded credentials"],
+      ["vnet peering", "low latency private backbone", "nsg inbound/outbound rules", "service tags", "no gateway required"]
+    ],
+    9: [
+      ["ipsec vpn tunnel", "bgp routing", "aws customer gateway", "azure vnet gateway", "megaport cloud router"],
+      ["kubernetes standard", "cloud agnostic terraform", "open source databases (postgres/redis)", "opentelemetry", "portable ci/cd"]
+    ],
+    10: [
+      ["route53 health checks", "dns failover policy", "rds cross-region read replica", "rto and rpo", "failover promotion script"],
+      ["aws config rule", "s3 block public access", "cloudtrail audit logs", "eventbridge trigger", "automated lambda remediation"]
+    ],
+    11: [
+      ["linear commit history", "merge commit", "git rebase -i", "squash merge", "shared branch safety"],
+      ["present role", "years of experience", "core stack (AWS/K8s/Terraform)", "quantifiable accomplishment", "passion for reliability"]
+    ],
+    12: [
+      ["groovy shared library", "vars directory", "global pipeline templates", "centralized security gates", "versioned library tags"],
+      ["matrix axis", "parallel execution", "build nodes label", "jdk/python versions matrix", "failFast configuration"]
+    ],
+    13: [
+      ["multi-stage builds", "minimal base images (Alpine/Distroless)", "non-root user (USER directive)", ".dockerignore", "layer caching", "vulnerability scanning (Trivy)"],
+      ["namespaces (isolation)", "cgroups (resource limiting)", "pid/net/mnt namespaces", "cgroups v2 memory limit", "kernel sharing"]
+    ],
+    14: [
+      ["kubectl describe pod", "kubectl logs --previous", "OOMKilled (Exit Code 137)", "liveness probe failure", "missing configmap/secret"],
+      ["stateless vs stateful", "ordinal pod naming (pod-0, pod-1)", "headless service", "volumeClaimTemplates", "ordered deployment/termination"]
+    ],
+    15: [
+      ["backend s3", "dynamodb_table lock", "state encryption at rest", "terragrunt", "terraform state mv"],
+      ["idempotency principle", "state: present/absent", "changed vs ok status", "handlers notification", "avoiding raw shell commands"]
+    ],
+    16: [
+      ["github actions build & scan", "helm chart repository", "gitops repository update", "argocd automated sync", "health check rollback"],
+      ["kustomize overlays", "helm value overrides", "environment branches vs folders", "pr promotion gates", "sealed secrets"]
+    ],
+    17: [
+      ["ingress controller logs", "service endpoints (kubectl get ep)", "upstream connection refused (502)", "upstream timeout (504)", "backend pod metrics"],
+      ["heap dump analysis", "node --inspect / py-spy", "prometheus container_memory_working_set_bytes", "gc logs", "memory leak fix"]
+    ],
+    18: [
+      ["vault agent injector", "kubernetes service account auth", "dynamic database secrets engine", "sidecar container", "in-memory secret injection"],
+      ["container image signing (cosign)", "in-toto provenance", "kyverno / opa gatekeeper admission controller", "sigstore", "software bill of materials (sbom)"]
+    ],
+    19: [
+      ["network load balancer (nlb)", "event-driven kafka", "redis cluster caching", "eks auto-scaling (karpenter)", "database sharding"],
+      ["opentelemetry collector", "traceparent header propagation", "span context", "jaeger / grafana tempo", "sampling rate configuration"]
+    ],
+    20: [
+      ["discovery & dependency mapping", "strangler fig pattern", "iac baseline (terraform)", "security compliance & ci/cd", "pilot migration & cutover"],
+      ["sli (metrics)", "slo (target)", "sla (contract)", "error budget depletion", "deployment freeze"]
+    ],
+    21: [
+      ["time-series anomaly detection", "machine learning baselining", "prometheus metric streams", "noise suppression", "predictive alerting"]
+    ],
+    22: [
+      ["triton inference server", "nvidia k8s device plugin", "dcgm metrics", "keda autoscaling", "gpu shared memory"]
+    ],
+    23: [
+      ["token rate limiting", "semantic caching (redis vector)", "multi-provider fallback", "streaming response proxy", "cost tracking per tenant"]
+    ],
+    24: [
+      ["k8s watcher daemon", "llm log analysis", "github api pr creation", "human-in-the-loop approval", "sandboxed evaluation"]
+    ],
+    25: [
+      ["mcp protocol specification", "tool definition schema", "json-rpc over stdio/sse", "read-only vs mutating actions", "permission boundaries"]
+    ],
+    26: [
+      ["azure-pipelines.yml", "pipeline environments", "azure key vault task", "kubelogin / aks service connection", "approval checks"]
+    ],
+    27: [
+      ["flagger custom resource", "istio virtualservice", "prometheus canary analysis", "weight increment", "automatic rollback on 5xx"]
+    ],
+    28: [
+      ["opa gatekeeper", "rego language", "constraint template", "resource requests and limits", "admission webhook denial"]
+    ],
+    29: [
+      ["cloudflare magic wan", "anycast routing", "cross-cloud active-active", "ai latency predictor", "zero downtime failover"]
+    ],
+    30: [
+      ["99.999% availability (five nines)", "zero-trust mesh (istio/vault)", "ai self-healing operations", "finops & cloud governance", "staff leadership vision"],
+      ["blameless post-mortem", "5 whys root cause analysis", "actionable preventive tickets", "timeline reconstruction", "executive stakeholder communication"]
+    ],
+  };
+
+
+
+  const resolvedTargetStage = (typeof window !== "undefined" && new URLSearchParams(window.location.search).get("stage") ? parseInt(new URLSearchParams(window.location.search).get("stage")!, 10) : null)
+    || (attemptId && attemptId.startsWith("stage-") ? parseInt(attemptId.replace("stage-", ""), 10) : null)
+    || (typeof window !== "undefined" && localStorage.getItem("active_interview_session") ? (JSON.parse(localStorage.getItem("active_interview_session") || "{}").stageId || null) : null)
+    || (activeStage ? Number(activeStage.stage_number) : null)
+    || 1;
+  const currentStageNum = (resolvedTargetStage >= 1 && resolvedTargetStage <= 30) ? resolvedTargetStage : 1;
 
   // Match live DB stage fetched from /interviews/stages
   const liveDbStage = dbStagesData.find((s: any) => s.id === currentStageNum || s.stage_number === currentStageNum);
@@ -368,31 +779,6 @@ export default function InterviewRoomPage() {
   const rawQText = (!isGenericStageTitle(dbQuestionText) ? dbQuestionText : null) || defaultStageQ;
   const derivedKeywords = extractKeywordsFromText(rawQText);
 
-  // Dynamic fallback expected answers per stage and index (aligned 100% with PostgreSQL DB)
-  const STAGE_FALLBACK_ANSWERS: Record<number, string[]> = {
-    1: [
-      "Detail your Cloud & DevOps background: present role, years of experience, core tech stack (AWS, Terraform, Docker, Kubernetes), key deployment workflows, and your most significant production achievement.",
-      "Explain the architectural triangle: 1) HA via Multi-AZ deployments with auto-scaling groups. 2) Cost governance using Spot/Reserved instances and right-sizing. 3) Developer velocity through standardized reusable IaC modules and automated CI/CD pipelines."
-    ],
-    2: [
-      "Provide a structured response covering architectural principles, diagnostic commands, and recovery steps.",
-      "Detailed walkthrough: Developer feature branch -> PR review with automated SAST/unit tests -> CI container build & scanning -> CD deployment via Helm/ArgoCD -> Telemetry monitoring.",
-      "Structured adoption: 1) Identify business problem & PoC evaluation. 2) Load & security benchmarking. 3) Staging pilot deployment. 4) Runbook creation and knowledge transfer."
-    ],
-    3: [
-      "IAM Users represent persistent identities with long-lived static credentials (access keys) which risk exposure if hardcoded. IAM Roles issue short-lived temporary security credentials via STS assume-role, eliminating static credential storage and enforcing principle of least privilege automatically for EC2/EKS workloads via IRSA.",
-      "A Public Subnet has a route table entry (0.0.0.0/0) pointing to an Internet Gateway (IGW) and assigns public IPs. A Private Subnet has no IGW route and only private IPs. Database instances in a private subnet initiate outbound connections to download patches via a NAT Gateway located in a public subnet."
-    ],
-    4: [
-      "1) Use Multi-Stage builds to exclude build tools/compilers from final runtime image. 2) Select minimal base images like Alpine or distroless. 3) Combine RUN commands and clean package manager caches in single layer. 4) Run containers as a non-root user and scan images with Trivy or Grype for vulnerabilities.",
-      "Blue/Green deploys a full identical environment alongside live traffic and switches load balancer router instantly, allowing zero-downtime and instant rollback by redirecting traffic back. Canary deploys new version to a small percentage of users (e.g., 5-10%), monitors error rate telemetry in Prometheus, and auto-rolls back via Helm/ArgoCD if errors exceed SLA threshold."
-    ],
-    5: [
-      "1) Run 'kubectl describe pod <name>' and examine Events section for exit codes (e.g. OOMKilled exit 137, command error exit 1). 2) Fetch previous container logs using 'kubectl logs <pod> --previous'. 3) Verify container liveness/readiness probe settings and initialDelaySeconds. 4) Validate environment variables, mounted secret volumes, and memory limits.",
-      "1) Distinguish error codes: 502 indicates Nginx received invalid/refused connection from upstream application pod; 504 indicates upstream timeout. 2) Check ingress controller logs for upstream connection errors. 3) Verify target Kubernetes Service selector matches pod labels. 4) Check pod resource usage (CPU/memory throttling) and connection pool limits."
-    ]
-  };
-
   const defaultStageAns = (STAGE_FALLBACK_ANSWERS[currentStageNum] || STAGE_FALLBACK_ANSWERS[1])[currentQIndex]
     || "Provide a structured response covering architectural principles, diagnostic commands, and recovery steps.";
 
@@ -405,9 +791,10 @@ export default function InterviewRoomPage() {
   const isDirtyRefAns = !rawIdealAnswer || rawIdealAnswer.toLowerCase().includes("sachin") || rawIdealAnswer.toLowerCase() === "test";
   const dbIdealAnswer = (!isDirtyRefAns && rawIdealAnswer && rawIdealAnswer.trim().length > 0) ? rawIdealAnswer.trim() : defaultStageAns;
 
+  const fallbackTopics = (STAGE_FALLBACK_TOPICS[currentStageNum] || [])[currentQIndex] || [];
   const dbKeywords = (activeQItem?.expected_topics && activeQItem.expected_topics.length > 0)
     ? activeQItem.expected_topics
-    : (activeStageQuestion?.expected_topics || activeQuestionAttempt?.question?.expected_topics);
+    : (activeStageQuestion?.expected_topics || activeQuestionAttempt?.question?.expected_topics || fallbackTopics);
 
   // Extract reference words STRICTLY from Admin Expected Answer
   const refAnswerWords = dbIdealAnswer
@@ -878,7 +1265,7 @@ export default function InterviewRoomPage() {
           try {
             const rawList = localStorage.getItem("completed_stages_list") || "[]";
             const list = JSON.parse(rawList);
-            const stageNum = activeStage?.stage_number || 1;
+            const stageNum = currentStageNum;
             if (Array.isArray(list) && !list.includes(stageNum)) {
               list.push(stageNum);
               localStorage.setItem("completed_stages_list", JSON.stringify(list));
@@ -1366,7 +1753,7 @@ export default function InterviewRoomPage() {
                   <Award className="w-7 h-7" />
                 </div>
                 <div>
-                  <h2 className="text-xl font-black text-white">Stage {activeStage?.stage_number || 1} Assessment Finished!</h2>
+                  <h2 className="text-xl font-black text-white">Stage {currentStageNum} Assessment Finished!</h2>
                   <span className="text-xs text-slate-400 font-mono">{maxQCount} / {maxQCount} Technical Questions Evaluated</span>
                 </div>
               </div>
@@ -1413,7 +1800,7 @@ export default function InterviewRoomPage() {
             <div className="p-4 rounded-2xl bg-slate-950 border border-slate-800 flex items-center justify-between px-5">
               <span className="text-xs font-mono font-bold text-slate-400">STAGE GATE STATUS</span>
               <span className="text-xs font-extrabold text-blue-400 font-mono">
-                {stageSummary.passed ? `Stage ${(activeStage?.stage_number || 1) + 1} Unlocked` : `Stage ${activeStage?.stage_number || 1} Active`}
+                {stageSummary.passed ? `Stage ${currentStageNum + 1} Unlocked` : `Stage ${currentStageNum} Active`}
               </span>
             </div>
 
@@ -1426,7 +1813,6 @@ export default function InterviewRoomPage() {
                       setIsNavigatingNextStage(true);
                       stopCameraCompletely();
                       forceStopAllWebcams();
-                      const currentStageNum = activeStage?.stage_number || 1;
                       const nextStageNum = currentStageNum + 1;
 
                       if (typeof window !== "undefined") {
@@ -1463,11 +1849,11 @@ export default function InterviewRoomPage() {
                     {isNavigatingNextStage ? (
                       <>
                         <Loader2 className="w-4 h-4 text-slate-950 animate-spin" />
-                        <span>Opening Stage {(activeStage?.stage_number || 1) + 1}...</span>
+                        <span>Opening Stage {currentStageNum + 1}...</span>
                       </>
                     ) : (
                       <>
-                        <span>Proceed Directly to Stage {(activeStage?.stage_number || 1) + 1} 🚀</span>
+                        <span>Proceed Directly to Stage {currentStageNum + 1} 🚀</span>
                         <ArrowRight className="w-4 h-4 stroke-[3]" />
                       </>
                     )}
@@ -1476,7 +1862,7 @@ export default function InterviewRoomPage() {
                     onClick={async () => {
                       setIsNavigatingNextStage(true);
                       stopCameraCompletely();
-                      const currentStageNum = activeStage?.stage_number || 1;
+                      /* currentStageNum already resolved */
 
                       if (typeof window !== "undefined") {
                         try {
@@ -1515,10 +1901,10 @@ export default function InterviewRoomPage() {
                       forceStopAllWebcams();
                       if (typeof window !== "undefined") {
                         localStorage.removeItem("active_interview_session");
-                        const currentStageNum = activeStage?.stage_number || 1;
+                        /* currentStageNum already resolved */
                         localStorage.setItem("auto_start_stage", String(currentStageNum));
                       }
-                      router.push(`/interviews?stage=${activeStage?.stage_number || 1}&autoStart=true`);
+                      router.push(`/interviews?stage=${currentStageNum}&autoStart=true`);
                     }}
                     disabled={isNavigatingNextStage}
                     className={`w-full sm:flex-1 py-3.5 px-5 rounded-2xl font-black text-xs text-white bg-gradient-to-r from-[#FF6B00] to-amber-500 hover:from-orange-500 hover:to-amber-600 shadow-xl shadow-[#FF6B00]/30 flex items-center justify-center gap-2 transition-all uppercase tracking-wider ${
@@ -1528,12 +1914,12 @@ export default function InterviewRoomPage() {
                     {isNavigatingNextStage ? (
                       <>
                         <Loader2 className="w-4 h-4 text-white animate-spin" />
-                        <span>Restarting Stage {activeStage?.stage_number || 1}...</span>
+                        <span>Restarting Stage {currentStageNum}...</span>
                       </>
                     ) : (
                       <>
                         <RefreshCw className="w-4 h-4" />
-                        <span>Resume / Retry Stage {activeStage?.stage_number || 1} 🔄</span>
+                        <span>Resume / Retry Stage {currentStageNum} 🔄</span>
                       </>
                     )}
                   </button>

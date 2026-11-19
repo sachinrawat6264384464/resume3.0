@@ -464,11 +464,21 @@ export default function InterviewsPage() {
     checkActiveSession();
     fetchStagesData();
 
+    const onFocus = () => fetchStagesData();
+    if (typeof window !== "undefined") {
+      window.addEventListener("focus", onFocus);
+    }
+
     const pollInterval = setInterval(() => {
       fetchStagesData();
-    }, 5000);
+    }, 45000);
 
-    return () => clearInterval(pollInterval);
+    return () => {
+      clearInterval(pollInterval);
+      if (typeof window !== "undefined") {
+        window.removeEventListener("focus", onFocus);
+      }
+    };
   }, [user]);
 
   useEffect(() => {
@@ -632,9 +642,17 @@ export default function InterviewsPage() {
     }
 
     // If an active session is currently running, prompt candidate to resume or drop out
-    if (activeSession) {
-      setAlertMsg(`⚠️ Active session in progress: "${activeSession.stageTitle || 'Live Interview'}". Click 'Resume Ongoing Interview 🚀' above or 'Drop Out 🚪' to proceed.`);
-      return;
+    if (activeSession && activeSession.stageId !== stageId) {
+      if (typeof window !== "undefined") {
+        const params = new URLSearchParams(window.location.search);
+        if (params.get("autoStart") === "true") {
+          localStorage.removeItem("active_interview_session");
+          setActiveSession(null);
+        } else {
+          setAlertMsg(`⚠️ Active session in progress: "${activeSession.stageTitle || 'Live Interview'}". Click 'Resume Ongoing Interview 🚀' above or 'Drop Out 🚪' to proceed.`);
+          return;
+        }
+      }
     }
 
     const targetStg = stages.find((st) => st.id === stageId) || ALL_30_STAGES[stageId];
@@ -676,7 +694,18 @@ export default function InterviewsPage() {
       return;
     }
 
-    const isPrevCompleted = stageId === 0 ? true : stages.some(st => st.id === stageId - 1 && st.status === "completed");
+    const rawCompletedList = typeof window !== "undefined" ? localStorage.getItem("completed_stages_list") : null;
+    let localCompletedSet = new Set<number>();
+    if (rawCompletedList) {
+      try {
+        const parsed = JSON.parse(rawCompletedList);
+        if (Array.isArray(parsed)) parsed.forEach((num: number) => localCompletedSet.add(num));
+      } catch {}
+    }
+    const isPrevCompleted = stageId <= 1 ? true : (
+      stages.some(st => st.id === stageId - 1 && st.status === "completed") ||
+      localCompletedSet.has(stageId - 1)
+    );
     if (!unlockAllStages && (targetStg?.status === "locked" || !isPrevCompleted)) {
       if (stageId === 1) {
         setIsStage0ModalOpen(true);
@@ -704,7 +733,7 @@ export default function InterviewsPage() {
     setActiveSession(sessionObj);
 
     // INSTANT ROUTE PUSH (0ms delay!)
-    router.push(`/interviews/${tempAttemptId}/pre-check`);
+    router.push(`/interviews/${tempAttemptId}/pre-check?stage=${stageId}`);
 
     // Async non-blocking background DB attempt creation
     apiFetch("/attempts/start", {

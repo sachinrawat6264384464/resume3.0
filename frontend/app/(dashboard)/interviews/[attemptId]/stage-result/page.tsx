@@ -163,7 +163,7 @@ export default function StageResultPage() {
         <div className="flex flex-col sm:flex-row items-center gap-3 w-full justify-center pt-2">
           {isPassed && nextStage ? (
             <Link prefetch={false}
-              href={`/interviews/${attemptId}/room`}
+              href={`/interviews?stage=${nextStage.stage_number}&autoStart=true`}
               className="w-full sm:w-auto py-3.5 px-8 rounded-xl font-semibold text-xs text-white bg-gradient-to-r from-indigo-600 via-indigo-500 to-cyan-500 hover:opacity-90 shadow-xl shadow-indigo-600/30 flex items-center justify-center gap-2"
             >
               <span>Advance to Stage {nextStage.stage_number}</span>

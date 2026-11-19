@@ -58,8 +58,27 @@ export default function PreCheckPage() {
   }, [attemptId, router]);
 
   const handleReadyToStart = (stream: MediaStream | null) => {
-    // Media stream ready -> proceed to live room
-    router.push(`/interviews/${attemptId}/room`);
+    // Media stream ready -> proceed to live room with explicit stage parameter
+    let targetStageNum = 1;
+    if (typeof window !== "undefined") {
+      const qStage = new URLSearchParams(window.location.search).get("stage");
+      if (qStage) {
+        const parsed = parseInt(qStage, 10);
+        if (!isNaN(parsed) && parsed >= 1 && parsed <= 30) targetStageNum = parsed;
+      } else if (attemptId && attemptId.startsWith("stage-")) {
+        const parsed = parseInt(attemptId.replace("stage-", ""), 10);
+        if (!isNaN(parsed) && parsed >= 1 && parsed <= 30) targetStageNum = parsed;
+      } else {
+        try {
+          const rawSession = localStorage.getItem("active_interview_session");
+          if (rawSession) {
+            const s = JSON.parse(rawSession);
+            if (s && typeof s.stageId === "number" && s.stageId >= 1) targetStageNum = s.stageId;
+          }
+        } catch {}
+      }
+    }
+    router.push(`/interviews/${attemptId}/room?stage=${targetStageNum}`);
   };
 
   if (isLoading) {

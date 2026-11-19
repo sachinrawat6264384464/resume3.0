@@ -34,7 +34,7 @@ export default function LandingPage() {
       if (token && userStr && userStr.trim() && userStr !== "undefined") {
         try {
           const u = JSON.parse(userStr);
-          if (u && u.id) {
+          if (u && u.id && u.id !== "candidate-default-id") {
             router.replace(u.role === "ADMIN" || u.role === "SUPER_ADMIN" ? "/admin" : "/dashboard");
             return;
           }
@@ -162,11 +162,7 @@ export default function LandingPage() {
         {/* HERO MAIN CONTAINER */}
         <div className="w-full px-4 sm:px-8 lg:px-20 flex flex-col justify-between gap-4 sm:gap-6">
           
-          {/* TOP ACCENT BADGE */}
-          <div className="w-max max-w-full inline-flex items-center gap-1.5 sm:gap-2 text-[#FF6B00] text-[11px] xs:text-xs sm:text-sm font-black tracking-wider uppercase mb-2 sm:mb-6 leading-tight bg-[#FF6B00]/10 border border-[#FF6B00]/30 px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-full">
-            <Sparkles className="w-3.5 h-3.5 text-[#FF6B00] shrink-0" />
-            <span className="truncate">Multi-Cloud + DevOps + DevSecOps + AI Careers</span>
-          </div>
+
 
           {/* DISPLAY TYPOGRAPHY WITH PRODUCT DOCUMENTATION HEADLINE */}
           <div className="flex flex-col tracking-tighter uppercase font-black select-none w-full gap-1 sm:gap-2">
