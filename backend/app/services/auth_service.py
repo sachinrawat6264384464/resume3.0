@@ -38,15 +38,22 @@ class AuthService:
         if user_in.email:
             conditions.append(User.email == user_in.email)
         if getattr(user_in, "phone_number", None):
-            conditions.append(User.phone_number == user_in.phone_number)
+            raw_phone = getattr(user_in, "phone_number")
+            conditions.append(User.phone_number == raw_phone)
+            digits = "".join(filter(str.isdigit, raw_phone))
+            if len(digits) >= 10:
+                last10 = digits[-10:]
+                conditions.append(User.phone_number == f"+91{last10}")
+                conditions.append(User.phone_number == last10)
+                conditions.append(User.phone_number.like(f"%{last10}%"))
 
         if conditions:
-            stmt = select(User).where(or_(*conditions))
+            stmt = select(User).where(or_(*conditions)).order_by(User.created_at.asc())
             result = await self.db.execute(stmt)
             existing = result.scalars().first()
             if existing:
                 dirty = False
-                if user_in.full_name and not existing.full_name:
+                if user_in.full_name and (not existing.full_name or existing.full_name.startswith("Candidate")):
                     existing.full_name = user_in.full_name
                     dirty = True
                 if getattr(user_in, "phone_number", None) and not existing.phone_number:
@@ -56,8 +63,12 @@ class AuthService:
                     existing.hashed_password = get_password_hash(user_in.password)
                     dirty = True
                 if dirty:
-                    await self.db.commit()
-                    await self.db.refresh(existing)
+                    try:
+                        await self.db.commit()
+                        await self.db.refresh(existing)
+                    except Exception:
+                        await self.db.rollback()
+                        existing = await self.get_user_by_id(existing.id)
                 return existing
 
         org_id = getattr(user_in, "organization_id", None)
@@ -79,8 +90,18 @@ class AuthService:
             firebase_uid=getattr(user_in, "firebase_uid", None),
             is_active=getattr(user_in, "is_active", True)
         )
-        self.db.add(user)
-        await self.db.flush()
+        try:
+            self.db.add(user)
+            await self.db.flush()
+        except Exception:
+            await self.db.rollback()
+            if conditions:
+                stmt = select(User).where(or_(*conditions)).order_by(User.created_at.asc())
+                result = await self.db.execute(stmt)
+                existing = result.scalars().first()
+                if existing:
+                    return existing
+            raise
 
         # If role is CANDIDATE, initialize candidate profile
         if user.role == UserRole.CANDIDATE.value or str(user.role).upper() == "CANDIDATE":
@@ -96,10 +117,24 @@ class AuthService:
                     phone=user.phone_number
                 )
                 self.db.add(candidate)
-                await self.db.flush()
+                try:
+                    await self.db.flush()
+                except Exception:
+                    await self.db.rollback()
+                    return user
 
-        await self.db.commit()
-        await self.db.refresh(user)
+        try:
+            await self.db.commit()
+            await self.db.refresh(user)
+        except Exception:
+            await self.db.rollback()
+            if conditions:
+                stmt = select(User).where(or_(*conditions)).order_by(User.created_at.asc())
+                result = await self.db.execute(stmt)
+                existing = result.scalars().first()
+                if existing:
+                    return existing
+            raise
         return user
 
     async def authenticate_local(self, login_data: LoginRequest) -> TokenResponse:

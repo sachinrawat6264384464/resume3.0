@@ -19,57 +19,72 @@ router = APIRouter(prefix="/auth", tags=["Authentication"])
 otp_cache = {}
 
 async def find_user_by_email_or_phone(db: AsyncSession, target_email: str, target_phone: str) -> Optional[User]:
-    conditions = []
     clean_email = (target_email or "").strip().lower()
-    if clean_email and "@" in clean_email and not clean_email.startswith("@"):
-        conditions.append(User.email == clean_email)
-
     clean_phone = (target_phone or "").strip()
-    if clean_phone:
-        digits = "".join(filter(str.isdigit, clean_phone))
-        if len(digits) >= 10:
-            last10 = digits[-10:]
-            conditions.append(User.phone_number.like(f"%{last10}%"))
-            conditions.append(User.email.like(f"%{last10}%"))
-            
-            # Also search Candidate table's phone column
-            from app.models.candidate import Candidate
-            stmt_cand = select(Candidate.user_id).where(Candidate.phone.like(f"%{last10}%"))
-            c_res = await db.execute(stmt_cand)
-            cand_uids = [uid for uid in c_res.scalars().all() if uid]
-            if cand_uids:
-                conditions.append(User.id.in_(cand_uids))
-        else:
-            conditions.append(User.phone_number == clean_phone)
+    digits = "".join(filter(str.isdigit, clean_phone))
+    last10 = digits[-10:] if len(digits) >= 10 else ""
 
-
-    if not conditions:
-        return None
-
-    stmt = select(User).where(or_(*conditions))
-    res = await db.execute(stmt)
-    user = res.scalars().first()
-
-    # If found, ensure user.phone_number and candidate.phone are kept in sync
-    if user and clean_phone:
-        dirty = False
-        if not user.phone_number:
-            user.phone_number = clean_phone
-            dirty = True
-        
+    # Priority 1: Phone number match (if phone is provided)
+    if last10:
+        phone_conditions = [
+            User.phone_number == clean_phone,
+            User.phone_number == f"+91{last10}",
+            User.phone_number == last10,
+            User.phone_number.like(f"%{last10}%")
+        ]
         from app.models.candidate import Candidate
-        stmt_c = select(Candidate).where(Candidate.user_id == user.id)
-        c_res = await db.execute(stmt_c)
-        cand = c_res.scalar_one_or_none()
-        if cand and not cand.phone:
-            cand.phone = clean_phone
-            dirty = True
-            
-        if dirty:
-            await db.commit()
-            await db.refresh(user)
+        stmt_cand = select(Candidate.user_id).where(
+            or_(
+                Candidate.phone == clean_phone,
+                Candidate.phone == f"+91{last10}",
+                Candidate.phone.like(f"%{last10}%")
+            )
+        )
+        c_res = await db.execute(stmt_cand)
+        cand_uids = [uid for uid in c_res.scalars().all() if uid]
+        if cand_uids:
+            phone_conditions.append(User.id.in_(cand_uids))
 
-    return user
+        stmt = select(User).where(or_(*phone_conditions)).order_by(User.created_at.asc())
+        res = await db.execute(stmt)
+        user_by_phone = res.scalars().first()
+        if user_by_phone:
+            return user_by_phone
+
+    # Priority 2: Real email match (non-placeholder email)
+    is_real_email = (
+        clean_email and 
+        "@" in clean_email and 
+        not clean_email.startswith("@") and 
+        not clean_email.endswith("@cloudops.internal") and
+        not clean_email.endswith(".internal")
+    )
+    if is_real_email:
+        stmt = select(User).where(User.email == clean_email).order_by(User.created_at.asc())
+        res = await db.execute(stmt)
+        user_by_email = res.scalars().first()
+        if user_by_email:
+            return user_by_email
+
+    # Priority 3: Placeholder email match
+    if last10:
+        placeholder_emails = [
+            f"cand_{last10}@cloudops.internal",
+            f"cand_91{last10}@cloudops.internal",
+            clean_email
+        ]
+        stmt = select(User).where(User.email.in_(placeholder_emails)).order_by(User.created_at.asc())
+        res = await db.execute(stmt)
+        user_by_placeholder = res.scalars().first()
+        if user_by_placeholder:
+            return user_by_placeholder
+
+    if clean_email and "@" in clean_email:
+        stmt = select(User).where(User.email == clean_email).order_by(User.created_at.asc())
+        res = await db.execute(stmt)
+        return res.scalars().first()
+
+    return None
 
 @router.post("/send-otp", response_model=StandardResponse[dict])
 async def send_otp(req: SendOTPRequest, db: AsyncSession = Depends(get_db)):
@@ -187,11 +202,30 @@ async def verify_otp(req: VerifyOTPRequest, db: AsyncSession = Depends(get_db)):
 
     from app.models.candidate import Candidate
     if existing_user:
-        # Update user full_name and phone_number if provided
+        # Update user full_name and phone_number safely if provided
         if req.full_name and req.full_name.strip() and not req.full_name.lower().startswith("candidate"):
             existing_user.full_name = req.full_name.strip()
+
+        # Update phone_number safely: only if not already set or changed, and avoid duplicate key conflict
         if target_phone:
-            existing_user.phone_number = target_phone
+            digits = "".join(filter(str.isdigit, target_phone))
+            last10 = digits[-10:] if len(digits) >= 10 else ""
+            user_digits = "".join(filter(str.isdigit, existing_user.phone_number or ""))
+            user_last10 = user_digits[-10:] if len(user_digits) >= 10 else ""
+
+            # If user already has this phone (same last 10 digits), keep standardized existing phone
+            if last10 and last10 == user_last10:
+                pass
+            elif existing_user.phone_number != target_phone:
+                conflict_conds = [User.id != existing_user.id, User.phone_number == target_phone]
+                if last10:
+                    conflict_conds.extend([User.phone_number == f"+91{last10}", User.phone_number == last10])
+                conflict_stmt = select(User.id).where(or_(*conflict_conds))
+                conflict_res = await db.execute(conflict_stmt)
+                if not conflict_res.first():
+                    existing_user.phone_number = target_phone
+                else:
+                    logger.info(f"Phone {target_phone} already mapped to another user, skipping phone_number overwrite on user {existing_user.id}")
 
         # Ensure Candidate record exists in DB and sync phone
         stmt_cand = select(Candidate).where(Candidate.user_id == existing_user.id)
@@ -207,13 +241,18 @@ async def verify_otp(req: VerifyOTPRequest, db: AsyncSession = Depends(get_db)):
             )
             db.add(cand)
         else:
-            if target_phone:
+            if target_phone and not cand.phone:
                 cand.phone = target_phone
-            elif existing_user.phone_number:
+            elif existing_user.phone_number and not cand.phone:
                 cand.phone = existing_user.phone_number
 
-        await db.commit()
-        await db.refresh(existing_user)
+        try:
+            await db.commit()
+            await db.refresh(existing_user)
+        except Exception as commit_err:
+            logger.error(f"Commit warning in verify_otp: {commit_err}")
+            await db.rollback()
+            existing_user = await service.get_user_by_id(existing_user.id)
 
         token_data = {
             "sub": existing_user.id,
@@ -229,10 +268,11 @@ async def verify_otp(req: VerifyOTPRequest, db: AsyncSession = Depends(get_db)):
 
     # 2. REGISTER NEW CANDIDATE USER AUTOMATICALLY
     phone_digits = "".join(filter(str.isdigit, target_phone)) if target_phone else ""
-    default_prefix = phone_digits if phone_digits else str(secrets.randbelow(900000))
+    last10 = phone_digits[-10:] if len(phone_digits) >= 10 else phone_digits
+    default_prefix = last10 if last10 else str(secrets.randbelow(900000))
     final_email = (target_email if (target_email and "@" in target_email and not target_email.endswith("@cloudops.internal") and not target_email.startswith("@")) else f"cand_{default_prefix}@cloudops.internal")
-    final_phone = target_phone if target_phone else (f"+91{phone_digits}" if len(phone_digits)>=10 else f"+91{secrets.randbelow(9000000000) + 1000000000}")
-    final_name = (req.full_name or "").strip() or (f"Candidate {phone_digits[-4:]}" if len(phone_digits)>=4 else "Candidate User")
+    final_phone = target_phone if target_phone else (f"+91{last10}" if len(last10)==10 else f"+91{secrets.randbelow(9000000000) + 1000000000}")
+    final_name = (req.full_name or "").strip() or (f"Candidate {last10[-4:]}" if len(last10)>=4 else "Candidate User")
     final_password = req.password or "DefaultPass@123"
 
     user = await service.register_user(

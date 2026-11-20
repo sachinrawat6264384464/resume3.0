@@ -100,13 +100,21 @@ async def add_performance_telemetry_middleware(request: Request, call_next):
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception):
     print(f"Unhandled Exception on {request.url}: {exc}")
+    origin = request.headers.get("origin")
+    headers = {}
+    if origin:
+        headers["Access-Control-Allow-Origin"] = origin
+        headers["Access-Control-Allow-Credentials"] = "true"
+        headers["Access-Control-Allow-Methods"] = "*"
+        headers["Access-Control-Allow-Headers"] = "*"
     return JSONResponse(
         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
         content={
             "success": False,
             "message": "An unexpected server error occurred. Please contact the administrator.",
             "error_detail": str(exc) if settings.DEBUG else None
-        }
+        },
+        headers=headers
     )
 
 # Include API Router
