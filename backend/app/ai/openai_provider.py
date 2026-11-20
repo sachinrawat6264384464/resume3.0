@@ -19,7 +19,7 @@ def get_ai_http_client() -> httpx.AsyncClient:
     global _persistent_client
     if _persistent_client is None or _persistent_client.is_closed:
         _persistent_client = httpx.AsyncClient(
-            timeout=60.0,
+            timeout=8.0,
             limits=httpx.Limits(max_keepalive_connections=20, max_connections=50)
         )
     return _persistent_client
@@ -33,9 +33,10 @@ class OpenAIProvider(AIProvider):
         self.model = settings.OPENAI_MODEL
         self.base_url = "https://api.openai.com/v1"
         self.fallback = MockAIProvider()
+        self._key_invalid = False
 
     async def _generate_json(self, prompt: str) -> Dict[str, Any]:
-        if not self.api_key:
+        if not self.api_key or self._key_invalid:
             return {}
         try:
             headers = {
@@ -54,12 +55,16 @@ class OpenAIProvider(AIProvider):
                     ],
                     "response_format": {"type": "json_object"},
                     "temperature": 0.3
-                }
+                },
+                timeout=6.0
             )
             if res.status_code == 200:
                 data = res.json()
                 content = data["choices"][0]["message"]["content"]
                 return json.loads(content)
+            elif res.status_code in (401, 403):
+                print(f"[OpenAIProvider] API key invalid/expired (status {res.status_code}). Enabling instant fallback.")
+                self._key_invalid = True
         except Exception as e:
             print(f"OpenAI completion failed ({e}), falling back to mock provider.")
         return {}

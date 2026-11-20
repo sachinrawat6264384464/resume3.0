@@ -67,6 +67,7 @@ export default function InterviewRoomPage() {
   const isRecordingRef = useRef(false);
   const candidateVideoRef = useRef<HTMLVideoElement | null>(null);
   const baseTranscriptRef = useRef("");
+  const sessionFinalTranscriptRef = useRef("");
 
   // 13 Mins Live Countdown Timer (780 Seconds)
   const [timeLeftSeconds, setTimeLeftSeconds] = useState(780); // 13 Mins
@@ -867,8 +868,9 @@ export default function InterviewRoomPage() {
     setLastMatchScore(null);
 
     // Save existing transcript as base text so new speech appends seamlessly after pause!
-    const baseText = spokenTranscript.trim() ? spokenTranscript.trim() + " " : "";
+    const baseText = spokenTranscript.trim();
     baseTranscriptRef.current = baseText;
+    sessionFinalTranscriptRef.current = "";
 
     const rec = new QuestionRecorder();
     rec.start(stream);
@@ -894,13 +896,33 @@ export default function InterviewRoomPage() {
         recognition.lang = sttLang; // 'en-US' or 'en-IN' to prevent Devanagari script
         
         recognition.onresult = (event: any) => {
-          let currentSessionText = "";
-          for (let i = 0; i < event.results.length; i++) {
-            currentSessionText += event.results[i][0].transcript + " ";
+          let newlyFinalized = "";
+          let interimText = "";
+          for (let i = event.resultIndex; i < event.results.length; i++) {
+            const result = event.results[i];
+            const text = result[0]?.transcript || "";
+            if (result.isFinal) {
+              newlyFinalized += text + " ";
+            } else {
+              interimText += text;
+            }
           }
-          const fullText = (baseTranscriptRef.current + currentSessionText).trim();
-          if (fullText) {
-            setSpokenTranscript(fullText);
+
+          if (newlyFinalized.trim()) {
+            sessionFinalTranscriptRef.current = [
+              sessionFinalTranscriptRef.current,
+              newlyFinalized.trim()
+            ].filter(Boolean).join(" ").trim();
+          }
+
+          const combined = [
+            baseTranscriptRef.current,
+            sessionFinalTranscriptRef.current,
+            interimText.trim()
+          ].filter(Boolean).join(" ").replace(/\s+/g, " ").trim();
+
+          if (combined) {
+            setSpokenTranscript(combined);
           }
         };
 
@@ -915,6 +937,12 @@ export default function InterviewRoomPage() {
 
         recognition.onend = () => {
           if (isRecordingRef.current) {
+            // Lock in all finalized text into baseTranscriptRef before starting next session
+            baseTranscriptRef.current = [
+              baseTranscriptRef.current,
+              sessionFinalTranscriptRef.current
+            ].filter(Boolean).join(" ").replace(/\s+/g, " ").trim();
+            sessionFinalTranscriptRef.current = "";
             try {
               recognition.start();
             } catch (e) {}
@@ -1142,11 +1170,14 @@ export default function InterviewRoomPage() {
       } catch (e) {}
     }
 
-    try {
-      if (recorderRef.current) {
-        await recorderRef.current.stop();
-      }
+    // Safely stop background media recorder without blocking UI thread
+    if (recorderRef.current) {
+      try {
+        recorderRef.current.stop().catch(() => {});
+      } catch (e) {}
+    }
 
+    try {
       const finalTranscriptText = (manualText || spokenTranscript).trim();
       setSubmittedAnswerText(finalTranscriptText);
 
@@ -1212,6 +1243,7 @@ export default function InterviewRoomPage() {
     setSpokenTranscript("");
     setSubmittedAnswerText("");
     baseTranscriptRef.current = "";
+    sessionFinalTranscriptRef.current = "";
     setQuestionSeconds(0);
     setIsRecording(false);
     isRecordingRef.current = false;
@@ -1235,6 +1267,8 @@ export default function InterviewRoomPage() {
         setLastMatchScore(null);
         setSpokenTranscript("");
         setSubmittedAnswerText("");
+        baseTranscriptRef.current = "";
+        sessionFinalTranscriptRef.current = "";
       } else {
         // Final Question Completed -> Calculate Stage Average & Gatekeeper Rules!
         const allScores = accumulatedScores.length > 0 ? accumulatedScores : [0];
@@ -1553,7 +1587,12 @@ export default function InterviewRoomPage() {
                 {/* Live Speech-to-Text Area */}
                 <textarea
                   value={spokenTranscript}
-                  onChange={(e) => setSpokenTranscript(e.target.value)}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setSpokenTranscript(val);
+                    baseTranscriptRef.current = val;
+                    sessionFinalTranscriptRef.current = "";
+                  }}
                   placeholder="Speak your answer or type it here..."
                   className="w-full min-h-[140px] text-slate-800 dark:text-slate-100 placeholder-slate-400 text-base font-normal resize-none focus:outline-none bg-transparent leading-relaxed"
                   disabled={Boolean(lastEvalResult) || isProcessing}
@@ -1584,8 +1623,20 @@ export default function InterviewRoomPage() {
                     <button
                       onClick={() => {
                         if (isRecording) {
-                          if (speechRecognitionRef.current) speechRecognitionRef.current.stop();
+                          if (speechRecognitionRef.current) {
+                            try {
+                              speechRecognitionRef.current.onend = null;
+                              speechRecognitionRef.current.onerror = null;
+                              speechRecognitionRef.current.stop();
+                            } catch (e) {}
+                          }
+                          isRecordingRef.current = false;
                           setIsRecording(false);
+                          baseTranscriptRef.current = [
+                            baseTranscriptRef.current,
+                            sessionFinalTranscriptRef.current
+                          ].filter(Boolean).join(" ").replace(/\s+/g, " ").trim();
+                          sessionFinalTranscriptRef.current = "";
                         }
                       }}
                       disabled={!isRecording}
