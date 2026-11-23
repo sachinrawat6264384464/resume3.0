@@ -20,8 +20,6 @@ interface CurriculumBadge {
 }
 
 const MODULE_BADGES: CurriculumBadge[] = [
-  { id: "mod-01", modNum: "STAGE 01", title: "PROFILE & PITCH", sub: "Stage 1 Master", variant: "teal" },
-  { id: "mod-03", modNum: "STAGE 03", title: "CLOUD INFRA", sub: "Stage 3 Master", variant: "blue" },
   { id: "mod-1", modNum: "STAGE 05", title: "LINUX & CLOUD", sub: "Stage 5 Master", variant: "amber" },
   { id: "mod-2", modNum: "STAGE 10", title: "AWS & CI/CD", sub: "Stage 10 Master", variant: "purple" },
   { id: "mod-3", modNum: "STAGE 15", title: "KUBERNETES", sub: "Stage 15 Master", variant: "purple" },
@@ -214,7 +212,14 @@ export default function LeaderboardPage() {
           if (typeof window !== "undefined") {
             try {
               const rawLocal = localStorage.getItem("candidate_claimed_badges");
-              if (rawLocal) localClaimed = JSON.parse(rawLocal);
+              if (rawLocal) {
+                const parsed = JSON.parse(rawLocal);
+                if (Array.isArray(parsed)) {
+                  localClaimed = parsed.filter(t => 
+                    MODULE_BADGES.some(b => typeof t === "string" && (t.includes(b.modNum) || t.includes(b.title)))
+                  );
+                }
+              }
             } catch (e) {}
           }
           const rawMyBadges = Array.from(new Set([

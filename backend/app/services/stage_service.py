@@ -109,8 +109,6 @@ class StageService:
 
                     badges = list(cand.badges_json or [])
                     badge_map = {
-                        1: "STAGE 01: PROFILE & PITCH FOUNDATIONS",
-                        3: "STAGE 03: CLOUD INFRASTRUCTURE",
                         5: "STAGE 05: LINUX & CLOUD FOUNDATIONS",
                         10: "STAGE 10: AWS & CI/CD AUTOMATION",
                         15: "STAGE 15: KUBERNETES & TERRAFORM",

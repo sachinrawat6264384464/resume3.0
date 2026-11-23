@@ -4,9 +4,9 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { 
   TrendingUp, Award, Clock, ArrowRight, CheckCircle2, 
-  AlertTriangle, ShieldCheck, Flame, Star, Zap, 
+  AlertTriangle, Flame, Star, Zap, 
   Layers, ChevronRight, Loader2, Cpu, Mic, FileCheck, Sparkles, X, Linkedin,
-  MessageSquare, ThumbsUp, UserCheck, Activity, BarChart3, CheckCheck
+  MessageSquare, ThumbsUp, UserCheck, CheckCheck
 } from "lucide-react";
 import { apiFetch } from "@/lib/api";
 
@@ -23,26 +23,6 @@ interface HexBadgeItem {
 }
 
 const HEX_BADGES_LIST: HexBadgeItem[] = [
-  { 
-    id: "mod-01", 
-    modNum: "STAGE 01", 
-    title: "PROFILE & PITCH FOUNDATIONS", 
-    sub: "Stage 1 Master", 
-    variant: "teal", 
-    desc: "Unlocked automatically upon completing Stage 1 self-introduction and opening technical pitch.", 
-    reqStages: 1,
-    unlocked: false 
-  },
-  { 
-    id: "mod-03", 
-    modNum: "STAGE 03", 
-    title: "CLOUD INFRASTRUCTURE", 
-    sub: "Stage 3 Master", 
-    variant: "blue", 
-    desc: "Unlocked automatically upon passing Stage 3 Cloud Infrastructure Engineer assessment.", 
-    reqStages: 3,
-    unlocked: false 
-  },
   { 
     id: "mod-1", 
     modNum: "STAGE 05", 
@@ -61,6 +41,16 @@ const HEX_BADGES_LIST: HexBadgeItem[] = [
     variant: "purple", 
     desc: "Unlocked automatically upon completing Stage 10 AWS & CI/CD automation curriculum.", 
     reqStages: 10,
+    unlocked: false 
+  },
+  { 
+    id: "mod-3", 
+    modNum: "STAGE 15", 
+    title: "KUBERNETES & TERRAFORM", 
+    sub: "Stage 15 Master", 
+    variant: "purple", 
+    desc: "Unlocked automatically upon completing Stage 15 Kubernetes & Terraform orchestration track.", 
+    reqStages: 15,
     unlocked: false 
   },
   { 
@@ -182,7 +172,15 @@ export default function CandidatePerformancePage() {
 
           try {
             const rawClaimed = localStorage.getItem("candidate_claimed_badges");
-            if (rawClaimed) localClaimedBadges = JSON.parse(rawClaimed);
+            if (rawClaimed) {
+              const parsed = JSON.parse(rawClaimed);
+              if (Array.isArray(parsed)) {
+                localClaimedBadges = parsed.filter(t => 
+                  HEX_BADGES_LIST.some(b => typeof t === "string" && (t.includes(b.modNum) || t.includes(b.title)))
+                );
+                localStorage.setItem("candidate_claimed_badges", JSON.stringify(localClaimedBadges));
+              }
+            }
           } catch (e) {}
         }
 
@@ -337,136 +335,11 @@ export default function CandidatePerformancePage() {
     ? Math.round(scoreValues.reduce((a, b) => a + b, 0) / scoreValues.length)
     : (perfData?.readiness_score || 94);
 
-  const readiness = perfData?.readiness_score && perfData.readiness_score > 0
-    ? Math.max(perfData.readiness_score, avgStageScore)
-    : avgStageScore;
-
-  const atsScore = perfData?.resume_ats_score || 85;
-
-  const pillars = perfData?.pillars || {
-    technical_accuracy: readiness,
-    concept_coverage: Math.min(100, Math.max(70, readiness - 2)),
-    reasoning_quality: Math.min(100, Math.max(70, readiness - 4)),
-    practical_knowledge: Math.min(100, Math.max(70, readiness - 1)),
-    communication_clarity: Math.min(100, Math.max(70, readiness - 3))
-  };
-
   const unlockedCount = badgesList.filter((b) => b.unlocked).length;
-  const progressPercent = Math.min(100, Math.round((completedCount / 30) * 100));
 
   return (
     <div className="flex flex-col gap-8 w-full pb-16 text-slate-900 dark:text-slate-100 font-sans">
       
-      {/* 📊 REAL-TIME PERFORMANCE STATS & READINESS MATRIX */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-        
-        {/* Readiness Benchmark Card */}
-        <div className="p-6 rounded-[28px] bg-slate-900 text-white border border-slate-800 shadow-xl flex flex-col justify-between gap-4">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-mono font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
-              <Activity className="w-4 h-4 text-[#FF6B00]" />
-              Readiness Benchmark
-            </span>
-            <span className="px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 text-[10px] font-mono font-black">
-              LIVE DB SYNC
-            </span>
-          </div>
-
-          <div className="flex items-baseline gap-3 my-1">
-            <span className="text-4xl sm:text-5xl font-black font-mono text-[#FF6B00]">
-              {readiness}%
-            </span>
-            <div className="flex flex-col">
-              <span className="text-xs font-bold text-slate-200">
-                {readiness >= 90 ? "Top 5% Placement Ready" : readiness >= 80 ? "Placement Ready" : "In Evaluation"}
-              </span>
-              <span className="text-[11px] text-[#FF6B00] font-mono font-bold">
-                {perfData?.salary_band || "₹25–40 LPA Band"}
-              </span>
-            </div>
-          </div>
-
-          <div className="w-full bg-slate-800 h-2 rounded-full overflow-hidden">
-            <div 
-              className="bg-gradient-to-r from-[#FF6B00] to-amber-400 h-full rounded-full transition-all duration-700"
-              style={{ width: `${Math.min(100, readiness)}%` }}
-            />
-          </div>
-        </div>
-
-        {/* Curriculum Progression Card */}
-        <div className="p-6 rounded-[28px] bg-slate-900 text-white border border-slate-800 shadow-xl flex flex-col justify-between gap-4">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-mono font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
-              <BarChart3 className="w-4 h-4 text-[#FF6B00]" />
-              Curriculum Progression
-            </span>
-            <span className="text-[11px] font-mono font-bold text-slate-300">
-              {progressPercent}% Complete
-            </span>
-          </div>
-
-          <div className="flex items-baseline gap-3 my-1">
-            <span className="text-4xl sm:text-5xl font-black font-mono text-emerald-400">
-              {completedCount}
-            </span>
-            <div className="flex flex-col">
-              <span className="text-xs font-bold text-slate-200">
-                / 30 Stages Completed
-              </span>
-              <span className="text-[11px] text-slate-400 font-mono font-bold">
-                {avgStageScore}% Avg Stage Score
-              </span>
-            </div>
-          </div>
-
-          <div className="w-full bg-slate-800 h-2 rounded-full overflow-hidden">
-            <div 
-              className="bg-gradient-to-r from-emerald-500 to-teal-400 h-full rounded-full transition-all duration-700"
-              style={{ width: `${Math.max(5, progressPercent)}%` }}
-            />
-          </div>
-        </div>
-
-        {/* 5 Core Skill Pillars Card */}
-        <div className="p-6 rounded-[28px] bg-slate-900 text-white border border-slate-800 shadow-xl flex flex-col justify-between gap-2.5">
-          <div className="flex items-center justify-between mb-1">
-            <span className="text-xs font-mono font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
-              <ShieldCheck className="w-4 h-4 text-[#FF6B00]" />
-              5 Core Skill Pillars
-            </span>
-            <span className="text-[10px] font-mono text-slate-400">5-Pillar Rubric</span>
-          </div>
-
-          <div className="flex flex-col gap-1.5 text-[11px]">
-            <div className="flex justify-between items-center text-slate-300 font-medium">
-              <span>Technical Accuracy</span>
-              <span className="font-mono font-bold text-white">{pillars.technical_accuracy}%</span>
-            </div>
-            <div className="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
-              <div className="bg-[#FF6B00] h-full rounded-full" style={{ width: `${pillars.technical_accuracy}%` }} />
-            </div>
-
-            <div className="flex justify-between items-center text-slate-300 font-medium mt-0.5">
-              <span>System & Cloud Architecture</span>
-              <span className="font-mono font-bold text-white">{pillars.practical_knowledge}%</span>
-            </div>
-            <div className="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
-              <div className="bg-amber-400 h-full rounded-full" style={{ width: `${pillars.practical_knowledge}%` }} />
-            </div>
-
-            <div className="flex justify-between items-center text-slate-300 font-medium mt-0.5">
-              <span>Incident Response & Troubleshooting</span>
-              <span className="font-mono font-bold text-white">{pillars.reasoning_quality}%</span>
-            </div>
-            <div className="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
-              <div className="bg-emerald-400 h-full rounded-full" style={{ width: `${pillars.reasoning_quality}%` }} />
-            </div>
-          </div>
-        </div>
-
-      </div>
-
       {/* 💬 LIVE SESSION & ADMIN EVALUATION FEEDBACK SECTION */}
       <div className="p-6 sm:p-8 rounded-[32px] bg-white dark:bg-slate-900 border-2 border-emerald-500/40 shadow-2xl flex flex-col gap-6 relative overflow-hidden">
         <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/5 rounded-full blur-3xl pointer-events-none" />
@@ -574,7 +447,7 @@ export default function CandidatePerformancePage() {
               </h3>
             </div>
             <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
-              Badges unlock automatically as you pass milestone stages and are showcased live on your Leaderboard profile!
+              Badges unlock automatically as you complete Stage 5, Stage 10, Stage 15, Stage 20 & Stage 30 of your curriculum!
             </p>
           </div>
 
@@ -584,7 +457,7 @@ export default function CandidatePerformancePage() {
         </div>
 
         {/* 3D Hexagon Badges Grid */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-6 items-center justify-items-center py-2">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-6 items-center justify-items-center py-2">
           {badgesList.map((badge) => (
             <div key={badge.id} className="flex flex-col items-center gap-2 text-center">
               <HexagonBadge badge={badge} onClick={() => handleOpenBadgeModal(badge)} />
