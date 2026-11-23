@@ -28,7 +28,15 @@ export async function apiFetch<T = any>(
   endpoint: string,
   options: RequestInit = {}
 ): Promise<T> {
-  const token = typeof window !== "undefined" ? localStorage.getItem("auth_token") : null;
+  let token: string | null = null;
+  if (typeof window !== "undefined") {
+    const isAdminContext = window.location.pathname.startsWith("/admin") || endpoint.startsWith("/admin");
+    if (isAdminContext) {
+      token = localStorage.getItem("admin_auth_token") || localStorage.getItem("auth_token");
+    } else {
+      token = localStorage.getItem("auth_token") || localStorage.getItem("candidate_auth_token");
+    }
+  }
 
   const headers: Record<string, string> = {
     "Cache-Control": "no-cache, no-store, must-revalidate",

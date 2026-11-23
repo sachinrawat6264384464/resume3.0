@@ -18,17 +18,26 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const getIsAdminUser = () => {
     if (process.env.NEXT_PUBLIC_IS_ADMIN_PORTAL === "true") return true;
     let currentUser = user;
-    if (!currentUser && typeof window !== "undefined") {
+    if (typeof window !== "undefined") {
       try {
-        const stored = localStorage.getItem("auth_user");
-        if (stored) currentUser = JSON.parse(stored);
+        const storedAdmin = localStorage.getItem("admin_auth_user");
+        if (storedAdmin) {
+          currentUser = JSON.parse(storedAdmin);
+        } else {
+          const stored = localStorage.getItem("auth_user");
+          if (stored) {
+            const parsed = JSON.parse(stored);
+            if (parsed.role === "ADMIN" || parsed.role === "SUPER_ADMIN") currentUser = parsed;
+          }
+        }
       } catch {}
     }
-    return (
+    return Boolean(
       currentUser?.role === "ADMIN" ||
       currentUser?.role === "SUPER_ADMIN" ||
       (currentUser as any)?.is_admin === true ||
-      currentUser?.email === "admin@cloudops.internal"
+      currentUser?.email === "admin@cloudops.internal" ||
+      currentUser?.email === "admin@cloudops.ai"
     );
   };
 

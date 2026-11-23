@@ -79,12 +79,12 @@ export function Sidebar({ isOpenMobile = false, onCloseMobile }: SidebarProps) {
   const handleLogout = () => {
     logout();
     onCloseMobile?.();
-    router.push("/login");
+    router.push(isAdminMode ? "/admin/login" : "/login");
   };
 
   const isSuperAdmin = user?.role === "SUPER_ADMIN" || user?.role === "ADMIN" || user?.email === "admin@cloudops.internal";
   const isStaffOrAdmin = isSuperAdmin || (Boolean(user?.role) && user?.role !== "CANDIDATE") || (user as any)?.is_admin === true;
-  const isAdminMode = isStaffOrAdmin && (pathname.startsWith("/admin") || process.env.NEXT_PUBLIC_IS_ADMIN_PORTAL === "true" || user?.role !== "CANDIDATE");
+  const isAdminMode = isStaffOrAdmin && (pathname.startsWith("/admin") || process.env.NEXT_PUBLIC_IS_ADMIN_PORTAL === "true");
 
   const [customAllowedServices, setCustomAllowedServices] = useState<string[] | null>(null);
 
@@ -305,12 +305,12 @@ export function Sidebar({ isOpenMobile = false, onCloseMobile }: SidebarProps) {
                   {displayName}
                 </span>
                 <span className="text-[10px] font-medium text-slate-500 truncate">
-                  {(user.role === "ADMIN" || isAdminMode) ? "Administrator" : (dbUser?.target_role || "Cloud Engineer")}
+                  {isAdminMode ? (user.role === "SUPER_ADMIN" ? "Super Administrator" : "Administrator") : (dbUser?.target_role || "Cloud Engineer")}
                 </span>
               </div>
             </div>
 
-            {(user.role === "ADMIN" || isAdminMode) ? (
+            {isAdminMode ? (
               <div className="flex items-center gap-1.5 pt-1.5 border-t border-slate-200/60 dark:border-slate-800">
                 <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shrink-0" />
                 <span className="text-[10px] font-black text-slate-700 dark:text-slate-300 tracking-tight">

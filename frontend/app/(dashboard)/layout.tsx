@@ -16,9 +16,15 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   useEffect(() => {
     setMounted(true);
-    // Restore session from localStorage if present
-    const storedToken = localStorage.getItem("auth_token");
-    const storedUser = localStorage.getItem("auth_user");
+    // Restore session role-aware from localStorage
+    const isAdmin = pathname.startsWith("/admin");
+    const storedToken = isAdmin 
+      ? (localStorage.getItem("admin_auth_token") || localStorage.getItem("auth_token"))
+      : localStorage.getItem("auth_token");
+    const storedUser = isAdmin
+      ? (localStorage.getItem("admin_auth_user") || localStorage.getItem("auth_user"))
+      : localStorage.getItem("auth_user");
+
     if (storedToken && storedUser && storedUser.trim() && storedUser !== "undefined") {
       try {
         const parsed = JSON.parse(storedUser);
@@ -27,10 +33,14 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         }
       } catch (err) {
         console.warn("Corrupt auth_user in localStorage, clearing auth cache:", err);
-        localStorage.removeItem("auth_user");
+        if (isAdmin) {
+          localStorage.removeItem("admin_auth_user");
+        } else {
+          localStorage.removeItem("auth_user");
+        }
       }
     }
-  }, [setAuth]);
+  }, [pathname, setAuth]);
 
   const isAdminRoute = pathname.startsWith("/admin");
 
@@ -38,24 +48,34 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const checkIsAdmin = () => {
     if (process.env.NEXT_PUBLIC_IS_ADMIN_PORTAL === "true") return true;
     let currentUser = user;
-    if (!currentUser && mounted && typeof window !== "undefined") {
+    if (mounted && typeof window !== "undefined") {
       try {
-        const stored = localStorage.getItem("auth_user");
-        if (stored) currentUser = JSON.parse(stored);
+        const storedAdmin = localStorage.getItem("admin_auth_user");
+        if (storedAdmin) {
+          currentUser = JSON.parse(storedAdmin);
+        } else {
+          const stored = localStorage.getItem("auth_user");
+          if (stored) {
+            const parsed = JSON.parse(stored);
+            if (parsed.role === "ADMIN" || parsed.role === "SUPER_ADMIN") currentUser = parsed;
+          }
+        }
       } catch {}
     }
     return Boolean(
       currentUser?.role === "ADMIN" ||
       currentUser?.role === "SUPER_ADMIN" ||
       (currentUser as any)?.is_admin === true ||
-      currentUser?.email === "admin@cloudops.internal"
+      currentUser?.email === "admin@cloudops.internal" ||
+      currentUser?.email === "admin@cloudops.ai"
     );
   };
 
   const isAdminUser = checkIsAdmin();
 
   const isCandidateAuthenticated = Boolean(
-    user?.id || (typeof window !== "undefined" && localStorage.getItem("auth_token"))
+    (user?.id && user?.role === "CANDIDATE") || 
+    (typeof window !== "undefined" && localStorage.getItem("auth_token") && localStorage.getItem("auth_user"))
   );
 
   useEffect(() => {
@@ -65,9 +85,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         router.replace("/admin/login");
       }
     } else {
-      const storedToken = localStorage.getItem("auth_token");
-      const storedUser = localStorage.getItem("auth_user");
-      if (!storedToken || !storedUser) {
+      const storedCandToken = localStorage.getItem("auth_token");
+      const storedCandUser = localStorage.getItem("auth_user");
+      if (!storedCandToken || !storedCandUser) {
+        if (isAdminUser) {
+          router.replace("/admin/templates");
+          return;
+        }
         router.replace("/login");
       }
     }

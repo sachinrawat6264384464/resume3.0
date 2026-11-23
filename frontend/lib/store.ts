@@ -13,12 +13,43 @@ interface AuthState {
 const getInitialAuth = (): { user: User | null; token: string | null; isAuthenticated: boolean } => {
   if (typeof window !== "undefined") {
     try {
+      const pathname = window.location.pathname;
+      const isAdminRoute = pathname.startsWith("/admin");
+
+      // On admin routes, prioritize dedicated admin session tokens
+      if (isAdminRoute) {
+        const adminToken = localStorage.getItem("admin_auth_token");
+        const adminUser = localStorage.getItem("admin_auth_user");
+        if (adminToken && adminUser && adminUser.trim() && adminUser !== "undefined") {
+          const parsed = JSON.parse(adminUser);
+          if (parsed && typeof parsed === "object" && parsed.id) {
+            return { user: parsed, token: adminToken, isAuthenticated: true };
+          }
+        }
+      }
+
+      // Candidate session tokens (used for /dashboard, /interviews, etc.)
       const storedToken = localStorage.getItem("auth_token");
       const storedUser = localStorage.getItem("auth_user");
       if (storedToken && storedUser && storedUser.trim() && storedUser !== "undefined") {
         const parsed = JSON.parse(storedUser);
         if (parsed && typeof parsed === "object" && parsed.id) {
-          return { user: parsed, token: storedToken, isAuthenticated: true };
+          // If on admin route, only accept if user is an admin
+          if (!isAdminRoute || parsed.role === "ADMIN" || parsed.role === "SUPER_ADMIN") {
+            return { user: parsed, token: storedToken, isAuthenticated: true };
+          }
+        }
+      }
+
+      // Fallback for admin if accessed with dedicated token
+      if (isAdminRoute) {
+        const adminTokenFallback = localStorage.getItem("admin_auth_token");
+        const adminUserFallback = localStorage.getItem("admin_auth_user");
+        if (adminTokenFallback && adminUserFallback) {
+          const parsed = JSON.parse(adminUserFallback);
+          if (parsed && typeof parsed === "object" && parsed.id) {
+            return { user: parsed, token: adminTokenFallback, isAuthenticated: true };
+          }
         }
       }
     } catch (e) {
@@ -36,18 +67,18 @@ export const useAuthStore = create<AuthState>((set) => ({
   isAuthenticated: initialAuth.isAuthenticated,
   setAuth: (user, token) => {
     if (typeof window !== "undefined") {
-      try {
-        const prevUserRaw = localStorage.getItem("auth_user");
-        if (prevUserRaw) {
-          const prevUser = JSON.parse(prevUserRaw);
-          if (prevUser.id && prevUser.id !== user.id) {
-            localStorage.clear();
-            sessionStorage.clear();
-          }
-        }
-      } catch (e) {}
-      localStorage.setItem("auth_token", token);
-      localStorage.setItem("auth_user", JSON.stringify(user));
+      const isAdmin = 
+        user.role === "ADMIN" || 
+        user.role === "SUPER_ADMIN" || 
+        window.location.pathname.startsWith("/admin");
+
+      if (isAdmin) {
+        localStorage.setItem("admin_auth_token", token);
+        localStorage.setItem("admin_auth_user", JSON.stringify(user));
+      } else {
+        localStorage.setItem("auth_token", token);
+        localStorage.setItem("auth_user", JSON.stringify(user));
+      }
     }
     set({ user, token, isAuthenticated: true });
   },
@@ -56,17 +87,28 @@ export const useAuthStore = create<AuthState>((set) => ({
       if (!state.user) return state;
       const newUser = { ...state.user, ...updatedFields };
       if (typeof window !== "undefined") {
-        localStorage.setItem("auth_user", JSON.stringify(newUser));
+        const isAdmin = 
+          newUser.role === "ADMIN" || 
+          newUser.role === "SUPER_ADMIN" || 
+          window.location.pathname.startsWith("/admin");
+        if (isAdmin) {
+          localStorage.setItem("admin_auth_user", JSON.stringify(newUser));
+        } else {
+          localStorage.setItem("auth_user", JSON.stringify(newUser));
+        }
       }
       return { user: newUser };
     });
   },
   logout: () => {
     if (typeof window !== "undefined") {
-      try {
-        localStorage.clear();
-        sessionStorage.clear();
-      } catch (e) {
+      const isAdmin = window.location.pathname.startsWith("/admin");
+      if (isAdmin) {
+        localStorage.removeItem("admin_auth_token");
+        localStorage.removeItem("admin_auth_user");
+        sessionStorage.removeItem("admin_cache_templates");
+        sessionStorage.removeItem("admin_cache_metrics");
+      } else {
         localStorage.removeItem("auth_token");
         localStorage.removeItem("auth_user");
         localStorage.removeItem("active_interview_session");

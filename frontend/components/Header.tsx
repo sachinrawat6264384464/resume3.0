@@ -110,7 +110,7 @@ export function Header({ onToggleMobileSidebar }: HeaderProps) {
         // Render cold-start — ignore, auth store name will be used
       }
     };
-    if (isAuthenticated) {
+    if (isAuthenticated && !isAdminRoute) {
       fetchProfile();
       fetchNotifications();
     }
@@ -160,12 +160,25 @@ export function Header({ onToggleMobileSidebar }: HeaderProps) {
 
   const handleLogout = () => {
     logout();
-    router.push("/login");
+    router.push(isAdminRoute ? "/admin/login" : "/login");
   };
+
+  const isSuperAdminOrAdmin = Boolean(
+    mounted && (
+      isAdminRoute || 
+      user?.role === "ADMIN" || 
+      user?.role === "SUPER_ADMIN" || 
+      user?.email === "admin@cloudops.internal" || 
+      user?.email === "admin@cloudops.ai"
+    )
+  );
 
   // Smart Candidate Name Resolution: Never stuck on Demo Candidate or raw email digits
   const getCandidateName = () => {
-    if (!mounted) return "Candidate User";
+    if (!mounted) return isSuperAdminOrAdmin ? "Super Admin" : "Candidate User";
+    if (isSuperAdminOrAdmin) {
+      return user?.full_name || "Super Admin";
+    }
     const uName = user?.full_name;
     const pName = candProfile?.user?.full_name;
     const email = user?.email;
@@ -195,11 +208,15 @@ export function Header({ onToggleMobileSidebar }: HeaderProps) {
   const isDummyEmail = !rawEmail || rawEmail.endsWith("@cloudops.internal") || rawEmail.includes(".internal") || rawEmail.includes("example.com");
   const isDummyPhone = !rawPhone || rawPhone.includes("123456789") || rawPhone.length < 10;
 
-  const displayEmailOrPhone = isDummyEmail 
-    ? (rawPhone ? `📱 ${rawPhone}` : "📱 Mobile Candidate")
-    : rawEmail;
+  const displayEmailOrPhone = isSuperAdminOrAdmin 
+    ? (user?.email || "admin@cloudops.ai")
+    : (isDummyEmail 
+        ? (rawPhone ? `📱 ${rawPhone}` : "📱 Mobile Candidate")
+        : rawEmail);
 
-  const candidateRole = (mounted && user?.role === "ADMIN") ? "Administrator" : ((mounted && candProfile?.target_role) || "Cloud Engineer");
+  const candidateRole = isSuperAdminOrAdmin 
+    ? (user?.role === "SUPER_ADMIN" ? "Super Administrator" : "Administrator") 
+    : ((mounted && candProfile?.target_role) || "Cloud Engineer");
 
   // Handle Send Email Link OTP
   const handleSendEmailOTP = async (e: React.FormEvent) => {
