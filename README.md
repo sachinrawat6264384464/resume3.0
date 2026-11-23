@@ -68,7 +68,7 @@ Engineered with a high-performance **Next.js 14 frontend microservice** deployed
 
 | Role | Identifier / Email | Password / OTP | Portal |
 |---|---|---|---|
-| **🛡️ Administrator** | `admin@cloudops.internal` | `Admin@12345` | [Admin Portal](https://resume3-admin.vercel.app) |
+| **🛡️ Administrator** | `admin@cloudops.internal` | `AdminPass@123` | [Admin Portal](https://resume3-admin.vercel.app) |
 | **🎓 Candidate User** | `+91 6264384464` | WhatsApp OTP / `622601` | [Candidate Portal](https://resume3-0-mu.vercel.app/login) |
 | **🎓 Demo Candidate** | `sachin@cloudops.internal` | `Sachin@12345` | [Candidate Portal](https://resume3-0-mu.vercel.app/login) |
 
