@@ -1364,110 +1364,54 @@ export default function InterviewRoomPage() {
   };
 
   return (
-    <div className="flex flex-col gap-6 max-w-6xl mx-auto w-full pb-16 text-slate-900 dark:text-slate-100 font-sans relative">
+    <div className="h-screen w-full max-w-[1550px] mx-auto flex flex-col justify-between p-2.5 sm:p-3.5 gap-2.5 overflow-hidden text-slate-900 dark:text-slate-100 font-sans relative">
       
-      {/* Top Header Bar */}
-      <div className="flex flex-wrap items-center justify-between gap-4 p-4 rounded-[28px] bg-slate-900 text-white border border-slate-800 shadow-2xl">
+      {/* 🚀 UNIFIED COMPACT CHAMBER HEADER BAR (Mode, Stepper, Timer & Drop Out in One Sleek Row) */}
+      <div className="flex flex-wrap items-center justify-between gap-2.5 px-3.5 py-2 rounded-2xl bg-slate-900 text-white border border-slate-800 shadow-xl shrink-0">
         
-        {/* Chamber Mode Indicator */}
-        <div className="flex items-center gap-2.5">
-          <span className="text-xs font-mono font-bold text-slate-400">CHAMBER MODE:</span>
-          <div className="flex items-center px-3 py-1.5 rounded-xl bg-slate-950/80 border border-slate-800 text-xs font-mono font-semibold text-slate-200 gap-2">
+        {/* Left: Mode Pill, Current Q Indicator, and Correct/Wrong Badges */}
+        <div className="flex items-center gap-2 flex-wrap">
+          <div className="flex items-center px-2.5 py-1 rounded-xl bg-slate-950/90 border border-slate-800 text-[11px] font-mono font-semibold text-slate-200 gap-1.5">
             <Database className="w-3.5 h-3.5 text-[#FF6B00]" />
             <span>Real Interview Mode ({dbTotalQCount} Qs)</span>
           </div>
+
+          <span className="px-2.5 py-1 rounded-xl bg-[#FF6B00]/15 text-[#FF6B00] font-mono font-black text-[11px] border border-[#FF6B00]/30">
+            Q{currentQIndex + 1} / {maxQCount}
+          </span>
+
+          <span className="px-2.5 py-1 rounded-xl bg-emerald-950/60 text-emerald-400 font-mono font-bold text-[11px] border border-emerald-500/30 flex items-center gap-1">
+            <CheckCircle2 className="w-3 h-3 text-emerald-400" />
+            <span>Correct: {accumulatedScores.slice(0, maxQCount).filter((s) => s !== undefined && s >= 60.0).length} / {maxQCount}</span>
+          </span>
+
+          <span className="px-2.5 py-1 rounded-xl bg-rose-950/60 text-rose-400 font-mono font-bold text-[11px] border border-rose-500/30 flex items-center gap-1">
+            <XCircle className="w-3 h-3 text-rose-400" />
+            <span>Wrong: {accumulatedScores.slice(0, maxQCount).filter((s) => s !== undefined && s < 60.0).length} / {maxQCount}</span>
+          </span>
         </div>
 
-        {/* Live Timer, Camera Active Badge & Drop Out Button */}
-        <div className="flex items-center gap-3 flex-wrap">
-          {isCameraLive ? (
-            <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-emerald-950/50 text-emerald-400 border border-emerald-500/30 text-xs font-mono font-bold">
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-              <Camera className="w-3.5 h-3.5 text-emerald-400" />
-              <span>LIVE CAMERA ACTIVE</span>
-            </div>
-          ) : (
-            <button
-              onClick={enableCameraStream}
-              className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-amber-950/50 text-amber-400 border border-amber-500/40 text-xs font-mono font-bold hover:bg-amber-950/80 transition-all cursor-pointer"
-              title="Click to Enable / Reconnect Camera Stream"
-            >
-              <CameraOff className="w-3.5 h-3.5 text-amber-400" />
-              <span>CAMERA PAUSED (CLICK TO ENABLE)</span>
-            </button>
-          )}
-
-          <div className={`flex items-center gap-2 px-3 py-1.5 rounded-xl border text-xs font-mono font-bold ${
-            isCameraLive
-              ? "bg-slate-950/80 border-slate-800 text-slate-200"
-              : "bg-amber-950/50 border-amber-500/40 text-amber-400"
-          }`}>
-            <Clock className="w-3.5 h-3.5 text-amber-400" />
-            <span>{isCameraLive ? `Time Remaining: ${formatTimer(timeLeftSeconds)}` : `TIMER PAUSED (${formatTimer(timeLeftSeconds)})`}</span>
-          </div>
-
-          {/* DROP OUT BUTTON */}
-          <button
-            onClick={() => setShowDropOutModal(true)}
-            className="px-3 py-1.5 rounded-xl bg-slate-950/80 hover:bg-rose-950/50 border border-slate-800 hover:border-rose-700/60 text-slate-400 hover:text-rose-400 text-xs font-mono font-bold flex items-center gap-1.5 transition-colors cursor-pointer"
-            title="Abort Interview Session"
-          >
-            <LogOut className="w-3.5 h-3.5" />
-            <span>Drop Out</span>
-          </button>
-        </div>
-      </div>
-
-      {/* 📊 REAL-TIME 1-TO-10 QUESTION ACCURACY & COUNTER TRACKER */}
-      <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-md flex flex-col md:flex-row items-center justify-between gap-4 font-sans">
-        
-        {/* Left: Live Accuracy Badges */}
-        <div className="flex flex-wrap items-center gap-3">
-          <div className="flex items-center gap-2">
-            <span className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider">
-              Assessment Stepper:
-            </span>
-            <span className="px-3 py-1 rounded-xl bg-[#FF6B00]/10 text-[#FF6B00] font-mono font-bold text-xs border border-[#FF6B00]/30">
-              Q{currentQIndex + 1} / {maxQCount}
-            </span>
-          </div>
-
-          <div className="flex items-center gap-2">
-            {/* Correct Answers Count */}
-            <span className="px-3 py-1 rounded-xl bg-slate-100 dark:bg-slate-800/80 text-emerald-600 dark:text-emerald-400 font-mono font-bold text-xs border border-slate-200 dark:border-slate-700 flex items-center gap-1.5 shadow-sm">
-              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-              <span>Correct: {accumulatedScores.slice(0, maxQCount).filter((s) => s !== undefined && s >= 60.0).length} / {maxQCount}</span>
-            </span>
-
-            {/* Incorrect Answers Count */}
-            <span className="px-3 py-1 rounded-xl bg-slate-100 dark:bg-slate-800/80 text-rose-600 dark:text-rose-400 font-mono font-bold text-xs border border-slate-200 dark:border-slate-700 flex items-center gap-1.5 shadow-sm">
-              <XCircle className="w-3.5 h-3.5 text-rose-600 dark:text-rose-400" />
-              <span>Wrong: {accumulatedScores.slice(0, maxQCount).filter((s) => s !== undefined && s < 60.0).length} / {maxQCount}</span>
-            </span>
-          </div>
-        </div>
-
-        {/* Right: 1-to-10 Stepper Dots / Pills Bar */}
-        <div className="flex items-center gap-1.5 flex-wrap">
+        {/* Center: Assessment Stepper Numbers / Dots */}
+        <div className="flex items-center gap-1.5">
           {Array.from({ length: maxQCount }).map((_, idx) => {
             const isCurrent = idx === currentQIndex;
             const score = accumulatedScores[idx];
             const isAttempted = score !== undefined;
             const isCorrect = isAttempted && score >= 60.0;
 
-            let badgeBg = "bg-slate-100 dark:bg-slate-800 text-slate-400 border-slate-200 dark:border-slate-700";
+            let badgeBg = "bg-slate-950/80 text-slate-500 border-slate-800";
             if (isCurrent) {
-              badgeBg = "bg-[#FF6B00] text-white border-[#FF6B00] shadow-md shadow-[#FF6B00]/30 ring-2 ring-[#FF6B00]/40";
+              badgeBg = "bg-[#FF6B00] text-slate-950 font-black border-[#FF6B00] shadow-sm shadow-[#FF6B00]/40 ring-2 ring-[#FF6B00]/30";
             } else if (isAttempted && isCorrect) {
-              badgeBg = "bg-emerald-500 text-white border-emerald-400 shadow-sm";
+              badgeBg = "bg-emerald-500 text-white border-emerald-400 shadow-xs";
             } else if (isAttempted && !isCorrect) {
-              badgeBg = "bg-rose-500 text-white border-rose-400 shadow-sm";
+              badgeBg = "bg-rose-500 text-white border-rose-400 shadow-xs";
             }
 
             return (
               <div
                 key={idx}
-                className={`w-8 h-8 rounded-xl border text-xs font-mono font-black flex items-center justify-center transition-all ${badgeBg}`}
+                className={`w-7 h-7 rounded-lg border text-xs font-mono font-black flex items-center justify-center transition-all ${badgeBg}`}
                 title={`Question ${idx + 1}: ${isAttempted ? (isCorrect ? `Passed (${score}%)` : `Needs Improvement (${score}%)`) : (isCurrent ? "Active Question" : "Pending")}`}
               >
                 {isAttempted ? (isCorrect ? "✓" : "✕") : idx + 1}
@@ -1475,8 +1419,42 @@ export default function InterviewRoomPage() {
             );
           })}
         </div>
-      </div>
 
+        {/* Right: Live Camera Active, Time Remaining & Drop Out Button */}
+        <div className="flex items-center gap-2 flex-wrap">
+          {isCameraLive ? (
+            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-emerald-950/50 text-emerald-400 border border-emerald-500/30 text-[11px] font-mono font-bold">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+              <Camera className="w-3.5 h-3.5 text-emerald-400" />
+              <span className="hidden sm:inline">LIVE CAMERA ACTIVE</span>
+            </div>
+          ) : (
+            <button
+              onClick={enableCameraStream}
+              className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-amber-950/50 text-amber-400 border border-amber-500/40 text-[11px] font-mono font-bold hover:bg-amber-950/80 transition-all cursor-pointer"
+              title="Click to Enable Camera"
+            >
+              <CameraOff className="w-3.5 h-3.5 text-amber-400" />
+              <span>CAMERA PAUSED</span>
+            </button>
+          )}
+
+          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-slate-950/90 border border-slate-800 text-slate-200 text-[11px] font-mono font-bold">
+            <Clock className="w-3.5 h-3.5 text-amber-400" />
+            <span>{isCameraLive ? `Time Remaining: ${formatTimer(timeLeftSeconds)}` : `TIMER PAUSED (${formatTimer(timeLeftSeconds)})`}</span>
+          </div>
+
+          <button
+            onClick={() => setShowDropOutModal(true)}
+            className="px-3 py-1 rounded-xl bg-slate-950/80 hover:bg-rose-950/50 border border-slate-800 hover:border-rose-700/60 text-slate-400 hover:text-rose-400 text-xs font-mono font-bold flex items-center gap-1.5 transition-colors cursor-pointer"
+            title="Abort Interview Session"
+          >
+            <LogOut className="w-3.5 h-3.5" />
+            <span>Drop Out</span>
+          </button>
+        </div>
+
+      </div>
 
       {/* XP Toast Banner */}
       {xpToast && (
@@ -1486,22 +1464,22 @@ export default function InterviewRoomPage() {
         </div>
       )}
 
-      {/* Main Dual-Panel Layout matching Screenshot 2 */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+      {/* Main Dual-Panel Layout (Flex-1 fits view perfectly without scroll) */}
+      <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-3 sm:gap-4 items-stretch min-h-0 overflow-hidden">
         
         {/* LEFT COLUMN: AI Interviewer Avatar Card + Live Candidate PIP */}
-        <div className="lg:col-span-5 flex flex-col gap-4">
-          <div className="p-8 rounded-[32px] bg-slate-50/90 dark:bg-slate-900/90 border border-slate-200/80 dark:border-slate-800 shadow-sm flex flex-col items-center text-center justify-between relative overflow-hidden min-h-[560px]">
+        <div className="lg:col-span-4 xl:col-span-4 flex flex-col h-full min-h-0 overflow-hidden">
+          <div className="p-4 sm:p-5 rounded-2xl bg-slate-900 border border-slate-800 shadow-xl flex flex-col items-center text-center justify-between relative overflow-hidden h-full min-h-0">
             
-            <div className="flex flex-col items-center gap-4 w-full pt-4">
+            <div className="flex flex-col items-center gap-3 w-full pt-1">
               {/* Avatar Circle */}
               <div className="relative">
-                <div className={`w-48 h-48 sm:w-56 sm:h-56 rounded-full p-1.5 transition-all duration-500 relative ${
+                <div className={`w-32 h-32 sm:w-40 sm:h-40 xl:w-44 xl:h-44 rounded-full p-1 transition-all duration-500 relative ${
                   isSpeaking
                     ? "bg-gradient-to-tr from-purple-600 via-indigo-500 to-blue-500 shadow-2xl shadow-indigo-500/40 ring-4 ring-indigo-400/30"
-                    : "bg-slate-200 dark:bg-slate-800 shadow-lg"
+                    : "bg-slate-800 shadow-lg"
                 }`}>
-                  <div className="w-full h-full rounded-full overflow-hidden bg-slate-950 relative border-4 border-white dark:border-slate-900">
+                  <div className="w-full h-full rounded-full overflow-hidden bg-slate-950 relative border-2 border-slate-800">
                     <img
                       src="/images/ai_avatar_interviewer.jpg"
                       alt="Ravya - AI Interviewer"
@@ -1513,14 +1491,14 @@ export default function InterviewRoomPage() {
 
               {/* Name & Title */}
               <div className="flex flex-col items-center gap-0.5">
-                <h3 className="text-xl font-extrabold text-slate-900 dark:text-white">Ravya</h3>
-                <span className="text-xs font-medium text-slate-500 dark:text-slate-400">AI Interview Coach</span>
+                <h3 className="text-lg font-black text-white">Ravya</h3>
+                <span className="text-xs font-medium text-slate-400">AI Interview Coach</span>
               </div>
 
               {/* Status Pill */}
-              <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-xs">
+              <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-slate-950 border border-slate-800 shadow-xs">
                 <span className={`w-2 h-2 rounded-full ${isSpeaking ? 'bg-purple-500 animate-ping' : 'bg-emerald-500'}`} />
-                <span className="text-xs font-semibold text-slate-700 dark:text-slate-200">
+                <span className="text-xs font-semibold text-slate-300">
                   {isSpeaking ? "Speaking" : "Ready for answer"}
                 </span>
               </div>
@@ -1528,7 +1506,7 @@ export default function InterviewRoomPage() {
               {/* Replay Question Link */}
               <button
                 onClick={playVoice}
-                className="flex items-center gap-1.5 text-xs font-semibold text-slate-600 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors cursor-pointer pt-1"
+                className="flex items-center gap-1.5 text-xs font-semibold text-slate-400 hover:text-indigo-400 transition-colors cursor-pointer"
               >
                 <RefreshCw className="w-3.5 h-3.5" />
                 <span>Replay question</span>
@@ -1536,10 +1514,10 @@ export default function InterviewRoomPage() {
             </div>
 
             {/* Candidate PIP Webcam Box (Bottom Right of Left Card) */}
-            <div className="w-full flex items-end justify-between pt-8 z-10">
-              <span className="text-xs font-medium text-slate-400">Ravya · AI Interviewer •</span>
+            <div className="w-full flex items-end justify-between pt-4 z-10">
+              <span className="text-[11px] font-medium text-slate-500">Ravya · AI Interviewer •</span>
               
-              <div className="w-36 h-28 sm:w-44 sm:h-32 rounded-2xl overflow-hidden border-2 border-white dark:border-slate-800 shadow-xl relative bg-slate-950 group">
+              <div className="w-32 h-24 sm:w-36 sm:h-28 rounded-xl overflow-hidden border-2 border-slate-800 shadow-xl relative bg-slate-950 group">
                 {stream && isCameraActive ? (
                   <video
                     ref={candidateVideoRef}
@@ -1554,7 +1532,7 @@ export default function InterviewRoomPage() {
                     <span className="text-[10px] font-medium">Camera Paused</span>
                   </div>
                 )}
-                <div className="absolute bottom-2 left-2 px-2 py-0.5 rounded-md bg-slate-900/80 backdrop-blur-sm text-[10px] font-semibold text-white flex items-center gap-1">
+                <div className="absolute bottom-1.5 left-1.5 px-1.5 py-0.5 rounded-md bg-slate-900/80 backdrop-blur-sm text-[9px] font-semibold text-white flex items-center gap-1">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
                   <span>You •</span>
                 </div>
@@ -1565,21 +1543,21 @@ export default function InterviewRoomPage() {
         </div>
 
         {/* RIGHT COLUMN: Question Heading & Interactive Answer Controls */}
-        <div className="lg:col-span-7 flex flex-col gap-6">
-          <div className="p-8 rounded-[32px] bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-sm flex flex-col justify-between gap-6 min-h-[560px]">
+        <div className="lg:col-span-8 xl:col-span-8 flex flex-col h-full min-h-0 overflow-hidden">
+          <div className="p-3.5 sm:p-5 rounded-2xl bg-slate-900 border border-slate-800 shadow-xl flex flex-col justify-between gap-2.5 sm:gap-3 h-full min-h-0 overflow-y-auto">
             
             {/* Question Header & Prompt */}
-            <div className="flex flex-col gap-4">
+            <div className="flex flex-col gap-2 shrink-0">
               <div className="flex items-center gap-2">
-                <span className="px-3 py-1 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-mono text-[11px] font-bold uppercase tracking-wider">
+                <span className="px-2.5 py-0.5 rounded-full bg-slate-800 text-slate-300 font-mono text-[10px] font-bold uppercase tracking-wider">
                   ROUND {currentQIndex + 1} · {currentStageCategory}
                 </span>
-                <span className="text-xs font-extrabold text-indigo-600 dark:text-indigo-400 tracking-wider uppercase">
+                <span className="text-xs font-extrabold text-indigo-400 tracking-wider uppercase">
                   {currentStageTitle}
                 </span>
               </div>
 
-              <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white leading-tight tracking-tight">
+              <h2 className="text-base sm:text-lg lg:text-xl font-bold text-white leading-snug tracking-tight">
                 {questionText}
               </h2>
 
@@ -1587,18 +1565,18 @@ export default function InterviewRoomPage() {
               <div className="relative">
                 <button
                   onClick={() => setShowHintModal(!showHintModal)}
-                  className="text-xs font-semibold text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 transition-colors flex items-center gap-1.5 cursor-pointer"
+                  className="text-xs font-semibold text-indigo-400 hover:text-indigo-300 transition-colors flex items-center gap-1.5 cursor-pointer"
                 >
                   <Lightbulb className="w-3.5 h-3.5 text-amber-500" />
                   <span>Need a structure hint?</span>
                 </button>
 
                 {showHintModal && (
-                  <div className="mt-3 p-4 rounded-2xl bg-indigo-50/80 dark:bg-indigo-950/50 border border-indigo-200 dark:border-indigo-800 text-xs text-indigo-900 dark:text-indigo-200 flex flex-col gap-2 animate-fadeIn">
-                    <span className="font-bold flex items-center gap-1.5 text-indigo-700 dark:text-indigo-300">
+                  <div className="mt-2 p-3 rounded-xl bg-indigo-950/60 border border-indigo-800 text-xs text-indigo-200 flex flex-col gap-1.5 animate-fadeIn">
+                    <span className="font-bold flex items-center gap-1.5 text-indigo-300">
                       Recommended Technical Structure:
                     </span>
-                    <ul className="list-disc pl-4 space-y-1 text-slate-700 dark:text-slate-300 font-medium">
+                    <ul className="list-disc pl-4 space-y-1 text-slate-300 font-medium">
                       {currentBenchmark.keywords.map((kw: string, i: number) => (
                         <li key={i}>{kw}</li>
                       ))}
@@ -1609,8 +1587,8 @@ export default function InterviewRoomPage() {
             </div>
 
             {/* Answer Input Panel */}
-            <div className="flex flex-col gap-4">
-              <div className="border border-slate-200 dark:border-slate-800 rounded-2xl bg-white dark:bg-slate-950 p-5 shadow-xs flex flex-col gap-3 focus-within:border-indigo-500 focus-within:ring-2 focus-within:ring-indigo-100 transition-all relative">
+            <div className="flex flex-col gap-2.5 flex-1 min-h-0 justify-end">
+              <div className="border border-slate-800 rounded-2xl bg-slate-950 p-3 sm:p-4 shadow-xs flex flex-col gap-2 focus-within:border-indigo-500 focus-within:ring-2 focus-within:ring-indigo-500/20 transition-all relative">
                 
                 {/* Answer Box Header */}
                 <div className="flex items-center justify-between text-xs text-slate-400 font-medium">
@@ -1630,18 +1608,18 @@ export default function InterviewRoomPage() {
                     sessionFinalTranscriptRef.current = "";
                   }}
                   placeholder="Speak your answer or type it here..."
-                  className="w-full min-h-[140px] text-slate-800 dark:text-slate-100 placeholder-slate-400 text-base font-normal resize-none focus:outline-none bg-transparent leading-relaxed"
+                  className="w-full min-h-[75px] sm:min-h-[95px] max-h-[130px] text-slate-100 placeholder-slate-400 text-sm font-normal resize-none focus:outline-none bg-transparent leading-relaxed"
                   disabled={Boolean(lastEvalResult) || isProcessing}
                 />
 
                 {/* Bottom Toolbar inside Answer Box */}
-                <div className="flex items-center justify-between pt-3 border-t border-slate-100 dark:border-slate-800/80 flex-wrap gap-3">
+                <div className="flex items-center justify-between pt-2 border-t border-slate-800/80 flex-wrap gap-2">
                   <div className="flex items-center gap-2">
                     {!isRecording ? (
                       <button
                         onClick={handleStartRecording}
                         disabled={Boolean(lastEvalResult) || isProcessing}
-                        className="bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-950 hover:bg-slate-800 dark:hover:bg-white px-5 py-2.5 rounded-xl text-xs font-bold flex items-center gap-2 transition-all cursor-pointer shadow-sm active:scale-95 disabled:opacity-50"
+                        className="bg-slate-100 text-slate-950 hover:bg-white px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer shadow-sm active:scale-95 disabled:opacity-50"
                       >
                         <span className="w-2 h-2 rounded-full bg-rose-500" />
                         <span>• Start speaking</span>
@@ -1649,7 +1627,7 @@ export default function InterviewRoomPage() {
                     ) : (
                       <button
                         onClick={() => handleFinishAnswer()}
-                        className="bg-rose-600 hover:bg-rose-700 text-white px-5 py-2.5 rounded-xl text-xs font-bold flex items-center gap-2 transition-all cursor-pointer shadow-md shadow-rose-200 animate-pulse"
+                        className="bg-rose-600 hover:bg-rose-700 text-white px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer shadow-md shadow-rose-950 animate-pulse"
                       >
                         <span className="w-2 h-2 rounded-full bg-white" />
                         <span>• Recording...</span>
@@ -1676,7 +1654,7 @@ export default function InterviewRoomPage() {
                         }
                       }}
                       disabled={!isRecording}
-                      className="bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 px-4 py-2.5 rounded-xl text-xs font-semibold transition-all cursor-pointer disabled:opacity-40"
+                      className="bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 px-3.5 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer disabled:opacity-40"
                     >
                       Stop
                     </button>
@@ -1690,11 +1668,11 @@ export default function InterviewRoomPage() {
               </div>
 
               {/* Footer Action Row */}
-              <div className="flex items-center justify-between pt-2">
+              <div className="flex items-center justify-between pt-1">
                 <button
                   onClick={handleProceedToNextQuestion}
                   disabled={isProcessing}
-                  className="text-xs font-medium text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 transition-colors cursor-pointer"
+                  className="text-xs font-medium text-slate-400 hover:text-slate-200 transition-colors cursor-pointer"
                 >
                   Skip this question
                 </button>
@@ -1702,7 +1680,7 @@ export default function InterviewRoomPage() {
                 <button
                   onClick={() => handleFinishAnswer()}
                   disabled={Boolean(lastEvalResult) || isProcessing}
-                  className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-7 py-3.5 rounded-2xl text-sm transition-all shadow-lg shadow-indigo-200 dark:shadow-none hover:shadow-indigo-300 flex items-center gap-2 cursor-pointer active:scale-98 disabled:opacity-50"
+                  className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-6 py-2.5 rounded-xl text-xs sm:text-sm transition-all shadow-lg flex items-center gap-2 cursor-pointer active:scale-98 disabled:opacity-50"
                 >
                   {isProcessing ? (
                     <>

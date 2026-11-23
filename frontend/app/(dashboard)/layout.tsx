@@ -121,6 +121,17 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     );
   }
 
+  // Interview Room Focus Mode: Hide sidebar and top header to provide full-screen immersive exam chamber
+  const isInterviewRoom = Boolean(pathname?.includes("/interviews/") && pathname?.includes("/room"));
+
+  if (isInterviewRoom) {
+    return (
+      <div className="h-screen w-screen max-h-screen max-w-full bg-[#050810] text-slate-100 overflow-y-auto lg:overflow-hidden relative" suppressHydrationWarning>
+        {children}
+      </div>
+    );
+  }
+
   return (
     <div className="flex min-h-screen w-full max-w-full bg-slate-50 dark:bg-[#050810] relative overflow-x-hidden" suppressHydrationWarning>
       <Sidebar 
