@@ -3,7 +3,7 @@
 import { useEffect, useState, Fragment } from "react";
 import { 
   Users, Search, RefreshCw, Mail, Phone, BookOpen, Award, Shield, 
-  CheckCircle2, Clock, Eye, AlertCircle, ChevronRight, User, Loader2, Download, X,
+  CheckCircle2, Clock, Eye, AlertCircle, ChevronLeft, ChevronRight, User, Loader2, Download, X,
   Linkedin, ExternalLink, Trash2, AlertTriangle, MessageSquare, Star, Send,
   ChevronDown, Layers, CreditCard, Sparkles, Check, Flame, Pencil, Plus
 } from "lucide-react";
@@ -410,6 +410,9 @@ export default function AdminCandidatesPage() {
     document.body.removeChild(link);
   };
 
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 10;
+
   const filteredCandidates = candidates.filter(c => {
     const name = c.user?.full_name || c.full_name || "";
     const email = c.user?.email || c.email || "";
@@ -418,6 +421,14 @@ export default function AdminCandidatesPage() {
     const q = searchQuery.toLowerCase();
     return name.toLowerCase().includes(q) || email.toLowerCase().includes(q) || role.toLowerCase().includes(q) || desig.toLowerCase().includes(q);
   });
+
+  // Reset to page 1 on search change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery]);
+
+  const totalPages = Math.max(1, Math.ceil(filteredCandidates.length / pageSize));
+  const paginatedCandidates = filteredCandidates.slice((currentPage - 1) * pageSize, currentPage * pageSize);
 
   const avgReadiness = candidates.length > 0
     ? Math.round(candidates.reduce((acc, curr) => acc + (curr.readiness_score || 0), 0) / candidates.length)
@@ -516,7 +527,7 @@ export default function AdminCandidatesPage() {
           />
         </div>
         <span className="text-xs font-bold text-slate-500">
-          Showing {filteredCandidates.length} Registered Candidate(s)
+          Showing {filteredCandidates.length === 0 ? 0 : `${(currentPage - 1) * pageSize + 1} - ${Math.min(currentPage * pageSize, filteredCandidates.length)} of ${filteredCandidates.length}`} Registered Candidate(s)
         </span>
       </div>
 
@@ -550,7 +561,7 @@ export default function AdminCandidatesPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60 text-xs">
-                {filteredCandidates.map((c) => {
+                {paginatedCandidates.map((c) => {
                   const linkedinUrl = getLinkedinUrl(c);
                   const desig = getDesignation(c);
                   const expLvl = getExperienceLevel(c);
@@ -1018,6 +1029,66 @@ export default function AdminCandidatesPage() {
                 })}
               </tbody>
             </table>
+          </div>
+        )}
+
+        {/* Pagination Footer (10 candidates per page) */}
+        {!loading && filteredCandidates.length > 0 && (
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 sm:px-6 border-t border-slate-200/80 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-900/80 text-xs">
+            <span className="text-slate-500 dark:text-slate-400 font-bold">
+              Showing <span className="text-slate-900 dark:text-white font-mono">{(currentPage - 1) * pageSize + 1}</span> to{" "}
+              <span className="text-slate-900 dark:text-white font-mono">{Math.min(currentPage * pageSize, filteredCandidates.length)}</span> of{" "}
+              <span className="text-slate-900 dark:text-white font-mono">{filteredCandidates.length}</span> Candidates
+            </span>
+
+            <div className="flex items-center gap-1.5">
+              <button
+                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                disabled={currentPage === 1}
+                className="px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed transition-colors flex items-center gap-1 cursor-pointer"
+              >
+                <ChevronLeft className="w-4 h-4" />
+                <span>Prev</span>
+              </button>
+
+              <div className="flex items-center gap-1">
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNum) => {
+                  if (
+                    totalPages > 7 &&
+                    pageNum !== 1 &&
+                    pageNum !== totalPages &&
+                    Math.abs(pageNum - currentPage) > 1
+                  ) {
+                    if (pageNum === 2 || pageNum === totalPages - 1) {
+                      return <span key={pageNum} className="px-1 text-slate-400">...</span>;
+                    }
+                    return null;
+                  }
+                  return (
+                    <button
+                      key={pageNum}
+                      onClick={() => setCurrentPage(pageNum)}
+                      className={`w-8 h-8 rounded-xl font-mono font-bold transition-all cursor-pointer ${
+                        currentPage === pageNum
+                          ? "bg-[#FF6B00] text-slate-950 font-black shadow-sm"
+                          : "text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
+                      }`}
+                    >
+                      {pageNum}
+                    </button>
+                  );
+                })}
+              </div>
+
+              <button
+                onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                disabled={currentPage === totalPages}
+                className="px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed transition-colors flex items-center gap-1 cursor-pointer"
+              >
+                <span>Next</span>
+                <ChevronRight className="w-4 h-4" />
+              </button>
+            </div>
           </div>
         )}
       </div>

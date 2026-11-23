@@ -6,7 +6,8 @@ import { motion } from "framer-motion";
 import { 
   Trophy, Flame, Star, Award, ShieldCheck, 
   TrendingUp, Users, ArrowUpRight, Loader2, Sparkles,
-  Search, Share2, CheckCircle2, Linkedin, ExternalLink, X as XIcon, MessageCircle
+  Search, Share2, CheckCircle2, Linkedin, ExternalLink, X as XIcon, MessageCircle,
+  ChevronLeft, ChevronRight
 } from "lucide-react";
 import { apiFetch } from "@/lib/api";
 import { useAuthStore } from "@/lib/store";
@@ -364,11 +365,22 @@ export default function LeaderboardPage() {
     }
   };
 
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 10;
+
   const filteredMembers = members.filter((m) => {
     const matchesSearch = m.name.toLowerCase().includes(searchQuery.toLowerCase()) || m.role.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesBatch = selectedBatchFilter === "all" || m.batch.toLowerCase() === selectedBatchFilter.toLowerCase();
     return matchesSearch && matchesBatch;
   });
+
+  // Reset to page 1 on filter or search changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, selectedBatchFilter, activeTimeframe]);
+
+  const totalPages = Math.max(1, Math.ceil(filteredMembers.length / pageSize));
+  const paginatedMembers = filteredMembers.slice((currentPage - 1) * pageSize, currentPage * pageSize);
 
   const totalPoints = members.reduce((acc, m) => acc + (m.pts || 0), 0);
 
@@ -461,7 +473,7 @@ export default function LeaderboardPage() {
                   </td>
                 </tr>
               ) : (
-                filteredMembers.map((m) => (
+                paginatedMembers.map((m) => (
                   <tr key={m.rank} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition-colors">
                     
                     {/* Rank */}
@@ -528,6 +540,66 @@ export default function LeaderboardPage() {
 
           </table>
         </div>
+
+        {/* Pagination Footer (10 candidates per page) */}
+        {!isLoading && filteredMembers.length > 0 && (
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 sm:px-6 border-t border-slate-200 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-900/80 text-xs">
+            <span className="text-slate-500 dark:text-slate-400 font-bold">
+              Showing <span className="text-slate-900 dark:text-white font-mono">{(currentPage - 1) * pageSize + 1}</span> to{" "}
+              <span className="text-slate-900 dark:text-white font-mono">{Math.min(currentPage * pageSize, filteredMembers.length)}</span> of{" "}
+              <span className="text-slate-900 dark:text-white font-mono">{filteredMembers.length}</span> Candidates
+            </span>
+
+            <div className="flex items-center gap-1.5">
+              <button
+                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                disabled={currentPage === 1}
+                className="px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed transition-colors flex items-center gap-1 cursor-pointer"
+              >
+                <ChevronLeft className="w-4 h-4" />
+                <span>Prev</span>
+              </button>
+
+              <div className="flex items-center gap-1">
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNum) => {
+                  if (
+                    totalPages > 7 &&
+                    pageNum !== 1 &&
+                    pageNum !== totalPages &&
+                    Math.abs(pageNum - currentPage) > 1
+                  ) {
+                    if (pageNum === 2 || pageNum === totalPages - 1) {
+                      return <span key={pageNum} className="px-1 text-slate-400">...</span>;
+                    }
+                    return null;
+                  }
+                  return (
+                    <button
+                      key={pageNum}
+                      onClick={() => setCurrentPage(pageNum)}
+                      className={`w-8 h-8 rounded-xl font-mono font-bold transition-all cursor-pointer ${
+                        currentPage === pageNum
+                          ? "bg-[#FF6B00] text-slate-950 font-black shadow-sm"
+                          : "text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
+                      }`}
+                    >
+                      {pageNum}
+                    </button>
+                  );
+                })}
+              </div>
+
+              <button
+                onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                disabled={currentPage === totalPages}
+                className="px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed transition-colors flex items-center gap-1 cursor-pointer"
+              >
+                <span>Next</span>
+                <ChevronRight className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+        )}
 
       </div>
 
