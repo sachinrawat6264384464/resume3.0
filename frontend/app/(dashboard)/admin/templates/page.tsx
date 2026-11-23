@@ -533,7 +533,7 @@ export default function AdminTemplatesPage() {
                       {/* Stage Level Badge */}
                       <button
                         onClick={() => handleOpenEditStageModal(stage)}
-                        className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-orange-100 dark:bg-orange-950/60 text-[#FF6B00] border border-[#FF6B00]/30 uppercase hover:bg-[#FF6B00] hover:text-white transition-colors cursor-pointer"
+                        className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-[#FF6B00]/10 text-[#FF6B00] border border-[#FF6B00]/30 uppercase hover:bg-[#FF6B00] hover:text-white transition-colors cursor-pointer"
                         title="Click to edit Stage Category & Level"
                       >
                         STAGE {displayStageNumber} • {levelBadge}
@@ -542,7 +542,7 @@ export default function AdminTemplatesPage() {
                       {/* Category Badge */}
                       <button
                         onClick={() => handleOpenEditStageModal(stage)}
-                        className="px-2.5 py-0.5 rounded-full text-[10px] font-mono text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 hover:border-[#FF6B00] transition-colors cursor-pointer"
+                        className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-medium text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-[#FF6B00]/50 hover:text-[#FF6B00] transition-colors cursor-pointer"
                         title="Click to edit Category"
                       >
                         {stage.category || "Foundation"}
@@ -551,25 +551,26 @@ export default function AdminTemplatesPage() {
                       {/* Difficulty Badge (Clickable) */}
                       <button
                         onClick={() => handleOpenEditStageModal(stage)}
-                        className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-black text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/60 border border-amber-300/40 hover:scale-105 transition-transform cursor-pointer"
+                        className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-medium text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-[#FF6B00]/50 hover:text-[#FF6B00] transition-colors cursor-pointer"
                         title="Click to edit Difficulty"
                       >
-                        🔥 {stage.difficulty || "Medium"}
+                        {stage.difficulty || "Medium"}
                       </button>
 
                       {/* Duration Badge (Clickable) */}
                       <button
                         onClick={() => handleOpenEditStageModal(stage)}
-                        className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/60 border border-blue-300/40 hover:scale-105 transition-transform cursor-pointer"
+                        className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-medium text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-[#FF6B00]/50 hover:text-[#FF6B00] transition-colors cursor-pointer"
                         title="Click to edit Est. Duration"
                       >
-                        ⏱️ {stage.duration || "20 Mins"}
+                        {stage.duration || "20 Mins"}
                       </button>
 
                       {/* DB Questions Counter */}
                       <button
                         onClick={() => setExpandedStageId(isExpanded ? null : stage.id)}
-                        className="px-2.5 py-0.5 rounded-full text-[10px] font-mono text-emerald-600 dark:text-emerald-400 font-bold bg-emerald-50 dark:bg-emerald-950 hover:bg-emerald-200 transition-colors cursor-pointer"
+                        className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-medium text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-[#FF6B00]/50 hover:text-[#FF6B00] transition-colors cursor-pointer"
+                        title="Click to view/expand questions"
                       >
                         {questionsCount} DB Questions
                       </button>
@@ -651,15 +652,13 @@ export default function AdminTemplatesPage() {
                           className="w-full text-left p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center gap-2 text-slate-700 dark:text-slate-300"
                         >
                           <Settings className="w-3.5 h-3.5 text-[#FF6B00]" />
-                          <span>⚙ Edit Full Stage Settings</span>
+                          <span>Edit Full Stage Settings</span>
                         </button>
-
-
 
                         {/* Quick Duration Selector */}
                         <div className="p-2 flex flex-col gap-1 border-t border-slate-100 dark:border-slate-800">
-                          <span className="text-[10px] text-blue-500 font-mono font-black uppercase">
-                            ⏱️ Quick Duration:
+                          <span className="text-[10px] text-slate-400 font-mono font-bold uppercase">
+                            Quick Duration:
                           </span>
                           <div className="flex flex-wrap gap-1">
                             {["10 Mins", "15 Mins", "20 Mins", "30 Mins", "45 Mins", "60 Mins"].map((durVal) => (
@@ -668,8 +667,8 @@ export default function AdminTemplatesPage() {
                                 onClick={() => handleQuickUpdateStageField(stage, { duration: durVal })}
                                 className={`px-2 py-1 rounded-md text-[10px] font-mono font-bold transition-all cursor-pointer ${
                                   stage.duration === durVal
-                                    ? "bg-blue-600 text-white font-black"
-                                    : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-blue-100"
+                                    ? "bg-[#FF6B00] text-white font-black"
+                                    : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700"
                                 }`}
                               >
                                 {durVal}
@@ -680,8 +679,8 @@ export default function AdminTemplatesPage() {
 
                         {/* Quick Difficulty Selector */}
                         <div className="p-2 flex flex-col gap-1 border-t border-slate-100 dark:border-slate-800">
-                          <span className="text-[10px] text-amber-500 font-mono font-black uppercase">
-                            🔥 Quick Difficulty:
+                          <span className="text-[10px] text-slate-400 font-mono font-bold uppercase">
+                            Quick Difficulty:
                           </span>
                           <div className="flex flex-wrap gap-1">
                             {["Easy", "Medium", "Hard", "Boss", "Extreme", "Legendary"].map((diffVal) => (
@@ -690,8 +689,8 @@ export default function AdminTemplatesPage() {
                                 onClick={() => handleQuickUpdateStageField(stage, { difficulty: diffVal })}
                                 className={`px-2 py-1 rounded-md text-[10px] font-mono font-bold transition-all cursor-pointer ${
                                   stage.difficulty === diffVal
-                                    ? "bg-amber-600 text-white font-black"
-                                    : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-amber-100"
+                                    ? "bg-[#FF6B00] text-white font-black"
+                                    : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700"
                                 }`}
                               >
                                 {diffVal}
@@ -707,7 +706,7 @@ export default function AdminTemplatesPage() {
                             className="w-full text-left p-2 rounded-lg bg-rose-50 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 hover:bg-rose-600 hover:text-white transition-colors flex items-center gap-2 font-black uppercase tracking-wider"
                           >
                             <Trash2 className="w-3.5 h-3.5" />
-                            <span>🗑 Delete Stage</span>
+                            <span>Delete Stage</span>
                           </button>
                         </div>
 
@@ -781,20 +780,20 @@ export default function AdminTemplatesPage() {
 
                             {/* 1. Question Input / Text Box */}
                             <div className="flex flex-col gap-1.5">
-                              <label className="text-[11px] font-mono font-black text-[#FF6B00] uppercase tracking-wider flex items-center gap-1.5">
-                                <span>❓ QUESTION (प्रश्न):</span>
+                              <label className="text-[11px] font-mono font-bold text-[#FF6B00] uppercase tracking-wider flex items-center gap-1.5">
+                                <span>QUESTION STATEMENT:</span>
                               </label>
-                              <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-950 border-2 border-slate-200 dark:border-slate-800 text-xs font-bold text-slate-900 dark:text-white leading-relaxed">
+                              <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs font-medium text-slate-900 dark:text-white leading-relaxed">
                                 {q.question_text}
                               </div>
                             </div>
 
                             {/* 2. Expected Answer / Solution Box */}
                             <div className="flex flex-col gap-1.5">
-                              <label className="text-[11px] font-mono font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-wider flex items-center gap-1.5">
-                                <span>💡 EXPECTED ANSWER / SOLUTION (उत्तर):</span>
+                              <label className="text-[11px] font-mono font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+                                <span>EXPECTED ANSWER / REFERENCE SOLUTION:</span>
                               </label>
-                              <div className="p-3.5 rounded-2xl bg-emerald-500/5 dark:bg-slate-950 border-2 border-emerald-500/30 text-xs font-medium text-slate-800 dark:text-slate-200 leading-relaxed font-mono">
+                              <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs font-mono font-medium text-slate-800 dark:text-slate-200 leading-relaxed">
                                 {q.reference_answer || "No reference answer set. Click 'Edit Question & Answer' to add solution."}
                               </div>
                             </div>
@@ -1030,8 +1029,8 @@ export default function AdminTemplatesPage() {
             {/* Form Fields */}
             <div className="flex flex-col gap-4">
               <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-black text-[#FF6B00] uppercase tracking-wider flex items-center gap-1.5">
-                  <span>❓ QUESTION TEXT (प्रश्न DALEIN): *</span>
+                <label className="text-xs font-mono font-bold text-[#FF6B00] uppercase tracking-wider flex items-center gap-1.5">
+                  <span>Question Statement *</span>
                 </label>
                 <textarea
                   required
@@ -1044,8 +1043,8 @@ export default function AdminTemplatesPage() {
               </div>
 
               <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-wider flex items-center gap-1.5">
-                  <span>💡 EXPECTED ANSWER / SOLUTION (उत्तर DALEIN): *</span>
+                <label className="text-xs font-mono font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+                  <span>Expected Reference Answer / Solution *</span>
                 </label>
                 <textarea
                   required
@@ -1053,7 +1052,7 @@ export default function AdminTemplatesPage() {
                   value={editForm.reference_answer}
                   onChange={(e) => setEditForm(prev => ({ ...prev, reference_answer: e.target.value }))}
                   placeholder="Enter the expected reference answer/solution here for candidate AI scoring..."
-                  className="w-full p-3.5 rounded-2xl text-xs bg-slate-50 dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white font-mono focus:outline-none focus:border-emerald-500"
+                  className="w-full p-3.5 rounded-2xl text-xs bg-slate-50 dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white font-mono focus:outline-none focus:border-[#FF6B00]"
                 />
               </div>
             </div>

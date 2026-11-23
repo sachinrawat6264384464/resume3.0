@@ -739,6 +739,15 @@ export default function InterviewRoomPage() {
         xpEarned: isPassedStage ? 150 : Math.floor(avgScore * 1.5)
       };
 
+      if (typeof window !== "undefined") {
+        try {
+          const rawScores = localStorage.getItem("stage_scores_map") || "{}";
+          const scoresMap = JSON.parse(rawScores);
+          scoresMap[currentStageNum] = `${avgScore}%`;
+          localStorage.setItem("stage_scores_map", JSON.stringify(scoresMap));
+        } catch (e) {}
+      }
+
       setStageSummary(finalSummary);
       return;
     }
@@ -1314,6 +1323,15 @@ export default function InterviewRoomPage() {
           xpEarned: isPassedStage ? 150 : Math.floor(avgScore * 1.5)
         };
 
+        if (typeof window !== "undefined") {
+          try {
+            const rawScores = localStorage.getItem("stage_scores_map") || "{}";
+            const scoresMap = JSON.parse(rawScores);
+            scoresMap[currentStageNum] = `${avgScore}%`;
+            localStorage.setItem("stage_scores_map", JSON.stringify(scoresMap));
+          } catch (e) {}
+        }
+
         setStageSummary(finalSummary);
       }
     } finally {
@@ -1334,49 +1352,49 @@ export default function InterviewRoomPage() {
       <div className="flex flex-wrap items-center justify-between gap-4 p-4 rounded-[28px] bg-slate-900 text-white border border-slate-800 shadow-2xl">
         
         {/* Chamber Mode Indicator */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2.5">
           <span className="text-xs font-mono font-bold text-slate-400">CHAMBER MODE:</span>
-          <div className="flex items-center px-3.5 py-1.5 rounded-xl bg-slate-950 border border-slate-800 text-xs font-bold text-rose-400 gap-2">
-            <Database className="w-4 h-4 text-rose-400" />
-            <span>🎥 Real Interview Mode ({dbTotalQCount} Qs)</span>
+          <div className="flex items-center px-3 py-1.5 rounded-xl bg-slate-950/80 border border-slate-800 text-xs font-mono font-semibold text-slate-200 gap-2">
+            <Database className="w-3.5 h-3.5 text-[#FF6B00]" />
+            <span>Real Interview Mode ({dbTotalQCount} Qs)</span>
           </div>
         </div>
 
         {/* Live Timer, Camera Active Badge & Drop Out Button */}
         <div className="flex items-center gap-3 flex-wrap">
           {isCameraLive ? (
-            <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 text-xs font-mono font-bold">
+            <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-emerald-950/50 text-emerald-400 border border-emerald-500/30 text-xs font-mono font-bold">
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-              <Camera className="w-4 h-4 text-emerald-400" />
+              <Camera className="w-3.5 h-3.5 text-emerald-400" />
               <span>LIVE CAMERA ACTIVE</span>
             </div>
           ) : (
             <button
               onClick={enableCameraStream}
-              className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-amber-500/20 text-amber-300 border border-amber-500/50 text-xs font-mono font-bold hover:bg-amber-500/30 transition-all cursor-pointer animate-pulse"
+              className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-amber-950/50 text-amber-400 border border-amber-500/40 text-xs font-mono font-bold hover:bg-amber-950/80 transition-all cursor-pointer"
               title="Click to Enable / Reconnect Camera Stream"
             >
-              <CameraOff className="w-4 h-4 text-amber-400 animate-bounce" />
-              <span>📷 CAMERA PAUSED (CLICK TO ENABLE)</span>
+              <CameraOff className="w-3.5 h-3.5 text-amber-400" />
+              <span>CAMERA PAUSED (CLICK TO ENABLE)</span>
             </button>
           )}
 
-          <div className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl border text-xs font-mono font-bold ${
+          <div className={`flex items-center gap-2 px-3 py-1.5 rounded-xl border text-xs font-mono font-bold ${
             isCameraLive
-              ? "bg-slate-950 border-slate-800 text-amber-400"
-              : "bg-amber-950/90 border-amber-500/50 text-amber-300 animate-pulse"
+              ? "bg-slate-950/80 border-slate-800 text-slate-200"
+              : "bg-amber-950/50 border-amber-500/40 text-amber-400"
           }`}>
-            <Clock className="w-4 h-4 text-amber-400" />
-            <span>{isCameraLive ? `Time Remaining: ${formatTimer(timeLeftSeconds)}` : `⏸️ TIMER PAUSED (${formatTimer(timeLeftSeconds)})`}</span>
+            <Clock className="w-3.5 h-3.5 text-amber-400" />
+            <span>{isCameraLive ? `Time Remaining: ${formatTimer(timeLeftSeconds)}` : `TIMER PAUSED (${formatTimer(timeLeftSeconds)})`}</span>
           </div>
 
-          {/* 🚪 DROP OUT BUTTON */}
+          {/* DROP OUT BUTTON */}
           <button
             onClick={() => setShowDropOutModal(true)}
-            className="px-3.5 py-1.5 rounded-xl bg-rose-950/80 hover:bg-rose-900 border border-rose-600/50 text-rose-300 text-xs font-bold flex items-center gap-1.5 transition-colors shadow-sm"
+            className="px-3 py-1.5 rounded-xl bg-slate-950/80 hover:bg-rose-950/50 border border-slate-800 hover:border-rose-700/60 text-slate-400 hover:text-rose-400 text-xs font-mono font-bold flex items-center gap-1.5 transition-colors cursor-pointer"
             title="Abort Interview Session"
           >
-            <LogOut className="w-3.5 h-3.5 text-rose-400" />
+            <LogOut className="w-3.5 h-3.5" />
             <span>Drop Out</span>
           </button>
         </div>
@@ -1391,20 +1409,20 @@ export default function InterviewRoomPage() {
             <span className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider">
               Assessment Stepper:
             </span>
-            <span className="px-3 py-1 rounded-xl bg-blue-100 dark:bg-blue-950 text-blue-600 dark:text-cyan-400 font-mono font-black text-xs border border-blue-200 dark:border-blue-800">
+            <span className="px-3 py-1 rounded-xl bg-[#FF6B00]/10 text-[#FF6B00] font-mono font-bold text-xs border border-[#FF6B00]/30">
               Q{currentQIndex + 1} / {maxQCount}
             </span>
           </div>
 
           <div className="flex items-center gap-2">
             {/* Correct Answers Count */}
-            <span className="px-3 py-1 rounded-xl bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 font-mono font-black text-xs border border-emerald-300 dark:border-emerald-800 flex items-center gap-1.5 shadow-sm">
+            <span className="px-3 py-1 rounded-xl bg-slate-100 dark:bg-slate-800/80 text-emerald-600 dark:text-emerald-400 font-mono font-bold text-xs border border-slate-200 dark:border-slate-700 flex items-center gap-1.5 shadow-sm">
               <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
               <span>Correct: {accumulatedScores.slice(0, maxQCount).filter((s) => s !== undefined && s >= 60.0).length} / {maxQCount}</span>
             </span>
 
             {/* Incorrect Answers Count */}
-            <span className="px-3 py-1 rounded-xl bg-rose-100 dark:bg-rose-950/80 text-rose-700 dark:text-rose-300 font-mono font-black text-xs border border-rose-300 dark:border-rose-800 flex items-center gap-1.5 shadow-sm">
+            <span className="px-3 py-1 rounded-xl bg-slate-100 dark:bg-slate-800/80 text-rose-600 dark:text-rose-400 font-mono font-bold text-xs border border-slate-200 dark:border-slate-700 flex items-center gap-1.5 shadow-sm">
               <XCircle className="w-3.5 h-3.5 text-rose-600 dark:text-rose-400" />
               <span>Wrong: {accumulatedScores.slice(0, maxQCount).filter((s) => s !== undefined && s < 60.0).length} / {maxQCount}</span>
             </span>
@@ -1421,7 +1439,7 @@ export default function InterviewRoomPage() {
 
             let badgeBg = "bg-slate-100 dark:bg-slate-800 text-slate-400 border-slate-200 dark:border-slate-700";
             if (isCurrent) {
-              badgeBg = "bg-blue-600 text-white border-blue-500 shadow-md shadow-blue-500/30 animate-pulse ring-2 ring-blue-400/50";
+              badgeBg = "bg-[#FF6B00] text-white border-[#FF6B00] shadow-md shadow-[#FF6B00]/30 ring-2 ring-[#FF6B00]/40";
             } else if (isAttempted && isCorrect) {
               badgeBg = "bg-emerald-500 text-white border-emerald-400 shadow-sm";
             } else if (isAttempted && !isCorrect) {
@@ -1800,7 +1818,7 @@ export default function InterviewRoomPage() {
             
             <div className="flex items-center justify-between pb-4 border-b border-slate-800">
               <div className="flex items-center gap-3">
-                <div className="p-3 rounded-2xl bg-blue-500/20 text-blue-400 border border-blue-500/30">
+                <div className="p-3 rounded-2xl bg-[#FF6B00]/10 text-[#FF6B00] border border-[#FF6B00]/30">
                   <Award className="w-7 h-7" />
                 </div>
                 <div>
@@ -1828,7 +1846,7 @@ export default function InterviewRoomPage() {
                 ? "bg-gradient-to-br from-emerald-950/60 to-slate-900 border-emerald-500/40"
                 : "bg-gradient-to-br from-rose-950/60 to-slate-900 border-rose-500/40"
             }`}>
-              <span className="text-xs font-mono font-bold text-slate-400">STAGE 1 OVERALL AGGREGATE SCORE</span>
+              <span className="text-xs font-mono font-bold text-slate-400">STAGE {currentStageNum} OVERALL AGGREGATE SCORE</span>
               <div className={`text-4xl sm:text-5xl font-black font-mono ${stageSummary.passed ? "text-emerald-400" : "text-rose-400"}`}>
                 {stageSummary.overallScore}%
               </div>
@@ -1836,7 +1854,7 @@ export default function InterviewRoomPage() {
                 {stageSummary.passed ? (
                   <span className="px-3 py-1 rounded-full text-xs font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 flex items-center gap-1.5">
                     <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-                    <span>STAGE 1 PASSED • STAGE 2 UNLOCKED! 🎉</span>
+                    <span>STAGE {currentStageNum} PASSED • STAGE {currentStageNum + 1} UNLOCKED</span>
                   </span>
                 ) : (
                   <span className="px-3 py-1 rounded-full text-xs font-bold bg-rose-500/20 text-rose-300 border border-rose-500/40 flex items-center gap-1.5">
@@ -1850,7 +1868,7 @@ export default function InterviewRoomPage() {
             {/* Breakdown Stats */}
             <div className="p-4 rounded-2xl bg-slate-950 border border-slate-800 flex items-center justify-between px-5">
               <span className="text-xs font-mono font-bold text-slate-400">STAGE GATE STATUS</span>
-              <span className="text-xs font-extrabold text-blue-400 font-mono">
+              <span className="text-xs font-extrabold text-[#FF6B00] font-mono">
                 {stageSummary.passed ? `Stage ${currentStageNum + 1} Unlocked` : `Stage ${currentStageNum} Active`}
               </span>
             </div>
@@ -1893,18 +1911,18 @@ export default function InterviewRoomPage() {
                       router.push(`/interviews?stage=${nextStageNum}&autoStart=true`);
                     }}
                     disabled={isNavigatingNextStage}
-                    className={`w-full sm:flex-1 py-3.5 px-5 rounded-2xl font-black text-xs text-slate-950 bg-gradient-to-r from-emerald-400 via-amber-300 to-orange-400 hover:from-amber-400 hover:to-orange-500 shadow-xl shadow-emerald-500/30 flex items-center justify-center gap-2 transition-all uppercase tracking-wider ${
+                    className={`w-full sm:flex-1 py-3.5 px-5 rounded-2xl font-black text-xs text-white bg-[#FF6B00] hover:bg-[#e05e00] shadow-lg shadow-[#FF6B00]/25 flex items-center justify-center gap-2 transition-all uppercase tracking-wider ${
                       isNavigatingNextStage ? "opacity-90 cursor-wait" : "hover:scale-[1.02] cursor-pointer"
                     }`}
                   >
                     {isNavigatingNextStage ? (
                       <>
-                        <Loader2 className="w-4 h-4 text-slate-950 animate-spin" />
+                        <Loader2 className="w-4 h-4 text-white animate-spin" />
                         <span>Opening Stage {currentStageNum + 1}...</span>
                       </>
                     ) : (
                       <>
-                        <span>Proceed Directly to Stage {currentStageNum + 1} 🚀</span>
+                        <span>Proceed Directly to Stage {currentStageNum + 1}</span>
                         <ArrowRight className="w-4 h-4 stroke-[3]" />
                       </>
                     )}
