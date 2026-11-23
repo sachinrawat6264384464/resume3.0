@@ -745,6 +745,15 @@ export default function InterviewRoomPage() {
           const scoresMap = JSON.parse(rawScores);
           scoresMap[currentStageNum] = `${avgScore}%`;
           localStorage.setItem("stage_scores_map", JSON.stringify(scoresMap));
+
+          if (isPassedStage) {
+            const rawList = localStorage.getItem("completed_stages_list") || "[]";
+            const list = JSON.parse(rawList);
+            if (Array.isArray(list) && !list.includes(currentStageNum)) {
+              list.push(currentStageNum);
+              localStorage.setItem("completed_stages_list", JSON.stringify(list));
+            }
+          }
         } catch (e) {}
       }
 
@@ -982,7 +991,7 @@ export default function InterviewRoomPage() {
           practical_score: 20.0,
           communication_score: 30.0,
           confidence_score: 30.0,
-          feedback: `❌ Response was too brief. Expected Model Solution: "${benchmark.ideal}"`,
+          feedback: `Response was too brief. Expected Model Solution: "${benchmark.ideal}"`,
           strengths: ["Submitted response"],
           weaknesses: ["Answer too short"],
           missing_concepts: keywords.slice(0, 4),
@@ -1107,10 +1116,10 @@ export default function InterviewRoomPage() {
           : Math.max(15.0, Math.round(matchPercentage * 0.70)));
 
     const feedbackText = isQuestionCopy
-      ? "❌ NEEDS IMPROVEMENT (0% Match). You submitted the question text instead of providing a technical answer."
+      ? "NEEDS IMPROVEMENT (0% Match). You submitted the question text instead of providing a technical answer."
       : (isPassed
-          ? `✅ PASSED (${matchPercentage}% Match ≥ 60%). Spoken answer accurately matched Expected Model Answer.`
-          : `❌ NEEDS IMPROVEMENT (${matchPercentage}% Match < 60%). Missing expected keywords: ${missingAdminWords.slice(0, 3).join(", ") || "Technical Details"}. Expected Answer: "${benchmark.ideal}"`);
+          ? `PASSED (${matchPercentage}% Match ≥ 60%). Spoken answer accurately matched Expected Model Answer.`
+          : `NEEDS IMPROVEMENT (${matchPercentage}% Match < 60%). Missing expected keywords: ${missingAdminWords.slice(0, 3).join(", ") || "Technical Details"}. Expected Answer: "${benchmark.ideal}"`);
 
     const evalResult: QuestionEvaluationResult = {
       overall_score: finalScore,
@@ -1329,6 +1338,15 @@ export default function InterviewRoomPage() {
             const scoresMap = JSON.parse(rawScores);
             scoresMap[currentStageNum] = `${avgScore}%`;
             localStorage.setItem("stage_scores_map", JSON.stringify(scoresMap));
+
+            if (isPassedStage) {
+              const rawList = localStorage.getItem("completed_stages_list") || "[]";
+              const list = JSON.parse(rawList);
+              if (Array.isArray(list) && !list.includes(currentStageNum)) {
+                list.push(currentStageNum);
+                localStorage.setItem("completed_stages_list", JSON.stringify(list));
+              }
+            }
           } catch (e) {}
         }
 
@@ -1578,7 +1596,7 @@ export default function InterviewRoomPage() {
                 {showHintModal && (
                   <div className="mt-3 p-4 rounded-2xl bg-indigo-50/80 dark:bg-indigo-950/50 border border-indigo-200 dark:border-indigo-800 text-xs text-indigo-900 dark:text-indigo-200 flex flex-col gap-2 animate-fadeIn">
                     <span className="font-bold flex items-center gap-1.5 text-indigo-700 dark:text-indigo-300">
-                      💡 Recommended Technical Structure:
+                      Recommended Technical Structure:
                     </span>
                     <ul className="list-disc pl-4 space-y-1 text-slate-700 dark:text-slate-300 font-medium">
                       {currentBenchmark.keywords.map((kw: string, i: number) => (
@@ -1714,8 +1732,8 @@ export default function InterviewRoomPage() {
                     )}
                     <span className={`font-extrabold text-sm ${lastMatchScore !== null && lastMatchScore >= 60 ? 'text-emerald-400' : 'text-rose-400'}`}>
                       {lastMatchScore !== null && lastMatchScore >= 60 
-                        ? `✅ PASSED (${lastMatchScore}% Concept Match ≥ 60%)` 
-                        : `❌ NEEDS IMPROVEMENT (${lastMatchScore ?? 0}% Match < 60%)`}
+                        ? `PASSED (${lastMatchScore}% Concept Match ≥ 60%)` 
+                        : `NEEDS IMPROVEMENT (${lastMatchScore ?? 0}% Match < 60%)`}
                     </span>
                   </div>
                   <div className="flex items-center gap-2">
@@ -1742,7 +1760,7 @@ export default function InterviewRoomPage() {
                     className="w-full sm:w-auto px-6 py-3.5 rounded-2xl font-black text-xs text-white bg-slate-800 hover:bg-slate-700 border border-slate-700 hover:border-amber-400 shadow-lg flex items-center justify-center gap-2 transition-all uppercase tracking-wider cursor-pointer"
                   >
                     <RefreshCw className="w-4 h-4 text-amber-400" />
-                    <span>🔄 Retry This Question</span>
+                    <span>Retry This Question</span>
                   </button>
 
                   <button
@@ -1759,8 +1777,8 @@ export default function InterviewRoomPage() {
                       <>
                         <span>
                           {currentQIndex + 1 < maxQCount
-                            ? `Proceed to Question ${currentQIndex + 2} of ${maxQCount} ➔`
-                            : "View Final Stage Performance Summary 🏆"}
+                            ? `Proceed to Question ${currentQIndex + 2} of ${maxQCount}`
+                            : "View Final Stage Performance Summary"}
                         </span>
                         <ArrowRight className="w-4 h-4" />
                       </>
@@ -1804,7 +1822,7 @@ export default function InterviewRoomPage() {
                 onClick={handleConfirmDropOut}
                 className="px-5 py-2.5 rounded-xl text-xs font-black text-white bg-rose-600 hover:bg-rose-500 shadow-lg shadow-rose-600/30 transition-all"
               >
-                Confirm Drop Out 🚪
+                Confirm Drop Out
               </button>
             </div>
           </div>
@@ -1988,7 +2006,7 @@ export default function InterviewRoomPage() {
                     ) : (
                       <>
                         <RefreshCw className="w-4 h-4" />
-                        <span>Resume / Retry Stage {currentStageNum} 🔄</span>
+                        <span>Resume / Retry Stage {currentStageNum}</span>
                       </>
                     )}
                   </button>

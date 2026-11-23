@@ -109,11 +109,13 @@ class StageService:
 
                     badges = list(cand.badges_json or [])
                     badge_map = {
-                        1: "Stage 1 CloudOps Pitch",
-                        2: "Linux Warrior",
-                        3: "Cloud Explorer",
-                        4: "DevOps Master",
-                        5: "Production Incident Hero"
+                        1: "STAGE 01: PROFILE & PITCH FOUNDATIONS",
+                        3: "STAGE 03: CLOUD INFRASTRUCTURE",
+                        5: "STAGE 05: LINUX & CLOUD FOUNDATIONS",
+                        10: "STAGE 10: AWS & CI/CD AUTOMATION",
+                        15: "STAGE 15: KUBERNETES & TERRAFORM",
+                        20: "STAGE 20: DEVSECOPS & MULTI-CLOUD",
+                        30: "STAGE 30: 40 LPA BOSS LEGEND"
                     }
                     earned_badge = badge_map.get(current_num)
                     if earned_badge and earned_badge not in badges and passed:

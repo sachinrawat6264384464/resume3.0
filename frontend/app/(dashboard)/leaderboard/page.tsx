@@ -20,10 +20,12 @@ interface CurriculumBadge {
 }
 
 const MODULE_BADGES: CurriculumBadge[] = [
-  { id: "mod-1", modNum: "STAGE 05", title: "LINUX & CLOUD", sub: "Stage 5 Master", variant: "teal" },
-  { id: "mod-2", modNum: "STAGE 10", title: "AWS & CI/CD", sub: "Stage 10 Master", variant: "amber" },
+  { id: "mod-01", modNum: "STAGE 01", title: "PROFILE & PITCH", sub: "Stage 1 Master", variant: "teal" },
+  { id: "mod-03", modNum: "STAGE 03", title: "CLOUD INFRA", sub: "Stage 3 Master", variant: "blue" },
+  { id: "mod-1", modNum: "STAGE 05", title: "LINUX & CLOUD", sub: "Stage 5 Master", variant: "amber" },
+  { id: "mod-2", modNum: "STAGE 10", title: "AWS & CI/CD", sub: "Stage 10 Master", variant: "purple" },
   { id: "mod-3", modNum: "STAGE 15", title: "KUBERNETES", sub: "Stage 15 Master", variant: "purple" },
-  { id: "mod-4", modNum: "STAGE 20", title: "DEVSECOPS", sub: "Stage 20 Master", variant: "blue" },
+  { id: "mod-4", modNum: "STAGE 20", title: "DEVSECOPS", sub: "Stage 20 Master", variant: "teal" },
   { id: "mod-5", modNum: "STAGE 30", title: "40 LPA BOSS", sub: "Stage 30 Legend", variant: "red" },
 ];
 
@@ -208,7 +210,18 @@ export default function LeaderboardPage() {
           );
 
           // Get REAL claimed badges (from candidate performance DB or claimed list)
-          const rawMyBadges = myPerfData?.badges || (existingInList?.allClaimedBadges ? [] : []);
+          let localClaimed: string[] = [];
+          if (typeof window !== "undefined") {
+            try {
+              const rawLocal = localStorage.getItem("candidate_claimed_badges");
+              if (rawLocal) localClaimed = JSON.parse(rawLocal);
+            } catch (e) {}
+          }
+          const rawMyBadges = Array.from(new Set([
+            ...(myPerfData?.badges || []),
+            ...localClaimed,
+            ...(existingInList?.allClaimedBadges?.map((b: any) => b.title) || [])
+          ]));
           const myRealBadges = parseCandidateBadges(rawMyBadges);
 
           // Get REAL XP from database (0 for new user)

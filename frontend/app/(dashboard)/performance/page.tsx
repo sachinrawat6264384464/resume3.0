@@ -6,7 +6,7 @@ import {
   TrendingUp, Award, Clock, ArrowRight, CheckCircle2, 
   AlertTriangle, ShieldCheck, Flame, Star, Zap, 
   Layers, ChevronRight, Loader2, Cpu, Mic, FileCheck, Sparkles, X, Linkedin,
-  MessageSquare, ThumbsUp, UserCheck
+  MessageSquare, ThumbsUp, UserCheck, Activity, BarChart3, CheckCheck
 } from "lucide-react";
 import { apiFetch } from "@/lib/api";
 
@@ -24,12 +24,32 @@ interface HexBadgeItem {
 
 const HEX_BADGES_LIST: HexBadgeItem[] = [
   { 
+    id: "mod-01", 
+    modNum: "STAGE 01", 
+    title: "PROFILE & PITCH FOUNDATIONS", 
+    sub: "Stage 1 Master", 
+    variant: "teal", 
+    desc: "Unlocked automatically upon completing Stage 1 self-introduction and opening technical pitch.", 
+    reqStages: 1,
+    unlocked: false 
+  },
+  { 
+    id: "mod-03", 
+    modNum: "STAGE 03", 
+    title: "CLOUD INFRASTRUCTURE", 
+    sub: "Stage 3 Master", 
+    variant: "blue", 
+    desc: "Unlocked automatically upon passing Stage 3 Cloud Infrastructure Engineer assessment.", 
+    reqStages: 3,
+    unlocked: false 
+  },
+  { 
     id: "mod-1", 
     modNum: "STAGE 05", 
     title: "LINUX & CLOUD FOUNDATIONS", 
     sub: "Stage 5 Master", 
-    variant: "teal", 
-    desc: "Unlocked automatically upon completing Stage 5 of your 30-stage curriculum.", 
+    variant: "amber", 
+    desc: "Unlocked automatically upon completing Stage 5 Production Troubleshooting Boss battle.", 
     reqStages: 5,
     unlocked: false 
   },
@@ -38,19 +58,9 @@ const HEX_BADGES_LIST: HexBadgeItem[] = [
     modNum: "STAGE 10", 
     title: "AWS & CI/CD AUTOMATION", 
     sub: "Stage 10 Master", 
-    variant: "amber", 
-    desc: "Unlocked automatically upon completing Stage 10 of your 30-stage curriculum.", 
-    reqStages: 10,
-    unlocked: false 
-  },
-  { 
-    id: "mod-3", 
-    modNum: "STAGE 15", 
-    title: "KUBERNETES & TERRAFORM", 
-    sub: "Stage 15 Master", 
     variant: "purple", 
-    desc: "Unlocked automatically upon completing Stage 15 of your 30-stage curriculum.", 
-    reqStages: 15,
+    desc: "Unlocked automatically upon completing Stage 10 AWS & CI/CD automation curriculum.", 
+    reqStages: 10,
     unlocked: false 
   },
   { 
@@ -58,8 +68,8 @@ const HEX_BADGES_LIST: HexBadgeItem[] = [
     modNum: "STAGE 20", 
     title: "DEVSECOPS & MULTI-CLOUD", 
     sub: "Stage 20 Master", 
-    variant: "blue", 
-    desc: "Unlocked automatically upon completing Stage 20 of your 30-stage curriculum.", 
+    variant: "teal", 
+    desc: "Unlocked automatically upon completing Stage 20 DevSecOps & Multi-Cloud architecture track.", 
     reqStages: 20,
     unlocked: false 
   },
@@ -92,7 +102,7 @@ const HexagonBadge = ({ badge, onClick }: { badge: HexBadgeItem; onClick?: () =>
       className={`relative w-20 h-24 shrink-0 flex flex-col items-center justify-center text-center p-1.5 cursor-pointer transition-all duration-300 hover:scale-110 drop-shadow-lg group ${
         !badge.unlocked ? "opacity-45 grayscale hover:grayscale-0 hover:opacity-100" : ""
       }`}
-      title={`${badge.modNum}: ${badge.title} - ${badge.unlocked ? "Unlocked" : `Requires Stage ${badge.reqStages}`}`}
+      title={`${badge.modNum}: ${badge.title} - ${badge.unlocked ? "Unlocked & Showcased on Leaderboard" : `Requires Stage ${badge.reqStages}`}`}
     >
       <svg className="absolute inset-0 w-full h-full" viewBox="0 0 100 115" fill="none" xmlns="http://www.w3.org/2000/svg">
         <defs>
@@ -125,7 +135,11 @@ export default function CandidatePerformancePage() {
   const [perfData, setPerfData] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(false);
 
-  // 5 Stage Milestone Badges state
+  // Dynamic Completed Stages and Stage Scores from DB + LocalStorage
+  const [completedCount, setCompletedCount] = useState<number>(0);
+  const [stageScores, setStageScores] = useState<Record<number, string>>({});
+
+  // Milestone Badges state
   const [badgesList, setBadgesList] = useState<HexBadgeItem[]>(HEX_BADGES_LIST);
   const [selectedBadge, setSelectedBadge] = useState<HexBadgeItem | null>(null);
   const [isBadgeModalOpen, setIsBadgeModalOpen] = useState(false);
@@ -149,19 +163,91 @@ export default function CandidatePerformancePage() {
         }
 
         setPerfData(data);
-        const userBadges = data?.badges || [];
-        const completedStagesCount = typeof data?.completed_stages_count === "number" ? data.completed_stages_count : 0;
 
-        setBadgesList((prev) =>
-          prev.map((b) => {
-            const isUnlockedByStage = completedStagesCount >= b.reqStages || userBadges.includes(b.title);
-            return {
-              ...b,
-              unlocked: isUnlockedByStage,
-              claimed: userBadges.includes(b.title)
-            };
-          })
-        );
+        // Hybrid Sync with Browser LocalStorage: Ensures zero lag after completing interview stages
+        let localCompletedStages: number[] = [];
+        let localScoresMap: Record<number, string> = {};
+        let localClaimedBadges: string[] = [];
+
+        if (typeof window !== "undefined") {
+          try {
+            const rawList = localStorage.getItem("completed_stages_list");
+            if (rawList) localCompletedStages = JSON.parse(rawList);
+          } catch (e) {}
+
+          try {
+            const rawScores = localStorage.getItem("stage_scores_map");
+            if (rawScores) localScoresMap = JSON.parse(rawScores);
+          } catch (e) {}
+
+          try {
+            const rawClaimed = localStorage.getItem("candidate_claimed_badges");
+            if (rawClaimed) localClaimedBadges = JSON.parse(rawClaimed);
+          } catch (e) {}
+        }
+
+        setStageScores(localScoresMap);
+
+        const passedStageSet = new Set<number>([
+          ...localCompletedStages.filter(s => typeof s === "number" && s >= 1),
+          ...Object.keys(localScoresMap).map(Number).filter(s => s >= 1)
+        ]);
+
+        const dbCompleted = typeof data?.completed_stages_count === "number" ? data.completed_stages_count : 0;
+        const totalCompleted = Math.max(dbCompleted, passedStageSet.size);
+        setCompletedCount(totalCompleted);
+
+        const userBadges = Array.from(new Set([
+          ...(data?.badges || []),
+          ...localClaimedBadges
+        ]));
+
+        // Calculate unlock status for all milestone badges
+        const newlyUnlockedToClaim: HexBadgeItem[] = [];
+        const updatedBadges = HEX_BADGES_LIST.map((b) => {
+          const isUnlocked = totalCompleted >= b.reqStages 
+            || passedStageSet.has(b.reqStages)
+            || userBadges.some(ub => 
+                ub.toLowerCase().includes(b.modNum.toLowerCase()) || 
+                ub.toLowerCase().includes(b.title.toLowerCase())
+              );
+
+          const isClaimed = isUnlocked || userBadges.some(ub => ub.toLowerCase().includes(b.modNum.toLowerCase()));
+
+          if (isUnlocked && !userBadges.includes(b.title)) {
+            newlyUnlockedToClaim.push(b);
+          }
+
+          return {
+            ...b,
+            unlocked: isUnlocked,
+            claimed: isClaimed
+          };
+        });
+
+        setBadgesList(updatedBadges);
+
+        // Auto-sync unlocked badges to profile and Leaderboard
+        if (newlyUnlockedToClaim.length > 0 && typeof window !== "undefined") {
+          const updatedClaimed = Array.from(new Set([...userBadges, ...newlyUnlockedToClaim.map(b => b.title)]));
+          localStorage.setItem("candidate_claimed_badges", JSON.stringify(updatedClaimed));
+          window.dispatchEvent(new Event("userProfileUpdated"));
+
+          // Send background claim request to DB for persistence
+          newlyUnlockedToClaim.forEach(async (nb) => {
+            try {
+              await apiFetch("/candidates/claim-badge", {
+                method: "POST",
+                body: JSON.stringify({
+                  badge_id: nb.id,
+                  badge_title: nb.title,
+                  completed_stages_count: totalCompleted
+                })
+              });
+            } catch (err) {}
+          });
+        }
+
       } catch (e) {
         console.warn("Candidate performance load notice:", e);
       } finally {
@@ -170,6 +256,18 @@ export default function CandidatePerformancePage() {
     }
 
     loadData();
+
+    // Listen for stage completion events to reload live stats instantly
+    if (typeof window !== "undefined") {
+      window.addEventListener("userProfileUpdated", loadData);
+      window.addEventListener("stageCompleted", loadData);
+    }
+    return () => {
+      if (typeof window !== "undefined") {
+        window.removeEventListener("userProfileUpdated", loadData);
+        window.removeEventListener("stageCompleted", loadData);
+      }
+    };
   }, []);
 
   const handleOpenBadgeModal = (badge: HexBadgeItem) => {
@@ -188,7 +286,8 @@ export default function CandidatePerformancePage() {
         method: "POST",
         body: JSON.stringify({
           badge_id: selectedBadge.id,
-          badge_title: selectedBadge.title
+          badge_title: selectedBadge.title,
+          completed_stages_count: completedCount
         })
       });
 
@@ -199,17 +298,23 @@ export default function CandidatePerformancePage() {
       );
 
       if (typeof window !== "undefined") {
+        const rawClaimed = localStorage.getItem("candidate_claimed_badges");
+        const list = rawClaimed ? JSON.parse(rawClaimed) : [];
+        if (!list.includes(selectedBadge.title)) {
+          list.push(selectedBadge.title);
+          localStorage.setItem("candidate_claimed_badges", JSON.stringify(list));
+        }
         window.dispatchEvent(new Event("userProfileUpdated"));
       }
 
-      setClaimSuccessMsg(`🎉 Badge '${selectedBadge.title}' Claimed & Showcased on Leaderboard Profile!`);
+      setClaimSuccessMsg(`Badge '${selectedBadge.title}' Claimed & Showcased on Leaderboard Profile!`);
     } catch (e: any) {
       setBadgesList((prev) =>
         prev.map((b) =>
           b.id === selectedBadge.id ? { ...b, unlocked: true, claimed: true } : b
         )
       );
-      setClaimSuccessMsg(`🎉 Badge '${selectedBadge.title}' Claimed! Showcased on Profile.`);
+      setClaimSuccessMsg(`Badge '${selectedBadge.title}' Claimed! Showcased on Profile.`);
     } finally {
       setIsClaiming(false);
     }
@@ -223,50 +328,146 @@ export default function CandidatePerformancePage() {
     );
   }
 
-  const readiness = perfData?.readiness_score || 85;
-  const atsScore = perfData?.resume_ats_score || 82;
+  // Dynamic live readiness and stage score calculation
+  const scoreValues: number[] = Object.values(stageScores)
+    .map(v => parseInt(String(v).replace("%", ""), 10))
+    .filter(v => !isNaN(v) && v > 0);
+
+  const avgStageScore = scoreValues.length > 0
+    ? Math.round(scoreValues.reduce((a, b) => a + b, 0) / scoreValues.length)
+    : (perfData?.readiness_score || 94);
+
+  const readiness = perfData?.readiness_score && perfData.readiness_score > 0
+    ? Math.max(perfData.readiness_score, avgStageScore)
+    : avgStageScore;
+
+  const atsScore = perfData?.resume_ats_score || 85;
+
   const pillars = perfData?.pillars || {
     technical_accuracy: readiness,
-    concept_coverage: Math.max(0, readiness - 2),
-    reasoning_quality: Math.max(0, readiness - 4),
-    practical_knowledge: Math.max(0, readiness - 3),
-    communication_clarity: readiness
-  };
-  const speech = perfData?.speech_telemetry || {
-    pacing_wpm: 138,
-    filler_words_per_min: 1.2,
-    structural_clarity: pillars.communication_clarity,
-    confidence_signals: Math.round(readiness * 0.95)
+    concept_coverage: Math.min(100, Math.max(70, readiness - 2)),
+    reasoning_quality: Math.min(100, Math.max(70, readiness - 4)),
+    practical_knowledge: Math.min(100, Math.max(70, readiness - 1)),
+    communication_clarity: Math.min(100, Math.max(70, readiness - 3))
   };
 
   const unlockedCount = badgesList.filter((b) => b.unlocked).length;
+  const progressPercent = Math.min(100, Math.round((completedCount / 30) * 100));
 
   return (
     <div className="flex flex-col gap-8 w-full pb-16 text-slate-900 dark:text-slate-100 font-sans">
       
-      {/* HEADER BANNER */}
-      <div className="p-6 sm:p-8 rounded-[32px] bg-gradient-to-r from-[#232F3E] via-[#1c2532] to-[#232F3E] text-white border border-[#FF9900]/30 shadow-2xl relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-6">
+      {/* 📊 REAL-TIME PERFORMANCE STATS & READINESS MATRIX */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
         
-        <div className="flex flex-col gap-3 z-10 max-w-2xl">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#FF9900]/10 border border-[#FF9900]/30 text-[#FF9900] text-xs font-black w-fit">
-            <TrendingUp className="w-3.5 h-3.5" />
-            <span>CAREER VELOCITY ANALYTICS • REAL-TIME DB SYNC</span>
+        {/* Readiness Benchmark Card */}
+        <div className="p-6 rounded-[28px] bg-slate-900 text-white border border-slate-800 shadow-xl flex flex-col justify-between gap-4">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-mono font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+              <Activity className="w-4 h-4 text-[#FF6B00]" />
+              Readiness Benchmark
+            </span>
+            <span className="px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 text-[10px] font-mono font-black">
+              LIVE DB SYNC
+            </span>
           </div>
 
-          <h1 className="text-3xl sm:text-4xl font-black tracking-tight text-white leading-tight uppercase">
-            Performance <span className="text-[#FF9900]">& Growth Matrix</span>
-          </h1>
+          <div className="flex items-baseline gap-3 my-1">
+            <span className="text-4xl sm:text-5xl font-black font-mono text-[#FF6B00]">
+              {readiness}%
+            </span>
+            <div className="flex flex-col">
+              <span className="text-xs font-bold text-slate-200">
+                {readiness >= 90 ? "Top 5% Placement Ready" : readiness >= 80 ? "Placement Ready" : "In Evaluation"}
+              </span>
+              <span className="text-[11px] text-[#FF6B00] font-mono font-bold">
+                {perfData?.salary_band || "₹25–40 LPA Band"}
+              </span>
+            </div>
+          </div>
 
-          <p className="text-xs sm:text-sm text-slate-300 font-medium leading-relaxed">
-            Real-time multi-dimensional analytics aggregating your live voice interview question attempts, 5-pillar rubric scores, and ATS resume benchmark evaluations.
-          </p>
+          <div className="w-full bg-slate-800 h-2 rounded-full overflow-hidden">
+            <div 
+              className="bg-gradient-to-r from-[#FF6B00] to-amber-400 h-full rounded-full transition-all duration-700"
+              style={{ width: `${Math.min(100, readiness)}%` }}
+            />
+          </div>
         </div>
 
+        {/* Curriculum Progression Card */}
+        <div className="p-6 rounded-[28px] bg-slate-900 text-white border border-slate-800 shadow-xl flex flex-col justify-between gap-4">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-mono font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+              <BarChart3 className="w-4 h-4 text-[#FF6B00]" />
+              Curriculum Progression
+            </span>
+            <span className="text-[11px] font-mono font-bold text-slate-300">
+              {progressPercent}% Complete
+            </span>
+          </div>
 
+          <div className="flex items-baseline gap-3 my-1">
+            <span className="text-4xl sm:text-5xl font-black font-mono text-emerald-400">
+              {completedCount}
+            </span>
+            <div className="flex flex-col">
+              <span className="text-xs font-bold text-slate-200">
+                / 30 Stages Completed
+              </span>
+              <span className="text-[11px] text-slate-400 font-mono font-bold">
+                {avgStageScore}% Avg Stage Score
+              </span>
+            </div>
+          </div>
+
+          <div className="w-full bg-slate-800 h-2 rounded-full overflow-hidden">
+            <div 
+              className="bg-gradient-to-r from-emerald-500 to-teal-400 h-full rounded-full transition-all duration-700"
+              style={{ width: `${Math.max(5, progressPercent)}%` }}
+            />
+          </div>
+        </div>
+
+        {/* 5 Core Skill Pillars Card */}
+        <div className="p-6 rounded-[28px] bg-slate-900 text-white border border-slate-800 shadow-xl flex flex-col justify-between gap-2.5">
+          <div className="flex items-center justify-between mb-1">
+            <span className="text-xs font-mono font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+              <ShieldCheck className="w-4 h-4 text-[#FF6B00]" />
+              5 Core Skill Pillars
+            </span>
+            <span className="text-[10px] font-mono text-slate-400">5-Pillar Rubric</span>
+          </div>
+
+          <div className="flex flex-col gap-1.5 text-[11px]">
+            <div className="flex justify-between items-center text-slate-300 font-medium">
+              <span>Technical Accuracy</span>
+              <span className="font-mono font-bold text-white">{pillars.technical_accuracy}%</span>
+            </div>
+            <div className="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
+              <div className="bg-[#FF6B00] h-full rounded-full" style={{ width: `${pillars.technical_accuracy}%` }} />
+            </div>
+
+            <div className="flex justify-between items-center text-slate-300 font-medium mt-0.5">
+              <span>System & Cloud Architecture</span>
+              <span className="font-mono font-bold text-white">{pillars.practical_knowledge}%</span>
+            </div>
+            <div className="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
+              <div className="bg-amber-400 h-full rounded-full" style={{ width: `${pillars.practical_knowledge}%` }} />
+            </div>
+
+            <div className="flex justify-between items-center text-slate-300 font-medium mt-0.5">
+              <span>Incident Response & Troubleshooting</span>
+              <span className="font-mono font-bold text-white">{pillars.reasoning_quality}%</span>
+            </div>
+            <div className="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
+              <div className="bg-emerald-400 h-full rounded-full" style={{ width: `${pillars.reasoning_quality}%` }} />
+            </div>
+          </div>
+        </div>
 
       </div>
 
-      {/* 💬 LIVE SESSION & ADMIN EVALUATION FEEDBACK SECTION (PROMINENT TOP POSITION) */}
+      {/* 💬 LIVE SESSION & ADMIN EVALUATION FEEDBACK SECTION */}
       <div className="p-6 sm:p-8 rounded-[32px] bg-white dark:bg-slate-900 border-2 border-emerald-500/40 shadow-2xl flex flex-col gap-6 relative overflow-hidden">
         <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/5 rounded-full blur-3xl pointer-events-none" />
 
@@ -361,29 +562,29 @@ export default function CandidatePerformancePage() {
 
       </div>
 
-      {/* 🏅 3D HEXAGON STAGE MILESTONE BADGES & CLAIM ENGINE */}
+      {/* 🏅 3D HEXAGON STAGE MILESTONE BADGES */}
       <div className="p-6 sm:p-8 rounded-[32px] bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-800 shadow-xl flex flex-col gap-6">
         
         <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
           <div className="flex flex-col gap-1">
             <div className="flex items-center gap-2">
-              <Award className="w-5 h-5 text-[#FF9900]" />
+              <Award className="w-5 h-5 text-[#FF6B00]" />
               <h3 className="text-base sm:text-lg font-black text-slate-900 dark:text-white uppercase tracking-tight">
                 Curriculum Stage Milestones ({badgesList.length} Badges)
               </h3>
             </div>
             <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
-              Badges unlock automatically as you complete Stage 5, Stage 10, Stage 15, Stage 20 & Stage 30 of your curriculum!
+              Badges unlock automatically as you pass milestone stages and are showcased live on your Leaderboard profile!
             </p>
           </div>
 
-          <span className="px-3 py-1.5 rounded-2xl bg-gradient-to-r from-[#FF9900] to-amber-500 text-slate-950 text-xs font-black uppercase tracking-wider shadow-sm">
+          <span className="px-3 py-1.5 rounded-2xl bg-gradient-to-r from-[#FF6B00] to-amber-500 text-slate-950 text-xs font-black uppercase tracking-wider shadow-sm">
             {unlockedCount} / {badgesList.length} Unlocked
           </span>
         </div>
 
-        {/* 3D Hexagon Badges Grid (5 Stage Badges) */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-6 items-center justify-items-center py-2">
+        {/* 3D Hexagon Badges Grid */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-6 items-center justify-items-center py-2">
           {badgesList.map((badge) => (
             <div key={badge.id} className="flex flex-col items-center gap-2 text-center">
               <HexagonBadge badge={badge} onClick={() => handleOpenBadgeModal(badge)} />
@@ -392,12 +593,21 @@ export default function CandidatePerformancePage() {
                 <span className="text-xs font-black text-slate-900 dark:text-white line-clamp-1">{badge.title}</span>
                 <span className={`text-[10px] font-extrabold px-2.5 py-0.5 rounded-full uppercase mt-1 ${
                   badge.claimed
-                    ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-500/40"
+                    ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-500/40 flex items-center gap-1"
                     : badge.unlocked
-                    ? "bg-[#FF9900] text-slate-950 font-black cursor-pointer animate-pulse"
+                    ? "bg-[#FF6B00] text-slate-950 font-black cursor-pointer animate-pulse"
                     : "bg-slate-200 dark:bg-slate-800 text-slate-500"
                 }`}>
-                  {badge.claimed ? "✓ Claimed" : badge.unlocked ? "Claim Badge" : `Locked (Stage ${badge.reqStages})`}
+                  {badge.claimed ? (
+                    <>
+                      <CheckCheck className="w-3 h-3 text-emerald-500" />
+                      <span>Unlocked</span>
+                    </>
+                  ) : badge.unlocked ? (
+                    "Claim Badge"
+                  ) : (
+                    `Locked (Stage ${badge.reqStages})`
+                  )}
                 </span>
               </div>
             </div>
@@ -406,26 +616,7 @@ export default function CandidatePerformancePage() {
 
       </div>
 
-      {/* QUICK LAUNCH PRACTICE CTA BANNER */}
-      <div className="p-6 sm:p-8 rounded-[32px] bg-gradient-to-r from-[#232F3E] via-[#1c2532] to-[#232F3E] text-white border border-[#FF9900]/30 shadow-2xl flex flex-col md:flex-row items-center justify-between gap-6">
-        <div className="flex flex-col gap-1.5">
-          <h3 className="text-lg font-black text-white flex items-center gap-2 uppercase tracking-tight">
-            <Sparkles className="w-5 h-5 text-[#FF9900]" />
-            Target Your Weakest Skill Areas with Quick Practice
-          </h3>
-          <p className="text-xs text-slate-300 font-medium">Practice one question scenario at a time to build technical depth.</p>
-        </div>
-
-        <Link
-          href="/interviews"
-          className="px-6 py-3.5 rounded-2xl bg-gradient-to-r from-[#FF6B00] via-[#FF9900] to-amber-500 hover:from-orange-600 hover:to-amber-600 text-slate-950 font-black text-xs flex items-center gap-2 shadow-xl shadow-[#FF9900]/25 transition-all shrink-0 hover:scale-[1.02] cursor-pointer uppercase tracking-wider"
-        >
-          <span>Launch Interview Practice →</span>
-          <ArrowRight className="w-4 h-4" />
-        </Link>
-      </div>
-
-      {/* BADGE CLAIM & LEADERBOARD SYNC MODAL */}
+      {/* BADGE DETAILS & PROFILE SHOWCASE MODAL */}
       {isBadgeModalOpen && selectedBadge && (
         <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 flex items-center justify-center p-4 animate-fadeIn">
           <div className="bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-800 rounded-[32px] max-w-md w-full p-6 sm:p-8 shadow-2xl flex flex-col items-center gap-5 text-center relative overflow-hidden">
@@ -473,18 +664,21 @@ export default function CandidatePerformancePage() {
                     </>
                   ) : !selectedBadge.unlocked ? (
                     <>
-                      <span>🔒 Complete Stage {selectedBadge.reqStages} to Unlock Badge</span>
+                      <span>Complete Stage {selectedBadge.reqStages} to Unlock Badge</span>
                     </>
                   ) : (
                     <>
                       <Sparkles className="w-4 h-4 text-slate-950" />
-                      <span>Claim Badge & Showcase on Profile 🚀</span>
+                      <span>Showcase Badge on Leaderboard Profile</span>
                     </>
                   )}
                 </button>
 
                 <span className="text-[10px] text-slate-400 font-mono">
-                  🔒 Auto-Unlocked at Stage {selectedBadge.reqStages} • Leaderboard Profile Sync
+                  {selectedBadge.unlocked 
+                    ? "✓ Stage requirement met • Live on Leaderboard profile" 
+                    : `Requires Stage ${selectedBadge.reqStages} completion`
+                  }
                 </span>
               </div>
             )}

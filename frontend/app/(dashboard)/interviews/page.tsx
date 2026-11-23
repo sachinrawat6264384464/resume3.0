@@ -13,47 +13,47 @@ import { useAuthStore } from "@/lib/store";
 
 const ALL_30_STAGES = [
   // STAGE 0 — PROFILE SETUP & VERIFICATION FORM
-  { id: 0, level: "Level 1", levelName: "Foundation", title: "STAGE 0: SETUP YOUR INTERVIEW PROFILE", xp: "+100 XP", duration: "5 Mins", questions: 1, questions_count: 1, icon: "📋", diff: "Easy", desc: "Complete candidate profile, phone, target role & LinkedIn verification form to unlock all interview stages.", status: "in_progress", score: "Active" },
+  { id: 0, level: "Level 1", levelName: "Foundation", title: "STAGE 0: SETUP YOUR INTERVIEW PROFILE", xp: "+100 XP", duration: "5 Mins", questions: 1, questions_count: 1, icon: "", diff: "Easy", desc: "Complete candidate profile, phone, target role & LinkedIn verification form to unlock all interview stages.", status: "in_progress", score: "Active" },
 
   // LEVEL 1 — FOUNDATION (TRACK 1)
-  { id: 1, level: "Level 1", levelName: "Foundation", title: "STAGE 1: INTRODUCE YOURSELF & PROFILE", xp: "+200 XP", duration: "12 Mins", questions: 2, questions_count: 2, icon: "🏆", diff: "Easy", desc: "Master your 60-second pitch, STAR background intro, and career story.", status: "locked", score: "--" },
-  { id: 2, level: "Level 1", levelName: "Foundation", title: "STAGE 2: LINUX SYSTEMS WARRIOR", xp: "+200 XP", duration: "15 Mins", questions: 3, questions_count: 3, icon: "🐧", diff: "Easy", desc: "Systemd service units, process signals, high I/O wait triage, and Linux commands.", status: "locked", score: "--" },
-  { id: 3, level: "Level 1", levelName: "Foundation", title: "STAGE 3: CLOUD INFRASTRUCTURE ENGINEER", xp: "+200 XP", duration: "18 Mins", questions: 2, questions_count: 2, icon: "☁️", diff: "Medium", desc: "AWS IAM roles vs users, VPC public vs private subnets, and NAT Gateways.", status: "locked", score: "--" },
-  { id: 4, level: "Level 1", levelName: "Foundation", title: "STAGE 4: DEVOPS & CONTAINERS ENGINEER", xp: "+200 XP", duration: "20 Mins", questions: 2, questions_count: 2, icon: "🚀", diff: "Medium", desc: "Multi-stage Dockerfiles, container security, Blue/Green vs Canary deployments.", status: "locked", score: "--" },
-  { id: 5, level: "Level 1", levelName: "Foundation", title: "STAGE 5: PRODUCTION TROUBLESHOOTING BOSS", xp: "+200 XP", duration: "20 Mins", questions: 2, questions_count: 2, icon: "🔥", diff: "Medium", desc: "Kubernetes pod CrashLoopBackOff triage and Nginx Ingress 502/504 debugging.", status: "locked", score: "--" },
+  { id: 1, level: "Level 1", levelName: "Foundation", title: "STAGE 1: INTRODUCE YOURSELF & PROFILE", xp: "+200 XP", duration: "12 Mins", questions: 2, questions_count: 2, icon: "", diff: "Easy", desc: "Master your 60-second pitch, STAR background intro, and career story.", status: "locked", score: "--" },
+  { id: 2, level: "Level 1", levelName: "Foundation", title: "STAGE 2: LINUX SYSTEMS WARRIOR", xp: "+200 XP", duration: "15 Mins", questions: 3, questions_count: 3, icon: "", diff: "Easy", desc: "Systemd service units, process signals, high I/O wait triage, and Linux commands.", status: "locked", score: "--" },
+  { id: 3, level: "Level 1", levelName: "Foundation", title: "STAGE 3: CLOUD INFRASTRUCTURE ENGINEER", xp: "+200 XP", duration: "18 Mins", questions: 2, questions_count: 2, icon: "", diff: "Medium", desc: "AWS IAM roles vs users, VPC public vs private subnets, and NAT Gateways.", status: "locked", score: "--" },
+  { id: 4, level: "Level 1", levelName: "Foundation", title: "STAGE 4: DEVOPS & CONTAINERS ENGINEER", xp: "+200 XP", duration: "20 Mins", questions: 2, questions_count: 2, icon: "", diff: "Medium", desc: "Multi-stage Dockerfiles, container security, Blue/Green vs Canary deployments.", status: "locked", score: "--" },
+  { id: 5, level: "Level 1", levelName: "Foundation", title: "STAGE 5: PRODUCTION TROUBLESHOOTING BOSS", xp: "+200 XP", duration: "20 Mins", questions: 2, questions_count: 2, icon: "", diff: "Medium", desc: "Kubernetes pod CrashLoopBackOff triage and Nginx Ingress 502/504 debugging.", status: "locked", score: "--" },
 
   // LEVEL 2 — CLOUD (TRACK 2)
-  { id: 6, level: "Level 2", levelName: "Cloud", title: "AWS Cloud Engineer", xp: "+400 XP", duration: "22 Mins", questions: 2, questions_count: 2, icon: "☁️", diff: "Medium", desc: "VPC networking, subnets, NAT Gateways, IAM policies, and S3 lifecycle.", status: "pro_locked", score: "--" },
-  { id: 7, level: "Level 2", levelName: "Cloud", title: "GCP Cloud Engineer", xp: "+450 XP", duration: "22 Mins", questions: 2, questions_count: 2, icon: "☁️", diff: "Medium", desc: "Google Cloud IAM, VPC Service Controls, GKE basics, and BigQuery Ops.", status: "pro_locked", score: "--" },
-  { id: 8, level: "Level 2", levelName: "Cloud", title: "Azure Cloud Engineer", xp: "+450 XP", duration: "22 Mins", questions: 2, questions_count: 2, icon: "☁️", diff: "Medium", desc: "Azure VNets, Entra ID, Virtual Machine Scale Sets, and Resource Groups.", status: "pro_locked", score: "--" },
-  { id: 9, level: "Level 2", levelName: "Cloud", title: "Multi-Cloud Architecture", xp: "+500 XP", duration: "25 Mins", questions: 2, questions_count: 2, icon: "⚡", diff: "Hard", desc: "Inter-cloud VPN peering, multi-cloud IAM federation, and cost optimization.", status: "pro_locked", score: "--" },
-  { id: 10, level: "Level 2", levelName: "Cloud", title: "Cloud Real-Time Scenarios", xp: "+550 XP", duration: "25 Mins", questions: 2, questions_count: 2, icon: "🔥", diff: "Hard", desc: "Cross-region failover, DNS failover with Route53, and storage outage triage.", status: "pro_locked", score: "--" },
+  { id: 6, level: "Level 2", levelName: "Cloud", title: "AWS Cloud Engineer", xp: "+400 XP", duration: "22 Mins", questions: 2, questions_count: 2, icon: "", diff: "Medium", desc: "VPC networking, subnets, NAT Gateways, IAM policies, and S3 lifecycle.", status: "pro_locked", score: "--" },
+  { id: 7, level: "Level 2", levelName: "Cloud", title: "GCP Cloud Engineer", xp: "+450 XP", duration: "22 Mins", questions: 2, questions_count: 2, icon: "", diff: "Medium", desc: "Google Cloud IAM, VPC Service Controls, GKE basics, and BigQuery Ops.", status: "pro_locked", score: "--" },
+  { id: 8, level: "Level 2", levelName: "Cloud", title: "Azure Cloud Engineer", xp: "+450 XP", duration: "22 Mins", questions: 2, questions_count: 2, icon: "", diff: "Medium", desc: "Azure VNets, Entra ID, Virtual Machine Scale Sets, and Resource Groups.", status: "pro_locked", score: "--" },
+  { id: 9, level: "Level 2", levelName: "Cloud", title: "Multi-Cloud Architecture", xp: "+500 XP", duration: "25 Mins", questions: 2, questions_count: 2, icon: "", diff: "Hard", desc: "Inter-cloud VPN peering, multi-cloud IAM federation, and cost optimization.", status: "pro_locked", score: "--" },
+  { id: 10, level: "Level 2", levelName: "Cloud", title: "Cloud Real-Time Scenarios", xp: "+550 XP", duration: "25 Mins", questions: 2, questions_count: 2, icon: "", diff: "Hard", desc: "Cross-region failover, DNS failover with Route53, and storage outage triage.", status: "pro_locked", score: "--" },
 
   // LEVEL 3 — DEVOPS (TRACK 3)
-  { id: 11, level: "Level 3", levelName: "DevOps", title: "Git + GitHub Workflow", xp: "+600 XP", duration: "25 Mins", questions: 2, questions_count: 2, icon: "🚀", diff: "Medium", desc: "Git rebase vs merge, git bisect, branch protection rules, and merge conflicts.", status: "pro_locked", score: "--" },
-  { id: 12, level: "Level 3", levelName: "DevOps", title: "Jenkins + CI/CD Pipelines", xp: "+650 XP", duration: "28 Mins", questions: 2, questions_count: 2, icon: "🚀", diff: "Hard", desc: "Multibranch Jenkinsfiles, shared libraries, matrix builds, and caching.", status: "pro_locked", score: "--" },
-  { id: 13, level: "Level 3", levelName: "DevOps", title: "Docker Containerization", xp: "+700 XP", duration: "28 Mins", questions: 2, questions_count: 2, icon: "📦", diff: "Hard", desc: "Multi-stage Dockerfiles, image minimization, cgroups, and container networking.", status: "pro_locked", score: "--" },
-  { id: 14, level: "Level 3", levelName: "DevOps", title: "Kubernetes Orchestration", xp: "+800 XP", duration: "30 Mins", questions: 2, questions_count: 2, icon: "☸️", diff: "Hard", desc: "Pods, Deployments, StatefulSets, Ingress Controllers, HPA, and CrashLoopBackOff.", status: "pro_locked", score: "--" },
-  { id: 15, level: "Level 3", levelName: "DevOps", title: "Ansible + Terraform IaC", xp: "+850 XP", duration: "30 Mins", questions: 2, questions_count: 2, icon: "🛠️", diff: "Hard", desc: "Remote state locking, Terraform modules, drift detection, and Ansible playbooks.", status: "pro_locked", score: "--" },
+  { id: 11, level: "Level 3", levelName: "DevOps", title: "Git + GitHub Workflow", xp: "+600 XP", duration: "25 Mins", questions: 2, questions_count: 2, icon: "", diff: "Medium", desc: "Git rebase vs merge, git bisect, branch protection rules, and merge conflicts.", status: "pro_locked", score: "--" },
+  { id: 12, level: "Level 3", levelName: "DevOps", title: "Jenkins + CI/CD Pipelines", xp: "+650 XP", duration: "28 Mins", questions: 2, questions_count: 2, icon: "", diff: "Hard", desc: "Multibranch Jenkinsfiles, shared libraries, matrix builds, and caching.", status: "pro_locked", score: "--" },
+  { id: 13, level: "Level 3", levelName: "DevOps", title: "Docker Containerization", xp: "+700 XP", duration: "28 Mins", questions: 2, questions_count: 2, icon: "", diff: "Hard", desc: "Multi-stage Dockerfiles, image minimization, cgroups, and container networking.", status: "pro_locked", score: "--" },
+  { id: 14, level: "Level 3", levelName: "DevOps", title: "Kubernetes Orchestration", xp: "+800 XP", duration: "30 Mins", questions: 2, questions_count: 2, icon: "", diff: "Hard", desc: "Pods, Deployments, StatefulSets, Ingress Controllers, HPA, and CrashLoopBackOff.", status: "pro_locked", score: "--" },
+  { id: 15, level: "Level 3", levelName: "DevOps", title: "Ansible + Terraform IaC", xp: "+850 XP", duration: "30 Mins", questions: 2, questions_count: 2, icon: "", diff: "Hard", desc: "Remote state locking, Terraform modules, drift detection, and Ansible playbooks.", status: "pro_locked", score: "--" },
 
   // LEVEL 4 — ADVANCED DEVOPS (TRACK 4)
-  { id: 16, level: "Level 4", levelName: "Advanced DevOps", title: "End-to-End CI/CD Project", xp: "+900 XP", duration: "32 Mins", questions: 2, questions_count: 2, icon: "🌐", diff: "Boss", desc: "Production GitHub Actions pipeline to EKS with ArgoCD GitOps sync.", status: "pro_locked", score: "--" },
-  { id: 17, level: "Level 4", levelName: "Advanced DevOps", title: "Production Troubleshooting", xp: "+1,000 XP", duration: "35 Mins", questions: 2, questions_count: 2, icon: "🚨", diff: "Boss", desc: "Live memory leak triage, high CPU load debugging, and 502 bad gateway fix.", status: "pro_locked", score: "--" },
-  { id: 18, level: "Level 4", levelName: "Advanced DevOps", title: "DevSecOps & Hardening", xp: "+1,100 XP", duration: "35 Mins", questions: 2, questions_count: 2, icon: "🛡️", diff: "Boss", desc: "Container image scanning (Trivy), SAST/DAST, and HashiCorp Vault integration.", status: "pro_locked", score: "--" },
-  { id: 19, level: "Level 4", levelName: "Advanced DevOps", title: "Real-Time DevOps Architecture", xp: "+1,200 XP", duration: "35 Mins", questions: 2, questions_count: 2, icon: "🏗️", diff: "Boss", desc: "High-throughput microservices architecture with zero-downtime rolling updates.", status: "pro_locked", score: "--" },
-  { id: 20, level: "Level 4", levelName: "Advanced DevOps", title: "Final DevOps Mock Interview", xp: "+1,500 XP", duration: "40 Mins", questions: 2, questions_count: 2, icon: "🎓", diff: "Boss", desc: "Full-spectrum senior panel simulation covering all 4 level pillars.", status: "pro_locked", score: "--" },
+  { id: 16, level: "Level 4", levelName: "Advanced DevOps", title: "End-to-End CI/CD Project", xp: "+900 XP", duration: "32 Mins", questions: 2, questions_count: 2, icon: "", diff: "Boss", desc: "Production GitHub Actions pipeline to EKS with ArgoCD GitOps sync.", status: "pro_locked", score: "--" },
+  { id: 17, level: "Level 4", levelName: "Advanced DevOps", title: "Production Troubleshooting", xp: "+1,000 XP", duration: "35 Mins", questions: 2, questions_count: 2, icon: "", diff: "Boss", desc: "Live memory leak triage, high CPU load debugging, and 502 bad gateway fix.", status: "pro_locked", score: "--" },
+  { id: 18, level: "Level 4", levelName: "Advanced DevOps", title: "DevSecOps & Hardening", xp: "+1,100 XP", duration: "35 Mins", questions: 2, questions_count: 2, icon: "", diff: "Boss", desc: "Container image scanning (Trivy), SAST/DAST, and HashiCorp Vault integration.", status: "pro_locked", score: "--" },
+  { id: 19, level: "Level 4", levelName: "Advanced DevOps", title: "Real-Time DevOps Architecture", xp: "+1,200 XP", duration: "35 Mins", questions: 2, questions_count: 2, icon: "", diff: "Boss", desc: "High-throughput microservices architecture with zero-downtime rolling updates.", status: "pro_locked", score: "--" },
+  { id: 20, level: "Level 4", levelName: "Advanced DevOps", title: "Final DevOps Mock Interview", xp: "+1,500 XP", duration: "40 Mins", questions: 2, questions_count: 2, icon: "", diff: "Boss", desc: "Full-spectrum senior panel simulation covering all 4 level pillars.", status: "pro_locked", score: "--" },
 
   // 10 BONUS AI & ADVANCED CHALLENGES
-  { id: 21, level: "Bonus", levelName: "Bonus Challenge", title: "Bonus 01: AIOps Challenge", xp: "+1,600 XP", duration: "30 Mins", questions: 1, questions_count: 1, icon: "🤖", diff: "Extreme", desc: "AI anomaly detection in Prometheus metrics and automated log clustering.", status: "pro_locked", score: "--" },
-  { id: 22, level: "Bonus", levelName: "Bonus Challenge", title: "Bonus 02: MLOps Challenge", xp: "+1,700 XP", duration: "30 Mins", questions: 1, questions_count: 1, icon: "🤖", diff: "Extreme", desc: "ML model serving infrastructure, Kubeflow pipelines, and feature stores.", status: "pro_locked", score: "--" },
-  { id: 23, level: "Bonus", levelName: "Bonus Challenge", title: "Bonus 03: AI Integration Challenge", xp: "+1,800 XP", duration: "30 Mins", questions: 1, questions_count: 1, icon: "🤖", diff: "Extreme", desc: "LLM API gateway rate limiting, streaming responses, and vector DB ops.", status: "pro_locked", score: "--" },
-  { id: 24, level: "Bonus", levelName: "Bonus Challenge", title: "Bonus 04: AI + DevOps Automation", xp: "+1,900 XP", duration: "30 Mins", questions: 1, questions_count: 1, icon: "⚡", diff: "Extreme", desc: "AI-driven self-healing infrastructure scripts and automated PR remediation.", status: "pro_locked", score: "--" },
-  { id: 25, level: "Bonus", levelName: "Bonus Challenge", title: "Bonus 05: AI MCP Challenge", xp: "+2,000 XP", duration: "30 Mins", questions: 1, questions_count: 1, icon: "🔌", diff: "Extreme", desc: "Model Context Protocol tools integration for infrastructure management.", status: "pro_locked", score: "--" },
-  { id: 26, level: "Bonus", levelName: "Bonus Challenge", title: "Bonus 06: Azure DevOps Project", xp: "+2,100 XP", duration: "30 Mins", questions: 1, questions_count: 1, icon: "🔷", diff: "Extreme", desc: "Azure Pipelines YAML, Artifacts, and Azure Kubernetes Service (AKS).", status: "pro_locked", score: "--" },
-  { id: 27, level: "Bonus", levelName: "Bonus Challenge", title: "Bonus 07: Project-Based CI/CD", xp: "+2,200 XP", duration: "30 Mins", questions: 1, questions_count: 1, icon: "🏗️", diff: "Extreme", desc: "Canary deployments, blue-green traffic shifting using Flagger and Istio.", status: "pro_locked", score: "--" },
-  { id: 28, level: "Bonus", levelName: "Bonus Challenge", title: "Bonus 08: Advanced DevSecOps Project", xp: "+2,300 XP", duration: "30 Mins", questions: 1, questions_count: 1, icon: "🔐", diff: "Extreme", desc: "OPA Gatekeeper policies, Kyverno admission controllers, and PCI-DSS compliance.", status: "pro_locked", score: "--" },
-  { id: 29, level: "Bonus", levelName: "Bonus Challenge", title: "Bonus 09: Multi-Cloud + AI Architecture", xp: "+2,500 XP", duration: "35 Mins", questions: 1, questions_count: 1, icon: "🌐", diff: "Extreme", desc: "Global latency routing across AWS, GCP, and Azure with AI failover.", status: "pro_locked", score: "--" },
-  { id: 30, level: "Bonus", levelName: "Bonus Challenge", title: "👑 40 LPA Final Boss Interview Battle", xp: "+3,000 XP", duration: "45 Mins", questions: 2, questions_count: 2, icon: "👑", diff: "Legendary", desc: "The ultimate 40 LPA Staff CloudOps Engineer Boss Battle! Prove your absolute mastery.", status: "pro_locked", score: "--" }
+  { id: 21, level: "Bonus", levelName: "Bonus Challenge", title: "Bonus 01: AIOps Challenge", xp: "+1,600 XP", duration: "30 Mins", questions: 1, questions_count: 1, icon: "", diff: "Extreme", desc: "AI anomaly detection in Prometheus metrics and automated log clustering.", status: "pro_locked", score: "--" },
+  { id: 22, level: "Bonus", levelName: "Bonus Challenge", title: "Bonus 02: MLOps Challenge", xp: "+1,700 XP", duration: "30 Mins", questions: 1, questions_count: 1, icon: "", diff: "Extreme", desc: "ML model serving infrastructure, Kubeflow pipelines, and feature stores.", status: "pro_locked", score: "--" },
+  { id: 23, level: "Bonus", levelName: "Bonus Challenge", title: "Bonus 03: AI Integration Challenge", xp: "+1,800 XP", duration: "30 Mins", questions: 1, questions_count: 1, icon: "", diff: "Extreme", desc: "LLM API gateway rate limiting, streaming responses, and vector DB ops.", status: "pro_locked", score: "--" },
+  { id: 24, level: "Bonus", levelName: "Bonus Challenge", title: "Bonus 04: AI + DevOps Automation", xp: "+1,900 XP", duration: "30 Mins", questions: 1, questions_count: 1, icon: "", diff: "Extreme", desc: "AI-driven self-healing infrastructure scripts and automated PR remediation.", status: "pro_locked", score: "--" },
+  { id: 25, level: "Bonus", levelName: "Bonus Challenge", title: "Bonus 05: AI MCP Challenge", xp: "+2,000 XP", duration: "30 Mins", questions: 1, questions_count: 1, icon: "", diff: "Extreme", desc: "Model Context Protocol tools integration for infrastructure management.", status: "pro_locked", score: "--" },
+  { id: 26, level: "Bonus", levelName: "Bonus Challenge", title: "Bonus 06: Azure DevOps Project", xp: "+2,100 XP", duration: "30 Mins", questions: 1, questions_count: 1, icon: "", diff: "Extreme", desc: "Azure Pipelines YAML, Artifacts, and Azure Kubernetes Service (AKS).", status: "pro_locked", score: "--" },
+  { id: 27, level: "Bonus", levelName: "Bonus Challenge", title: "Bonus 07: Project-Based CI/CD", xp: "+2,200 XP", duration: "30 Mins", questions: 1, questions_count: 1, icon: "", diff: "Extreme", desc: "Canary deployments, blue-green traffic shifting using Flagger and Istio.", status: "pro_locked", score: "--" },
+  { id: 28, level: "Bonus", levelName: "Bonus Challenge", title: "Bonus 08: Advanced DevSecOps Project", xp: "+2,300 XP", duration: "30 Mins", questions: 1, questions_count: 1, icon: "", diff: "Extreme", desc: "OPA Gatekeeper policies, Kyverno admission controllers, and PCI-DSS compliance.", status: "pro_locked", score: "--" },
+  { id: 29, level: "Bonus", levelName: "Bonus Challenge", title: "Bonus 09: Multi-Cloud + AI Architecture", xp: "+2,500 XP", duration: "35 Mins", questions: 1, questions_count: 1, icon: "", diff: "Extreme", desc: "Global latency routing across AWS, GCP, and Azure with AI failover.", status: "pro_locked", score: "--" },
+  { id: 30, level: "Bonus", levelName: "Bonus Challenge", title: "Stage 30: 40 LPA Final Boss Interview Battle", xp: "+3,000 XP", duration: "45 Mins", questions: 2, questions_count: 2, icon: "", diff: "Legendary", desc: "The ultimate 40 LPA Staff CloudOps Engineer Boss Battle! Prove your absolute mastery.", status: "pro_locked", score: "--" }
 ];
 
 const getInitialStages = () => {
@@ -133,11 +133,11 @@ export default function InterviewsPage() {
     }
     if (nextVal) {
       setAlertMsg(null);
-      setPaymentSuccessMsg("🔓 ALL 30 STAGES UNLOCKED: You can now freely practice and launch any stage!");
+      setPaymentSuccessMsg("ALL 30 STAGES UNLOCKED: You can now freely practice and launch any stage!");
       setTimeout(() => setPaymentSuccessMsg(null), 4000);
     } else {
       setPaymentSuccessMsg(null);
-      setAlertMsg("🔒 Sequential Stage Lock Restored: Complete stages in order.");
+      setAlertMsg("Sequential Stage Lock Restored: Complete stages in order.");
       setTimeout(() => setAlertMsg(null), 3000);
     }
   };
@@ -426,7 +426,7 @@ export default function InterviewsPage() {
           diff: "Easy",
           xp: "+100 XP",
           duration: "5 Mins",
-          icon: "📋",
+          icon: "",
           questions: 1,
           questions_count: 1,
           status: isStg0Done ? "completed" : "in_progress",
@@ -576,7 +576,7 @@ export default function InterviewsPage() {
     }
 
     if (activeSession) {
-      setAlertMsg(`⚠️ You have an active live interview running (${activeSession.stageTitle || 'Stage Interview'}). Please 'Resume Ongoing Interview 🚀' or 'Drop Out 🚪' before launching a new stage.`);
+      setAlertMsg(`You have an active live interview running (${activeSession.stageTitle || 'Stage Interview'}). Please 'Resume Ongoing Interview' or 'Drop Out' before launching a new stage.`);
     }
     if (!unlockAllStages && isPaymentEnabled && (s.status === "pro_locked" || (!isSubscribed && s.id >= 6))) {
       setSelectedStageForPayment(s);
@@ -585,7 +585,7 @@ export default function InterviewsPage() {
     }
     const isPrevCompleted = s.id === 1 || stages.some(st => st.id === s.id - 1 && st.status === "completed");
     if (!unlockAllStages && s.status === "locked" && !isPrevCompleted) {
-      setAlertMsg(`⚠️ Stage ${s.id} is locked. Please complete Stage ${s.id - 1} first to unlock!`);
+      setAlertMsg(`Stage ${s.id} is locked. Please complete Stage ${s.id - 1} first to unlock!`);
     }
   };
 
@@ -595,7 +595,7 @@ export default function InterviewsPage() {
     // 1. Instant UI modal close & success notification (0ms delay)
     setIsSavingStage0(false);
     setIsStage0ModalOpen(false);
-    setPaymentSuccessMsg("🎉 Stage 0 Profile Setup Saved! Stage 1 Unlocked.");
+    setPaymentSuccessMsg("Stage 0 Profile Setup Saved! Stage 1 Unlocked.");
 
     // Update global user state (name, email, phone) across entire frontend app
     if (updateUser) {
@@ -680,7 +680,7 @@ export default function InterviewsPage() {
           localStorage.removeItem("active_interview_session");
           setActiveSession(null);
         } else {
-          setAlertMsg(`⚠️ Active session in progress: "${activeSession.stageTitle || 'Live Interview'}". Click 'Resume Ongoing Interview 🚀' above or 'Drop Out 🚪' to proceed.`);
+          setAlertMsg(`Active session in progress: "${activeSession.stageTitle || 'Live Interview'}". Click 'Resume Ongoing Interview' above or 'Drop Out' to proceed.`);
           return;
         }
       }
@@ -715,7 +715,7 @@ export default function InterviewsPage() {
     const isStage0Done = stages.some(st => st.id === 0 && st.status === "completed");
     if (!unlockAllStages && stageId > 0 && !isStage0Done) {
       setIsStage0ModalOpen(true);
-      setAlertMsg("⚠️ Stage 0 Profile Setup must be completed first before starting Stage 1!");
+      setAlertMsg("Stage 0 Profile Setup must be completed first before starting Stage 1!");
       return;
     }
 
@@ -740,9 +740,9 @@ export default function InterviewsPage() {
     if (!unlockAllStages && (targetStg?.status === "locked" || !isPrevCompleted)) {
       if (stageId === 1) {
         setIsStage0ModalOpen(true);
-        setAlertMsg("⚠️ Stage 0 Profile Setup must be completed first before starting Stage 1!");
+        setAlertMsg("Stage 0 Profile Setup must be completed first before starting Stage 1!");
       } else {
-        setAlertMsg(`⚠️ Stage ${stageId} is locked. Please complete Stage ${stageId - 1} first!`);
+        setAlertMsg(`Stage ${stageId} is locked. Please complete Stage ${stageId - 1} first!`);
       }
       return;
     }
@@ -851,12 +851,12 @@ export default function InterviewsPage() {
 
               setIsSubscribed(true);
               setIsPaymentModalOpen(false);
-              setPaymentSuccessMsg("🎉 Razorpay Payment Verified! PRO Pass Activated. All 30 Stages unlocked!");
+              setPaymentSuccessMsg("Razorpay Payment Verified! PRO Pass Activated. All 30 Stages unlocked!");
               fetchStagesData();
             } catch (e: any) {
               setIsSubscribed(true);
               setIsPaymentModalOpen(false);
-              setPaymentSuccessMsg("🎉 Payment Verified! All 30 Stages unlocked.");
+              setPaymentSuccessMsg("Payment Verified! All 30 Stages unlocked.");
               fetchStagesData();
             } finally {
               setIsProcessingPayment(false);
@@ -903,12 +903,12 @@ export default function InterviewsPage() {
 
       setIsSubscribed(true);
       setIsPaymentModalOpen(false);
-      setPaymentSuccessMsg("🎉 Test Payment Verified! PRO Pass Activated. All 30 Stages unlocked!");
+      setPaymentSuccessMsg("Test Payment Verified! PRO Pass Activated. All 30 Stages unlocked!");
       fetchStagesData();
     } catch (e: any) {
       setIsSubscribed(true);
       setIsPaymentModalOpen(false);
-      setPaymentSuccessMsg("🎉 Payment Successful! All 30 Stages unlocked.");
+      setPaymentSuccessMsg("Payment Successful! All 30 Stages unlocked.");
       fetchStagesData();
     } finally {
       setIsProcessingPayment(false);
@@ -938,9 +938,6 @@ export default function InterviewsPage() {
       {isDemoGuest && (
         <div className="relative z-20 p-3 sm:p-4 rounded-xl bg-amber-500/10 border border-amber-500/40 text-amber-600 dark:text-amber-400 flex flex-col sm:flex-row items-center justify-between gap-3 backdrop-blur-xl">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-amber-500/20 flex items-center justify-center text-amber-500 font-bold shrink-0 text-sm">
-              👁️
-            </div>
             <div className="flex flex-col">
               <span className="text-[11px] font-mono font-black uppercase tracking-wider text-amber-500">
                 GUEST DEMO MODE ACTIVE
@@ -972,10 +969,7 @@ export default function InterviewsPage() {
 
         {/* Compact Unlocked Counter Pill */}
         <div className="flex items-center gap-2.5 shrink-0 self-end md:self-auto">
-          <div className="flex items-center gap-2.5 bg-slate-50 dark:bg-slate-800/80 px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-700/80 shrink-0 shadow-xs">
-            <div className="w-8 h-8 rounded-lg bg-[#FF6B00]/15 border border-[#FF6B00]/40 flex items-center justify-center text-[#FF6B00]">
-              <Trophy className="w-4 h-4" />
-            </div>
+          <div className="flex items-center gap-2.5 bg-slate-50 dark:bg-slate-800/80 px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700/80 shrink-0 shadow-xs">
             <div className="flex flex-col">
               <span className="text-[9px] font-mono font-black text-slate-400 uppercase tracking-wider">UNLOCKED</span>
               <span className="text-sm font-black text-slate-900 dark:text-white leading-none">
@@ -993,20 +987,16 @@ export default function InterviewsPage() {
               className="px-3.5 py-2 rounded-xl bg-gradient-to-r from-[#FF9900] via-amber-400 to-orange-400 text-slate-950 text-xs font-black flex items-center gap-2 shadow-md shadow-[#FF9900]/20 hover:scale-[1.02] transition-all cursor-pointer uppercase tracking-wider shrink-0"
               title={`Pay ₹${configuredFee} Once & Unlock All 30 Stages`}
             >
-              <Crown className="w-4 h-4 text-slate-950 fill-slate-950 shrink-0" />
               <span>PRO Pass (₹{configuredFee})</span>
             </button>
           )}
         </div>
       </div>
 
-      {/* 🎥 ACTIVE LIVE INTERVIEW SESSION BANNER */}
+      {/* ACTIVE LIVE INTERVIEW SESSION BANNER */}
       {activeSession && (
         <div className="relative z-20 p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-rose-950/95 via-slate-900 to-amber-950/95 border border-rose-500/70 shadow-xl backdrop-blur-xl flex flex-col md:flex-row items-center justify-between gap-4 animate-pulse">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-rose-500/20 border border-rose-500/60 flex items-center justify-center text-rose-400 shrink-0 shadow-md">
-              <Video className="w-5 h-5 animate-bounce" />
-            </div>
             <div className="flex flex-col gap-0.5 text-left">
               <div className="flex items-center gap-2">
                 <span className="w-2 h-2 rounded-full bg-rose-500 animate-ping" />
@@ -1025,8 +1015,7 @@ export default function InterviewsPage() {
               onClick={() => router.push(activeSession.roomUrl || `/interviews/${activeSession.attemptId}/room`)}
               className="flex-1 md:flex-none px-4 py-2.5 rounded-xl font-black text-xs text-white bg-gradient-to-r from-rose-500 via-orange-500 to-amber-500 hover:from-rose-400 hover:to-amber-400 shadow-md shadow-rose-500/30 flex items-center justify-center gap-2 transition-all cursor-pointer uppercase tracking-wider"
             >
-              <Video className="w-3.5 h-3.5" />
-              <span>Resume Interview 🚀</span>
+              <span>Resume Interview</span>
             </button>
 
             <button
@@ -1034,8 +1023,7 @@ export default function InterviewsPage() {
               className="px-3 py-2.5 rounded-xl font-black text-xs text-rose-300 bg-rose-950/80 hover:bg-rose-900 border border-rose-500/50 flex items-center justify-center gap-1 transition-all cursor-pointer"
               title="Drop Out & Abort Active Interview Session"
             >
-              <LogOut className="w-3.5 h-3.5 text-rose-400" />
-              <span>Drop Out 🚪</span>
+              <span>Drop Out</span>
             </button>
           </div>
         </div>
@@ -1051,7 +1039,6 @@ export default function InterviewsPage() {
 
       {alertMsg && (
         <div className="relative z-10 p-3 rounded-xl bg-amber-50 dark:bg-amber-950/60 border border-amber-300 dark:border-amber-800 text-xs font-black text-amber-800 dark:text-amber-200 flex items-center gap-2">
-          <AlertCircle className="w-4 h-4 text-amber-500 shrink-0" />
           <span>{alertMsg}</span>
         </div>
       )}
@@ -1059,12 +1046,12 @@ export default function InterviewsPage() {
       {/* COMPACT FILTER PILLS WITH HORIZONTAL SCROLLING */}
       <div className="relative z-10 p-1.5 sm:p-2 rounded-xl bg-white/90 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 shadow-xs backdrop-blur-xl flex items-center gap-2 overflow-x-auto w-full max-w-full scroll-smooth">
         {[
-          { key: "ALL", icon: "🔥", title: "All 30 Stages", badge: "ALL", badgeClass: "bg-slate-200/70 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-300 dark:border-slate-700" },
-          { key: "LEVEL1", icon: "🐧", title: "Track 1: Foundation", badge: !isPaymentEnabled ? "FREE" : (paidStartStageConfig > 5 ? "FREE" : (paidStartStageConfig <= 1 ? "PRO" : "PARTIAL")), badgeClass: (!isPaymentEnabled || paidStartStageConfig > 5) ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30" : "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30" },
-          { key: "LEVEL2", icon: "☁️", title: "Track 2: Cloud", badge: !isPaymentEnabled ? "FREE" : (paidStartStageConfig > 10 ? "FREE" : (paidStartStageConfig <= 6 ? "PRO" : "PARTIAL")), badgeClass: (!isPaymentEnabled || paidStartStageConfig > 10) ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30" : "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30" },
-          { key: "LEVEL3", icon: "🚀", title: "Track 3: DevOps", badge: !isPaymentEnabled ? "FREE" : (paidStartStageConfig > 15 ? "FREE" : (paidStartStageConfig <= 11 ? "PRO" : "PARTIAL")), badgeClass: (!isPaymentEnabled || paidStartStageConfig > 15) ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30" : "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30" },
-          { key: "LEVEL4", icon: "⚡", title: "Track 4: Advanced", badge: !isPaymentEnabled ? "FREE" : (paidStartStageConfig > 20 ? "FREE" : (paidStartStageConfig <= 16 ? "PRO" : "PARTIAL")), badgeClass: (!isPaymentEnabled || paidStartStageConfig > 20) ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30" : "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30" },
-          { key: "BONUS", icon: "🤖", title: "Bonus AI Labs", badge: "10 LABS", badgeClass: "bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/30" },
+          { key: "ALL", title: "All 30 Stages", badge: "ALL", badgeClass: "bg-slate-200/70 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-300 dark:border-slate-700" },
+          { key: "LEVEL1", title: "Track 1: Foundation", badge: !isPaymentEnabled ? "FREE" : (paidStartStageConfig > 5 ? "FREE" : (paidStartStageConfig <= 1 ? "PRO" : "PARTIAL")), badgeClass: (!isPaymentEnabled || paidStartStageConfig > 5) ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30" : "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30" },
+          { key: "LEVEL2", title: "Track 2: Cloud", badge: !isPaymentEnabled ? "FREE" : (paidStartStageConfig > 10 ? "FREE" : (paidStartStageConfig <= 6 ? "PRO" : "PARTIAL")), badgeClass: (!isPaymentEnabled || paidStartStageConfig > 10) ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30" : "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30" },
+          { key: "LEVEL3", title: "Track 3: DevOps", badge: !isPaymentEnabled ? "FREE" : (paidStartStageConfig > 15 ? "FREE" : (paidStartStageConfig <= 11 ? "PRO" : "PARTIAL")), badgeClass: (!isPaymentEnabled || paidStartStageConfig > 15) ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30" : "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30" },
+          { key: "LEVEL4", title: "Track 4: Advanced", badge: !isPaymentEnabled ? "FREE" : (paidStartStageConfig > 20 ? "FREE" : (paidStartStageConfig <= 16 ? "PRO" : "PARTIAL")), badgeClass: (!isPaymentEnabled || paidStartStageConfig > 20) ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30" : "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30" },
+          { key: "BONUS", title: "Bonus AI Labs", badge: "10 LABS", badgeClass: "bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/30" },
         ].map((tab) => {
           const isActive = activeTab === tab.key;
           return (
@@ -1136,7 +1123,7 @@ export default function InterviewsPage() {
                   )}
 
                   <div className="flex items-center gap-2.5 sm:gap-3.5 min-w-0 pl-0.5 flex-1">
-                    <div className={`w-9 h-9 sm:w-11 sm:h-11 rounded-xl font-black text-xs sm:text-base flex items-center justify-center shrink-0 transition-transform ${
+                    <div className={`w-9 h-9 sm:w-11 sm:h-11 rounded-xl font-black text-xs sm:text-sm font-mono flex items-center justify-center shrink-0 transition-transform ${
                       isBoss
                         ? "bg-amber-500 text-slate-950 shadow-md shadow-amber-500/30"
                         : isCompleted
@@ -1149,7 +1136,13 @@ export default function InterviewsPage() {
                         ? "bg-amber-500/20 text-[#FF9900] border border-[#FF9900]/40"
                         : "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700"
                     }`}>
-                      {isCompleted ? <CheckCircle2 className="w-5 h-5 sm:w-6 sm:h-6" /> : isProLocked ? <Crown className="w-4 h-4 sm:w-5 sm:h-5 text-[#FF9900]" /> : <span>{s.icon}</span>}
+                      {isCompleted ? (
+                        <CheckCircle2 className="w-5 h-5 sm:w-6 sm:h-6" />
+                      ) : isProLocked ? (
+                        <span className="text-[10px] sm:text-xs font-bold">PRO</span>
+                      ) : (
+                        <span>{String(s.id).padStart(2, '0')}</span>
+                      )}
                     </div>
 
                     <div className="flex flex-col min-w-0 flex-1">
@@ -1189,7 +1182,6 @@ export default function InterviewsPage() {
                         className="px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-xl bg-[#FF9900] text-slate-950 text-[10px] sm:text-xs font-black flex items-center gap-1 shadow-sm hover:bg-amber-400 transition-all cursor-pointer whitespace-nowrap"
                         title={`One-Time Pass Unlocks All Stages ${paidStartStageConfig}-30`}
                       >
-                        <Crown className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-slate-950" />
                         <span className="hidden xs:inline">PRO PASS</span>
                         <span className="inline xs:hidden">PRO</span>
                       </button>
@@ -1216,9 +1208,8 @@ export default function InterviewsPage() {
               <div className="flex flex-col gap-4">
                 
                 <div className="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-slate-800">
-                  <span className="text-xs font-black text-[#FF6B00] uppercase tracking-widest flex items-center gap-2">
-                    <span className="text-lg">{selectedStage.icon}</span>
-                    <span>CHALLENGE IDENTITY</span>
+                  <span className="text-xs font-black text-[#FF6B00] uppercase tracking-widest">
+                    CHALLENGE IDENTITY
                   </span>
                   <span className="text-xs font-mono font-black text-slate-500 px-2.5 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800">
                     STAGE {selectedStage.id}
@@ -1254,15 +1245,15 @@ export default function InterviewsPage() {
                   <>
                     <div className="grid grid-cols-3 gap-2.5 py-2">
                       <div className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700/80 flex flex-col gap-0.5">
-                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider flex items-center gap-1">
-                          <Flame className="w-3 h-3 text-orange-500" /> DIFFICULTY
+                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider">
+                          DIFFICULTY
                         </span>
                         <span className="text-xs font-black text-[#FF6B00]">{selectedStage.diff}</span>
                       </div>
 
                       <div className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700/80 flex flex-col gap-0.5">
-                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider flex items-center gap-1">
-                          <Clock className="w-3 h-3 text-blue-500" /> EST. DURATION
+                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider">
+                          EST. DURATION
                         </span>
                         <span className="text-xs font-black text-slate-900 dark:text-white font-mono">
                           {selectedStage.duration}
@@ -1270,8 +1261,8 @@ export default function InterviewsPage() {
                       </div>
 
                       <div className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700/80 flex flex-col gap-0.5">
-                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider flex items-center gap-1">
-                          <Mic className="w-3 h-3 text-purple-500" /> SCENARIOS
+                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider">
+                          SCENARIOS
                         </span>
                         <span className="text-xs font-black text-slate-900 dark:text-white font-mono">
                           {selectedStage.questions_count ?? selectedStage.questions} Questions
@@ -1306,8 +1297,7 @@ export default function InterviewsPage() {
                     )
                   ) : (!unlockAllStages && selectedStage.status === "pro_locked") ? (
                     <>
-                      <Crown className="w-4 h-4 text-slate-950" />
-                      <span>Unlock All Stages (Pay ₹{configuredFee}) 🚀</span>
+                      <span>Unlock All Stages (Pay ₹{configuredFee})</span>
                     </>
                   ) : (!unlockAllStages && selectedStage.status === "locked") ? (
                     <>
@@ -1321,7 +1311,6 @@ export default function InterviewsPage() {
                     </>
                   ) : (
                     <>
-                      <Mic className="w-4 h-4" />
                       <span>Launch Stage {selectedStage.id} Interview Room</span>
                       <ArrowRight className="w-4 h-4" />
                     </>
@@ -1421,13 +1410,13 @@ export default function InterviewsPage() {
                 ) : (
                   <>
                     <Zap className="w-4 h-4 fill-slate-950" />
-                    <span>Pay ₹50 Once & Unlock All 30 Stages 🚀</span>
+                    <span>Pay ₹50 Once & Unlock All 30 Stages</span>
                   </>
                 )}
               </button>
 
               <span className="text-[10px] text-center text-slate-400 font-mono">
-                🔒 Secure 256-Bit SSL Encrypted Razorpay Gateway • Instant Lifetime Activation
+                Secure 256-Bit SSL Encrypted Razorpay Gateway • Instant Lifetime Activation
               </span>
             </div>
 
@@ -1638,7 +1627,7 @@ export default function InterviewsPage() {
 
             <div className="flex flex-col gap-1.5 text-center">
               <span className="text-xs font-mono font-black text-[#FF6B00] uppercase tracking-widest">
-                💻 LAPTOP / DESKTOP REQUIRED
+                LAPTOP / DESKTOP REQUIRED
               </span>
               <h3 className="text-xl font-black text-slate-900 dark:text-white uppercase tracking-tight">
                 Desktop Screen Required for AI Room
@@ -1647,14 +1636,14 @@ export default function InterviewsPage() {
 
             <div className="p-4 rounded-2xl bg-amber-50 dark:bg-amber-950/30 border border-amber-300 dark:border-amber-800/60 text-xs leading-relaxed text-slate-700 dark:text-slate-200 text-left font-medium flex flex-col gap-2">
               <p className="font-bold text-[#FF6B00]">
-                ⚠️ Yeh interview stage mobile device par continue nahi ho payega!
+                Yeh interview stage mobile device par continue nahi ho payega!
               </p>
               <p>
                 Real-Time Voice AI Spoken Interview, STAR Pitch Teleprompter, HD Microphone evaluation, and Camera Background Blur laptop / desktop browser par optimal chalte hain.
               </p>
               <div className="pt-2 border-t border-amber-200 dark:border-amber-900/40 flex flex-col gap-1 text-[11px] text-slate-600 dark:text-slate-300">
-                <span>✅ <strong>Recommended:</strong> Open in Chrome / Edge on Laptop</span>
-                <span>✅ <strong>Permissions:</strong> Microphone & Camera required</span>
+                <span><strong>Recommended:</strong> Open in Chrome / Edge on Laptop</span>
+                <span><strong>Permissions:</strong> Microphone & Camera required</span>
               </div>
             </div>
 
@@ -1670,7 +1659,7 @@ export default function InterviewsPage() {
                 className="w-full py-3.5 rounded-2xl font-black text-xs text-white bg-gradient-to-r from-[#FF6B00] to-amber-500 hover:from-orange-500 hover:to-amber-600 shadow-md shadow-[#FF6B00]/25 flex items-center justify-center gap-2 cursor-pointer uppercase tracking-wider"
               >
                 {copiedLink ? <Check className="w-4 h-4 text-white" /> : <Copy className="w-4 h-4 text-white" />}
-                <span>{copiedLink ? "Link Copied! Paste on Laptop 📋" : "Copy Page Link for Laptop 📋"}</span>
+                <span>{copiedLink ? "Link Copied! Paste on Laptop" : "Copy Page Link for Laptop"}</span>
               </button>
 
               <button
@@ -1694,7 +1683,7 @@ export default function InterviewsPage() {
 
             <div className="flex flex-col gap-1.5 text-center">
               <span className="text-[11px] font-mono font-black text-[#FF6B00] uppercase tracking-widest">
-                🔒 FULL ACCESS REQUIRED
+                FULL ACCESS REQUIRED
               </span>
               <h3 className="text-xl font-black text-slate-900 dark:text-white uppercase tracking-tight">
                 To Continue, Please Login / Register
@@ -1703,14 +1692,14 @@ export default function InterviewsPage() {
 
             <div className="p-4 rounded-2xl bg-orange-50 dark:bg-orange-950/30 border border-orange-200 dark:border-orange-900/40 text-xs leading-relaxed text-slate-700 dark:text-slate-200 text-left font-medium flex flex-col gap-2">
               <p className="font-bold text-[#FF6B00]">
-                🎯 You have reached the Demo Trial Limit!
+                You have reached the Demo Trial Limit!
               </p>
               <p>
                 Stages 4 to 30, AI voice evaluation reports, resume ATS score, and verified readiness certificates require a free candidate account.
               </p>
               <div className="pt-2 border-t border-orange-200 dark:border-orange-900/40 flex flex-col gap-1 text-[11px] text-slate-600 dark:text-slate-300">
-                <span>✅ <strong>Free Account:</strong> Unlocks Stages 1 to 5</span>
-                <span>✅ <strong>Save Progress:</strong> Detailed AI score audit & history</span>
+                <span><strong>Free Account:</strong> Unlocks Stages 1 to 5</span>
+                <span><strong>Save Progress:</strong> Detailed AI score audit & history</span>
               </div>
             </div>
 
