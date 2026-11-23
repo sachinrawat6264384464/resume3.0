@@ -81,19 +81,60 @@ async def get_leaderboard(
             except Exception:
                 pass
 
-        # Compute dynamic earned milestone badges
+        # Compute dynamic earned milestone badges from stages, XP, level, and candidate badges_json
         cand_passed = passed_stages_map.get(cand.id, set())
+        max_passed = max(cand_passed) if cand_passed else 0
+        cand_xp = cand.xp or 0
+        cand_level = cand.level or 1
+        cand_raw_badges = [str(b).lower() for b in (cand.badges_json or [])]
+
+        has_stage_5 = (
+            max_passed >= 5
+            or cand_xp >= 300
+            or cand_level >= 2
+            or any("5" in b or "linux" in b or "incident" in b or "troubleshooting" in b or "foundation" in b for b in cand_raw_badges)
+        )
+        has_stage_10 = (
+            max_passed >= 10
+            or cand_xp >= 1000
+            or cand_level >= 5
+            or any("10" in b or "ci/cd" in b or "automation" in b or "devops master" in b for b in cand_raw_badges)
+        )
+        has_stage_15 = (
+            max_passed >= 15
+            or cand_xp >= 2000
+            or cand_level >= 8
+            or any("15" in b or "kubernetes" in b or "terraform" in b for b in cand_raw_badges)
+        )
+        has_stage_20 = (
+            max_passed >= 20
+            or cand_xp >= 3000
+            or cand_level >= 11
+            or any("20" in b or "devsecops" in b or "multi-cloud" in b for b in cand_raw_badges)
+        )
+        has_stage_30 = (
+            max_passed >= 30
+            or cand_xp >= 4500
+            or cand_level >= 15
+            or any("30" in b or "boss" in b or "40 lpa" in b for b in cand_raw_badges)
+        )
+
         earned_badges: List[str] = []
-        if any(s >= 5 for s in cand_passed):
+        if has_stage_5:
             earned_badges.append("STAGE 05: LINUX & CLOUD FOUNDATIONS")
-        if any(s >= 10 for s in cand_passed):
+        if has_stage_10:
             earned_badges.append("STAGE 10: AWS & CI/CD AUTOMATION")
-        if any(s >= 15 for s in cand_passed):
+        if has_stage_15:
             earned_badges.append("STAGE 15: KUBERNETES & TERRAFORM")
-        if any(s >= 20 for s in cand_passed):
+        if has_stage_20:
             earned_badges.append("STAGE 20: DEVSECOPS & MULTI-CLOUD")
-        if any(s >= 30 for s in cand_passed):
+        if has_stage_30:
             earned_badges.append("STAGE 30: 40 LPA BOSS LEGEND")
+
+        # Also retain any existing custom claimed badges
+        for b in (cand.badges_json or []):
+            if b and b not in earned_badges:
+                earned_badges.append(b)
 
         global_ranking.append(LeaderboardEntry(
             rank=idx,

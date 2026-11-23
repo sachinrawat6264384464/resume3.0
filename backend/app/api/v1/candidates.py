@@ -982,12 +982,19 @@ async def get_my_performance(
     res_json = cand.resume_data_json or {}
     admin_fb_list = res_json.get("admin_feedback", [])
 
+    cand_badges = list(cand.badges_json or [])
+    if completed_stages_count >= 5 or (cand.xp or 0) >= 300 or (cand.level or 1) >= 2:
+        if "STAGE 05: LINUX & CLOUD FOUNDATIONS" not in cand_badges:
+            cand_badges.append("STAGE 05: LINUX & CLOUD FOUNDATIONS")
+            cand.badges_json = cand_badges
+            await db.commit()
+
     perf = {
         "candidate_id": cand.id,
         "readiness_score": readiness_score,
         "resume_ats_score": ats_score_val,
         "completed_stages_count": completed_stages_count,
-        "badges": cand.badges_json or [],
+        "badges": cand_badges,
         "salary_band": "₹18–25 LPA" if readiness_score < 80 else "₹25–40 LPA",
         "pillars": {
             "technical_accuracy": tech_avg,

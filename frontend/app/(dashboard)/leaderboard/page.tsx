@@ -15,16 +15,17 @@ interface CurriculumBadge {
   id: string;
   modNum: string;
   title: string;
+  shortTitle?: string;
   sub: string;
   variant: "teal" | "amber" | "purple" | "blue" | "red";
 }
 
 const MODULE_BADGES: CurriculumBadge[] = [
-  { id: "mod-1", modNum: "STAGE 05", title: "LINUX & CLOUD", sub: "Stage 5 Master", variant: "amber" },
-  { id: "mod-2", modNum: "STAGE 10", title: "AWS & CI/CD", sub: "Stage 10 Master", variant: "purple" },
-  { id: "mod-3", modNum: "STAGE 15", title: "KUBERNETES", sub: "Stage 15 Master", variant: "purple" },
-  { id: "mod-4", modNum: "STAGE 20", title: "DEVSECOPS", sub: "Stage 20 Master", variant: "teal" },
-  { id: "mod-5", modNum: "STAGE 30", title: "40 LPA BOSS", sub: "Stage 30 Legend", variant: "red" },
+  { id: "mod-1", modNum: "STAGE 05", title: "LINUX & CLOUD FOUNDATIONS", shortTitle: "LINUX & CLOUD", sub: "Stage 5 Master", variant: "amber" },
+  { id: "mod-2", modNum: "STAGE 10", title: "AWS & CI/CD AUTOMATION", shortTitle: "AWS & CI/CD", sub: "Stage 10 Master", variant: "purple" },
+  { id: "mod-3", modNum: "STAGE 15", title: "KUBERNETES & TERRAFORM", shortTitle: "KUBERNETES", sub: "Stage 15 Master", variant: "purple" },
+  { id: "mod-4", modNum: "STAGE 20", title: "DEVSECOPS & MULTI-CLOUD", shortTitle: "DEVSECOPS", sub: "Stage 20 Master", variant: "teal" },
+  { id: "mod-5", modNum: "STAGE 30", title: "40 LPA BOSS LEGEND", shortTitle: "40 LPA BOSS", sub: "Stage 30 Legend", variant: "red" },
 ];
 
 const HexagonBadge = ({ badge }: { badge: CurriculumBadge }) => {
@@ -70,7 +71,7 @@ const HexagonBadge = ({ badge }: { badge: CurriculumBadge }) => {
       </svg>
       <div className="relative z-10 flex flex-col items-center justify-center text-white w-full max-w-[44px] px-0.5 leading-none overflow-hidden text-center">
         <span className="text-[6px] font-mono font-black uppercase tracking-tighter text-slate-100 opacity-90 truncate max-w-full">{badge.modNum}</span>
-        <span className="text-[7px] font-black uppercase tracking-tight text-white leading-tight font-sans mt-0.5 drop-shadow-sm text-center break-words line-clamp-2 max-w-full">{badge.title}</span>
+        <span className="text-[7px] font-black uppercase tracking-tight text-white leading-tight font-sans mt-0.5 drop-shadow-sm text-center break-words line-clamp-2 max-w-full">{badge.shortTitle || badge.title}</span>
         <span className="text-[5.5px] font-mono font-bold opacity-85 uppercase tracking-tighter text-slate-200 truncate max-w-full mt-0.5">{badge.sub}</span>
         <div className="flex items-center justify-center gap-0.5 mt-0.5 text-amber-300 text-[6px]">
           ★ ★ ★
@@ -89,26 +90,33 @@ const parseCandidateBadges = (rawBadges: any[]): CurriculumBadge[] => {
 
   MODULE_BADGES.forEach((mb) => {
     const isMatched = rawBadges.some((b) => {
-      if (typeof b !== "string") return false;
-      const str = b.trim().toLowerCase();
+      if (!b) return false;
+      const str = String(b).trim().toLowerCase();
       const modNumClean = mb.modNum.toLowerCase(); // e.g. "stage 05"
       const modNumShort = modNumClean.replace("0", ""); // e.g. "stage 5"
       const titleClean = mb.title.toLowerCase();
+      const shortClean = (mb.shortTitle || "").toLowerCase();
 
       return (
         str === mb.id.toLowerCase() ||
         str === modNumClean ||
         str === modNumShort ||
         str === titleClean ||
+        (shortClean && str === shortClean) ||
         str === mb.sub.toLowerCase() ||
-        str === `${mb.modNum}: ${mb.title}`.toLowerCase() ||
-        str === `${mb.modNum} ${mb.title}`.toLowerCase() ||
-        (str.includes(modNumClean) && str.includes(titleClean)) ||
-        (str.includes(modNumShort) && str.includes(titleClean))
+        str.includes(modNumClean) ||
+        str.includes(modNumShort) ||
+        str.includes(titleClean) ||
+        (shortClean && str.includes(shortClean)) ||
+        (mb.id === "mod-1" && (str.includes("linux") || str.includes("incident") || str.includes("troubleshooting") || str.includes("stage 5") || str.includes("stage 05"))) ||
+        (mb.id === "mod-2" && (str.includes("aws") || str.includes("ci/cd") || str.includes("automation") || str.includes("stage 10"))) ||
+        (mb.id === "mod-3" && (str.includes("kubernetes") || str.includes("terraform") || str.includes("stage 15"))) ||
+        (mb.id === "mod-4" && (str.includes("devsecops") || str.includes("multi-cloud") || str.includes("stage 20"))) ||
+        (mb.id === "mod-5" && (str.includes("boss") || str.includes("40 lpa") || str.includes("stage 30")))
       );
     });
 
-    if (isMatched) {
+    if (isMatched && !claimed.some(c => c.id === mb.id)) {
       claimed.push(mb);
     }
   });
@@ -207,24 +215,48 @@ export default function LeaderboardPage() {
                  (m.name.toLowerCase() === userName)
           );
 
-          // Get REAL claimed badges (from candidate performance DB or claimed list)
+          // Get completed stages count from browser local storage & DB
+          let localCompletedCount = 0;
           let localClaimed: string[] = [];
           if (typeof window !== "undefined") {
+            try {
+              const rawList = localStorage.getItem("completed_stages_list");
+              if (rawList) {
+                const list = JSON.parse(rawList);
+                if (Array.isArray(list)) localCompletedCount = list.filter((s: any) => typeof s === "number" && s >= 1).length;
+              }
+              const rawScores = localStorage.getItem("stage_scores_map");
+              if (rawScores) {
+                const sc = JSON.parse(rawScores);
+                localCompletedCount = Math.max(localCompletedCount, Object.keys(sc).length);
+              }
+            } catch (e) {}
+
             try {
               const rawLocal = localStorage.getItem("candidate_claimed_badges");
               if (rawLocal) {
                 const parsed = JSON.parse(rawLocal);
                 if (Array.isArray(parsed)) {
-                  localClaimed = parsed.filter(t => 
-                    MODULE_BADGES.some(b => typeof t === "string" && (t.includes(b.modNum) || t.includes(b.title)))
-                  );
+                  localClaimed = parsed;
                 }
               }
             } catch (e) {}
           }
+
+          const effectiveStages = Math.max(localCompletedCount, myPerfData?.completed_stages_count || 0);
+
+          // If logged-in candidate completed >= 5 stages, automatically add STAGE 05 badge
+          const autoMilestoneBadges: string[] = [];
+          if (effectiveStages >= 5) autoMilestoneBadges.push("STAGE 05: LINUX & CLOUD FOUNDATIONS");
+          if (effectiveStages >= 10) autoMilestoneBadges.push("STAGE 10: AWS & CI/CD AUTOMATION");
+          if (effectiveStages >= 15) autoMilestoneBadges.push("STAGE 15: KUBERNETES & TERRAFORM");
+          if (effectiveStages >= 20) autoMilestoneBadges.push("STAGE 20: DEVSECOPS & MULTI-CLOUD");
+          if (effectiveStages >= 30) autoMilestoneBadges.push("STAGE 30: 40 LPA BOSS LEGEND");
+
           const rawMyBadges = Array.from(new Set([
             ...(myPerfData?.badges || []),
             ...localClaimed,
+            ...autoMilestoneBadges,
             ...(existingInList?.allClaimedBadges?.map((b: any) => b.title) || [])
           ]));
           const myRealBadges = parseCandidateBadges(rawMyBadges);
