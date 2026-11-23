@@ -382,25 +382,23 @@ export default function LeaderboardPage() {
         <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 p-1.5 rounded-2xl w-full sm:w-auto">
           <button
             onClick={() => setActiveTimeframe("weekly")}
-            className={`flex-1 sm:flex-initial px-5 py-2.5 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+            className={`flex-1 sm:flex-initial px-5 py-2.5 rounded-xl text-xs font-black transition-all flex items-center justify-center cursor-pointer ${
               activeTimeframe === "weekly"
                 ? "bg-[#0B1E36] text-white shadow-md"
                 : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
             }`}
           >
-            <Flame className="w-4 h-4 text-amber-500 fill-amber-500" />
             <span>Weekly Ranking</span>
           </button>
 
           <button
             onClick={() => setActiveTimeframe("all_time")}
-            className={`flex-1 sm:flex-initial px-5 py-2.5 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+            className={`flex-1 sm:flex-initial px-5 py-2.5 rounded-xl text-xs font-black transition-all flex items-center justify-center cursor-pointer ${
               activeTimeframe === "all_time"
                 ? "bg-[#0B1E36] text-white shadow-md"
                 : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
             }`}
           >
-            <Trophy className="w-4 h-4 text-amber-400 fill-amber-400" />
             <span>All-Time</span>
           </button>
         </div>
@@ -595,7 +593,7 @@ export default function LeaderboardPage() {
               {claimedBonus ? (
                 <div className="p-3.5 rounded-2xl bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-300 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300 text-xs font-bold flex items-center justify-center gap-2">
                   <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-                  <span>🎉 +50 PTS Bonus Claimed & Added to Candidate Total!</span>
+                  <span>+50 PTS Bonus Claimed & Added to Candidate Total!</span>
                 </div>
               ) : (
                 <button
@@ -603,7 +601,7 @@ export default function LeaderboardPage() {
                   className="w-full py-3.5 rounded-2xl font-black text-xs text-white bg-gradient-to-r from-[#FF6B00] to-amber-500 hover:from-orange-500 hover:to-amber-600 shadow-md shadow-[#FF6B00]/25 flex items-center justify-center gap-2 cursor-pointer uppercase tracking-wider"
                 >
                   <Sparkles className="w-4 h-4 text-white" />
-                  <span>Claim +50 Points LinkedIn Share Bonus 🚀</span>
+                  <span>Claim +50 Points LinkedIn Share Bonus</span>
                 </button>
               )}
             </div>
