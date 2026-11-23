@@ -196,41 +196,19 @@ export function Sidebar({ isOpenMobile = false, onCloseMobile }: SidebarProps) {
       `}>
         
         {/* Brand Header */}
-        <div className="p-5 pb-3 flex flex-col gap-2">
-          <div className="flex items-center justify-between">
-            <Link prefetch={false} href="/" onClick={onCloseMobile} className="flex items-center gap-3 group">
-              <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-[#FF6B00] via-amber-500 to-orange-400 p-[1.5px] shadow-md shadow-[#FF6B00]/20 group-hover:scale-105 transition-transform">
-                <div className="w-full h-full bg-[#0B1E36] rounded-[10px] flex items-center justify-center text-white">
-                  <Cloud className="w-4 h-4 text-[#FF6B00] fill-[#FF6B00]/20" />
-                </div>
-              </div>
-              <div className="flex flex-col">
-                <span className="text-base font-black tracking-tight text-[#0B1E36] dark:text-white leading-none">
-                  CloudOps <span className="text-[#FF6B00]">AI</span>
-                </span>
-                <span className={`text-[9px] font-black uppercase tracking-widest mt-1.5 px-2 py-0.5 rounded-full w-max ${
-                  isAdminMode 
-                    ? 'bg-[#0B1E36] text-white border border-[#FF6B00]/40'
-                    : 'bg-orange-100 dark:bg-orange-950/60 text-[#FF6B00] border border-[#FF6B00]/30'
-                }`}>
-                  {isAdminMode ? "ADMIN PANEL PORTAL" : "CANDIDATE PORTAL"}
-                </span>
-              </div>
-            </Link>
-            <button
-              onClick={onCloseMobile}
-              className="p-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-slate-900 dark:hover:text-white lg:hidden"
-              title="Close Drawer"
-            >
-              <X className="w-4 h-4" />
-            </button>
-          </div>
-          
-          {!isAdminMode && (
-            <p className="text-[9.5px] font-semibold text-slate-500 dark:text-slate-400 leading-snug px-0.5">
-              Learn Today. Implement Today. Build Your Career.
-            </p>
-          )}
+        <div className="p-5 pb-3 flex items-center justify-between">
+          <Link prefetch={false} href="/" onClick={onCloseMobile} className="flex items-center group">
+            <span className="text-xl sm:text-2xl font-black tracking-tight text-[#0B1E36] dark:text-white leading-none">
+              Lexus <span className="text-[#FF6B00]">AI</span>
+            </span>
+          </Link>
+          <button
+            onClick={onCloseMobile}
+            className="p-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-slate-900 dark:hover:text-white lg:hidden"
+            title="Close Drawer"
+          >
+            <X className="w-4 h-4" />
+          </button>
         </div>
 
         {/* Navigation List */}

@@ -200,7 +200,7 @@ export default function AdminLoginPage() {
           </div>
           <div className="flex flex-col">
             <span className="text-base sm:text-lg font-black text-slate-900 dark:text-white leading-none">
-              CloudOps <span className="text-[#FF6B00]">AI</span>
+              Lexus <span className="text-[#FF6B00]">AI</span>
             </span>
             <span className="text-[9px] sm:text-[10px] font-mono font-black text-[#FF6B00] uppercase tracking-widest mt-0.5">
               ADMIN OS GATEKEEPER

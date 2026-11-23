@@ -348,7 +348,7 @@ export default function LoginPage() {
             </div>
             <div className="flex flex-col">
               <span className="text-xl font-black text-white leading-none tracking-tight">
-                CloudOps <span className="text-[#FF6B00]">AI</span>
+                Lexus <span className="text-[#FF6B00]">AI</span>
               </span>
               <span className="text-[10px] font-mono font-black text-[#FF6B00] uppercase tracking-widest mt-1">
                 CANDIDATE ASSESSMENT PORTAL
@@ -384,7 +384,7 @@ export default function LoginPage() {
         </div>
 
         <div className="relative z-10 pt-2 border-t border-slate-800 text-[11px] font-mono text-slate-500">
-          © 2026 CloudOps AI • Candidate Assessment OS
+          © 2026 Lexus AI • Candidate Assessment OS
         </div>
       </div>
 
@@ -402,7 +402,7 @@ export default function LoginPage() {
               </div>
             </div>
             <span className="text-sm font-black text-slate-900 dark:text-white leading-none">
-              CloudOps <span className="text-[#FF6B00]">AI</span>
+              Lexus <span className="text-[#FF6B00]">AI</span>
             </span>
           </Link>
 

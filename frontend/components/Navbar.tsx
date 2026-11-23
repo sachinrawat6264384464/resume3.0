@@ -40,7 +40,7 @@ export function Navbar() {
           </div>
           <div className="flex flex-col justify-center">
             <div className="flex items-center gap-1 font-black text-lg tracking-tight text-slate-900 dark:text-white leading-none">
-              CloudOps
+              Lexus
               <span className="text-[#FF9900] font-extrabold ml-0.5">AI</span>
             </div>
           </div>
